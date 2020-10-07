@@ -2,7 +2,7 @@
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 second processor ("Tube Elite").
 
-It is a companion to the repository containing the [tape version of Elite](https://github.com/markmoxon/elite-beebasm).
+It is a companion to the repository containing the [tape version of Elite](https://github.com/markmoxon/elite-beebasm) and its [accompanying website](https://www.bbcelite.com)
 
 ## Contents
 
@@ -180,7 +180,7 @@ Note that the log tables in both the `ELTG` and `I.CODE` sections of the source 
 
 ## Next steps
 
-I'm planning to merge the projects for the Tube and tape versiosn of Elite so there's just one build pipeline for both, but for now the two projects are separate. See the README for the main project for more details on building Elite.
+I'm planning to document the Tube version of Elite in the same way that I [documented the tape version](https://www.bbcelite.com). See the README for the main project for more details on building Elite.
 
 ---
 
