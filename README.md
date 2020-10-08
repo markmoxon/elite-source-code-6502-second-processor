@@ -2,7 +2,7 @@
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 second processor ("Tube Elite").
 
-It is a companion to the repository containing the [tape version of Elite](https://github.com/markmoxon/elite-beebasm) and its [accompanying website](https://www.bbcelite.com)
+It is a companion to the repository containing the [tape version of Elite](https://github.com/markmoxon/elite-beebasm) and its [accompanying website](https://www.bbcelite.com).
 
 ## Contents
 
@@ -46,8 +46,6 @@ You will need the following to build Tube Elite from the source:
 * Python. Both versions 2.7 and 3.x should work.
 * Mac and Linux users may need to install `make` if it isn't already present (for Windows users, `make.exe` is included in this repository).
 
-For details of how the build process works, see the [build documentation on bbcelite.com](https://www.bbcelite.com/about_site/building_elite.html).
-
 Let's look at how to build Tube Elite from the source.
 
 ### Build targets
@@ -67,7 +65,7 @@ Note that the build ends with a warning that there is no `SAVE` command in the s
 
 ### Windows
 
-For Windows users, there is a batch file called `make.bat` to which you can pass one of the three build targets above. Before this will work, you should edit the batch file and change the values of the `BEEBASM` and `PYTHON` variables to point to the locations of your `beebasm.exe` and `python.exe` executables. You also need to change directory to the repository folder (i.e. the same folder as `make.exe`).
+For Windows users, there is a batch file called `make.bat` to which you can pass one of the build targets above. Before this will work, you should edit the batch file and change the values of the `BEEBASM` and `PYTHON` variables to point to the locations of your `beebasm.exe` and `python.exe` executables. You also need to change directory to the repository folder (i.e. the same folder as `make.exe`).
 
 All being well, doing one of the following:
 
@@ -162,7 +160,7 @@ During compilation, details of every step are output in a file called `compile.t
 
 The source files on the source disc do not build as they are; some massaging is required, as described in [this thread on Stardot](https://stardot.org.uk/forums/viewtopic.php?t=14607). Note also that the `P.DIALS2P` file on the source disc has some erroneous dots in the right-hand side of the dashboard; a fixed version is available in the `images` folder in this repository, and this fixed version was used to build the reference binaries in the `extracted` folder.
 
-The `extracted/workspaces` folder contains binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either intialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `extracted/workspaces` folder are for. These binaries are only loaded by the `encrypt` build target; for the `build` target, workspaces are initialised with zeroes.
+The `extracted/workspaces` folder contains binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either intialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `extracted/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
 
 Here's an example of how these binaries are included, in this case for the `LBUF` workspace in the `ELTB` section:
 
@@ -176,11 +174,11 @@ ELSE
 ENDIF
 ```
 
-Note that the log tables in both the `ELTG` and `I.CODE` sections of the source are also included in the `workspaces` folder. This is because BBC BASIC calculates slightly different values for these tables to BeebAsm. The `encrypt` build target therefore loads the original BBC Micro versions of these log tables using the same approach as above, to ensure the output matches the originals, while the `build` target sticks with BeebAsm's built-in `LOG()` function and generates the tables as part of the build process.
+Note that the log tables in both the `ELTG` and `I.CODE` sections of the source are also included in the `workspaces` folder. This is because BBC BASIC calculates slightly different values for these tables compared to those calculated by BeebAsm. The `encrypt` target therefore loads the original BBC Micro versions of these log tables using the same approach as above, to ensure the output matches the originals, while the `build` target sticks with BeebAsm's built-in `LOG()` function and generates the tables as part of the build process.
 
 ## Next steps
 
-I'm planning to document the Tube version of Elite in the same way that I [documented the tape version](https://www.bbcelite.com). See the README for the main project for more details on building Elite.
+I'm planning to document the Tube version of Elite in the same way that I [documented the tape version](https://www.bbcelite.com), though this is a long-term plan.
 
 ---
 
