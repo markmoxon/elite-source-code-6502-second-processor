@@ -1,6 +1,6 @@
-# Original source code for the Tube version of Elite
+# Original source code for the 6502 Second Processor version of Elite
 
-This folder contains the original source code for the Tube version of Elite from Ian Bell's personal website.
+This folder contains the original source code for the 6502 Second Processor version of Elite from Ian Bell's personal website.
 
 ---
 

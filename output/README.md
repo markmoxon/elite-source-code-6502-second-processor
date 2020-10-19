@@ -1,6 +1,6 @@
-# Build output for the Tube version of Elite
+# Build output for the 6502 Second Processor version of Elite
 
-This folder contains the output binaries from the build process for the Tube version of Elite.
+This folder contains the output binaries from the build process for the 6502 Second Processor version of Elite.
 
 ---
 

@@ -1,9 +1,9 @@
 \ ******************************************************************************
 \
-\ TUBE ELITE BIG CODE FILE SOURCE
+\ 6502 SECOND PROCESSOR ELITE BIG CODE FILE SOURCE
 \
-\ Tube Elite was written by Ian Bell and David Braben and is copyright Acornsoft
-\ 1985
+\ 6502 Second Processor Elite was written by Ian Bell and David Braben and is
+\ copyright Acornsoft 1985
 \
 \ The code on this site is identical to the version released on Ian Bell's
 \ personal website at http://www.iancgbell.clara.net/elite/

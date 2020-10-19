@@ -2,10 +2,10 @@
 #
 # ******************************************************************************
 #
-# ELITE CHECKSUM SCRIPT
+# 6502 SECOND PROCESSOR ELITE CHECKSUM SCRIPT
 #
-# Written by Mark Moxon, and inspired by Kieran Connell's version for the tape
-# version of Elite
+# Written by Mark Moxon, and inspired by Kieran Connell's version for the
+# cassette version of Elite
 #
 # This script applies encryption and checksums to the compiled binary for the
 # main parasite game code. It reads the unencrypted "CODE.unprot.bin" binary and

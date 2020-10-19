@@ -23,6 +23,6 @@ $RECYCLE.BIN/
 # =========================
 .vscode/tasks.json
 compile.txt
-elite-beebasm.code-workspace
+tube-elite-beebasm.code-workspace
 run.bat
-elite-header.h.asm
+6502sp-header.h.asm

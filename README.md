@@ -1,6 +1,6 @@
-# Source code for Tube Elite on the BBC Micro
+# Source code for Elite on the BBC Micro with a 6502 Second Processor
 
-This repository contains the original source code for Elite on the BBC Micro with a 6502 second processor ("Tube Elite").
+This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor (also known as "6502SP Elite" or "Tube Elite").
 
 It is a companion to the repository containing the [tape version of Elite](https://github.com/markmoxon/elite-beebasm) and its [accompanying website](https://www.bbcelite.com).
 
@@ -8,7 +8,7 @@ It is a companion to the repository containing the [tape version of Elite](https
 
 * [Acknowledgements](#acknowledgements)
 
-* [Building Tube Elite from the source](#building-tube-elite-from-the-source)
+* [Building 6502 Second Processor Elite from the source](#building-6502-second-processor-elite-from-the-source)
 
 * [Notes on the original source files](#notes-on-the-original-source-files)
 
@@ -16,7 +16,7 @@ It is a companion to the repository containing the [tape version of Elite](https
 
 ## Acknowledgements
 
-Tube Elite was written by Ian Bell and David Braben and is copyright &copy; Acornsoft 1985.
+6502 Second Processor Elite was written by Ian Bell and David Braben and is copyright &copy; Acornsoft 1985.
 
 The code on this site is identical to the version released on [Ian Bell's personal website](http://www.iancgbell.clara.net/elite/) (it's just been reformatted to be more readable).
 
@@ -24,7 +24,7 @@ The commentary is copyright &copy; Mark Moxon. Any misunderstandings or mistakes
 
 The following archive from Ian Bell's site forms the basis for this project:
 
-* [Tube sources as a disc image](http://www.elitehomepage.org/archive/a/a5022201.zip)
+* [6502 Second Processor sources as a disc image](http://www.elitehomepage.org/archive/a/a5022201.zip)
 
 ### A note on licences, copyright etc.
 
@@ -38,17 +38,17 @@ Under GitHub's rules, you have the right to read and fork this repository... but
 
 My hope is that the non-profit intentions of this repository will enable it to stay hosted and available, but the original copyright holders do have the right to ask for it to be taken down, in which case I will comply without hesitation. I do hope, though, that along with the various other disassemblies and commentaries of this source, it will remain viable.
 
-## Building Tube Elite from the source
+## Building 6502 Second Processor Elite from the source
 
 ### Requirements
 
-You will need the following to build Tube Elite from the source:
+You will need the following to build 6502 Second Processor Elite from the source:
 
 * BeebAsm, which can be downloaded from the [BeebAsm repository](https://github.com/stardot/beebasm). Mac and Linux users will have to build their own executable with `make code`, while Windows users can just download the `beebasm.exe` file.
 * Python. Both versions 2.7 and 3.x should work.
 * Mac and Linux users may need to install `make` if it isn't already present (for Windows users, `make.exe` is included in this repository).
 
-Let's look at how to build Tube Elite from the source.
+Let's look at how to build 6502 Second Processor Elite from the source.
 
 ### Build targets
 
@@ -79,7 +79,7 @@ make.bat build
 make.bat encrypt
 ```
 
-will produce a file called `elite-tube.ssd`, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
+will produce a file called `elite-6502sp.ssd`, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
 
 ### Mac and Linux
 
@@ -95,7 +95,7 @@ make build
 make encrypt
 ```
 
-will produce a file called `elite-tube.ssd`, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
+will produce a file called `elite-6502sp.ssd`, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
 
 ### Verifying the output
 
@@ -127,7 +127,7 @@ make encrypt verify
 
 The Python script `crc32.py` does the actual verification, and shows the checksums and file sizes of both sets of files, alongside each other, and with a Match column that flags any discrepancies. If you are building an unencrypted set of files then there will be lots of differences, while the encrypted files should match.
 
-The binaries in the `extracted` folder were taken straight from the [Tube sources disc image](http://www.elitehomepage.org/archive/a/a5022201.zip), while those in the `output` folder are produced by the build process. For example, if you don't make any changes to the code and build the project with `make encrypt verify`, then this is the output of the verification process:
+The binaries in the `extracted` folder were taken straight from the [6502 Second Processor sources disc image](http://www.elitehomepage.org/archive/a/a5022201.zip), while those in the `output` folder are produced by the build process. For example, if you don't make any changes to the code and build the project with `make encrypt verify`, then this is the output of the verification process:
 
 ```
 [--extracted--]  [---output----]
@@ -180,7 +180,7 @@ Note that the log tables in both the `ELTG` and `I.CODE` sections of the source 
 
 ## Next steps
 
-I'm planning to document the Tube version of Elite in the same way that I [documented the tape version](https://www.bbcelite.com), though this is a long-term plan.
+I'm planning to document the 6502 Second Processor version of Elite in the same way that I [documented the tape version](https://www.bbcelite.com), though this is a long-term plan.
 
 ---
 

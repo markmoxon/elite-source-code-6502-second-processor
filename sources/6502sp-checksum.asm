@@ -1,9 +1,9 @@
 \ ******************************************************************************
 \
-\ TUBE ELITE ENCRYPTION SOURCE
+\ 6502 SECOND PROCESSOR ELITE ENCRYPTION SOURCE
 \
-\ Tube Elite was written by Ian Bell and David Braben and is copyright Acornsoft
-\ 1985
+\ 6502 Second Processor Elite was written by Ian Bell and David Braben and is
+\ copyright Acornsoft 1985
 \
 \ The code on this site is identical to the version released on Ian Bell's
 \ personal website at http://www.iancgbell.clara.net/elite/
@@ -14,8 +14,8 @@
 \ ******************************************************************************
 
 \ The following routines from the S.PCODES BBC BASIC source file are implemented
-\ in the tube-checksum.py script - this file is purely for reference and is not
-\ used in the build process
+\ in the 6502sp-checksum.py script - this file is purely for reference and is
+\ not used in the build process
 
 \ ZP: This sets the checksum byte at S%-1
 
