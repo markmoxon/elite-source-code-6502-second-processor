@@ -97,23 +97,23 @@ ENDMACRO
 
 .DIALS
 
-INCBIN "images/P.DIALS2P.bin"
+INCBIN "binaries/P.DIALS2P.bin"
 
 .DATE
 
-INCBIN "images/P.DATE2P.bin"
+INCBIN "binaries/P.DATE2P.bin"
 
 .ASOFT
 
-INCBIN "images/Z.ACSOFT.bin"
+INCBIN "binaries/Z.ACSOFT.bin"
 
 .ELITE
 
-INCBIN "images/Z.ELITE.bin"
+INCBIN "binaries/Z.ELITE.bin"
 
 .CpASOFT
 
-INCBIN "images/Z.(C)ASFT.bin"
+INCBIN "binaries/Z.(C)ASFT.bin"
 
 \ ******************************************************************************
 \

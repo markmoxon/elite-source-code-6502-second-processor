@@ -111,7 +111,7 @@ ORG CODE%
 
 FONT% = P% DIV 256
 
-INCBIN "images/P.FONT.bin"
+INCBIN "binaries/P.FONT.bin"
 
 TABLE = &2300
 
