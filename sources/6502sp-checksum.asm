@@ -20,7 +20,7 @@
 \ ZP: This sets the checksum byte at S%-1
 
 .ZP
-
+{
  SEC
 
  LDY #0                 \ Set Y = 0
@@ -51,10 +51,10 @@
  STA S%-1               \ Store A in checksum byte at S%-1
 
  RTS                    \ Return from the subroutine
-
+}
 
 \ SC: This EORs bytes between &1300 and &9FFF
-
+{
 .SC
 
  LDY #0                 \ (X Y) = SC(1 0) = &1300
@@ -78,12 +78,12 @@
  BNE DEEL               \ Loop back if X < &A0
 
  RTS                    \ Return from the subroutine
-
+}
 
 \ V: This reverses the order of bytes between G% and F%-1
 
 .V
-
+{
  LDA #G%MOD256          \ V(1 0) = G%
 
 .SC
@@ -124,3 +124,4 @@
  BCS whiz
 
  RTS                    \ Return from the subroutine
+}
