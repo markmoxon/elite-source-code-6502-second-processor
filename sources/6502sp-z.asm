@@ -345,7 +345,6 @@ NEXT
 
  BRK
 
-
 \ ******************************************************************************
 \       Name: JMPTAB
 \ ******************************************************************************
@@ -579,7 +578,7 @@ NEXT
  LDA #10
  JSR POSWRCH
 
-.^sent
+.sent
 
  LDA #3
  JSR NVOSWRCH
@@ -853,7 +852,7 @@ NEXT
  LDA #&82
  JMP USOSWRCH
 
-.^RTS1
+.RTS1
 
  RTS
 
@@ -2084,7 +2083,7 @@ NEXT
  TAY
  LDA orange,Y
 
-.^HLOIN3
+.HLOIN3
 
  STA S
  CPX X2
@@ -2834,7 +2833,7 @@ ENDMACRO
  LDX OSSC
  LDY OSSC+1
 
-.^SAFE
+.SAFE
 
  RTS
 
@@ -3071,7 +3070,7 @@ ENDMACRO
  DEY
  BPL RRL1
 
-.^RR4
+.RR4
 
  PLA
  TAX
@@ -3418,7 +3417,7 @@ ENDMACRO
  LSR A
  LSR A
 
-.^DIL
+.DIL
 
  STA Q
  LDX #FF
@@ -3627,7 +3626,7 @@ protlen = end65C02-do65C02
  LDA #&18
  STA &FE20
 
-.^VNT3
+.VNT3
 
  LDA TVT3,Y
  STA &FE21

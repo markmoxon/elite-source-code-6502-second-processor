@@ -94,7 +94,6 @@ ENDMACRO
 \       Name: MVBL
 \ ******************************************************************************
 
-
 .MVPG
 
  LDY #0
@@ -107,7 +106,7 @@ ENDMACRO
  BNE MPL
  RTS 
 
-.^MVBL
+.MVBL
 
  JSR MVPG
  INC Z1+1

@@ -1385,7 +1385,7 @@ ENDIF
 
  LDX #0
 
-.^MAL1
+.MAL1
 
  STX XSAV
  LDA FRIN,X
@@ -1529,7 +1529,7 @@ ENDIF
  CMP #80
  BCC MA62
 
-.^GOIN
+.GOIN
 
  JMP DOENTRY
 
@@ -1924,7 +1924,7 @@ ENDIF
  AND (XX0),Y
  AND #15
 
-.^SPIN2
+.SPIN2
 
  STA CNT
 
@@ -1936,7 +1936,7 @@ ENDIF
  DEC CNT
  BNE spl+2
 
-.^oh
+.oh
 
  RTS
 
@@ -1997,7 +1997,7 @@ ENDIF
  STA V
  LDA #(TKN1 DIV256)
 
-.^DTEN
+.DTEN
 
  STA V+1
  LDY #0
@@ -2078,7 +2078,7 @@ ENDIF
  TAX
  LDA TKN2+1,X  \letter pair
 
-.^DTS
+.DTS
 
  CMP #&41
  BCC DT9
@@ -2615,7 +2615,7 @@ NEXT
  LDY T1
  RTS
 
-.^LBFL
+.LBFL
 
  LDY LBUP
  BEQ LBZE2
@@ -2739,7 +2739,7 @@ ENDIF
  LDY T1
  RTS
 
-.^HBFL
+.HBFL
 
  LDA HBUP
  STA HBUF
@@ -2757,7 +2757,7 @@ ENDIF
  LDY T1
  RTS
 
-.^HBZE
+.HBZE
 
  LDA #2
  STA HBUP
@@ -2860,11 +2860,11 @@ ENDIF
  BMI PBFL
  LDY T1
 
-.^PX4
+.PX4
 
  RTS
 
-.^PBFL
+.PBFL
 
  LDA PBUP
  STA pixbl
@@ -2884,7 +2884,7 @@ ENDIF
  LDY T1
  RTS
 
-.^PBZE
+.PBZE
 
  LDA #2
  STA PBUP
@@ -3331,12 +3331,11 @@ ENDIF
 \       Name: MAS2
 \ ******************************************************************************
 
-
-.^m
+.m
 
  LDA #0
 
-.^MAS2
+.MAS2
 
  ORA K%+2,Y
  ORA K%+5,Y
@@ -3372,7 +3371,6 @@ ENDIF
 \       Name: STATUS
 \ ******************************************************************************
 
-
 .wearedocked
 
  LDA #205
@@ -3394,7 +3392,7 @@ ENDIF
  DEX
  BNE st3
 
-.^STATUS
+.STATUS
 
  LDA #8
  JSR TRADEMODE
@@ -3656,7 +3654,6 @@ ENDIF
  LDA K+1
  STA INWK+1,X
  RTS
-
 
 \ ******************************************************************************
 \       Name: TENS
@@ -4037,7 +4034,7 @@ DTW7 = MT16+1
  DEX
  BNE DAL5
 
-.^rT9
+.rT9
 
  RTS
 
@@ -4457,7 +4454,7 @@ LOAD_C% = LOAD% +P% - CODE%
  JSR TIDY
  JMP LL9
 
-.^UNWISE
+.UNWISE
 
 .HA1
 
@@ -4466,7 +4463,6 @@ LOAD_C% = LOAD% +P% - CODE%
 \ ******************************************************************************
 \       Name: TACTICS (Part 1 of 7)
 \ ******************************************************************************
-
 
 .TA34
 
@@ -4552,7 +4548,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \       Name: TACTICS (Part 2 of 7)
 \ ******************************************************************************
 
-.^TACTICS
+.TACTICS
 
  LDA #3
  STA RAT
@@ -4667,7 +4663,7 @@ LOAD_C% = LOAD% +P% - CODE%
  BCC GOPL
  JMP DOCKIT
 
-.^GOPL
+.GOPL
 
  JSR SPS1
  JMP TA151
@@ -4910,7 +4906,7 @@ LOAD_C% = LOAD% +P% - CODE%
 
  RTS
 
-.^TA151
+.TA151
 
  LDY #10
  JSR TAS3
@@ -5061,7 +5057,7 @@ LOAD_C% = LOAD% +P% - CODE%
  STA V
  LDA #((K%+NI%)DIV256)
 
-.^VCSUB
+.VCSUB
 
  STA V+1
  LDY #2
@@ -5231,7 +5227,7 @@ LOAD_C% = LOAD% +P% - CODE%
  LDA (XX0),Y
  CMP R
 
-.^HI1
+.HI1
 
  RTS
 
@@ -5258,7 +5254,7 @@ LOAD_C% = LOAD% +P% - CODE%
  ORA #128
  STA INWK+32
 
-.^fq1
+.fq1
 
  LDA #96
  STA INWK+14
@@ -5492,7 +5488,7 @@ LOAD_C% = LOAD% +P% - CODE%
  STA STP
  JSR TTX66
 
-.^HFS1
+.HFS1
 
  LDX #X
  STX K3
@@ -5753,7 +5749,7 @@ LOAD_C% = LOAD% +P% - CODE%
  LDX ALP1
  STX P
 
-.^MULTS
+.MULTS
 
 \AP = A*P(P+<32)
  TAX
@@ -5973,10 +5969,9 @@ LOAD_C% = LOAD% +P% - CODE%
 \       Name: MLTU2
 \ ******************************************************************************
 
-
  STX Q
 
-.^MLTU2
+.MLTU2
 
 \AP(2) = AP*Qunsg(EORP)
  EOR #FF
@@ -6449,7 +6444,7 @@ TAX \just in case
  BCC RE2
  LDX #FF
 
-.^RE2
+.RE2
 
  BPL djd1
  LDA T
@@ -6473,7 +6468,7 @@ TAX \just in case
 
  BPL RE2+2
 
-.^djd1
+.djd1
 
  LDA DJD
  BNE RE2+2
@@ -6563,7 +6558,7 @@ TAX \just in case
  STA GNTMP
  JSR DENGY
 
-.^LASLI2
+.LASLI2
 
  LDA QQ11
  BNE LASLI-1
@@ -6720,7 +6715,7 @@ TAX \just in case
  JSR MCASH
  LDA #15
 
-.^BRPS
+.BRPS
 
  BNE BRP
 
@@ -6778,7 +6773,7 @@ TAX \just in case
  LDA #10
  BNE BRPS
 
-.^BRIS
+.BRIS
 
  LDA #216
  JSR DETOK
@@ -6968,7 +6963,7 @@ LOAD_D% = LOAD% + P% - CODE%
  PHA
  LDA #SETYC
 
-.^label
+.label
 
  JSR OSWRCH
  PLA
@@ -7171,7 +7166,7 @@ LOAD_D% = LOAD% + P% - CODE%
  ADC #170
  JSR TT27
 
-.^TT72
+.TT72
 
  LDA QQ3
  LSR A
@@ -7411,7 +7406,7 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA #CYAN
  JSR DOCOL \< = Ian = >
 
-.^TT15b
+.TT15b
 
  LDA #24
  LDX QQ11
@@ -7478,7 +7473,6 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: TT14
 \ ******************************************************************************
 
-
 .TT126
 
  LDA #104
@@ -7492,7 +7486,7 @@ LOAD_D% = LOAD% + P% - CODE%
  STA K
  JMP TT128
 
-.^TT14
+.TT14
 
  LDA #CYAN\WH
  JSR DOCOL
@@ -7636,7 +7630,7 @@ LOAD_D% = LOAD% + P% - CODE%
  BCS BAY2
  JMP TT220
 
-.^BAY2
+.BAY2
 
  LDA #f9
  JMP FRCE
@@ -7717,7 +7711,7 @@ LOAD_D% = LOAD% + P% - CODE%
  STA R
  BRA OUT\++
 
-.^NWDAV4
+.NWDAV4
 
  JSR TT67
  LDA #176
@@ -7754,7 +7748,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
  STY QQ29
 
-.^NWDAVxx
+.NWDAVxx
 
  LDX QQ20,Y
  BEQ TT212
@@ -7846,7 +7840,6 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: TT214 Unused?
 \ ******************************************************************************
 
-
 \.TT214\PHA\JSRTT162\PLA
 
 .TT221
@@ -7931,7 +7924,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
  STA QQ19+4
 
-.^TT180
+.TT180
 
  RTS
 
@@ -8254,7 +8247,7 @@ LOAD_D% = LOAD% + P% - CODE%
  RTS \< = Ian = >
  JSR hm
 
-.^TTX111
+.TTX111
 
  LDA QQ8
  ORA QQ8+1
@@ -8297,7 +8290,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
  LDA #15
 
-.^wW2
+.wW2
 
  STA QQ22+1
  STA QQ22
@@ -8431,13 +8424,12 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: TT151
 \ ******************************************************************************
 
-
 .TT151q
 
  PLA
  RTS \no trade items in MJ
 
-.^TT151
+.TT151
 
  PHA
  STA QQ19+4
@@ -8709,14 +8701,13 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: MJP
 \ ******************************************************************************
 
-
-.^ptg
+.ptg
 
  LSR COK
  SEC
  ROL COK
 
-.^MJP
+.MJP
 
 \JSRCATLOD
  LDA #3
@@ -8738,7 +8729,7 @@ LOAD_D% = LOAD% + P% - CODE%
  EOR #31
  STA QQ1
 
-.^RTS111
+.RTS111
 
  RTS
 
@@ -8869,7 +8860,7 @@ LOAD_D% = LOAD% + P% - CODE%
  STA CASH
  CLC
 
-.^TT113
+.TT113
 
  RTS
 
@@ -8908,12 +8899,11 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: EQSHP
 \ ******************************************************************************
 
-
 .bay
 
  JMP BAY
 
-.^EQSHP
+.EQSHP
 
  LDA #32
  JSR TRADEMODE
@@ -9051,7 +9041,7 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA #31
  JSR TT27
 
-.^err
+.err
 
  JSR dn2
  JMP BAY
@@ -9166,11 +9156,10 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: prx
 \ ******************************************************************************
 
-
  SEC
  SBC #1
 
-.^prx
+.prx
 
  ASL A
  TAY
@@ -9178,7 +9167,7 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA PRXS+1,Y
  TAY
 
-.^c
+.c
 
  RTS
 
@@ -9545,7 +9534,7 @@ LOAD_E% = LOAD% + P% - CODE%
  BCS TT44
  ADC #32
 
-.^TT44
+.TT44
 
  JMP TT26
 
@@ -9692,14 +9681,13 @@ LOAD_E% = LOAD% + P% - CODE%
  LDA (V),Y
  BNE TT50
 
-.^TT48
+.TT48
 
  RTS
 
 \ ******************************************************************************
 \       Name: DOEXP
 \ ******************************************************************************
-
 
 .EX2
 
@@ -9708,7 +9696,7 @@ LOAD_E% = LOAD% + P% - CODE%
  STA INWK+31
  RTS
 
-.^DOEXP
+.DOEXP
 
  LDA INWK+31
  AND #64
@@ -10034,11 +10022,10 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Name: SHD
 \ ******************************************************************************
 
-
  DEX
  RTS
 
-.^SHD
+.SHD
 
  INX
  BEQ SHD-2
@@ -10479,13 +10466,12 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Name: MSBAR
 \ ******************************************************************************
 
-
 .msbpars
 
  EQUB 4
  EQUD 0
 
-.^MSBAR
+.MSBAR
 
  PHX \++
  STX msbpars+2
@@ -10645,7 +10631,6 @@ LOAD_E% = LOAD% + P% - CODE%
 \ ******************************************************************************
 \       Name: PL9 (Part 3 of 3)
 \ ******************************************************************************
-
 
 .PL26
 
@@ -10844,7 +10829,6 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Name: SUN (Part 1 of 4)
 \ ******************************************************************************
 
-
  JMP WPLS
 
 .PLF3
@@ -10860,7 +10844,7 @@ LOAD_E% = LOAD% + P% - CODE%
  LDA #FF
  BNE PLF5
 
-.^SUN
+.SUN
 
  LDA #1
  STA LSX
@@ -11071,7 +11055,7 @@ LOAD_E% = LOAD% + P% - CODE%
  STA SUNX+1
  JSR HBFL
 
-.^RTS2
+.RTS2
 
  RTS
 
@@ -11207,7 +11191,7 @@ LOAD_E% = LOAD% + P% - CODE%
  CPY T
  BCC WPL1
 
-.^WP1
+.WP1
 
  RTS
 
@@ -11420,7 +11404,7 @@ LOAD_E% = LOAD% + P% - CODE%
  ADC #0
  TAX
 
-.^PL44
+.PL44
 
  CLC
 
@@ -11947,12 +11931,11 @@ LOAD_F% = LOAD% + P% - CODE%
 \       Name: 
 \ ******************************************************************************
 
-
-.^DORND2
+.DORND2
 
  CLC
 
-.^DORND
+.DORND
 
  LDA RAND
  ROL A
@@ -11970,7 +11953,6 @@ LOAD_F% = LOAD% + P% - CODE%
 \ ******************************************************************************
 \       Name: Main game loop (Part 1 of 6)
 \ ******************************************************************************
-
 
 .MTT4
 
@@ -12002,7 +11984,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \       Name: Main game loop (Part 2 of 6)
 \ ******************************************************************************
 
-.^TT100
+.TT100
 
  JSR M%
  DEC DLY
@@ -12010,7 +11992,7 @@ LOAD_F% = LOAD% + P% - CODE%
  BPL me3
  INC DLY
 
-.^me3
+.me3
 
  DEC MCNT
  BEQ P%+5
@@ -12212,7 +12194,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \       Name: Main game loop (Part 5 of 6)
 \ ******************************************************************************
 
-.^MLOOP
+.MLOOP
 
  LDX #FF
  TXS
@@ -12254,7 +12236,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \       Name: Main game loop (Part 6 of 6)
 \ ******************************************************************************
 
-.^FRCE
+.FRCE
 
  JSR TT102
  LDA QQ12
@@ -12385,7 +12367,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
  RTS
 
-.^T95
+.T95
 
  LDA QQ11
  AND #192
@@ -12630,7 +12612,7 @@ LOAD_F% = LOAD% + P% - CODE%
  JSR DFAULT
  JSR SVE
 
-.^QU5
+.QU5
 
  JSR DFAULT
  JSR msblob
@@ -13256,7 +13238,7 @@ LOAD_F% = LOAD% + P% - CODE%
  DEX
  BPL LOL1
 
-.^LOR
+.LOR
 
  SEC
  RTS
@@ -13398,7 +13380,7 @@ LOAD_F% = LOAD% + P% - CODE%
  ROL K3+7
  BCC TAL2
 
-.^TA2
+.TA2
 
  LDA K3+1
  LSR A
@@ -13801,7 +13783,7 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA auto
  BEQ DK15
 
-.^auton
+.auton
 
  JSR ZINF
  LDA #96
@@ -13892,7 +13874,7 @@ LOAD_F% = LOAD% + P% - CODE%
  CPX #&69
  BNE DK2
 
-.^FREEZE
+.FREEZE
 
  JSR WSCAN
  JSR RDKEY
@@ -13983,7 +13965,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
  STY YSAV
 
-.^t
+.t
 
  LDY #2
  JSR DELAY
@@ -13999,7 +13981,7 @@ LOAD_F% = LOAD% + P% - CODE%
  LDY YSAV
  TAX
 
-.^out
+.out
 
  RTS
 
@@ -14173,7 +14155,6 @@ LOAD_F% = LOAD% + P% - CODE%
 \       Name: TIDY
 \ ******************************************************************************
 
-
 .TI2
 
  TYA
@@ -14193,7 +14174,7 @@ LOAD_F% = LOAD% + P% - CODE%
  STA INWK+18
  JMP TI3
 
-.^TIDY
+.TIDY
 
  LDA INWK+10
  STA XX15
@@ -14645,7 +14626,7 @@ ENDIF
  STA R
  RTS
 
-.^LL31
+.LL31
 
  ASL A
  BCS LL29
@@ -14758,12 +14739,11 @@ ENDIF
 \       Name: LL9 (Part 1 of 11)
 \ ******************************************************************************
 
-
 .LL25
 
  JMP PLANET
 
-.^LL9
+.LL9
 
  LDX TYPE
  BMI LL25
@@ -14821,7 +14801,7 @@ ENDIF
  STA XX1+31
  JMP DOEXP
 
-.^EE51
+.EE51
 
  LDA #8
  BIT XX1+31
@@ -15755,7 +15735,7 @@ ENDIF
 
  JMP LL75
 
-.^LL81
+.LL81
 
  LDA U
 \LDY#0
@@ -15901,7 +15881,7 @@ ENDIF
  LDX T
  BNE LL121
 
-.^LL122
+.LL122
 
  LDA #0
  TAX
@@ -15943,7 +15923,7 @@ ENDIF
  LDX T
  BNE LL122
 
-.^LL121
+.LL121
 
  LDA #255
  TAY
@@ -15980,7 +15960,7 @@ ENDIF
  PLA
  BMI LL128
 
-.^LL133
+.LL133
 
  TXA
  EOR #FF
@@ -16032,7 +16012,7 @@ ENDIF
  STA SWAP
  LDA XX15+5
 
-.^LL147
+.LL147
 
  LDX #Y*2-1
  ORA XX12+1
@@ -16476,7 +16456,7 @@ LOAD_H% = LOAD% + P% - CODE%
 \       Name: MVEIT (Part 6 of 9)
 \ ******************************************************************************
 
-.^MV45
+.MV45
 
  LDA DELTA
  STA R
@@ -16550,7 +16530,6 @@ LOAD_H% = LOAD% + P% - CODE%
 \       Name: MVEIT (Part 9 of 9)
 \ ******************************************************************************
 
-
 .MV5
 
  LDA INWK+31
@@ -16572,10 +16551,9 @@ LOAD_H% = LOAD% + P% - CODE%
 \       Name: MVT1
 \ ******************************************************************************
 
-
  AND #128
 
-.^MVT1
+.MVT1
 
  ASL A
  STA S
@@ -16957,7 +16935,6 @@ ENDIF
 \       Name: LOOK1
 \ ******************************************************************************
 
-
 .LO2
 
  RTS
@@ -16969,7 +16946,7 @@ ENDIF
  JSR SIGHT
  JMP NWSTARS
 
-.^LOOK1
+.LOOK1
 
  LDA #0
  JSR DOVDU19
@@ -17060,7 +17037,7 @@ ENDIF
  STX QQ17
  RTS
 
-.^BOX
+.BOX
 
  LDA #YELLOW
  JSR DOCOL
@@ -17122,7 +17099,7 @@ ENDIF
  LDA #0
  TAY
 
-.^SC5
+.SC5
 
  RTS
 \ ******************************************************************************
@@ -17319,7 +17296,6 @@ D = 80
 
  BRK
 
-
 \ ******************************************************************************
 \       Name: ZINF2
 \ ******************************************************************************
@@ -17339,7 +17315,6 @@ D = 80
  STA INWK+22
  STA INWK+14
  RTS
-
 
 \ ******************************************************************************
 \       Name: TWIST2
@@ -18001,7 +17976,6 @@ D = 80
 \ ******************************************************************************
 \       Name: acorn
 \ ******************************************************************************
-
 
 \           \......+......./\......+......./\......+......./\......+......"
 
