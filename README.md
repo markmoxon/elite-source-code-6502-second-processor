@@ -2,7 +2,7 @@
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor (also known as "6502SP Elite" or "Tube Elite").
 
-It is a companion to the repository containing the [tape version of Elite](https://github.com/markmoxon/elite-beebasm) and its [accompanying website](https://www.bbcelite.com).
+It is a companion to the repository containing the [cassette version of Elite](https://github.com/markmoxon/elite-beebasm) and its [accompanying website](https://www.bbcelite.com).
 
 ## Contents
 
