@@ -13,7 +13,7 @@
 \
 \ ******************************************************************************
 
-INCLUDE "sources/6502sp-header.h.asm"
+INCLUDE "sources/elite-header.h.asm"
 
 PUTFILE "output/ELITE.bin", "ELITE", &FF2000, &FF2085
 

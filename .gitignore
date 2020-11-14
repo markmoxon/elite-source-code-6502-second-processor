@@ -25,4 +25,4 @@ $RECYCLE.BIN/
 compile.txt
 6502sp-elite-beebasm.code-workspace
 run.bat
-6502sp-header.h.asm
+elite-header.h.asm

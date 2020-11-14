@@ -14,7 +14,7 @@
 \ ******************************************************************************
 
 \ The following routines from the S.PCODES BBC BASIC source file are implemented
-\ in the 6502sp-checksum.py script - this file is purely for reference and is
+\ in the elite-checksum.py script - this file is purely for reference and is
 \ not used in the build process
 
 \ ZP: This sets the checksum byte at S%-1
