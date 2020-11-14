@@ -11,6 +11,9 @@
 \ The commentary is copyright Mark Moxon, and any misunderstandings or mistakes
 \ in the documentation are entirely my fault
 \
+\ The terminology and notations used in this commentary are explained at
+\ https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html
+\
 \ ******************************************************************************
 
 CODE% = &1000
@@ -93,7 +96,7 @@ INCBIN "extracted/workspaces/BCFS-SHIPS.bin"
 
 \ ******************************************************************************
 \
-\ Save output/CODE.unprot.bin
+\ Save 6502sp/output/CODE.unprot.bin
 \
 \ ******************************************************************************
 
