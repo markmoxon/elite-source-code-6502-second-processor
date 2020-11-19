@@ -2566,8 +2566,7 @@ TAX
 \
 \ ------------------------------------------------------------------------------
 \
-\ Add two signed 16-bit numbers together, making sure the result has the
-\ correct sign. Specifically:
+\ Add two 16-bit sign-magnitude numbers together, calculating:
 \
 \   (A X) = (A P) + (S R)
 \
@@ -2589,7 +2588,7 @@ TAX
                         \ If we reach here, then A and S have the same sign, so
                         \ we can add them and set the sign to get the result
 
- LDA R                  \ Add the least significant bytes together into X, so
+ LDA R                  \ Add the least significant bytes together into X:
  CLC                    \
  ADC P                  \   X = P + R
  TAX
@@ -2618,9 +2617,9 @@ TAX
  AND #%01111111         \ U, so U now contains |S|
  STA U
 
- LDA P                  \ Subtract the least significant bytes into X, so
- SEC                    \   X = P - R
- SBC R
+ LDA P                  \ Subtract the least significant bytes into X:
+ SEC                    \
+ SBC R                  \   X = P - R
  TAX
 
  LDA T1                 \ Restore the A of the argument (A P) from T1 and
@@ -2640,7 +2639,7 @@ TAX
                         \ If we get here, then |A| < |S|, so our subtraction
                         \ above was the wrong way round (we actually subtracted
                         \ the larger absolute value from the smaller absolute
-                        \ value. So let's subtract the result we have in (A X)
+                        \ value). So let's subtract the result we have in (A X)
                         \ from zero, so that the subtraction is the right way
                         \ round
 
@@ -2649,8 +2648,8 @@ TAX
  TXA                    \ Set X = 0 - X using two's complement (to negate a
  EOR #&FF               \ number in two's complement, you can invert the bits
  ADC #1                 \ and add one - and we know the C flag is clear as we
- TAX                    \ didn't take the BCS branch above, so ADC will do the 
-                        \ correct addition)
+ TAX                    \ didn't take the BCS branch above, so the ADC will do
+                        \ the correct addition)
 
  LDA #0                 \ Set A = 0 - A, which we can do this time using a
  SBC U                  \ a subtraction with the C flag clear
@@ -2946,6 +2945,7 @@ TAX
 \ ******************************************************************************
 
 MACRO DKS4
+
  LDX #3                 \ Set X to 3, so it's ready to send to SHEILA once
                         \ interrupts have been disabled
 
@@ -2978,6 +2978,7 @@ MACRO DKS4
  STX SHEILA+&40         \ to %1011 to restart auto scan of keyboard
 
  CLI                    \ Allow interrupts again
+
 ENDMACRO
 \ ******************************************************************************
 \       Name: KYTB

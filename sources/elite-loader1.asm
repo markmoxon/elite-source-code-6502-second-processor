@@ -113,28 +113,44 @@ ORG CODE%
  EQUB 0, 0, 0           \
  EQUB 0, 0, 0           \ This sets 6845 registers (R12 R13) = &0800 to point
  EQUB 23, 0, 13, &00    \ to the start of screen memory in terms of character
- EQUB 0, 0, 0           \ rows
- EQUB 0, 0, 0
+ EQUB 0, 0, 0           \ rows. There are 8 pixel lines in each character row,
+ EQUB 0, 0, 0           \ so to get the actual address of the start of screen
+                        \ memory, we multiply by 8:
+                        \
+                        \   &0800 * 8 = &4000
+                        \
+                        \ So this sets the start of screen memory to &4000
 
  EQUB 23, 0, 1, 64      \ Set 6845 register R1 = 64
  EQUB 0, 0, 0           \
  EQUB 0, 0, 0           \ This is the "horizontal displayed" register, which
                         \ defines the number of character blocks per horizontal
-                        \ character row
+                        \ character row. For comparison, this value is 80 for
+                        \ modes 1 and 2, but our custom screen is not as wide at
+                        \ only 64 character blocks across
 
  EQUB 23, 0, 2, 90      \ Set 6845 register R2 = 90
  EQUB 0, 0, 0           \
  EQUB 0, 0, 0           \ This is the "horizontal sync position" register, which
                         \ defines the position of the horizontal sync pulse on
                         \ the horizontal line in terms of character widths from
-                        \ the left-hand side of the screen
+                        \ the left-hand side of the screen. For comparison this
+                        \ is 98 for modes 1 and 2, but needs to be adjusted for
+                        \ our custom screen's width
 
  EQUB 23, 0, 10, 32     \ Set 6845 register R10 = 32
  EQUB 0, 0, 0           \
  EQUB 0, 0, 0           \ This is the "cursor start" register, which sets the
                         \ cursor start line at 0 with a fast blink rate
 
- EQUB 23,0,&87,34,0,0,0,0,0,0
+ EQUB 23, 0, &87, 34    \ Set 6845 register R7 = 34
+ EQUB 0, 0, 0           \
+ EQUB 0, 0, 0           \ This is the "vertical sync position" register, which
+                        \ defines the row number where the vertical sync pulse
+                        \ is fired. This is aleady set to 34 for mode 1 and 2,
+                        \ so I'm not sure what this command does, especially as
+                        \ the register number has bit 7 set (it's &87 rather
+                        \ than 7). More investigation needed!
 
 \ ******************************************************************************
 \
@@ -145,9 +161,10 @@ ORG CODE%
 \
 \ ------------------------------------------------------------------------------
 \
-\ This table contains the sound envelope data, which is passed to OSWORD to set
-\ up the sound envelopes in part 2 below. Refer to chapter 30 of the BBC Micro
-\ User Guide for details of sound envelopes.
+\ This table contains the sound envelope data, which is passed to OSWORD by the
+\ FNE macro to create the four sound envelopes used in-game. Refer to chapter 30
+\ of the BBC Micro User Guide for details of sound envelopes and what all the
+\ parameters mean.
 \
 \ The envelopes are as follows:
 \
@@ -179,20 +196,22 @@ ORG CODE%
 \
 \ ------------------------------------------------------------------------------
 \
-\ The following macro is used to defining the four sound envelopes used in the
+\ The following macro is used to define the four sound envelopes used in the
 \ game. It uses OSWORD 8 to create an envelope using the 14 parameters in the
-\ the I%-th block of 14 bytes at location E%. This does the same as BBC BASIC's
-\ ENVELOPE command.
+\ the I%-th block of 14 bytes at location E%. This OSWORD call is the same as
+\ BBC BASIC's ENVELOPE command.
 \
 \ See variable E% for more details of the envelopes themselves.
 \
 \ ******************************************************************************
 
 MACRO FNE I%
+
   LDX #LO(E%+I%*14)     \ Call OSWORD with A = 8 and (Y X) pointing to the
   LDY #HI(E%+I%*14)     \ I%-th set of envelope data in E%, to set up sound
   LDA #8                \ envelope I%
   JSR OSWORD
+
 ENDMACRO
 
 \ ******************************************************************************
@@ -365,8 +384,9 @@ ENDMACRO
 
 .PLL1
 
-                        \ The following loop iterates CNT(1 0) times, i.e. &500
-                        \ or 1280 times
+                        \ The following loop iterates CNT(1 0) times, i.e. &300
+                        \ or 768 times, and draws the planet part of the
+                        \ loading screen's Saturn
 
  LDA VIA+4              \ Read the 6522 System VIA T1C-L timer 1 low-order
  STA RAND+1             \ counter, which increments 1000 times a second so this
@@ -455,7 +475,7 @@ ENDMACRO
 
  JSR PIX                \ Draw a pixel at screen coordinate (X, -A), i.e. at
                         \
-                        \ (ZP / 2, -A)
+                        \   (ZP / 2, -A)
                         \
                         \ where ZP = SQRT(128^2 - (r1^2 + r2^2))
                         \
@@ -480,6 +500,10 @@ ENDMACRO
  DEC CNT+1              \ Decrement the counter in CNT+1 (the high byte)
 
  BNE PLL1               \ Loop back to PLL1 until CNT+1 = 0
+
+                        \ The following loop iterates CNT2(1 0) times, i.e. &1DD
+                        \ or 477 times, and draws the background stars on the
+                        \ loading screen
 
 .PLL2
 
@@ -513,9 +537,9 @@ ENDMACRO
  JSR PIX                \ Draw a pixel at screen coordinate (X, -A), i.e. at
                         \ (r3, -r4), where (r3^2 + r4^2) / 256 >= 17
                         \
-                        \ Negating a random number from 0 to 255 gives the same
-                        \ thing, so this is the same as plotting at (x, y)
-                        \ where:
+                        \ Negating a random number from 0 to 255 still gives a
+                        \ random number from 0 to 255, so this is the same as
+                        \ plotting at (x, y) where:
                         \
                         \   x = random number from 0 to 255
                         \   y = random number from 0 to 255
@@ -532,6 +556,10 @@ ENDMACRO
  DEC CNT2+1             \ Decrement the counter in CNT2+1 (the high byte)
 
  BNE PLL2               \ Loop back to PLL2 until CNT2+1 = 0
+
+                        \ The following loop iterates CNT3(1 0) times, i.e. &333
+                        \ or 819 times, and draws the rings around the loading
+                        \ screen's Saturn
 
 .PLL3
 
@@ -578,8 +606,8 @@ ENDMACRO
                         \   %00000000 - %00011111  = 0-31
                         \   %11100000 - %11111111  = 224-255
                         \
-                        \ In terms of signed 8-bit integers, this is from -32 to
-                        \ 31. Let's call it r7
+                        \ In terms of signed 8-bit integers, this is a random
+                        \ number from -32 to 31. Let's call it r7
 
  ADC YY                 \ Set X = A + YY
  TAX                    \       = r7 + r6
@@ -599,8 +627,8 @@ ENDMACRO
  CMP #80                \ If A >= 80, jump down to PLC3 to skip to the next
  BCS PLC3               \ pixel
 
- CMP #32                \ If A < 32, jump down to PLC3 to skip to the next
- BCC PLC3               \ pixel
+ CMP #32                \ If A < 32, jump down to PLC3 to skip to the next pixel
+ BCC PLC3
 
  TYA                    \ Set A = Y + T
  ADC T                  \       = r7^2 / 256 + r6^2 / 256
@@ -622,9 +650,9 @@ ENDMACRO
                         \   X = (random -32 to 31) + r6
                         \   A = r6
                         \
-                        \ Negating a random number from 0 to 255 gives the same
-                        \ thing, so this is the same as plotting at (x, y)
-                        \ where:
+                        \ Negating a random number from 0 to 255 still gives a
+                        \ random number from 0 to 255, so this is the same as
+                        \ plotting at (x, y) where:
                         \
                         \   r5 = random number from 0 to 255
                         \   r6 = random number from 0 to 255
@@ -768,8 +796,9 @@ ENDMACRO
 \ before drawing, and then the routine uses the same approach as the PIXEL
 \ routine in the main game code, except it plots a single pixel from TWOS
 \ instead of a two pixel dash from TWOS2. This applies to the top part of the
-\ screen (the monochrome mode 4 portion). See the PIXEL routine in the main game
-\ code for more details.
+\ screen (the four-colour mode 1 space view).
+\
+\ See the PIXEL routine in the main game code for more details.
 \
 \ Arguments:
 \
@@ -785,19 +814,23 @@ ENDMACRO
 
  EOR #%10000000         \ Flip the sign of A
 
- LSR A
+ LSR A                  \ Set ZP+1 = &40 + 2 * (A >> 3)
  LSR A
  LSR A
  ASL A
  ORA #&40
  STA ZP+1
- TXA 
- EOR #128
- AND #&FC
+
+ TXA                    \ Set (C ZP) = (X >> 2) * 8
+ EOR #%10000000         \
+ AND #%11111100         \ i.e. the C flag contains bit 8 of the calculation
  ASL A
  STA ZP
- BCC P%+4
- INC ZP+1
+
+ BCC P%+4               \ If the C flag is set, i.e. bit 8 of the above
+ INC ZP+1               \ calculation was a 1, increment ZP+1 so that ZP(1 0)
+                        \ points to the second page in this character row (i.e.
+                        \ the right half of the row)
 
  TYA                    \ Set Y = Y AND %111
  AND #%00000111
@@ -807,8 +840,8 @@ ENDMACRO
  AND #%00000111
  TAX
 
- LDA TWOS,X
- STA (ZP),Y
+ LDA TWOS,X             \ Otherwise fetch a pixel from TWOS and poke it into
+ STA (ZP),Y             \ ZP+Y
 
  RTS                    \ Return from the subroutine
 
@@ -907,7 +940,7 @@ ENDMACRO
 \ This routine is identical to LL5 in the main game code - it even has the same
 \ label names. The only difference is that LL5 calculates Q = SQRT(R Q), but
 \ apart from the variables used, the instructions are identical, so see the LL5
-\ routine in the main game code for more details.
+\ routine in the main game code for more details on the algorithm used here.
 \
 \ ******************************************************************************
 

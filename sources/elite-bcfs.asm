@@ -89,7 +89,7 @@ ORG F% + &400
 .ships
 
 PRINT "ships = ", ~P%
-INCBIN "extracted/SHIPS.bin"
+INCBIN "output/SHIPS.bin"
 INCBIN "extracted/workspaces/BCFS-SHIPS.bin"
 
 .end
