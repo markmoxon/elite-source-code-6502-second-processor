@@ -74,43 +74,48 @@ STRIPE = &23
 \       Name: ZP
 \ ******************************************************************************
 
-ORG &80
+ORG &0080
 
 .ZP
 
- SKIP 0
+ SKIP 0                 \ The start of the zero page workspace
 
 .P
 
- SKIP 1
+ SKIP 1                 \ Temporary storage, used in a number of places
 
 .Q
 
- SKIP 1
+ SKIP 1                 \ Temporary storage, used in a number of places
 
 .R
 
- SKIP 1
+ SKIP 1                 \ Temporary storage, used in a number of places
 
 .S
 
- SKIP 1
+ SKIP 1                 \ Temporary storage, used in a number of places
 
 .T
 
- SKIP 1
+ SKIP 1                 \ Temporary storage, used in a number of places
 
 .SWAP
 
- SKIP 1
+ SKIP 1                 \ Temporary storage, used to store a flag that records
+                        \ whether or not we had to swap a line's start and end
+                        \ coordinates around when clipping the line in routine
+                        \ LL145 (the flag is used in places like BLINE to swap
+                        \ them back)
 
 .T1
 
- SKIP 1
+ SKIP 1                 \ Temporary storage, used in a number of places
 
 .COL
 
- SKIP 1
+ SKIP 1                 \ Temporary storage, used to store colour information
+                        \ when drawing pixels in the mode 5 dashboard screen
 
 .OSSC
 
@@ -229,15 +234,15 @@ NEXT
  EQUD &8292A0B0
  EQUD &C2D2E0F0 \Trade YMW
 
-\.............. Variables - do not alter after PARAMS .................
-
 .XC
 
- EQUB 1
+ EQUB 1                 \ The x-coordinate of the text cursor (i.e. the text
+                        \ column), set to an initial value of 1
 
 .YC
 
- EQUB 1
+ EQUB 1                 \ The y-coordinate of the text cursor (i.e. the text
+                        \ row), set to an initial value of 1
 
 .K3
 
@@ -245,7 +250,7 @@ NEXT
 
 .U
 
- BRK
+ SKIP 1                 \ Temporary storage, used in a number of places
 
 .LINTAB
 
@@ -257,7 +262,8 @@ NEXT
 
 .YSAV
 
- BRK
+ SKIP 1                 \ Temporary storage for saving the value of the Y
+                        \ register, used in a number of places
 
 \ ******************************************************************************
 \
@@ -280,7 +286,13 @@ NEXT
 
 .DL
 
- BRK
+ SKIP 1                 \ Vertical sync flag
+                        \
+                        \ DL gets set to 30 every time we reach vertical sync on
+                        \ the video system, which happens 50 times a second
+                        \ (50Hz). The WSCAN routine uses this to pause until the
+                        \ vertical sync, by setting DL to 0 and then monitoring
+                        \ its value until it changes to 30
 
 \ ******************************************************************************
 \
@@ -299,7 +311,23 @@ NEXT
 
 .HFX
 
- BRK
+ SKIP 1                 \ A flag that toggles the hyperspace colour effect
+                        \
+                        \   * 0 = no colour effect
+                        \
+                        \   * Non-zero = hyperspace colour effect enabled
+                        \
+                        \ When HFS is set to 1, the mode 4 screen that makes
+                        \ up the top part of the display is temporarily switched
+                        \ to mode 5 (the same screen mode as the dashboard),
+                        \ which has the effect of blurring and colouring the
+                        \ hyperspace rings in the top part of the screen. The
+                        \ code to do this is in the LINSCN routine, which is
+                        \ called as part of the screen mode routine at IRQ1.
+                        \ It's in LINSCN that HFX is checked, and if it is
+                        \ non-zero, the top part of the screen is not switched
+                        \ to mode 4, thus leaving the top part of the screen in
+                        \ the more colourful mode 5
 
 .CATF
 
@@ -307,17 +335,22 @@ NEXT
 
 .K
 
- EQUD 0
+ SKIP 4                 \ Temporary storage, used in a number of places
 
 .PARAMS
 
 .ENERGY
 
- BRK
+ SKIP 1                 \ Energy bank status
+                        \
+                        \   * 0 = empty
+                        \
+                        \   * &FF = full
 
 .ALP1
 
- BRK
+ SKIP 1                 \ Magnitude of the roll angle alpha, i.e. |alpha|,
+                        \ which is a positive value between 0 and 31
 
 .ALP2
 
@@ -325,51 +358,115 @@ NEXT
 
 .BETA
 
- BRK
+ SKIP 1                 \ The current pitch angle beta, which is reduced from
+                        \ JSTY to a sign-magnitude value between -8 and +8
+                        \
+                        \ This describes how fast we are pitching our ship, and
+                        \ determines how fast the universe pitches around us
+                        \
+                        \ The sign bit is also stored in BET2, while the
+                        \ opposite sign is stored in BET2+1
 
 .BET1
 
- BRK
+ SKIP 1                 \ The magnitude of the pitch angle beta, i.e. |beta|,
+                        \ which is a positive value between 0 and 8
 
 .DELTA
 
- BRK
+ SKIP 1                 \ Our current speed, in the range 1-40
 
 .ALTIT
 
- BRK
+ SKIP 1                 \ Our altitude above the surface of the planet or sun
+                        \
+                        \   * 255 = we are a long way above the surface
+                        \
+                        \   * 1-254 = our altitude as the square root of:
+                        \
+                        \       x_hi^2 + y_hi^2 + z_hi^2 - 6^2
+                        \
+                        \     where our ship is at the origin, the centre of the
+                        \     planet/sun is at (x_hi, y_hi, z_hi), and the
+                        \     radius of the planet is 6
+                        \
+                        \   * 0 = we have crashed into the surface
 
 .MCNT
 
- BRK
+ SKIP 1                 \ The main loop counter
+                        \
+                        \ This counter determines how often certain actions are
+                        \ performed within the main loop. See the deep dive on
+                        \ "Scheduling tasks with the main loop counter" for more
+                        \ details
 
 .FSH
 
- BRK
+ SKIP 1                 \ Forward shield status
+                        \
+                        \   * 0 = empty
+                        \
+                        \   * &FF = full
 
 .ASH
 
- BRK
+ SKIP 1                 \ Aft shield status
+                        \
+                        \   * 0 = empty
+                        \
+                        \   * &FF = full
 
 .QQ14
 
- BRK
+ SKIP 1                 \ Our current fuel level (0-70)
+                        \
+                        \ The fuel level is stored as the number of light years
+                        \ multiplied by 10, so QQ14 = 1 represents 0.1 light
+                        \ years, and the maximum possible value is 70, for 7.0
+                        \ light years
 
 .GNTMP
 
- BRK
+ SKIP 1                 \ Laser temperature (or "gun temperature")
+                        \
+                        \ If the laser temperature exceeds 242 then the laser
+                        \ overheats and cannot be fired again until it has
+                        \ cooled down
 
 .CABTMP
 
- BRK
+ SKIP 1                 \ Cabin temperature
+                        \
+                        \ The ambient cabin temperature in deep space is 30,
+                        \ which is displayed as one notch on the dashboard bar
+                        \
+                        \ We get higher temperatures closer to the sun
+                        \
+                        \ CABTMP shares a location with MANY, but that's OK as
+                        \ MANY+0 would contain the number of ships of type 0,
+                        \ but as there is no ship type 0 (they start at 1), MANY
+                        \ is unused
 
 .FLH
 
- BRK
+ EQUB 0                 \ Flashing console bars configuration setting
+                        \
+                        \   * 0 = static bars (default)
+                        \
+                        \   * &FF = flashing bars
+                        \
+                        \ Toggled by pressing "F" when paused, see the DKS3
+                        \ routine for details
 
 .ESCP
 
- BRK
+ SKIP 1                 \ Escape pod
+                        \
+                        \   * 0 = not fitted
+                        \
+                        \   * &FF = fitted
+
 \ ******************************************************************************
 \       Name: JMPTAB
 \ ******************************************************************************
@@ -2980,6 +3077,7 @@ MACRO DKS4
  CLI                    \ Allow interrupts again
 
 ENDMACRO
+
 \ ******************************************************************************
 \       Name: KYTB
 \ ******************************************************************************
@@ -3835,6 +3933,7 @@ ENDMACRO
 
  STA XC
  JMP PUTBACK
+
 \ ******************************************************************************
 \       Name: SETYC
 \ ******************************************************************************
@@ -4744,7 +4843,3 @@ PRINT "protlen = ", ~protlen
 
 PRINT "S.I.CODE ", ~CODE%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD%
 SAVE "output/I.CODE.bin", CODE%, P%, LOAD%
-
-\INPUT"Insert destination disk and hit RETURN"A$
-\OSCLI("S.I.CODE "+STR$~W%+" "+STR$~O%+" FFFF"+STR$~STARTUP+" FFFF"+STR$~H%)
-\PRINT"CODE:";~C%",";~P%" (";&4000-P%" Free)  ZP:";~ZP;"Prot: ";~protlen
