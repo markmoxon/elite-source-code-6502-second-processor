@@ -82,7 +82,7 @@ ORG F%
 .words
 
 PRINT "words = ", ~P%
-INCBIN "extracted/WORDS.bin"
+INCBIN "output/WORDS.bin"
 
 ORG F% + &400
 

@@ -26,13 +26,10 @@ C% = &1000
 W% = &9200
 L% = C%
 Z = 0
-SNE = &7C0
-ACT = &7E0
 NTY = 34
 D% = &D000
 E% = D%+2*NTY
 LS% = D%-1
-QQ18 = &400
 BRKV = &202
 
 Q% = _ENABLE_MAX_COMMANDER
@@ -744,10 +741,1410 @@ ORG &0100
 
 \ ******************************************************************************
 \
+\ ELITE RECURSIVE TEXT TOKEN FILE
+\
+\ Produces the binary file WORDS.bin that gets loaded by elite-loader.asm.
+\
+\ The recursive token table is loaded at &81B0 and is moved down to &0400 as
+\ part of elite-loader2.asm. The table binary also includes the sine and arctan
+\ tables, so the three parts end up as follows:
+\
+\   * Recursive token table:    QQ18 = &0400 to &07C0
+\   * Sine lookup table:        SNE  = &07C0 to &07DF
+\   * Arctan lookup table:      ACT  = &07E0 to &07FF
+\
+\ ******************************************************************************
+
+CODE_WORDS% = &0400
+LOAD_WORDS% = &81B0
+
+ORG CODE_WORDS%
+
+\ ******************************************************************************
+\
+\       Name: CHAR
+\       Type: Macro
+\   Category: Text
+\    Summary: Macro definition for characters in the recursive token table
+\  Deep dive: Printing text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used when building the recursive token table:
+\
+\   CHAR 'x'            Insert ASCII character "x"
+\
+\ See the deep dive on "Printing text tokens" for details on how characters are
+\ stored in the recursive token table.
+\
+\ Arguments:
+\
+\   'x'                 The character to insert into the table
+\
+\ ******************************************************************************
+
+MACRO CHAR x
+
+  EQUB x EOR 35
+
+ENDMACRO
+
+\ ******************************************************************************
+\
+\       Name: TWOK
+\       Type: Macro
+\   Category: Text
+\    Summary: Macro definition for two-letter tokens in the token table
+\  Deep dive: Printing text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used when building the recursive token table:
+\
+\   TWOK 'x', 'y'       Insert two-letter token "xy"
+\
+\ See the deep dive on "Printing text tokens" for details on how two-letter
+\ tokens are stored in the recursive token table.
+\
+\ Arguments:
+\
+\   'x'                 The first letter of the two-letter token to insert into
+\                       the table
+\
+\   'y'                 The second letter of the two-letter token to insert into
+\                       the table
+\
+\ ******************************************************************************
+
+MACRO TWOK t, k
+
+  IF t = 'A' AND k = 'L' : EQUB 128 EOR 35 : ENDIF
+  IF t = 'L' AND k = 'E' : EQUB 129 EOR 35 : ENDIF
+  IF t = 'X' AND k = 'E' : EQUB 130 EOR 35 : ENDIF
+  IF t = 'G' AND k = 'E' : EQUB 131 EOR 35 : ENDIF
+  IF t = 'Z' AND k = 'A' : EQUB 132 EOR 35 : ENDIF
+  IF t = 'C' AND k = 'E' : EQUB 133 EOR 35 : ENDIF
+  IF t = 'B' AND k = 'I' : EQUB 134 EOR 35 : ENDIF
+  IF t = 'S' AND k = 'O' : EQUB 135 EOR 35 : ENDIF
+  IF t = 'U' AND k = 'S' : EQUB 136 EOR 35 : ENDIF
+  IF t = 'E' AND k = 'S' : EQUB 137 EOR 35 : ENDIF
+  IF t = 'A' AND k = 'R' : EQUB 138 EOR 35 : ENDIF
+  IF t = 'M' AND k = 'A' : EQUB 139 EOR 35 : ENDIF
+  IF t = 'I' AND k = 'N' : EQUB 140 EOR 35 : ENDIF
+  IF t = 'D' AND k = 'I' : EQUB 141 EOR 35 : ENDIF
+  IF t = 'R' AND k = 'E' : EQUB 142 EOR 35 : ENDIF
+  IF t = 'A' AND k = '?' : EQUB 143 EOR 35 : ENDIF
+  IF t = 'E' AND k = 'R' : EQUB 144 EOR 35 : ENDIF
+  IF t = 'A' AND k = 'T' : EQUB 145 EOR 35 : ENDIF
+  IF t = 'E' AND k = 'N' : EQUB 146 EOR 35 : ENDIF
+  IF t = 'B' AND k = 'E' : EQUB 147 EOR 35 : ENDIF
+  IF t = 'R' AND k = 'A' : EQUB 148 EOR 35 : ENDIF
+  IF t = 'L' AND k = 'A' : EQUB 149 EOR 35 : ENDIF
+  IF t = 'V' AND k = 'E' : EQUB 150 EOR 35 : ENDIF
+  IF t = 'T' AND k = 'I' : EQUB 151 EOR 35 : ENDIF
+  IF t = 'E' AND k = 'D' : EQUB 152 EOR 35 : ENDIF
+  IF t = 'O' AND k = 'R' : EQUB 153 EOR 35 : ENDIF
+  IF t = 'Q' AND k = 'U' : EQUB 154 EOR 35 : ENDIF
+  IF t = 'A' AND k = 'N' : EQUB 155 EOR 35 : ENDIF
+  IF t = 'T' AND k = 'E' : EQUB 156 EOR 35 : ENDIF
+  IF t = 'I' AND k = 'S' : EQUB 157 EOR 35 : ENDIF
+  IF t = 'R' AND k = 'I' : EQUB 158 EOR 35 : ENDIF
+  IF t = 'O' AND k = 'N' : EQUB 159 EOR 35 : ENDIF
+
+ENDMACRO
+
+\ ******************************************************************************
+\
+\       Name: CTRL
+\       Type: Macro
+\   Category: Text
+\    Summary: Macro definition for control codes in the recursive token table
+\  Deep dive: Printing text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used when building the recursive token table:
+\
+\   CTRL n              Insert control code token {n}
+\
+\ See the deep dive on "Printing text tokens" for details on how characters are
+\ stored in the recursive token table.
+\
+\ Arguments:
+\
+\   n                   The control code to insert into the table
+\
+\ ******************************************************************************
+
+MACRO CTRL n
+
+  EQUB n EOR 35
+
+ENDMACRO
+
+\ ******************************************************************************
+\
+\       Name: RTOK
+\       Type: Macro
+\   Category: Text
+\    Summary: Macro definition for recursive tokens in the recursive token table
+\  Deep dive: Printing text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used when building the recursive token table:
+\
+\   RTOK n              Insert recursive token [n]
+\
+\                         * Tokens 0-95 get stored as n + 160
+\
+\                         * Tokens 128-145 get stored as n - 114
+\
+\                         * Tokens 96-127 get stored as n
+\
+\ See the deep dive on "Printing text tokens" for details on how recursive
+\ tokens are stored in the recursive token table.
+\
+\ Arguments:
+\
+\   n                   The number of the recursive token to insert into the
+\                       table, in the range 0 to 145
+\
+\ ******************************************************************************
+
+MACRO RTOK n
+
+  IF n >= 0 AND n <= 95
+    t = n + 160
+  ELIF n >= 128
+    t = n - 114
+  ELSE
+    t = n
+  ENDIF
+
+  EQUB t EOR 35
+
+ENDMACRO
+
+\ ******************************************************************************
+\
+\       Name: QQ18
+\       Type: Variable
+\   Category: Text
+\    Summary: Recursive token table for tokens 0-148
+\  Deep dive: Printing text tokens
+\
+\ ******************************************************************************
+
+.QQ18
+
+ RTOK 111               \ Token 0:      "FUEL SCOOPS ON {beep}"
+ RTOK 131               \ Encoded as:   "[111][131]{7}"
+ CTRL 7
+ EQUB 0
+
+ CHAR ' '               \ Token 1:      " CHART"
+ CHAR 'C'               \ Encoded as:   " CH<138>T"
+ CHAR 'H'
+ TWOK 'A', 'R'
+ CHAR 'T'
+ EQUB 0
+
+ CHAR 'G'               \ Token 2:      "GOVERNMENT"
+ CHAR 'O'               \ Encoded as:   "GO<150>RNM<146>T"
+ TWOK 'V', 'E'
+ CHAR 'R'
+ CHAR 'N'
+ CHAR 'M'
+ TWOK 'E', 'N'
+ CHAR 'T'
+ EQUB 0
+
+ CHAR 'D'               \ Token 3:      "DATA ON {selected system name}"
+ TWOK 'A', 'T'          \ Encoded as:   "D<145>A[131]{3}"
+ CHAR 'A'
+ RTOK 131
+ CTRL 3
+ EQUB 0
+
+ TWOK 'I', 'N'          \ Token 4:      "INVENTORY{crlf}"
+ TWOK 'V', 'E'          \ Encoded as:   "<140><150>NT<153>Y{12}"
+ CHAR 'N'
+ CHAR 'T'
+ TWOK 'O', 'R'
+ CHAR 'Y'
+ CTRL 12
+ EQUB 0
+
+ CHAR 'S'               \ Token 5:      "SYSTEM"
+ CHAR 'Y'               \ Encoded as:   "SYS<156>M"
+ CHAR 'S'
+ TWOK 'T', 'E'
+ CHAR 'M'
+ EQUB 0
+
+ CHAR 'P'               \ Token 6:      "PRICE"
+ TWOK 'R', 'I'          \ Encoded as:   "P<158><133>"
+ TWOK 'C', 'E'
+ EQUB 0
+
+ CTRL 2                 \ Token 7:      "{current system name} MARKET PRICES"
+ CHAR ' '               \ Encoded as:   "{2} <139>RKET [6]S"
+ TWOK 'M', 'A'
+ CHAR 'R'
+ CHAR 'K'
+ CHAR 'E'
+ CHAR 'T'
+ CHAR ' '
+ RTOK 6
+ CHAR 'S'
+ EQUB 0
+
+ TWOK 'I', 'N'          \ Token 8:      "INDUSTRIAL"
+ CHAR 'D'               \ Encoded as:   "<140>D<136>T<158><128>"
+ TWOK 'U', 'S'
+ CHAR 'T'
+ TWOK 'R', 'I'
+ TWOK 'A', 'L'
+ EQUB 0
+
+ CHAR 'A'               \ Token 9:      "AGRICULTURAL"
+ CHAR 'G'               \ Encoded as:   "AG<158>CULTU<148>L"
+ TWOK 'R', 'I'
+ CHAR 'C'
+ CHAR 'U'
+ CHAR 'L'
+ CHAR 'T'
+ CHAR 'U'
+ TWOK 'R', 'A'
+ CHAR 'L'
+ EQUB 0
+
+ TWOK 'R', 'I'          \ Token 10:     "RICH "
+ CHAR 'C'               \ Encoded as:   "<158>CH "
+ CHAR 'H'
+ CHAR ' '
+ EQUB 0
+
+ CHAR 'A'               \ Token 11:     "AVERAGE "
+ TWOK 'V', 'E'          \ Encoded as:   "A<150><148><131> "
+ TWOK 'R', 'A'
+ TWOK 'G', 'E'
+ CHAR ' '
+ EQUB 0
+
+ CHAR 'P'               \ Token 12:     "POOR "
+ CHAR 'O'               \ Encoded as:   "PO<153> "
+ TWOK 'O', 'R'
+ CHAR ' '
+ EQUB 0                 \ Encoded as:   "PO<153> "
+
+ TWOK 'M', 'A'          \ Token 13:     "MAINLY "
+ TWOK 'I', 'N'          \ Encoded as:   "<139><140>LY "
+ CHAR 'L'
+ CHAR 'Y'
+ CHAR ' '
+ EQUB 0
+
+ CHAR 'U'               \ Token 14:     "UNIT"
+ CHAR 'N'               \ Encoded as:   "UNIT"
+ CHAR 'I'
+ CHAR 'T'
+ EQUB 0
+
+ CHAR 'V'               \ Token 15:     "VIEW "
+ CHAR 'I'               \ Encoded as:   "VIEW "
+ CHAR 'E'
+ CHAR 'W'
+ CHAR ' '
+ EQUB 0
+
+ TWOK 'Q', 'U'          \ Token 16:     "QUANTITY"
+ TWOK 'A', 'N'          \ Encoded as:   "<154><155><151>TY"
+ TWOK 'T', 'I'
+ CHAR 'T'
+ CHAR 'Y'
+ EQUB 0
+
+ TWOK 'A', 'N'          \ Token 17:     "ANARCHY"
+ TWOK 'A', 'R'          \ Encoded as:   "<155><138>CHY"
+ CHAR 'C'
+ CHAR 'H'
+ CHAR 'Y'
+ EQUB 0
+
+ CHAR 'F'               \ Token 18:     "FEUDAL"
+ CHAR 'E'               \ Encoded as:   "FEUD<128>"
+ CHAR 'U'
+ CHAR 'D'
+ TWOK 'A', 'L'
+ EQUB 0
+
+ CHAR 'M'               \ Token 19:     "MULTI-GOVERNMENT"
+ CHAR 'U'               \ Encoded as:   "MUL<151>-[2]"
+ CHAR 'L'
+ TWOK 'T', 'I'
+ CHAR '-'
+ RTOK 2
+ EQUB 0
+
+ TWOK 'D', 'I'          \ Token 20:     "DICTATORSHIP"
+ CHAR 'C'               \ Encoded as:   "<141>CT<145><153>[25]"
+ CHAR 'T'
+ TWOK 'A', 'T'
+ TWOK 'O', 'R'
+ RTOK 25
+ EQUB 0
+
+ RTOK 91                \ Token 21:     "COMMUNIST"
+ CHAR 'M'               \ Encoded as:   "[91]MUN<157>T"
+ CHAR 'U'
+ CHAR 'N'
+ TWOK 'I', 'S'
+ CHAR 'T'
+ EQUB 0
+
+ CHAR 'C'               \ Token 22:     "CONFEDERACY"
+ TWOK 'O', 'N'          \ Encoded as:   "C<159>F<152><144>ACY"
+ CHAR 'F'
+ TWOK 'E', 'D'
+ TWOK 'E', 'R'
+ CHAR 'A'
+ CHAR 'C'
+ CHAR 'Y'
+ EQUB 0
+
+ CHAR 'D'               \ Token 23:     "DEMOCRACY"
+ CHAR 'E'               \ Encoded as:   "DEMOC<148>CY"
+ CHAR 'M'
+ CHAR 'O'
+ CHAR 'C'
+ TWOK 'R', 'A'
+ CHAR 'C'
+ CHAR 'Y'
+ EQUB 0
+
+ CHAR 'C'               \ Token 24:     "CORPORATE STATE"
+ TWOK 'O', 'R'          \ Encoded as:   "C<153>P<153><145>E [43]<145>E"
+ CHAR 'P'
+ TWOK 'O', 'R'
+ TWOK 'A', 'T'
+ CHAR 'E'
+ CHAR ' '
+ RTOK 43
+ TWOK 'A', 'T'
+ CHAR 'E'
+ EQUB 0
+
+ CHAR 'S'               \ Token 25:     "SHIP"
+ CHAR 'H'               \ Encoded as:   "SHIP"
+ CHAR 'I'
+ CHAR 'P'
+ EQUB 0
+
+ CHAR 'P'               \ Token 26:     "PRODUCT"
+ RTOK 94                \ Encoded as:   "P[94]]DUCT"
+ CHAR 'D'
+ CHAR 'U'
+ CHAR 'C'
+ CHAR 'T'
+ EQUB 0
+
+ CHAR ' '               \ Token 27:     " LASER"
+ TWOK 'L', 'A'          \ Encoded as:   " <149>S<144>"
+ CHAR 'S'
+ TWOK 'E', 'R'
+ EQUB 0
+
+ CHAR 'H'               \ Token 28:     "HUMAN COLONIAL"
+ CHAR 'U'               \ Encoded as:   "HUM<155> COL<159>I<128>"
+ CHAR 'M'
+ TWOK 'A', 'N'
+ CHAR ' '
+ CHAR 'C'
+ CHAR 'O'
+ CHAR 'L'
+ TWOK 'O', 'N'
+ CHAR 'I'
+ TWOK 'A', 'L'
+ EQUB 0
+
+ CHAR 'H'               \ Token 29:     "HYPERSPACE "
+ CHAR 'Y'               \ Encoded as:   "HYP<144>SPA<133> "
+ CHAR 'P'
+ TWOK 'E', 'R'
+ CHAR 'S'
+ CHAR 'P'
+ CHAR 'A'
+ TWOK 'C', 'E'
+ CHAR ' '
+ EQUB 0
+
+ CHAR 'S'               \ Token 30:     "SHORT RANGE CHART"
+ CHAR 'H'               \ Encoded as:   "SH<153>T [42][1]"
+ TWOK 'O', 'R'
+ CHAR 'T'
+ CHAR ' '
+ RTOK 42
+ RTOK 1
+ EQUB 0
+
+ TWOK 'D', 'I'          \ Token 31:     "DISTANCE"
+ RTOK 43                \ Encoded as:   "<141>[43]<155><133>"
+ TWOK 'A', 'N'
+ TWOK 'C', 'E'
+ EQUB 0
+
+ CHAR 'P'               \ Token 32:     "POPULATION"
+ CHAR 'O'               \ Encoded as:   "POPUL<145>I<159>"
+ CHAR 'P'
+ CHAR 'U'
+ CHAR 'L'
+ TWOK 'A', 'T'
+ CHAR 'I'
+ TWOK 'O', 'N'
+ EQUB 0
+
+ CHAR 'G'               \ Token 33:     "GROSS PRODUCTIVITY"
+ RTOK 94                \ Encoded as:   "G[94]SS [26]IVITY"
+ CHAR 'S'
+ CHAR 'S'
+ CHAR ' '
+ RTOK 26
+ CHAR 'I'
+ CHAR 'V'
+ CHAR 'I'
+ CHAR 'T'
+ CHAR 'Y'
+ EQUB 0
+
+ CHAR 'E'               \ Token 34:     "ECONOMY"
+ CHAR 'C'               \ Encoded as:   "EC<159>OMY"
+ TWOK 'O', 'N'
+ CHAR 'O'
+ CHAR 'M'
+ CHAR 'Y'
+ EQUB 0
+
+ CHAR ' '               \ Token 35:     " LIGHT YEARS"
+ CHAR 'L'               \ Encoded as:   " LIGHT YE<138>S"
+ CHAR 'I'
+ CHAR 'G'
+ CHAR 'H'
+ CHAR 'T'
+ CHAR ' '
+ CHAR 'Y'
+ CHAR 'E'
+ TWOK 'A', 'R'
+ CHAR 'S'
+ EQUB 0
+
+ TWOK 'T', 'E'          \ Token 36:     "TECH.LEVEL"
+ CHAR 'C'               \ Encoded as:   "<156>CH.<129><150>L"
+ CHAR 'H'
+ CHAR '.'
+ TWOK 'L', 'E'
+ TWOK 'V', 'E'
+ CHAR 'L'
+ EQUB 0
+
+ CHAR 'C'               \ Token 37:     "CASH"
+ CHAR 'A'               \ Encoded as:   "CASH"
+ CHAR 'S'
+ CHAR 'H'
+ EQUB 0
+
+ CHAR ' '               \ Token 38:     " BILLION"
+ TWOK 'B', 'I'          \ Encoded as:   " <134>[129]I<159>"
+ RTOK 129
+ CHAR 'I'
+ TWOK 'O', 'N'
+ EQUB 0
+
+ RTOK 122               \ Token 39:     "GALACTIC CHART{galaxy number
+ RTOK 1                 \                right-aligned to width 3}"
+ CTRL 1                 \ Encoded as:   "[122][1]{1}"
+ EQUB 0
+
+ CHAR 'T'               \ Token 40:     "TARGET LOST"
+ TWOK 'A', 'R'          \ Encoded as:   "T<138><131>T LO[43]"
+ TWOK 'G', 'E'
+ CHAR 'T'
+ CHAR ' '
+ CHAR 'L'
+ CHAR 'O'
+ RTOK 43
+ EQUB 0
+
+ RTOK 106               \ Token 41:     "MISSILE JAMMED"
+ CHAR ' '               \ Encoded as:   "[106] JAMM<152>"
+ CHAR 'J'
+ CHAR 'A'
+ CHAR 'M'
+ CHAR 'M'
+ TWOK 'E', 'D'
+ EQUB 0
+
+ CHAR 'R'               \ Token 42:     "RANGE"
+ TWOK 'A', 'N'          \ Encoded as:   "R<155><131>"
+ TWOK 'G', 'E'
+ EQUB 0
+
+ CHAR 'S'               \ Token 43:     "ST"
+ CHAR 'T'               \ Encoded as:   "ST"
+ EQUB 0
+
+ RTOK 16                \ Token 44:     "QUANTITY OF "
+ CHAR ' '               \ Encoded as:   "[16] OF "
+ CHAR 'O'
+ CHAR 'F'
+ CHAR ' '
+ EQUB 0
+
+ CHAR 'S'               \ Token 45:     "SELL"
+ CHAR 'E'               \ Encoded as:   "SE[129]"
+ RTOK 129
+ EQUB 0
+
+ CHAR ' '               \ Token 46:     " CARGO{switch to sentence case}"
+ CHAR 'C'               \ Encoded as:   " C<138>GO{6}"
+ TWOK 'A', 'R'
+ CHAR 'G'
+ CHAR 'O'
+ CTRL 6
+ EQUB 0
+
+ CHAR 'E'               \ Token 47:     "EQUIP"
+ TWOK 'Q', 'U'          \ Encoded as:   "E<154>IP"
+ CHAR 'I'
+ CHAR 'P'
+ EQUB 0
+
+ CHAR 'F'               \ Token 48:     "FOOD"
+ CHAR 'O'               \ Encoded as:   "FOOD"
+ CHAR 'O'
+ CHAR 'D'
+ EQUB 0
+
+ TWOK 'T', 'E'          \ Token 49:     "TEXTILES"
+ CHAR 'X'               \ Encoded as:   "<156>X<151>L<137>"
+ TWOK 'T', 'I'
+ CHAR 'L'
+ TWOK 'E', 'S'
+ EQUB 0
+
+ TWOK 'R', 'A'          \ Token 50:     "RADIOACTIVES"
+ TWOK 'D', 'I'          \ Encoded as:   "<148><141>OAC<151><150>S"
+ CHAR 'O'
+ CHAR 'A'
+ CHAR 'C'
+ TWOK 'T', 'I'
+ TWOK 'V', 'E'
+ CHAR 'S'
+ EQUB 0
+
+ CHAR 'S'               \ Token 51:     "SLAVES"
+ TWOK 'L', 'A'          \ Encoded as:   "S<149><150>S"
+ TWOK 'V', 'E'
+ CHAR 'S'
+ EQUB 0
+
+ CHAR 'L'               \ Token 52:     "LIQUOR/WINES"
+ CHAR 'I'               \ Encoded as:   "LI<154><153>/W<140><137>"
+ TWOK 'Q', 'U'
+ TWOK 'O', 'R'
+ CHAR '/'
+ CHAR 'W'
+ TWOK 'I', 'N'
+ TWOK 'E', 'S'
+ EQUB 0
+
+ CHAR 'L'               \ Token 53:     "LUXURIES"
+ CHAR 'U'               \ Encoded as:   "LUXU<158><137>"
+ CHAR 'X'
+ CHAR 'U'
+ TWOK 'R', 'I'
+ TWOK 'E', 'S'
+ EQUB 0
+
+ CHAR 'N'               \ Token 54:     "NARCOTICS"
+ TWOK 'A', 'R'          \ Encoded as:   "N<138>CO<151>CS"
+ CHAR 'C'
+ CHAR 'O'
+ TWOK 'T', 'I'
+ CHAR 'C'
+ CHAR 'S'
+ EQUB 0
+
+ RTOK 91                \ Token 55:     "COMPUTERS"
+ CHAR 'P'               \ Encoded as:   "[91]PUT<144>S"
+ CHAR 'U'
+ CHAR 'T'
+ TWOK 'E', 'R'
+ CHAR 'S'
+ EQUB 0
+
+ TWOK 'M', 'A'          \ Token 56:     "MACHINERY"
+ CHAR 'C'               \ Encoded as:   "<139>CH<140><144>Y"
+ CHAR 'H'
+ TWOK 'I', 'N'
+ TWOK 'E', 'R'
+ CHAR 'Y'
+ EQUB 0
+
+ CHAR 'A'               \ Token 57:     "ALLOYS"
+ CHAR 'L'               \ Encoded as:   "ALLOYS"
+ CHAR 'L'
+ CHAR 'O'
+ CHAR 'Y'
+ CHAR 'S'
+ EQUB 0
+
+ CHAR 'F'               \ Token 58:     "FIREARMS"
+ CHAR 'I'               \ Encoded as:   "FI<142><138>MS"
+ TWOK 'R', 'E'
+ TWOK 'A', 'R'
+ CHAR 'M'
+ CHAR 'S'
+ EQUB 0
+
+ CHAR 'F'               \ Token 59:     "FURS"
+ CHAR 'U'               \ Encoded as:   "FURS"
+ CHAR 'R'
+ CHAR 'S'
+ EQUB 0
+
+ CHAR 'M'               \ Token 60:     "MINERALS"
+ TWOK 'I', 'N'          \ Encoded as:   "M<140><144><128>S"
+ TWOK 'E', 'R'
+ TWOK 'A', 'L'
+ CHAR 'S'
+ EQUB 0
+
+ CHAR 'G'               \ Token 61:     "GOLD"
+ CHAR 'O'               \ Encoded as:   "GOLD"
+ CHAR 'L'
+ CHAR 'D'
+ EQUB 0
+
+ CHAR 'P'               \ Token 62:     "PLATINUM"
+ CHAR 'L'               \ Encoded as:   "PL<145><140>UM"
+ TWOK 'A', 'T'
+ TWOK 'I', 'N'
+ CHAR 'U'
+ CHAR 'M'
+ EQUB 0
+
+ TWOK 'G', 'E'          \ Token 63:     "GEM-STONES"
+ CHAR 'M'               \ Encoded as:   "<131>M-[43]<159><137>"
+ CHAR '-'
+ RTOK 43
+ TWOK 'O', 'N'
+ TWOK 'E', 'S'
+ EQUB 0
+
+ TWOK 'A', 'L'          \ Token 64:     "ALIEN ITEMS"
+ CHAR 'I'               \ Encoded as:   "<128>I<146> [127]S"
+ TWOK 'E', 'N'
+ CHAR ' '
+ RTOK 127
+ CHAR 'S'
+ EQUB 0
+
+ CTRL 12                \ Token 65:     "{crlf}10{cash right-aligned to width 9}
+ CHAR '1'               \                 CR5{cash right-aligned to width 9} CR"
+ CHAR '0'               \ Encoded as:   "{12}10{0}5{0}"
+ CTRL 0
+ CHAR '5'
+ CTRL 0
+ EQUB 0
+
+ CHAR ' '               \ Token 66:     " CR"
+ CHAR 'C'               \ Encoded as:   " CR"
+ CHAR 'R'
+ EQUB 0
+
+ CHAR 'L'               \ Token 67:     "LARGE"
+ TWOK 'A', 'R'          \ Encoded as:   "L<138><131>"
+ TWOK 'G', 'E'
+ EQUB 0
+
+ CHAR 'F'               \ Token 68:     "FIERCE"
+ CHAR 'I'               \ Encoded as:   "FI<144><133>"
+ TWOK 'E', 'R'
+ TWOK 'C', 'E'
+ EQUB 0
+
+ CHAR 'S'               \ Token 69:     "SMALL"
+ TWOK 'M', 'A'          \ Encoded as:   "S<139>[129]"
+ RTOK 129
+ EQUB 0
+
+ CHAR 'G'               \ Token 70:     "GREEN"
+ TWOK 'R', 'E'          \ Encoded as:   "G<142><146>"
+ TWOK 'E', 'N'
+ EQUB 0
+
+ CHAR 'R'               \ Token 71:     "RED"
+ TWOK 'E', 'D'          \ Encoded as:   "R<152>"
+ EQUB 0
+
+ CHAR 'Y'               \ Token 72:     "YELLOW"
+ CHAR 'E'               \ Encoded as:   "YE[129]OW"
+ RTOK 129
+ CHAR 'O'
+ CHAR 'W'
+ EQUB 0
+
+ CHAR 'B'               \ Token 73:     "BLUE"
+ CHAR 'L'               \ Encoded as:   "BLUE"
+ CHAR 'U'
+ CHAR 'E'
+ EQUB 0
+
+ CHAR 'B'               \ Token 74:     "BLACK"
+ TWOK 'L', 'A'          \ Encoded as:   "B<149>CK"
+ CHAR 'C'
+ CHAR 'K'
+ EQUB 0
+
+ RTOK 136               \ Token 75:     "HARMLESS"
+ EQUB 0                 \ Encoded as:   "[136]"
+
+ CHAR 'S'               \ Token 76:     "SLIMY"
+ CHAR 'L'               \ Encoded as:   "SLIMY"
+ CHAR 'I'
+ CHAR 'M'
+ CHAR 'Y'
+ EQUB 0
+
+ CHAR 'B'               \ Token 77:     "BUG-EYED"
+ CHAR 'U'               \ Encoded as:   "BUG-EY<152>"
+ CHAR 'G'
+ CHAR '-'
+ CHAR 'E'
+ CHAR 'Y'
+ TWOK 'E', 'D'
+ EQUB 0
+
+ CHAR 'H'               \ Token 78:     "HORNED"
+ TWOK 'O', 'R'          \ Encoded as:   "H<153>N<152>"
+ CHAR 'N'
+ TWOK 'E', 'D'
+ EQUB 0
+
+ CHAR 'B'               \ Token 79:     "BONY"
+ TWOK 'O', 'N'          \ Encoded as:   "B<159>Y"
+ CHAR 'Y'
+ EQUB 0
+
+ CHAR 'F'               \ Token 80:     "FAT"
+ TWOK 'A', 'T'          \ Encoded as:   "F<145>"
+ EQUB 0
+
+ CHAR 'F'               \ Token 81:     "FURRY"
+ CHAR 'U'               \ Encoded as:   "FURRY"
+ CHAR 'R'
+ CHAR 'R'
+ CHAR 'Y'
+ EQUB 0
+
+ RTOK 94                \ Token 82:     "RODENT"
+ CHAR 'D'               \ Encoded as:   "[94]D<146>T"
+ TWOK 'E', 'N'
+ CHAR 'T'
+ EQUB 0
+
+ CHAR 'F'               \ Token 83:     "FROG"
+ RTOK 94                \ Encoded as:   "F[94]G"
+ CHAR 'G'
+ EQUB 0
+
+ CHAR 'L'               \ Token 84:     "LIZARD"
+ CHAR 'I'               \ Encoded as:   "LI<132>RD"
+ TWOK 'Z', 'A'
+ CHAR 'R'
+ CHAR 'D'
+ EQUB 0
+
+ CHAR 'L'               \ Token 85:     "LOBSTER"
+ CHAR 'O'               \ Encoded as:   "LOB[43]<144>"
+ CHAR 'B'
+ RTOK 43
+ TWOK 'E', 'R'
+ EQUB 0
+
+ TWOK 'B', 'I'          \ Token 86:     "BIRD"
+ CHAR 'R'               \ Encoded as:   "<134>RD"
+ CHAR 'D'
+ EQUB 0
+
+ CHAR 'H'               \ Token 87:     "HUMANOID"
+ CHAR 'U'               \ Encoded as:   "HUM<155>OID"
+ CHAR 'M'
+ TWOK 'A', 'N'
+ CHAR 'O'
+ CHAR 'I'
+ CHAR 'D'
+ EQUB 0
+
+ CHAR 'F'               \ Token 88:     "FELINE"
+ CHAR 'E'               \ Encoded as:   "FEL<140>E"
+ CHAR 'L'
+ TWOK 'I', 'N'
+ CHAR 'E'
+ EQUB 0
+
+ TWOK 'I', 'N'          \ Token 89:     "INSECT"
+ CHAR 'S'               \ Encoded as:   "<140>SECT"
+ CHAR 'E'
+ CHAR 'C'
+ CHAR 'T'
+ EQUB 0
+
+ RTOK 11                \ Token 90:     "AVERAGE RADIUS"
+ TWOK 'R', 'A'          \ Encoded as:   "[11]<148><141><136>"
+ TWOK 'D', 'I'
+ TWOK 'U', 'S'
+ EQUB 0
+
+ CHAR 'C'               \ Token 91:     "COM"
+ CHAR 'O'               \ Encoded as:   "COM"
+ CHAR 'M'
+ EQUB 0
+
+ RTOK 91                \ Token 92:     "COMMANDER"
+ CHAR 'M'               \ Encoded as:   "[91]M<155>D<144>"
+ TWOK 'A', 'N'
+ CHAR 'D'
+ TWOK 'E', 'R'
+ EQUB 0
+
+ CHAR ' '               \ Token 93:     " DESTROYED"
+ CHAR 'D'               \ Encoded as:   " D<137>T[94]Y<152>"
+ TWOK 'E', 'S'
+ CHAR 'T'
+ RTOK 94
+ CHAR 'Y'
+ TWOK 'E', 'D'
+ EQUB 0
+
+ CHAR 'R'               \ Token 94:     "RO"
+ CHAR 'O'               \ Encoded as:   "RO"
+ EQUB 0
+
+ RTOK 14                \ Token 95:     "UNIT  QUANTITY{crlf} PRODUCT   UNIT
+ CHAR ' '               \                 PRICE FOR SALE{crlf}{lf}"
+ CHAR ' '               \ Encoded as:   "[14]  [16]{12} [26]   [14] [6] F<153>
+ RTOK 16                \                 SA<129>{12}{10}"
+ CTRL 12
+ CHAR ' '
+ RTOK 26
+ CHAR ' '
+ CHAR ' '
+ CHAR ' '
+ RTOK 14
+ CHAR ' '
+ RTOK 6
+ CHAR ' '
+ CHAR 'F'
+ TWOK 'O', 'R'
+ CHAR ' '
+ CHAR 'S'
+ CHAR 'A'
+ TWOK 'L', 'E'
+ CTRL 12
+ CTRL 10
+ EQUB 0
+
+ CHAR 'F'               \ Token 96:     "FRONT"
+ CHAR 'R'               \ Encoded as:   "FR<159>T"
+ TWOK 'O', 'N'
+ CHAR 'T'
+ EQUB 0
+
+ TWOK 'R', 'E'          \ Token 97:     "REAR"
+ TWOK 'A', 'R'          \ Encoded as:   "<142><138>"
+ EQUB 0
+
+ TWOK 'L', 'E'          \ Token 98:     "LEFT"
+ CHAR 'F'               \ Encoded as:   "<129>FT"
+ CHAR 'T'
+ EQUB 0
+
+ TWOK 'R', 'I'          \ Token 99:     "RIGHT"
+ CHAR 'G'               \ Encoded as:   "<158>GHT"
+ CHAR 'H'
+ CHAR 'T'
+ EQUB 0
+
+ RTOK 121               \ Token 100:    "ENERGY LOW{beep}"
+ CHAR 'L'               \ Encoded as:   "[121]LOW{7}"
+ CHAR 'O'
+ CHAR 'W'
+ CTRL 7
+ EQUB 0
+
+ RTOK 99                \ Token 101:    "RIGHT ON COMMANDER!"
+ RTOK 131               \ Encoded as:   "[99][131][92]!"
+ RTOK 92
+ CHAR '!'
+ EQUB 0
+
+ CHAR 'E'               \ Token 102:    "EXTRA "
+ CHAR 'X'               \ Encoded as:   "EXT<148> "
+ CHAR 'T'
+ TWOK 'R', 'A'
+ CHAR ' '
+ EQUB 0
+
+ CHAR 'P'               \ Token 103:    "PULSE LASER"
+ CHAR 'U'               \ Encoded as:   "PULSE[27]"
+ CHAR 'L'
+ CHAR 'S'
+ CHAR 'E'
+ RTOK 27
+ EQUB 0
+
+ TWOK 'B', 'E'          \ Token 104:    "BEAM LASER"
+ CHAR 'A'               \ Encoded as:   "<147>AM[27]"
+ CHAR 'M'
+ RTOK 27
+ EQUB 0
+
+ CHAR 'F'               \ Token 105:    "FUEL"
+ CHAR 'U'               \ Encoded as:   "FUEL"
+ CHAR 'E'
+ CHAR 'L'
+ EQUB 0
+
+ CHAR 'M'               \ Token 106:    "MISSILE"
+ TWOK 'I', 'S'          \ Encoded as:   "M<157>SI<129>"
+ CHAR 'S'
+ CHAR 'I'
+ TWOK 'L', 'E'
+ EQUB 0
+
+ RTOK 67                \ Token 107:    "LARGE CARGO{switch to sentence
+ RTOK 46                \                 case} BAY"
+ CHAR ' '               \ Encoded as:   "[67][46] BAY"
+ CHAR 'B'
+ CHAR 'A'
+ CHAR 'Y'
+ EQUB 0
+
+ CHAR 'E'               \ Token 108:    "E.C.M.SYSTEM"
+ CHAR '.'               \ Encoded as:   "E.C.M.[5]"
+ CHAR 'C'
+ CHAR '.'
+ CHAR 'M'
+ CHAR '.'
+ RTOK 5
+ EQUB 0
+
+ RTOK 102               \ Token 109:    "EXTRA PULSE LASERS"
+ RTOK 103               \ Encoded as:   "[102][103]S"
+ CHAR 'S'
+ EQUB 0
+
+ RTOK 102               \ Token 110:    "EXTRA BEAM LASERS"
+ RTOK 104               \ Encoded as:   "[102][104]S"
+ CHAR 'S'
+ EQUB 0
+
+ RTOK 105               \ Token 111:    "FUEL SCOOPS"
+ CHAR ' '               \ Encoded as:   "[105] SCOOPS"
+ CHAR 'S'
+ CHAR 'C'
+ CHAR 'O'
+ CHAR 'O'
+ CHAR 'P'
+ CHAR 'S'
+ EQUB 0
+
+ TWOK 'E', 'S'          \ Token 112:    "ESCAPE POD"
+ CHAR 'C'               \ Encoded as:   "<137>CAPE POD"
+ CHAR 'A'
+ CHAR 'P'
+ CHAR 'E'
+ CHAR ' '
+ CHAR 'P'
+ CHAR 'O'
+ CHAR 'D'
+ EQUB 0
+
+ RTOK 121               \ Token 113:    "ENERGY BOMB"
+ CHAR 'B'               \ Encoded as:   "[121]BOMB"
+ CHAR 'O'
+ CHAR 'M'
+ CHAR 'B'
+ EQUB 0
+
+ RTOK 102               \ Token 114:    "EXTRA ENERGY UNIT"
+ RTOK 121                \ Encoded as:   "[102][121][14]"
+ RTOK 14
+ EQUB 0
+
+ CHAR 'D'               \ Token 115:    "DOCKING COMPUTERS"
+ CHAR 'O'               \ Encoded as:   "DOCK<140>G [55]"
+ CHAR 'C'
+ CHAR 'K'
+ TWOK 'I', 'N'
+ CHAR 'G'
+ CHAR ' '
+ RTOK 55
+ EQUB 0
+
+ RTOK 122               \ Token 116:    "GALACTIC HYPERSPACE "
+ CHAR ' '               \ Encoded as:   "[122] [29]"
+ RTOK 29
+ EQUB 0
+
+ CHAR 'M'               \ Token 117:    "MILITARY  LASER"
+ CHAR 'I'               \ Encoded as:   "MILIT<138>Y [27]"
+ CHAR 'L'
+ CHAR 'I'
+ CHAR 'T'
+ TWOK 'A', 'R'
+ CHAR 'Y'
+ CHAR ' '
+ RTOK 27
+ EQUB 0
+
+ CHAR 'M'               \ Token 118:    "MINING  LASER"
+ TWOK 'I', 'N'          \ Encoded as:   "M<140><140>G [27]"
+ TWOK 'I', 'N'
+ CHAR 'G'
+ CHAR ' '
+ RTOK 27
+ EQUB 0
+
+ RTOK 37                \ Token 119:    "CASH:{cash right-aligned to width 9}
+ CHAR ':'               \                 CR{crlf}"
+ CTRL 0                 \ Encoded as:   "[37]:{0}"
+ EQUB 0
+
+ TWOK 'I', 'N'          \ Token 120:    "INCOMING MISSILE"
+ RTOK 91                \ Encoded as:   "<140>[91]<140>G [106]"
+ TWOK 'I', 'N'
+ CHAR 'G'
+ CHAR ' '
+ RTOK 106
+ EQUB 0
+
+ TWOK 'E', 'N'          \ Token 121:    "ENERGY "
+ TWOK 'E', 'R'          \ Encoded as:   "<146><144>GY "
+ CHAR 'G'
+ CHAR 'Y'
+ CHAR ' '
+ EQUB 0
+
+ CHAR 'G'               \ Token 122:    "GALACTIC"
+ CHAR 'A'               \ Encoded as:   "GA<149>C<151>C"
+ TWOK 'L', 'A'
+ CHAR 'C'
+ TWOK 'T', 'I'
+ CHAR 'C'
+ EQUB 0
+
+ RTOK 115               \ Token 123:    "DOCKING COMPUTERS ON"
+ CHAR ' '               \ Encoded as:   "[115] ON"
+ CHAR 'O'
+ CHAR 'N'
+ EQUB 0
+
+ CHAR 'A'               \ Token 124:    "ALL"
+ RTOK 129               \ Encoded as:   "A[129]"
+ EQUB 0
+
+ CTRL 5                 \ Token 125:    "FUEL: {fuel level} LIGHT YEARS{crlf}
+ TWOK 'L', 'E'          \                CASH:{cash right-aligned to width 9}
+ CHAR 'G'               \                 CR{crlf}LEGAL STATUS:"
+ TWOK 'A', 'L'          \ Encoded as:   "{5}<129>G<128> [43]<145><136>:"
+ CHAR ' '
+ RTOK 43
+ TWOK 'A', 'T'
+ TWOK 'U', 'S'
+ CHAR ':'
+ EQUB 0
+
+ RTOK 92                \ Token 126:    "COMMANDER {commander name}{crlf}{crlf}
+ CHAR ' '               \                {crlf}{switch to sentence case}PRESENT
+ CTRL 4                 \                 SYSTEM{tab to column 21}:{current
+ CTRL 12                \                system name}{crlf}HYPERSPACE SYSTEM
+ CTRL 12                \                {tab to column 21}:{selected system
+ CTRL 12                \                name}{crlf}CONDITION{tab to column
+ CTRL 6                 \                21}:"
+ RTOK 145               \ Encoded as:   "[92] {4}{12}{12}{12}{6}[145] [5]{9}{2}
+ CHAR ' '               \                {12}[29][5]{9}{3}{12}C<159><141><151>
+ RTOK 5                 \                <159>{9}"
+ CTRL 9
+ CTRL 2
+ CTRL 12
+ RTOK 29
+ RTOK 5
+ CTRL 9
+ CTRL 3
+ CTRL 12
+ CHAR 'C'
+ TWOK 'O', 'N'
+ TWOK 'D', 'I'
+ TWOK 'T', 'I'
+ TWOK 'O', 'N'
+ CTRL 9
+ EQUB 0
+
+ CHAR 'I'               \ Token 127:    "ITEM"
+ TWOK 'T', 'E'          \ Encoded as:   "I<156>M"
+ CHAR 'M'
+ EQUB 0
+
+ EQUB 0                 \ Token 128:    ""
+
+ CHAR 'L'               \ Token 129:    "LL"
+ CHAR 'L'               \ Encoded as:   "LL"
+ EQUB 0
+
+ TWOK 'R', 'A'          \ Token 130:    "RATING:"
+ TWOK 'T', 'I'          \ Encoded as:   "<148><151>NG:"
+ CHAR 'N'
+ CHAR 'G'
+ CHAR ':'
+ EQUB 0
+
+ CHAR ' '               \ Token 131:    " ON "
+ TWOK 'O', 'N'          \ Encoded as:   " <159> "
+ CHAR ' '
+ EQUB 0
+
+ CTRL 12                \ Token 132:    "{crlf}{switch to all caps}EQUIPMENT:
+ CTRL 8                 \                {switch to sentence case}"
+ RTOK 47                \ Encoded as:   "{12}{8}[47]M<146>T:{6}"
+ CHAR 'M'
+ TWOK 'E', 'N'
+ CHAR 'T'
+ CHAR ':'
+ CTRL 6
+ EQUB 0
+
+ CHAR 'C'               \ Token 133:    "CLEAN"
+ TWOK 'L', 'E'          \ Encoded as:   "C<129><155>"
+ TWOK 'A', 'N'
+ EQUB 0
+
+ CHAR 'O'               \ Token 134:    "OFFENDER"
+ CHAR 'F'               \ Encoded as:   "OFF<146>D<144>"
+ CHAR 'F'
+ TWOK 'E', 'N'
+ CHAR 'D'
+ TWOK 'E', 'R'
+ EQUB 0
+
+ CHAR 'F'               \ Token 135:    "FUGITIVE"
+ CHAR 'U'               \ Encoded as:   "FUGI<151><150>"
+ CHAR 'G'
+ CHAR 'I'
+ TWOK 'T', 'I'
+ TWOK 'V', 'E'
+ EQUB 0
+
+ CHAR 'H'               \ Token 136:    "HARMLESS"
+ TWOK 'A', 'R'          \ Encoded as:   "H<138>M<129>SS"
+ CHAR 'M'
+ TWOK 'L', 'E'
+ CHAR 'S'
+ CHAR 'S'
+ EQUB 0
+
+ CHAR 'M'               \ Token 137:    "MOSTLY HARMLESS"
+ CHAR 'O'               \ Encoded as:   "MO[43]LY [136]"
+ RTOK 43
+ CHAR 'L'
+ CHAR 'Y'
+ CHAR ' '
+ RTOK 136
+ EQUB 0
+
+ RTOK 12                \ Token 138:    "POOR "
+ EQUB 0                 \ Encoded as:   "[12]"
+
+ RTOK 11                \ Token 139:    "AVERAGE "
+ EQUB 0                 \ Encoded as:   "[11]"
+
+ CHAR 'A'               \ Token 140:    "ABOVE AVERAGE "
+ CHAR 'B'               \ Encoded as:   "ABO<150> [11]"
+ CHAR 'O'
+ TWOK 'V', 'E'
+ CHAR ' '
+ RTOK 11
+ EQUB 0
+
+ RTOK 91                \ Token 141:    "COMPETENT"
+ CHAR 'P'               \ Encoded as:   "[91]PET<146>T"
+ CHAR 'E'
+ CHAR 'T'
+ TWOK 'E', 'N'
+ CHAR 'T'
+ EQUB 0
+
+ CHAR 'D'               \ Token 142:    "DANGEROUS"
+ TWOK 'A', 'N'          \ Encoded as:   "D<155><131>[94]<136>"
+ TWOK 'G', 'E'
+ RTOK 94
+ TWOK 'U', 'S'
+ EQUB 0
+
+ CHAR 'D'               \ Token 143:    "DEADLY"
+ CHAR 'E'               \ Encoded as:   "DEADLY"
+ CHAR 'A'
+ CHAR 'D'
+ CHAR 'L'
+ CHAR 'Y'
+ EQUB 0
+
+ CHAR '-'               \ Token 144:    "---- E L I T E ----"
+ CHAR '-'               \ Encoded as:   "---- E L I T E ----"
+ CHAR '-'
+ CHAR '-'
+ CHAR ' '
+ CHAR 'E'
+ CHAR ' '
+ CHAR 'L'
+ CHAR ' '
+ CHAR 'I'
+ CHAR ' '
+ CHAR 'T'
+ CHAR ' '
+ CHAR 'E'
+ CHAR ' '
+ CHAR '-'
+ CHAR '-'
+ CHAR '-'
+ CHAR '-'
+ EQUB 0
+
+ CHAR 'P'               \ Token 145:    "PRESENT"
+ TWOK 'R', 'E'          \ Encoded as:   "P<142>S<146>T"
+ CHAR 'S'
+ TWOK 'E', 'N'
+ CHAR 'T'
+ EQUB 0
+
+ CTRL 8                 \ Token 146:    "{switch to all caps}GAME OVER"
+ CHAR 'G'               \ Encoded as:   "{8}GAME O<150>R"
+ CHAR 'A'
+ CHAR 'M'
+ CHAR 'E'
+ CHAR ' '
+ CHAR 'O'
+ TWOK 'V', 'E'
+ CHAR 'R'
+ EQUB 0
+
+ SKIP 4                 \ These bytes are unused
+
+\ ******************************************************************************
+\
+\       Name: SNE
+\       Type: Variable
+\   Category: Maths (Geometry)
+\    Summary: Sine/cosine table
+\  Deep dive: The sine, cosine and arctan tables
+\
+\ ------------------------------------------------------------------------------
+\
+\ To calculate the following:
+\
+\   sin(theta) * 256
+\
+\ where theta is in radians, look up the value in:
+\
+\   SNE + (theta * 10)
+\
+\ To calculate the following:
+\
+\   cos(theta) * 256
+\
+\ where theta is in radians, look up the value in:
+\
+\   SNE + ((theta * 10) + 16) mod 32
+\
+\ Theta must be between 0 and 3.1 radians, so theta * 10 is between 0 and 31.
+\
+\ ******************************************************************************
+
+.SNE
+
+FOR I%, 0, 31
+  N = ABS(SIN((I% / 64) * 2 * PI))
+  IF N >= 1
+    EQUB &FF
+  ELSE
+    EQUB INT(256 * N + 0.5)
+  ENDIF
+NEXT
+
+\ ******************************************************************************
+\
+\       Name: ACT
+\       Type: Variable
+\   Category: Maths (Geometry)
+\    Summary: Arctan table
+\
+\ ------------------------------------------------------------------------------
+\
+\ To calculate the following:
+\
+\   theta = arctan(t)
+\
+\ where 0 <= t < 1, look up the value in:
+\
+\   ACT + (t * 32)
+\
+\ The result will be an integer representing the angle in radians, with 256
+\ representing a full circle of 2 * PI radians.
+\
+\ The table does not support values of t >= 1 or t < 0 directly, but we can use
+\ the following calculations instead:
+\
+\   * For t > 1, arctan(t) = 64 - arctan(1 / t)
+\
+\   * For t < 0, arctan(-t) = 128 - arctan(t)
+\
+\ If t < -1, we can do the first one to get arctan(|t|), then the second to get
+\ arctan(-|t|).
+\
+\ ******************************************************************************
+
+.ACT
+
+FOR I%, 0, 31
+  EQUB INT((128 / PI) * ATN(I% / 32) + 0.5)
+NEXT
+
+\ ******************************************************************************
+\
+\ Save output/WORDS9.bin
+\
+\ ******************************************************************************
+
+PRINT "WORDS"
+PRINT "Assembled at ", ~CODE_WORDS%
+PRINT "Ends at ", ~P%
+PRINT "Code size is ", ~(P% - CODE_WORDS%)
+PRINT "Execute at ", ~LOAD%
+PRINT "Reload at ", ~LOAD_WORDS%
+
+PRINT "S.WORDS ",~CODE%," ",~P%," ",~LOAD%," ",~LOAD_WORDS%
+SAVE "output/WORDS.bin", CODE_WORDS%, P%, LOAD%
+
+\ ******************************************************************************
+\
 \       Name: UP
 \       Type: Workspace
-\    Address: &0800
+\    Address: &0800 to &0974
 \   Category: Workspaces
+\    Summary: Ship slots, variables
 \
 \ ******************************************************************************
 
@@ -755,11 +2152,15 @@ ORG &0800
 
 .UP
 
- SKIP 0
+ SKIP 0                 \ The start of the UP workspace
 
-\.QQ16 \Repeated below
+\.QQ16
 
- SKIP 65
+ SKIP 65                \ This QQ16 label is present in the original source, but
+                        \ it is overridden by the QQ16 label in the Elite A
+                        \ section, so this declaration has no effect. BeebAsm
+                        \ does not allow labels to be defined twice, so this one
+                        \ is commented out
 
 .KL
 
@@ -902,7 +2303,7 @@ ORG &0800
 
 .FRIN
 
- SKIP NOSH + 1          \ Slots for the 13 ships in the local bubble of universe
+ SKIP NOSH + 1          \ Slots for the 21 ships in the local bubble of universe
                         \
                         \ See the deep dive on "The local bubble of universe"
                         \ for details of how Elite stores the local universe in
@@ -1134,13 +2535,11 @@ ORG &0800
                         \ movement
 .XSAV2
 
- SKIP 1                 \ Temporary storage, used for storing the value of the X
-                        \ register in the TT26 routine
+ SKIP 1                 \ This byte is unused in this version of Elite
 
 .YSAV2
 
- SKIP 1                 \ Temporary storage, used for storing the value of the Y
-                        \ register in the TT26 routine
+ SKIP 1                 \ This byte is unused in this version of Elite
 
 .NAME
 
@@ -1576,13 +2975,15 @@ NT% = SVC + 2 - TP      \ This sets the variable NT% to the size of the current
 
 .BUF
 
- SKIP 100\ ******************************************************************************
+ SKIP 100
+
+\ ******************************************************************************
 \
 \       Name: WP
 \       Type: Workspace
-\    Address: &0D00
+\    Address: &0D00 to &0E3B
 \   Category: Workspaces
-\    Summary: Ship slots, variables
+\    Summary: Variables
 \
 \ ******************************************************************************
 
@@ -1706,7 +3107,7 @@ PRINT "WP workspace from  ", ~WP," to ", ~P%
 \
 \       Name: K%
 \       Type: Workspace
-\    Address: &8200
+\    Address: &8200 to &85FF
 \   Category: Workspaces
 \    Summary: Ship data blocks and ship line heaps
 \  Deep dive: Ship data blocks
@@ -1737,7 +3138,7 @@ ORG &8200
 \
 \       Name: LP
 \       Type: Workspace
-\    Address: &8600
+\    Address: &8600 to &91FF
 \   Category: Workspaces
 \
 \ ******************************************************************************
@@ -1746,7 +3147,7 @@ ORG &8600
 
 .LP
 
- SKIP 0
+ SKIP 0                 \ The start of the LP workspace
 
 .X1TB
 
@@ -1817,6 +3218,7 @@ LOAD_A% = LOAD%
 .MOS
 
  BRK
+
 .COMC
 
  EQUB 0                 \ The colour of the dot on the compass
@@ -2165,6 +3567,11 @@ ENDIF
  JSR Checksum
  JMP BEGIN
  NOP
+
+\ ******************************************************************************
+\       Name: DEEOR
+\ ******************************************************************************
+
 .DEEOR
 
  LDY #0
@@ -2189,6 +3596,11 @@ ENDIF
  CPX #&A0
  BNE DEEL
  JMP BRKBK
+
+\ ******************************************************************************
+\       Name: DOENTRY
+\ ******************************************************************************
+
 .DOENTRY
 
  \after dock
@@ -2272,6 +3684,7 @@ ENDIF
  STA BRKV+1
  CLI
  RTS
+
 \ ******************************************************************************
 \
 \       Name: Main flight loop (Part 1 of 16)
@@ -4068,7 +5481,7 @@ ENDIF
  LDA V
  PHA
  LDA V+1
-PHA  \Magic
+ PHA  \Magic
  TXA
  ASL A
  TAX
@@ -5176,10 +6589,16 @@ ENDIF
  RTS
 
 \ ******************************************************************************
-\       Name: pixbl, PBUF
+\       Name: pixbl
 \ ******************************************************************************
 
 .pixbl
+
+ SKIP 0                 \ pixbl points to the first byte of PBUF
+
+\ ******************************************************************************
+\       Name: PBUF
+\ ******************************************************************************
 
 .PBUF
 
@@ -26344,11 +27763,16 @@ LOAD_F% = LOAD% + P% - CODE%
 \ Note that KYTB actually points to the byte before the start of the table, so
 \ the offset of the first key value is 1 (i.e. KYTB+1), not 0.
 \
+\ Other entry points:
+\
+\   KYTB                Contains an RTS
+\
 \ ******************************************************************************
 
 .KYTB
 
- RTS
+ RTS                    \ Return from the subroutine (used as an entry point and
+                        \ a fall-through from above)
 
                         \ These are the primary flight controls (pitch, roll,
                         \ speed and lasers):
@@ -34539,13 +35963,6 @@ MACRO TOKN n
 
 ENDMACRO
 
-MACRO CHAR x
-
-  PRINT x
-  EQUB x EOR VE
-
-ENDMACRO
-
 .TKN1
 
  EQUB VE
@@ -34555,102 +35972,102 @@ ENDMACRO
  TOKN 30
  TOKN 1
  TOKN 8
- CHAR ' '
+ TOKN ' '
  TOKN 241
- CHAR 'S'
- CHAR 'K'
- CHAR ' '
- CHAR 'A'
- CHAR 'C'
+ TOKN 'S'
+ TOKN 'K'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'C'
  TOKN 233
- CHAR 'S'
- CHAR 'S'
- CHAR ' '
- CHAR 'M'
- CHAR 'E'
+ TOKN 'S'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'M'
+ TOKN 'E'
  TOKN 225
  TOKN 215
  TOKN 10
  TOKN 2
- CHAR '1'
- CHAR '.'
- CHAR ' '
+ TOKN '1'
+ TOKN '.'
+ TOKN ' '
  TOKN 149
  TOKN 215
- CHAR '2'
- CHAR '.'
- CHAR ' '
- CHAR 'S'
- CHAR 'A'
+ TOKN '2'
+ TOKN '.'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'A'
  TOKN 250
- CHAR ' '
+ TOKN ' '
  TOKN 154
- CHAR ' '
+ TOKN ' '
  TOKN 4
  TOKN 215
- CHAR '3'
- CHAR '.'
- CHAR ' '
- CHAR 'C'
+ TOKN '3'
+ TOKN '.'
+ TOKN ' '
+ TOKN 'C'
  TOKN 245
- CHAR 'A'
+ TOKN 'A'
  TOKN 224
- CHAR 'G'
- CHAR 'U'
- CHAR 'E'
+ TOKN 'G'
+ TOKN 'U'
+ TOKN 'E'
  TOKN 215
- CHAR '4'
- CHAR '.'
- CHAR ' '
- CHAR 'D'
- CHAR 'E'
- CHAR 'L'
+ TOKN '4'
+ TOKN '.'
+ TOKN ' '
+ TOKN 'D'
+ TOKN 'E'
+ TOKN 'L'
  TOKN 221
- CHAR 'E'
+ TOKN 'E'
  TOKN 208
- CHAR 'F'
- CHAR 'I'
+ TOKN 'F'
+ TOKN 'I'
  TOKN 229
  TOKN 215
- CHAR '5'
- CHAR '.'
- CHAR ' '
- CHAR 'E'
- CHAR 'X'
+ TOKN '5'
+ TOKN '.'
+ TOKN ' '
+ TOKN 'E'
+ TOKN 'X'
  TOKN 219
  TOKN 215
  EQUB VE
 
  TOKN 12
- CHAR 'W'
- CHAR 'H'
- CHAR 'I'
- CHAR 'C'
- CHAR 'H'
- CHAR ' '
+ TOKN 'W'
+ TOKN 'H'
+ TOKN 'I'
+ TOKN 'C'
+ TOKN 'H'
+ TOKN ' '
  TOKN 151
- CHAR '?'
+ TOKN '?'
  EQUB VE
 
- CHAR 'C'
- CHAR 'O'
- CHAR 'M'
- CHAR 'P'
- CHAR 'E'
+ TOKN 'C'
+ TOKN 'O'
+ TOKN 'M'
+ TOKN 'P'
+ TOKN 'E'
  TOKN 251    \ <251)
  TOKN 251
  TOKN 223
- CHAR ' '
+ TOKN ' '
  TOKN 225
- CHAR 'M'
- CHAR 'B'
+ TOKN 'M'
+ TOKN 'B'
  TOKN 244
- CHAR ':'
+ TOKN ':'
  EQUB VE
 
  TOKN 150
  TOKN 151
- CHAR ' '
+ TOKN ' '
  TOKN 16
  TOKN 152
  TOKN 215
@@ -34663,424 +36080,424 @@ ENDMACRO
  TOKN 177
  EQUB VE
 
- CHAR ' '
- CHAR ' '
+ TOKN ' '
+ TOKN ' '
  TOKN 149
- CHAR ' '
+ TOKN ' '
  TOKN 1
- CHAR '('
- CHAR 'Y'
- CHAR '/'
- CHAR 'N'
- CHAR ')'
- CHAR '?'
+ TOKN '('
+ TOKN 'Y'
+ TOKN '/'
+ TOKN 'N'
+ TOKN ')'
+ TOKN '?'
  TOKN 2
  TOKN 12
  TOKN 12
  EQUB VE
 
- CHAR 'P'
+ TOKN 'P'
  TOKN 242
- CHAR 'S'
- CHAR 'S'
- CHAR ' '
- CHAR 'S'
- CHAR 'P'
- CHAR 'A'
+ TOKN 'S'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'P'
+ TOKN 'A'
  TOKN 233
- CHAR ' '
+ TOKN ' '
  TOKN 253
- CHAR ' '
- CHAR 'F'
- CHAR 'I'
+ TOKN ' '
+ TOKN 'F'
+ TOKN 'I'
  TOKN 242
- CHAR ','
+ TOKN ','
  TOKN 154
- CHAR '.'
+ TOKN '.'
  TOKN 12
  TOKN 12
  EQUB VE
 
  TOKN 154
- CHAR 39
- CHAR 'S'
+ TOKN 39
+ TOKN 'S'
  TOKN 200
  EQUB VE
 
  TOKN 21
- CHAR 'F'
- CHAR 'I'
+ TOKN 'F'
+ TOKN 'I'
  TOKN 229
  TOKN 201
- CHAR 'D'
- CHAR 'E'
- CHAR 'L'
+ TOKN 'D'
+ TOKN 'E'
+ TOKN 'L'
  TOKN 221
- CHAR 'E'
- CHAR '?'
+ TOKN 'E'
+ TOKN '?'
  EQUB VE
 
  TOKN 23
  TOKN 14
  TOKN 2
- CHAR 'G'
+ TOKN 'G'
  TOKN 242
  TOKN 221
  TOKN 240
- CHAR 'G'
- CHAR 'S'
+ TOKN 'G'
+ TOKN 'S'
  TOKN 213
  TOKN 178
  TOKN 19
- CHAR 'I'
- CHAR ' '
+ TOKN 'I'
+ TOKN ' '
  TOKN 247
- CHAR 'G'
+ TOKN 'G'
  TOKN 208
- CHAR 'M'
- CHAR 'O'
- CHAR 'M'
+ TOKN 'M'
+ TOKN 'O'
+ TOKN 'M'
  TOKN 246
- CHAR 'T'
- CHAR ' '
- CHAR 'O'
- CHAR 'F'
- CHAR ' '
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'O'
+ TOKN 'F'
+ TOKN ' '
  TOKN 179
- CHAR 'R'
- CHAR ' '
- CHAR 'V'
+ TOKN 'R'
+ TOKN ' '
+ TOKN 'V'
  TOKN 228
- CHAR 'U'
+ TOKN 'U'
  TOKN 216
  TOKN 229
- CHAR ' '
+ TOKN ' '
  TOKN 251
- CHAR 'M'
- CHAR 'E'
+ TOKN 'M'
+ TOKN 'E'
  TOKN 204
-\CHAR '#'
+\TOKN '#'
 \EQUB VE
 
- CHAR 'W'
- CHAR 'E'
- CHAR ' '
- CHAR 'W'
+ TOKN 'W'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'W'
  TOKN 217
- CHAR 'L'
- CHAR 'D'
- CHAR ' '
- CHAR 'L'
- CHAR 'I'
- CHAR 'K'
- CHAR 'E'
- CHAR ' '
+ TOKN 'L'
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'L'
+ TOKN 'I'
+ TOKN 'K'
+ TOKN 'E'
+ TOKN ' '
  TOKN 179
  TOKN 201
- CHAR 'D'
- CHAR 'O'
+ TOKN 'D'
+ TOKN 'O'
  TOKN 208
- CHAR 'L'
+ TOKN 'L'
  TOKN 219
- CHAR 'T'
+ TOKN 'T'
  TOKN 229
- CHAR ' '
- CHAR 'J'
- CHAR 'O'
- CHAR 'B'
- CHAR ' '
- CHAR 'F'
+ TOKN ' '
+ TOKN 'J'
+ TOKN 'O'
+ TOKN 'B'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
- CHAR ' '
+ TOKN ' '
  TOKN 236
  TOKN 204
  TOKN 147
  TOKN 207
- CHAR ' '
+ TOKN ' '
  TOKN 179
- CHAR ' '
+ TOKN ' '
  TOKN 218
- CHAR 'E'
- CHAR ' '
- CHAR 'H'
- CHAR 'E'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'E'
  TOKN 242
  TOKN 202
- CHAR 'A'
+ TOKN 'A'
  TOKN 210
- CHAR 'M'
- CHAR 'O'
- CHAR 'D'
- CHAR 'E'
- CHAR 'L'
- CHAR ','
- CHAR ' '
+ TOKN 'M'
+ TOKN 'O'
+ TOKN 'D'
+ TOKN 'E'
+ TOKN 'L'
+ TOKN ','
+ TOKN ' '
  TOKN 147
  TOKN 19
- CHAR 'C'
+ TOKN 'C'
  TOKN 223
  TOKN 222
- CHAR 'R'
- CHAR 'I'
- CHAR 'C'
- CHAR 'T'
+ TOKN 'R'
+ TOKN 'I'
+ TOKN 'C'
+ TOKN 'T'
  TOKN 253
- CHAR ','
- CHAR ' '
- CHAR 'E'
+ TOKN ','
+ TOKN ' '
+ TOKN 'E'
  TOKN 254
- CHAR 'I'
- CHAR 'P'
+ TOKN 'I'
+ TOKN 'P'
  TOKN 196
- CHAR 'W'
- CHAR 'I'
+ TOKN 'W'
+ TOKN 'I'
  TOKN 226
  TOKN 208
- CHAR 'T'
- CHAR 'O'
- CHAR 'P'
-\CHAR '#'
+ TOKN 'T'
+ TOKN 'O'
+ TOKN 'P'
+\TOKN '#'
 \EQUB VE
 
- CHAR ' '
+ TOKN ' '
  TOKN 218
- CHAR 'C'
- CHAR 'R'
+ TOKN 'C'
+ TOKN 'R'
  TOKN 221
  TOKN 210
- CHAR 'S'
- CHAR 'H'
- CHAR 'I'
- CHAR 'E'
- CHAR 'L'
- CHAR 'D'
- CHAR ' '
- CHAR 'G'
+ TOKN 'S'
+ TOKN 'H'
+ TOKN 'I'
+ TOKN 'E'
+ TOKN 'L'
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'G'
  TOKN 246
  TOKN 244
  TOKN 245
  TOKN 253
  TOKN 204
- CHAR 'U'
- CHAR 'N'
- CHAR 'F'
+ TOKN 'U'
+ TOKN 'N'
+ TOKN 'F'
  TOKN 253
- CHAR 'T'
- CHAR 'U'
- CHAR 'N'
+ TOKN 'T'
+ TOKN 'U'
+ TOKN 'N'
  TOKN 245
- CHAR 'E'
- CHAR 'L'
- CHAR 'Y'
- CHAR ' '
+ TOKN 'E'
+ TOKN 'L'
+ TOKN 'Y'
+ TOKN ' '
  TOKN 219
- CHAR 39
- CHAR 'S'
- CHAR ' '
+ TOKN 39
+ TOKN 'S'
+ TOKN ' '
  TOKN 247
  TOKN 246
- CHAR ' '
+ TOKN ' '
  TOKN 222
- CHAR 'O'
- CHAR 'L'
+ TOKN 'O'
+ TOKN 'L'
  TOKN 246
  TOKN 204
  TOKN 22
-\CHAR '#'
+\TOKN '#'
 \EQUB VE
 
  TOKN 219
- CHAR ' '
- CHAR 'W'
+ TOKN ' '
+ TOKN 'W'
  TOKN 246
- CHAR 'T'
- CHAR ' '
- CHAR 'M'
- CHAR 'I'
- CHAR 'S'
- CHAR 'S'
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'M'
+ TOKN 'I'
+ TOKN 'S'
+ TOKN 'S'
  TOKN 195
- CHAR 'F'
- CHAR 'R'
- CHAR 'O'
- CHAR 'M'
- CHAR ' '
+ TOKN 'F'
+ TOKN 'R'
+ TOKN 'O'
+ TOKN 'M'
+ TOKN ' '
  TOKN 217
- CHAR 'R'
- CHAR ' '
+ TOKN 'R'
+ TOKN ' '
  TOKN 207
- CHAR ' '
- CHAR 'Y'
+ TOKN ' '
+ TOKN 'Y'
  TOKN 238
- CHAR 'D'
- CHAR ' '
+ TOKN 'D'
+ TOKN ' '
  TOKN 223
- CHAR ' '
+ TOKN ' '
  TOKN 19
  TOKN 230
  TOKN 244
- CHAR ' '
- CHAR 'F'
- CHAR 'I'
+ TOKN ' '
+ TOKN 'F'
+ TOKN 'I'
  TOKN 250
- CHAR ' '
- CHAR 'M'
+ TOKN ' '
+ TOKN 'M'
  TOKN 223
  TOKN 226
- CHAR 'S'
- CHAR ' '
- CHAR 'A'
- CHAR 'G'
- CHAR 'O'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'G'
+ TOKN 'O'
  TOKN 178
  TOKN 28
  TOKN 204
  TOKN 179
- CHAR 'R'
- CHAR ' '
- CHAR 'M'
- CHAR 'I'
- CHAR 'S'
- CHAR 'S'
- CHAR 'I'
+ TOKN 'R'
+ TOKN ' '
+ TOKN 'M'
+ TOKN 'I'
+ TOKN 'S'
+ TOKN 'S'
+ TOKN 'I'
  TOKN 223
- CHAR ','
- CHAR ' '
- CHAR 'S'
- CHAR 'H'
+ TOKN ','
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'H'
  TOKN 217
- CHAR 'L'
- CHAR 'D'
- CHAR ' '
+ TOKN 'L'
+ TOKN 'D'
+ TOKN ' '
  TOKN 179
- CHAR ' '
- CHAR 'D'
- CHAR 'E'
- CHAR 'C'
- CHAR 'I'
- CHAR 'D'
- CHAR 'E'
+ TOKN ' '
+ TOKN 'D'
+ TOKN 'E'
+ TOKN 'C'
+ TOKN 'I'
+ TOKN 'D'
+ TOKN 'E'
  TOKN 201
- CHAR 'A'
- CHAR 'C'
+ TOKN 'A'
+ TOKN 'C'
  TOKN 233
- CHAR 'P'
- CHAR 'T'
- CHAR ' '
+ TOKN 'P'
+ TOKN 'T'
+ TOKN ' '
  TOKN 219
- CHAR ','
- CHAR ' '
- CHAR 'I'
- CHAR 'S'
+ TOKN ','
+ TOKN ' '
+ TOKN 'I'
+ TOKN 'S'
  TOKN 201
  TOKN 218
- CHAR 'E'
- CHAR 'K'
+ TOKN 'E'
+ TOKN 'K'
  TOKN 178
- CHAR 'D'
+ TOKN 'D'
  TOKN 237
- CHAR 'T'
- CHAR 'R'
- CHAR 'O'
- CHAR 'Y'
- CHAR ' '
-\CHAR '#'
+ TOKN 'T'
+ TOKN 'R'
+ TOKN 'O'
+ TOKN 'Y'
+ TOKN ' '
+\TOKN '#'
 \EQUB VE
 
  TOKN 148
  TOKN 207
  TOKN 204
  TOKN 179
- CHAR ' '
- CHAR 'A'
+ TOKN ' '
+ TOKN 'A'
  TOKN 242
- CHAR ' '
- CHAR 'C'
- CHAR 'A'
- CHAR 'U'
+ TOKN ' '
+ TOKN 'C'
+ TOKN 'A'
+ TOKN 'U'
  TOKN 251
  TOKN 223
  TOKN 196
  TOKN 226
  TOKN 245
- CHAR ' '
+ TOKN ' '
  TOKN 223
- CHAR 'L'
- CHAR 'Y'
- CHAR ' '
+ TOKN 'L'
+ TOKN 'Y'
+ TOKN ' '
  TOKN 6
  TOKN 117
  TOKN 5
- CHAR 'S'
- CHAR ' '
- CHAR 'W'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'W'
  TOKN 220
- CHAR 'L'
- CHAR ' '
- CHAR 'P'
+ TOKN 'L'
+ TOKN ' '
+ TOKN 'P'
  TOKN 246
  TOKN 221
  TOKN 248
- CHAR 'T'
- CHAR 'E'
- CHAR ' '
+ TOKN 'T'
+ TOKN 'E'
+ TOKN ' '
  TOKN 147
- CHAR 'N'
- CHAR 'E'
- CHAR 'W'
- CHAR ' '
- CHAR 'S'
- CHAR 'H'
- CHAR 'I'
- CHAR 'E'
- CHAR 'L'
- CHAR 'D'
- CHAR 'S'
+ TOKN 'N'
+ TOKN 'E'
+ TOKN 'W'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'H'
+ TOKN 'I'
+ TOKN 'E'
+ TOKN 'L'
+ TOKN 'D'
+ TOKN 'S'
  TOKN 178
  TOKN 226
  TOKN 245
- CHAR ' '
+ TOKN ' '
  TOKN 147
  TOKN 19
- CHAR 'C'
+ TOKN 'C'
  TOKN 223
  TOKN 222
- CHAR 'R'
- CHAR 'I'
- CHAR 'C'
- CHAR 'T'
+ TOKN 'R'
+ TOKN 'I'
+ TOKN 'C'
+ TOKN 'T'
  TOKN 253
  TOKN 202
- CHAR 'F'
+ TOKN 'F'
  TOKN 219
- CHAR 'T'
+ TOKN 'T'
  TOKN 196
- CHAR 'W'
- CHAR 'I'
+ TOKN 'W'
+ TOKN 'I'
  TOKN 226
-\CHAR '#'
+\TOKN '#'
 \EQUB VE
 
- CHAR ' '
+ TOKN ' '
  TOKN 255
- CHAR ' '
+ TOKN ' '
  TOKN 6
  TOKN 108
  TOKN 5
  TOKN 177
  TOKN 2
  TOKN 8
- CHAR 'G'
- CHAR 'O'
- CHAR 'O'
- CHAR 'D'
- CHAR ' '
- CHAR 'L'
- CHAR 'U'
- CHAR 'C'
- CHAR 'K'
- CHAR ','
- CHAR ' '
+ TOKN 'G'
+ TOKN 'O'
+ TOKN 'O'
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'L'
+ TOKN 'U'
+ TOKN 'C'
+ TOKN 'K'
+ TOKN ','
+ TOKN ' '
  TOKN 154
  TOKN 212
  TOKN 22
@@ -35092,165 +36509,165 @@ ENDMACRO
  TOKN 23
  TOKN 14
  TOKN 2
- CHAR ' '
- CHAR ' '
+ TOKN ' '
+ TOKN ' '
  TOKN 245
- CHAR 'T'
+ TOKN 'T'
  TOKN 246
  TOKN 251
  TOKN 223
  TOKN 213
- CHAR '.'
- CHAR ' '
+ TOKN '.'
+ TOKN ' '
  TOKN 19
- CHAR 'W'
- CHAR 'E'
- CHAR ' '
- CHAR 'H'
- CHAR 'A'
+ TOKN 'W'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'A'
  TOKN 250
- CHAR ' '
- CHAR 'N'
- CHAR 'E'
+ TOKN ' '
+ TOKN 'N'
+ TOKN 'E'
  TOKN 196
- CHAR 'O'
- CHAR 'F'
- CHAR ' '
+ TOKN 'O'
+ TOKN 'F'
+ TOKN ' '
  TOKN 179
- CHAR 'R'
- CHAR ' '
+ TOKN 'R'
+ TOKN ' '
  TOKN 218
- CHAR 'R'
- CHAR 'V'
- CHAR 'I'
- CHAR 'C'
+ TOKN 'R'
+ TOKN 'V'
+ TOKN 'I'
+ TOKN 'C'
  TOKN 237
- CHAR ' '
- CHAR 'A'
- CHAR 'G'
- CHAR 'A'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'G'
+ TOKN 'A'
  TOKN 240
  TOKN 204
-\CHAR '#'
+\TOKN '#'
 \EQUB VE
 
- CHAR 'I'
- CHAR 'F'
- CHAR ' '
+ TOKN 'I'
+ TOKN 'F'
+ TOKN ' '
  TOKN 179
- CHAR ' '
- CHAR 'W'
+ TOKN ' '
+ TOKN 'W'
  TOKN 217
- CHAR 'L'
- CHAR 'D'
- CHAR ' '
+ TOKN 'L'
+ TOKN 'D'
+ TOKN ' '
  TOKN 247
- CHAR ' '
+ TOKN ' '
  TOKN 235
- CHAR ' '
- CHAR 'G'
- CHAR 'O'
- CHAR 'O'
- CHAR 'D'
- CHAR ' '
- CHAR 'A'
- CHAR 'S'
+ TOKN ' '
+ TOKN 'G'
+ TOKN 'O'
+ TOKN 'O'
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'S'
  TOKN 201
- CHAR 'G'
- CHAR 'O'
+ TOKN 'G'
+ TOKN 'O'
  TOKN 201
  TOKN 19
  TOKN 233
  TOKN 244
  TOKN 241
- CHAR ' '
+ TOKN ' '
  TOKN 179
- CHAR ' '
- CHAR 'W'
+ TOKN ' '
+ TOKN 'W'
  TOKN 220
- CHAR 'L'
- CHAR ' '
+ TOKN 'L'
+ TOKN ' '
  TOKN 247
- CHAR ' '
- CHAR 'B'
- CHAR 'R'
- CHAR 'I'
- CHAR 'E'
- CHAR 'F'
+ TOKN ' '
+ TOKN 'B'
+ TOKN 'R'
+ TOKN 'I'
+ TOKN 'E'
+ TOKN 'F'
  TOKN 252
  TOKN 204
- CHAR 'I'
- CHAR 'F'
- CHAR ' '
- CHAR 'S'
- CHAR 'U'
- CHAR 'C'
+ TOKN 'I'
+ TOKN 'F'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'U'
+ TOKN 'C'
  TOKN 233
- CHAR 'S'
- CHAR 'S'
- CHAR 'F'
- CHAR 'U'
- CHAR 'L'
- CHAR ','
- CHAR ' '
+ TOKN 'S'
+ TOKN 'S'
+ TOKN 'F'
+ TOKN 'U'
+ TOKN 'L'
+ TOKN ','
+ TOKN ' '
  TOKN 179
- CHAR ' '
- CHAR 'W'
+ TOKN ' '
+ TOKN 'W'
  TOKN 220
- CHAR 'L'
- CHAR ' '
+ TOKN 'L'
+ TOKN ' '
  TOKN 247
- CHAR ' '
- CHAR 'W'
- CHAR 'E'
- CHAR 'L'
- CHAR 'L'
- CHAR ' '
+ TOKN ' '
+ TOKN 'W'
+ TOKN 'E'
+ TOKN 'L'
+ TOKN 'L'
+ TOKN ' '
  TOKN 242
- CHAR 'W'
+ TOKN 'W'
  TOKN 238
- CHAR 'D'
+ TOKN 'D'
  TOKN 252
  TOKN 212
  TOKN 24
  EQUB VE
 
- CHAR '('
+ TOKN '('
  TOKN 19
- CHAR 'C'
- CHAR ')'
- CHAR ' '
- CHAR 'A'
- CHAR 'C'
+ TOKN 'C'
+ TOKN ')'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'C'
  TOKN 253
- CHAR 'N'
+ TOKN 'N'
  TOKN 235
- CHAR 'F'
- CHAR 'T'
- CHAR ' '
- CHAR '1'
- CHAR '9'
- CHAR '8'
- CHAR '4'
+ TOKN 'F'
+ TOKN 'T'
+ TOKN ' '
+ TOKN '1'
+ TOKN '9'
+ TOKN '8'
+ TOKN '4'
  EQUB VE
 
- CHAR 'B'
- CHAR 'Y'
- CHAR ' '
- CHAR 'D'
- CHAR '.'
- CHAR 'B'
+ TOKN 'B'
+ TOKN 'Y'
+ TOKN ' '
+ TOKN 'D'
+ TOKN '.'
+ TOKN 'B'
  TOKN 248
  TOKN 247
- CHAR 'N'
- CHAR ' '
- CHAR '&'
- CHAR ' '
- CHAR 'I'
- CHAR '.'
+ TOKN 'N'
+ TOKN ' '
+ TOKN '&'
+ TOKN ' '
+ TOKN 'I'
+ TOKN '.'
  TOKN 247
- CHAR 'L'
- CHAR 'L'
+ TOKN 'L'
+ TOKN 'L'
  EQUB VE
 
  TOKN 21
@@ -35265,139 +36682,139 @@ ENDMACRO
  TOKN 23
  TOKN 14
  TOKN 2
- CHAR ' '
- CHAR ' '
- CHAR 'C'
+ TOKN ' '
+ TOKN ' '
+ TOKN 'C'
  TOKN 223
- CHAR 'G'
+ TOKN 'G'
  TOKN 248
- CHAR 'T'
- CHAR 'U'
+ TOKN 'T'
+ TOKN 'U'
  TOKN 249
  TOKN 251
  TOKN 223
- CHAR 'S'
- CHAR ' '
+ TOKN 'S'
+ TOKN ' '
  TOKN 154
- CHAR '!'
+ TOKN '!'
  TOKN 12
  TOKN 12
  TOKN 226
  TOKN 244
- CHAR 'E'
+ TOKN 'E'
  TOKN 13
- CHAR ' '
- CHAR 'W'
+ TOKN ' '
+ TOKN 'W'
  TOKN 220
- CHAR 'L'
- CHAR ' '
+ TOKN 'L'
+ TOKN ' '
  TOKN 228
- CHAR 'W'
- CHAR 'A'
- CHAR 'Y'
- CHAR 'S'
- CHAR ' '
+ TOKN 'W'
+ TOKN 'A'
+ TOKN 'Y'
+ TOKN 'S'
+ TOKN ' '
  TOKN 247
  TOKN 208
- CHAR 'P'
+ TOKN 'P'
  TOKN 249
  TOKN 233
- CHAR ' '
- CHAR 'F'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
- CHAR ' '
+ TOKN ' '
  TOKN 179
- CHAR ' '
+ TOKN ' '
  TOKN 240
  TOKN 211
  TOKN 204
  TOKN 255
- CHAR 'D'
- CHAR ' '
+ TOKN 'D'
+ TOKN ' '
  TOKN 239
- CHAR 'Y'
+ TOKN 'Y'
  TOKN 247
- CHAR ' '
+ TOKN ' '
  TOKN 235
  TOKN 223
  TOKN 244
- CHAR ' '
+ TOKN ' '
  TOKN 226
  TOKN 255
- CHAR ' '
+ TOKN ' '
  TOKN 179
- CHAR ' '
+ TOKN ' '
  TOKN 226
  TOKN 240
- CHAR 'K'
-\CHAR '#'
+ TOKN 'K'
+\TOKN '#'
 \EQUB VE
 
- CHAR '.'
- CHAR '.'
+ TOKN '.'
+ TOKN '.'
  TOKN 212
  TOKN 24
  EQUB VE
 
- CHAR 'F'
+ TOKN 'F'
  TOKN 216
  TOKN 229
- CHAR 'D'
+ TOKN 'D'
  EQUB VE
 
  TOKN 227
- CHAR 'T'
+ TOKN 'T'
  TOKN 216
  TOKN 229
  EQUB VE
 
- CHAR 'W'
- CHAR 'E'
- CHAR 'L'
- CHAR 'L'
- CHAR ' '
- CHAR 'K'
+ TOKN 'W'
+ TOKN 'E'
+ TOKN 'L'
+ TOKN 'L'
+ TOKN ' '
+ TOKN 'K'
  TOKN 227
- CHAR 'W'
- CHAR 'N'
+ TOKN 'W'
+ TOKN 'N'
  EQUB VE
 
- CHAR 'F'
- CHAR 'A'
- CHAR 'M'
- CHAR 'O'
+ TOKN 'F'
+ TOKN 'A'
+ TOKN 'M'
+ TOKN 'O'
  TOKN 236
  EQUB VE
 
  TOKN 227
- CHAR 'T'
+ TOKN 'T'
  TOKN 252
  EQUB VE
 
  TOKN 250
- CHAR 'R'
- CHAR 'Y'
+ TOKN 'R'
+ TOKN 'Y'
  EQUB VE
 
- CHAR 'M'
+ TOKN 'M'
  TOKN 220
- CHAR 'D'
- CHAR 'L'
- CHAR 'Y'
+ TOKN 'D'
+ TOKN 'L'
+ TOKN 'Y'
  EQUB VE
 
- CHAR 'M'
- CHAR 'O'
+ TOKN 'M'
+ TOKN 'O'
  TOKN 222
  EQUB VE
 
  TOKN 242
- CHAR 'A'
- CHAR 'S'
+ TOKN 'A'
+ TOKN 'S'
  TOKN 223
  TOKN 216
- CHAR 'L'
- CHAR 'Y'
+ TOKN 'L'
+ TOKN 'Y'
  EQUB VE
 
 \EQUB 0 EOR VE
@@ -35409,158 +36826,158 @@ ENDMACRO
  TOKN 114
  EQUB VE
 
- CHAR 'G'
+ TOKN 'G'
  TOKN 242
  TOKN 245
  EQUB VE
 
- CHAR 'V'
- CHAR 'A'
+ TOKN 'V'
+ TOKN 'A'
  TOKN 222
  EQUB VE
 
- CHAR 'P'
+ TOKN 'P'
  TOKN 240
- CHAR 'K'
+ TOKN 'K'
  EQUB VE
 
  TOKN 2
  TOKN 119
- CHAR ' '
+ TOKN ' '
  TOKN 118
  TOKN 13
- CHAR ' '
+ TOKN ' '
  TOKN 185
- CHAR 'A'
+ TOKN 'A'
  TOKN 251
  TOKN 223
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
  TOKN 156
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
  TOKN 117
  EQUB VE
 
  TOKN 128
- CHAR ' '
- CHAR 'F'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
  TOKN 237
- CHAR 'T'
- CHAR 'S'
+ TOKN 'T'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'O'
+ TOKN 'O'
  TOKN 233
  TOKN 255
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'S'
- CHAR 'H'
- CHAR 'Y'
- CHAR 'N'
+ TOKN 'S'
+ TOKN 'H'
+ TOKN 'Y'
+ TOKN 'N'
  TOKN 237
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'S'
+ TOKN 'S'
  TOKN 220
- CHAR 'L'
+ TOKN 'L'
  TOKN 240
  TOKN 237
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
  TOKN 239
- CHAR 'T'
+ TOKN 'T'
  TOKN 195
- CHAR 'T'
+ TOKN 'T'
  TOKN 248
  TOKN 241
  TOKN 251
  TOKN 223
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
  TOKN 224
  TOKN 245
- CHAR 'H'
+ TOKN 'H'
  TOKN 195
- CHAR 'O'
- CHAR 'F'
- CHAR ' '
+ TOKN 'O'
+ TOKN 'F'
+ TOKN ' '
  TOKN 100
  EQUB VE
 
  TOKN 224
  TOKN 250
- CHAR ' '
- CHAR 'F'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
- CHAR ' '
+ TOKN ' '
  TOKN 100
  EQUB VE
 
- CHAR 'F'
- CHAR 'O'
- CHAR 'O'
- CHAR 'D'
- CHAR ' '
- CHAR 'B'
+ TOKN 'F'
+ TOKN 'O'
+ TOKN 'O'
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'B'
  TOKN 229
- CHAR 'N'
- CHAR 'D'
+ TOKN 'N'
+ TOKN 'D'
  TOKN 244
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'T'
+ TOKN 'T'
  TOKN 217
- CHAR 'R'
- CHAR 'I'
+ TOKN 'R'
+ TOKN 'I'
  TOKN 222
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'P'
- CHAR 'O'
+ TOKN 'P'
+ TOKN 'O'
  TOKN 221
- CHAR 'R'
- CHAR 'Y'
+ TOKN 'R'
+ TOKN 'Y'
  EQUB VE
 
  TOKN 241
- CHAR 'S'
- CHAR 'C'
- CHAR 'O'
- CHAR 'S'
+ TOKN 'S'
+ TOKN 'C'
+ TOKN 'O'
+ TOKN 'S'
  EQUB VE
 
  TOKN 108
  EQUB VE
 
- CHAR 'W'
+ TOKN 'W'
  TOKN 228
- CHAR 'K'
+ TOKN 'K'
  TOKN 195
  TOKN 158
  EQUB VE
 
- CHAR 'C'
+ TOKN 'C'
  TOKN 248
- CHAR 'B'
+ TOKN 'B'
  EQUB VE
 
- CHAR 'B'
+ TOKN 'B'
  TOKN 245
  EQUB VE
 
  TOKN 224
- CHAR 'B'
+ TOKN 'B'
  TOKN 222
  EQUB VE
 
@@ -35568,114 +36985,114 @@ ENDMACRO
  EQUB VE
 
  TOKN 247
- CHAR 'S'
+ TOKN 'S'
  TOKN 221
  EQUB VE
 
- CHAR 'P'
+ TOKN 'P'
  TOKN 249
- CHAR 'G'
- CHAR 'U'
+ TOKN 'G'
+ TOKN 'U'
  TOKN 252
  EQUB VE
 
  TOKN 248
- CHAR 'V'
- CHAR 'A'
- CHAR 'G'
+ TOKN 'V'
+ TOKN 'A'
+ TOKN 'G'
  TOKN 252
  EQUB VE
 
- CHAR 'C'
- CHAR 'U'
- CHAR 'R'
- CHAR 'S'
+ TOKN 'C'
+ TOKN 'U'
+ TOKN 'R'
+ TOKN 'S'
  TOKN 252
  EQUB VE
 
- CHAR 'S'
- CHAR 'C'
+ TOKN 'S'
+ TOKN 'C'
  TOKN 217
- CHAR 'R'
- CHAR 'G'
+ TOKN 'R'
+ TOKN 'G'
  TOKN 252
  EQUB VE
 
  TOKN 113
- CHAR ' '
- CHAR 'C'
- CHAR 'I'
- CHAR 'V'
+ TOKN ' '
+ TOKN 'C'
+ TOKN 'I'
+ TOKN 'V'
  TOKN 220
- CHAR ' '
- CHAR 'W'
+ TOKN ' '
+ TOKN 'W'
  TOKN 238
  EQUB VE
 
  TOKN 104
- CHAR ' '
+ TOKN ' '
  TOKN 95
- CHAR ' '
+ TOKN ' '
  TOKN 96
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'A'
- CHAR ' '
+ TOKN 'A'
+ TOKN ' '
  TOKN 104
- CHAR ' '
+ TOKN ' '
  TOKN 241
  TOKN 218
- CHAR 'A'
+ TOKN 'A'
  TOKN 218
  EQUB VE
 
  TOKN 113
- CHAR ' '
- CHAR 'E'
+ TOKN ' '
+ TOKN 'E'
  TOKN 238
  TOKN 226
  TOKN 254
- CHAR 'A'
- CHAR 'K'
+ TOKN 'A'
+ TOKN 'K'
  TOKN 237
  EQUB VE
 
  TOKN 113
- CHAR ' '
+ TOKN ' '
  TOKN 235
  TOKN 249
- CHAR 'R'
- CHAR ' '
- CHAR 'A'
- CHAR 'C'
+ TOKN 'R'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'C'
  TOKN 251
- CHAR 'V'
+ TOKN 'V'
  TOKN 219
- CHAR 'Y'
+ TOKN 'Y'
  EQUB VE
 
  TOKN 175
  TOKN 93
- CHAR ' '
+ TOKN ' '
  TOKN 94
  EQUB VE
 
  TOKN 147
  TOKN 17
- CHAR ' '
+ TOKN ' '
  TOKN 95
- CHAR ' '
+ TOKN ' '
  TOKN 96
  EQUB VE
 
  TOKN 175
  TOKN 193
- CHAR 'S'
- CHAR 39
- CHAR ' '
+ TOKN 'S'
+ TOKN 39
+ TOKN ' '
  TOKN 98
- CHAR ' '
+ TOKN ' '
  TOKN 99
  EQUB VE
 
@@ -35686,139 +37103,139 @@ ENDMACRO
 
  TOKN 175
  TOKN 107
- CHAR ' '
+ TOKN ' '
  TOKN 108
  EQUB VE
 
- CHAR 'J'
- CHAR 'U'
- CHAR 'I'
+ TOKN 'J'
+ TOKN 'U'
+ TOKN 'I'
  TOKN 233
  EQUB VE
 
- CHAR 'B'
+ TOKN 'B'
  TOKN 248
- CHAR 'N'
- CHAR 'D'
- CHAR 'Y'
+ TOKN 'N'
+ TOKN 'D'
+ TOKN 'Y'
  EQUB VE
 
- CHAR 'W'
+ TOKN 'W'
  TOKN 245
  TOKN 244
  EQUB VE
 
- CHAR 'B'
+ TOKN 'B'
  TOKN 242
- CHAR 'W'
+ TOKN 'W'
  EQUB VE
 
- CHAR 'G'
+ TOKN 'G'
  TOKN 238
- CHAR 'G'
+ TOKN 'G'
  TOKN 229
- CHAR ' '
- CHAR 'B'
+ TOKN ' '
+ TOKN 'B'
  TOKN 249
  TOKN 222
  TOKN 244
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
  TOKN 18
  EQUB VE
 
  TOKN 17
- CHAR ' '
+ TOKN ' '
  TOKN 96
  EQUB VE
 
  TOKN 17
- CHAR ' '
+ TOKN ' '
  TOKN 18
  EQUB VE
 
  TOKN 17
- CHAR ' '
+ TOKN ' '
  TOKN 104
  EQUB VE
 
  TOKN 104
- CHAR ' '
+ TOKN ' '
  TOKN 18
  EQUB VE
 
- CHAR 'F'
+ TOKN 'F'
  TOKN 216
- CHAR 'U'
+ TOKN 'U'
  TOKN 224
  TOKN 236
  EQUB VE
 
- CHAR 'E'
- CHAR 'X'
- CHAR 'O'
+ TOKN 'E'
+ TOKN 'X'
+ TOKN 'O'
  TOKN 251
- CHAR 'C'
+ TOKN 'C'
  EQUB VE
 
- CHAR 'H'
- CHAR 'O'
- CHAR 'O'
- CHAR 'P'
- CHAR 'Y'
+ TOKN 'H'
+ TOKN 'O'
+ TOKN 'O'
+ TOKN 'P'
+ TOKN 'Y'
  EQUB VE
 
- CHAR 'U'
+ TOKN 'U'
  TOKN 225
- CHAR 'S'
- CHAR 'U'
+ TOKN 'S'
+ TOKN 'U'
  TOKN 228
  EQUB VE
 
- CHAR 'E'
- CHAR 'X'
- CHAR 'C'
+ TOKN 'E'
+ TOKN 'X'
+ TOKN 'C'
  TOKN 219
  TOKN 240
- CHAR 'G'
+ TOKN 'G'
  EQUB VE
 
- CHAR 'C'
- CHAR 'U'
- CHAR 'I'
- CHAR 'S'
+ TOKN 'C'
+ TOKN 'U'
+ TOKN 'I'
+ TOKN 'S'
  TOKN 240
- CHAR 'E'
+ TOKN 'E'
  EQUB VE
 
- CHAR 'N'
- CHAR 'I'
- CHAR 'G'
- CHAR 'H'
- CHAR 'T'
- CHAR ' '
- CHAR 'L'
- CHAR 'I'
- CHAR 'F'
- CHAR 'E'
+ TOKN 'N'
+ TOKN 'I'
+ TOKN 'G'
+ TOKN 'H'
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'L'
+ TOKN 'I'
+ TOKN 'F'
+ TOKN 'E'
  EQUB VE
 
- CHAR 'C'
- CHAR 'A'
- CHAR 'S'
- CHAR 'I'
+ TOKN 'C'
+ TOKN 'A'
+ TOKN 'S'
+ TOKN 'I'
  TOKN 227
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'S'
+ TOKN 'S'
  TOKN 219
- CHAR ' '
- CHAR 'C'
- CHAR 'O'
- CHAR 'M'
- CHAR 'S'
+ TOKN ' '
+ TOKN 'C'
+ TOKN 'O'
+ TOKN 'M'
+ TOKN 'S'
  EQUB VE
 
  TOKN 2
@@ -35831,13 +37248,13 @@ ENDMACRO
 
  TOKN 147
  TOKN 145
- CHAR ' '
+ TOKN ' '
  TOKN 3
  EQUB VE
 
  TOKN 147
  TOKN 146
- CHAR ' '
+ TOKN ' '
  TOKN 3
  EQUB VE
 
@@ -35849,116 +37266,116 @@ ENDMACRO
  TOKN 146
  EQUB VE
 
- CHAR 'S'
+ TOKN 'S'
  TOKN 223
- CHAR ' '
- CHAR 'O'
- CHAR 'F'
+ TOKN ' '
+ TOKN 'O'
+ TOKN 'F'
  TOKN 208
- CHAR 'B'
+ TOKN 'B'
  TOKN 219
- CHAR 'C'
- CHAR 'H'
+ TOKN 'C'
+ TOKN 'H'
  EQUB VE
 
- CHAR 'S'
- CHAR 'C'
+ TOKN 'S'
+ TOKN 'C'
  TOKN 217
- CHAR 'N'
- CHAR 'D'
+ TOKN 'N'
+ TOKN 'D'
  TOKN 242
- CHAR 'L'
+ TOKN 'L'
  EQUB VE
 
- CHAR 'B'
+ TOKN 'B'
  TOKN 249
- CHAR 'C'
- CHAR 'K'
- CHAR 'G'
- CHAR 'U'
+ TOKN 'C'
+ TOKN 'K'
+ TOKN 'G'
+ TOKN 'U'
  TOKN 238
- CHAR 'D'
+ TOKN 'D'
  EQUB VE
 
- CHAR 'R'
- CHAR 'O'
- CHAR 'G'
- CHAR 'U'
- CHAR 'E'
+ TOKN 'R'
+ TOKN 'O'
+ TOKN 'G'
+ TOKN 'U'
+ TOKN 'E'
  EQUB VE
 
- CHAR 'W'
- CHAR 'H'
+ TOKN 'W'
+ TOKN 'H'
  TOKN 253
  TOKN 237
  TOKN 223
- CHAR ' '
+ TOKN ' '
  TOKN 247
  TOKN 221
  TOKN 229
- CHAR ' '
- CHAR 'H'
- CHAR 'E'
- CHAR 'A'
- CHAR 'D'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'E'
+ TOKN 'A'
+ TOKN 'D'
  TOKN 196
- CHAR 'F'
+ TOKN 'F'
  TOKN 249
- CHAR 'P'
- CHAR ' '
- CHAR 'E'
+ TOKN 'P'
+ TOKN ' '
+ TOKN 'E'
  TOKN 238
- CHAR 39
- CHAR 'D'
- CHAR ' '
- CHAR 'K'
- CHAR 'N'
- CHAR 'A'
+ TOKN 39
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'K'
+ TOKN 'N'
+ TOKN 'A'
  TOKN 250
  EQUB VE
 
- CHAR 'N'
- CHAR ' '
- CHAR 'U'
- CHAR 'N'
+ TOKN 'N'
+ TOKN ' '
+ TOKN 'U'
+ TOKN 'N'
  TOKN 242
  TOKN 239
- CHAR 'R'
- CHAR 'K'
+ TOKN 'R'
+ TOKN 'K'
  TOKN 216
  TOKN 229
  EQUB VE
 
- CHAR ' '
- CHAR 'B'
+ TOKN ' '
+ TOKN 'B'
  TOKN 253
  TOKN 240
- CHAR 'G'
+ TOKN 'G'
  EQUB VE
 
- CHAR ' '
- CHAR 'D'
- CHAR 'U'
- CHAR 'L'
- CHAR 'L'
+ TOKN ' '
+ TOKN 'D'
+ TOKN 'U'
+ TOKN 'L'
+ TOKN 'L'
  EQUB VE
 
- CHAR ' '
- CHAR 'T'
- CHAR 'E'
+ TOKN ' '
+ TOKN 'T'
+ TOKN 'E'
  TOKN 241
- CHAR 'O'
+ TOKN 'O'
  TOKN 236
  EQUB VE
 
- CHAR ' '
+ TOKN ' '
  TOKN 242
- CHAR 'V'
- CHAR 'O'
- CHAR 'L'
- CHAR 'T'
+ TOKN 'V'
+ TOKN 'O'
+ TOKN 'L'
+ TOKN 'T'
  TOKN 240
- CHAR 'G'
+ TOKN 'G'
  EQUB VE
 
  TOKN 145
@@ -35967,127 +37384,127 @@ ENDMACRO
  TOKN 146
  EQUB VE
 
- CHAR 'P'
+ TOKN 'P'
  TOKN 249
  TOKN 233
  EQUB VE
 
- CHAR 'L'
+ TOKN 'L'
  TOKN 219
- CHAR 'T'
+ TOKN 'T'
  TOKN 229
- CHAR ' '
+ TOKN ' '
  TOKN 145
  EQUB VE
 
- CHAR 'D'
- CHAR 'U'
- CHAR 'M'
- CHAR 'P'
+ TOKN 'D'
+ TOKN 'U'
+ TOKN 'M'
+ TOKN 'P'
  EQUB VE
 
- CHAR 'I'
- CHAR ' '
- CHAR 'H'
- CHAR 'E'
+ TOKN 'I'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'E'
  TOKN 238
  TOKN 208
  TOKN 114
- CHAR ' '
+ TOKN ' '
  TOKN 224
- CHAR 'O'
- CHAR 'K'
+ TOKN 'O'
+ TOKN 'K'
  TOKN 195
  TOKN 207
- CHAR ' '
- CHAR 'A'
- CHAR 'P'
- CHAR 'P'
- CHAR 'E'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'P'
+ TOKN 'P'
+ TOKN 'E'
  TOKN 238
  TOKN 196
  TOKN 245
  TOKN 209
  EQUB VE
 
- CHAR 'Y'
- CHAR 'E'
- CHAR 'A'
- CHAR 'H'
- CHAR ','
- CHAR ' '
- CHAR 'I'
- CHAR ' '
- CHAR 'H'
- CHAR 'E'
+ TOKN 'Y'
+ TOKN 'E'
+ TOKN 'A'
+ TOKN 'H'
+ TOKN ','
+ TOKN ' '
+ TOKN 'I'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'E'
  TOKN 238
  TOKN 208
  TOKN 114
- CHAR ' '
+ TOKN ' '
  TOKN 207
- CHAR ' '
+ TOKN ' '
  TOKN 229
- CHAR 'F'
- CHAR 'T'
+ TOKN 'F'
+ TOKN 'T'
  TOKN 209
  TOKN 208
- CHAR ' '
- CHAR 'W'
- CHAR 'H'
- CHAR 'I'
+ TOKN ' '
+ TOKN 'W'
+ TOKN 'H'
+ TOKN 'I'
  TOKN 229
- CHAR ' '
- CHAR 'B'
- CHAR 'A'
- CHAR 'C'
- CHAR 'K'
+ TOKN ' '
+ TOKN 'B'
+ TOKN 'A'
+ TOKN 'C'
+ TOKN 'K'
  EQUB VE
 
- CHAR 'G'
+ TOKN 'G'
  TOKN 221
- CHAR ' '
+ TOKN ' '
  TOKN 179
- CHAR 'R'
- CHAR ' '
- CHAR 'I'
- CHAR 'R'
+ TOKN 'R'
+ TOKN ' '
+ TOKN 'I'
+ TOKN 'R'
  TOKN 223
- CHAR ' '
- CHAR 'A'
- CHAR 'S'
- CHAR 'S'
- CHAR ' '
- CHAR 'O'
- CHAR 'V'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'S'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'O'
+ TOKN 'V'
  TOKN 244
- CHAR ' '
- CHAR 'T'
- CHAR 'O'
+ TOKN ' '
+ TOKN 'T'
+ TOKN 'O'
  TOKN 209
  EQUB VE
 
  TOKN 235
- CHAR 'M'
- CHAR 'E'
- CHAR ' '
+ TOKN 'M'
+ TOKN 'E'
+ TOKN ' '
  TOKN 115
  TOKN 210
  TOKN 207
- CHAR ' '
- CHAR 'W'
- CHAR 'A'
- CHAR 'S'
- CHAR ' '
+ TOKN ' '
+ TOKN 'W'
+ TOKN 'A'
+ TOKN 'S'
+ TOKN ' '
  TOKN 218
  TOKN 246
- CHAR ' '
+ TOKN ' '
  TOKN 245
  TOKN 209
  EQUB VE
 
- CHAR 'T'
- CHAR 'R'
- CHAR 'Y'
+ TOKN 'T'
+ TOKN 'R'
+ TOKN 'Y'
  TOKN 209
  EQUB VE
 
@@ -36103,74 +37520,74 @@ ENDMACRO
 \EQUB 0 EOR VE
  EQUB VE
 
- CHAR 'W'
- CHAR 'A'
- CHAR 'S'
- CHAR 'P'
+ TOKN 'W'
+ TOKN 'A'
+ TOKN 'S'
+ TOKN 'P'
  EQUB VE
 
- CHAR 'M'
- CHAR 'O'
+ TOKN 'M'
+ TOKN 'O'
  TOKN 226
  EQUB VE
 
- CHAR 'G'
- CHAR 'R'
- CHAR 'U'
- CHAR 'B'
+ TOKN 'G'
+ TOKN 'R'
+ TOKN 'U'
+ TOKN 'B'
  EQUB VE
 
  TOKN 255
- CHAR 'T'
+ TOKN 'T'
  EQUB VE
 
  TOKN 18
  EQUB VE
 
- CHAR 'P'
- CHAR 'O'
+ TOKN 'P'
+ TOKN 'O'
  TOKN 221
  EQUB VE
 
  TOKN 238
- CHAR 'T'
- CHAR 'S'
- CHAR ' '
- CHAR 'G'
+ TOKN 'T'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'G'
  TOKN 248
- CHAR 'D'
- CHAR 'U'
+ TOKN 'D'
+ TOKN 'U'
  TOKN 245
- CHAR 'E'
+ TOKN 'E'
  EQUB VE
 
- CHAR 'Y'
- CHAR 'A'
- CHAR 'K'
+ TOKN 'Y'
+ TOKN 'A'
+ TOKN 'K'
  EQUB VE
 
- CHAR 'S'
- CHAR 'N'
- CHAR 'A'
+ TOKN 'S'
+ TOKN 'N'
+ TOKN 'A'
  TOKN 220
  EQUB VE
 
- CHAR 'S'
- CHAR 'L'
- CHAR 'U'
- CHAR 'G'
+ TOKN 'S'
+ TOKN 'L'
+ TOKN 'U'
+ TOKN 'G'
  EQUB VE
 
- CHAR 'T'
- CHAR 'R'
- CHAR 'O'
- CHAR 'P'
- CHAR 'I'
- CHAR 'C'
+ TOKN 'T'
+ TOKN 'R'
+ TOKN 'O'
+ TOKN 'P'
+ TOKN 'I'
+ TOKN 'C'
  TOKN 228
  EQUB VE
 
- CHAR 'D'
+ TOKN 'D'
  TOKN 246
  TOKN 218
  EQUB VE
@@ -36179,107 +37596,107 @@ ENDMACRO
  TOKN 240
  EQUB VE
 
- CHAR 'I'
- CHAR 'M'
- CHAR 'P'
+ TOKN 'I'
+ TOKN 'M'
+ TOKN 'P'
  TOKN 246
  TOKN 221
  TOKN 248
- CHAR 'B'
+ TOKN 'B'
  TOKN 229
  EQUB VE
 
- CHAR 'E'
- CHAR 'X'
- CHAR 'U'
+ TOKN 'E'
+ TOKN 'X'
+ TOKN 'U'
  TOKN 247
  TOKN 248
- CHAR 'N'
- CHAR 'T'
+ TOKN 'N'
+ TOKN 'T'
  EQUB VE
 
- CHAR 'F'
- CHAR 'U'
- CHAR 'N'
- CHAR 'N'
- CHAR 'Y'
+ TOKN 'F'
+ TOKN 'U'
+ TOKN 'N'
+ TOKN 'N'
+ TOKN 'Y'
  EQUB VE
 
- CHAR 'W'
- CHAR 'I'
+ TOKN 'W'
+ TOKN 'I'
  TOKN 244
- CHAR 'D'
+ TOKN 'D'
  EQUB VE
 
- CHAR 'U'
+ TOKN 'U'
  TOKN 225
- CHAR 'S'
- CHAR 'U'
+ TOKN 'S'
+ TOKN 'U'
  TOKN 228
  EQUB VE
 
  TOKN 222
  TOKN 248
- CHAR 'N'
+ TOKN 'N'
  TOKN 231
  EQUB VE
 
- CHAR 'P'
- CHAR 'E'
- CHAR 'C'
- CHAR 'U'
- CHAR 'L'
- CHAR 'I'
+ TOKN 'P'
+ TOKN 'E'
+ TOKN 'C'
+ TOKN 'U'
+ TOKN 'L'
+ TOKN 'I'
  TOKN 238
  EQUB VE
 
- CHAR 'F'
+ TOKN 'F'
  TOKN 242
  TOKN 254
  TOKN 246
- CHAR 'T'
+ TOKN 'T'
  EQUB VE
 
- CHAR 'O'
- CHAR 'C'
- CHAR 'C'
- CHAR 'A'
- CHAR 'S'
- CHAR 'I'
+ TOKN 'O'
+ TOKN 'C'
+ TOKN 'C'
+ TOKN 'A'
+ TOKN 'S'
+ TOKN 'I'
  TOKN 223
  TOKN 228
  EQUB VE
 
- CHAR 'U'
- CHAR 'N'
- CHAR 'P'
+ TOKN 'U'
+ TOKN 'N'
+ TOKN 'P'
  TOKN 242
  TOKN 241
- CHAR 'C'
- CHAR 'T'
+ TOKN 'C'
+ TOKN 'T'
  TOKN 216
  TOKN 229
  EQUB VE
 
- CHAR 'D'
+ TOKN 'D'
  TOKN 242
- CHAR 'A'
- CHAR 'D'
- CHAR 'F'
- CHAR 'U'
- CHAR 'L'
+ TOKN 'A'
+ TOKN 'D'
+ TOKN 'F'
+ TOKN 'U'
+ TOKN 'L'
  EQUB VE
 
  TOKN 171
  EQUB VE
 
  TOKN 92
- CHAR ' '
+ TOKN ' '
  TOKN 91
- CHAR ' '
- CHAR 'F'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
- CHAR ' '
+ TOKN ' '
  TOKN 101
  EQUB VE
 
@@ -36289,55 +37706,55 @@ ENDMACRO
  EQUB VE
 
  TOKN 102
- CHAR ' '
- CHAR 'B'
- CHAR 'Y'
- CHAR ' '
+ TOKN ' '
+ TOKN 'B'
+ TOKN 'Y'
+ TOKN ' '
  TOKN 103
  EQUB VE
 
  TOKN 140
- CHAR ' '
- CHAR 'B'
- CHAR 'U'
- CHAR 'T'
- CHAR ' '
+ TOKN ' '
+ TOKN 'B'
+ TOKN 'U'
+ TOKN 'T'
+ TOKN ' '
  TOKN 142
  EQUB VE
 
- CHAR ' '
- CHAR 'A'
+ TOKN ' '
+ TOKN 'A'
  TOKN 111
- CHAR ' '
+ TOKN ' '
  TOKN 112
  EQUB VE
 
- CHAR 'P'
- CHAR 'L'
+ TOKN 'P'
+ TOKN 'L'
  TOKN 255
  TOKN 221
  EQUB VE
 
- CHAR 'W'
+ TOKN 'W'
  TOKN 253
- CHAR 'L'
- CHAR 'D'
+ TOKN 'L'
+ TOKN 'D'
  EQUB VE
 
  TOKN 226
- CHAR 'E'
- CHAR ' '
+ TOKN 'E'
+ TOKN ' '
  EQUB VE
 
  TOKN 226
- CHAR 'I'
- CHAR 'S'
- CHAR ' '
+ TOKN 'I'
+ TOKN 'S'
+ TOKN ' '
  EQUB VE
 
  TOKN 224
- CHAR 'A'
- CHAR 'D'
+ TOKN 'A'
+ TOKN 'D'
  TOKN 210
  TOKN 154
  EQUB VE
@@ -36348,63 +37765,63 @@ ENDMACRO
  TOKN 8
  EQUB VE
 
- CHAR 'D'
- CHAR 'R'
- CHAR 'I'
+ TOKN 'D'
+ TOKN 'R'
+ TOKN 'I'
  TOKN 250
  EQUB VE
 
- CHAR ' '
- CHAR 'C'
+ TOKN ' '
+ TOKN 'C'
  TOKN 245
- CHAR 'A'
+ TOKN 'A'
  TOKN 224
- CHAR 'G'
- CHAR 'U'
- CHAR 'E'
+ TOKN 'G'
+ TOKN 'U'
+ TOKN 'E'
  EQUB VE
 
- CHAR 'I'
+ TOKN 'I'
  TOKN 255
  EQUB VE
 
  TOKN 19
- CHAR 'C'
- CHAR 'O'
- CHAR 'M'
- CHAR 'M'
+ TOKN 'C'
+ TOKN 'O'
+ TOKN 'M'
+ TOKN 'M'
  TOKN 255
- CHAR 'D'
+ TOKN 'D'
  TOKN 244
  EQUB VE
 
  TOKN 104
  EQUB VE
 
- CHAR 'M'
+ TOKN 'M'
  TOKN 217
- CHAR 'N'
- CHAR 'T'
- CHAR 'A'
+ TOKN 'N'
+ TOKN 'T'
+ TOKN 'A'
  TOKN 240
  EQUB VE
 
  TOKN 252
- CHAR 'I'
- CHAR 'B'
+ TOKN 'I'
+ TOKN 'B'
  TOKN 229
  EQUB VE
 
- CHAR 'T'
+ TOKN 'T'
  TOKN 242
- CHAR 'E'
+ TOKN 'E'
  EQUB VE
 
- CHAR 'S'
- CHAR 'P'
- CHAR 'O'
- CHAR 'T'
- CHAR 'T'
+ TOKN 'S'
+ TOKN 'P'
+ TOKN 'O'
+ TOKN 'T'
+ TOKN 'T'
  TOKN 252
  EQUB VE
 
@@ -36415,9 +37832,9 @@ ENDMACRO
  EQUB VE
 
  TOKN 97
- CHAR 'O'
- CHAR 'I'
- CHAR 'D'
+ TOKN 'O'
+ TOKN 'I'
+ TOKN 'D'
  EQUB VE
 
  TOKN 127
@@ -36427,33 +37844,33 @@ ENDMACRO
  EQUB VE
 
  TOKN 255
- CHAR 'C'
- CHAR 'I'
+ TOKN 'C'
+ TOKN 'I'
  TOKN 246
- CHAR 'T'
+ TOKN 'T'
  EQUB VE
 
- CHAR 'E'
- CHAR 'X'
+ TOKN 'E'
+ TOKN 'X'
  TOKN 233
- CHAR 'P'
+ TOKN 'P'
  TOKN 251
  TOKN 223
  TOKN 228
  EQUB VE
 
- CHAR 'E'
- CHAR 'C'
+ TOKN 'E'
+ TOKN 'C'
  TOKN 233
- CHAR 'N'
- CHAR 'T'
- CHAR 'R'
- CHAR 'I'
- CHAR 'C'
+ TOKN 'N'
+ TOKN 'T'
+ TOKN 'R'
+ TOKN 'I'
+ TOKN 'C'
  EQUB VE
 
  TOKN 240
- CHAR 'G'
+ TOKN 'G'
  TOKN 248
  TOKN 240
  TOKN 252
@@ -36462,22 +37879,22 @@ ENDMACRO
  TOKN 114
  EQUB VE
 
- CHAR 'K'
+ TOKN 'K'
  TOKN 220
- CHAR 'L'
+ TOKN 'L'
  TOKN 244
  EQUB VE
 
- CHAR 'D'
- CHAR 'E'
- CHAR 'A'
- CHAR 'D'
- CHAR 'L'
- CHAR 'Y'
+ TOKN 'D'
+ TOKN 'E'
+ TOKN 'A'
+ TOKN 'D'
+ TOKN 'L'
+ TOKN 'Y'
  EQUB VE
 
- CHAR 'E'
- CHAR 'V'
+ TOKN 'E'
+ TOKN 'V'
  TOKN 220
  EQUB VE
 
@@ -36486,17 +37903,17 @@ ENDMACRO
  TOKN 228
  EQUB VE
 
- CHAR 'V'
- CHAR 'I'
- CHAR 'C'
- CHAR 'I'
- CHAR 'O'
+ TOKN 'V'
+ TOKN 'I'
+ TOKN 'C'
+ TOKN 'I'
+ TOKN 'O'
  TOKN 236
  EQUB VE
 
  TOKN 219
- CHAR 'S'
- CHAR ' '
+ TOKN 'S'
+ TOKN ' '
  EQUB VE
 
  TOKN 13
@@ -36504,100 +37921,100 @@ ENDMACRO
  TOKN 19
  EQUB VE
 
- CHAR '.'
+ TOKN '.'
  TOKN 12
  TOKN 15
  EQUB VE
 
- CHAR ' '
+ TOKN ' '
  TOKN 255
- CHAR 'D'
- CHAR ' '
+ TOKN 'D'
+ TOKN ' '
  EQUB VE
 
- CHAR 'Y'
+ TOKN 'Y'
  TOKN 217
  EQUB VE
 
- CHAR 'P'
+ TOKN 'P'
  TOKN 238
- CHAR 'K'
+ TOKN 'K'
  TOKN 195
- CHAR 'M'
+ TOKN 'M'
  TOKN 221
  TOKN 244
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'D'
+ TOKN 'D'
  TOKN 236
- CHAR 'T'
- CHAR ' '
- CHAR 'C'
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'C'
  TOKN 224
- CHAR 'U'
- CHAR 'D'
- CHAR 'S'
+ TOKN 'U'
+ TOKN 'D'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'I'
+ TOKN 'I'
  TOKN 233
- CHAR ' '
+ TOKN ' '
  TOKN 247
- CHAR 'R'
- CHAR 'G'
- CHAR 'S'
+ TOKN 'R'
+ TOKN 'G'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'R'
- CHAR 'O'
- CHAR 'C'
- CHAR 'K'
- CHAR ' '
- CHAR 'F'
+ TOKN 'R'
+ TOKN 'O'
+ TOKN 'C'
+ TOKN 'K'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
  TOKN 239
  TOKN 251
  TOKN 223
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'V'
- CHAR 'O'
- CHAR 'L'
- CHAR 'C'
- CHAR 'A'
+ TOKN 'V'
+ TOKN 'O'
+ TOKN 'L'
+ TOKN 'C'
+ TOKN 'A'
  TOKN 227
  TOKN 237
  EQUB VE
 
- CHAR 'P'
- CHAR 'L'
+ TOKN 'P'
+ TOKN 'L'
  TOKN 255
- CHAR 'T'
+ TOKN 'T'
  EQUB VE
 
- CHAR 'T'
- CHAR 'U'
- CHAR 'L'
- CHAR 'I'
- CHAR 'P'
+ TOKN 'T'
+ TOKN 'U'
+ TOKN 'L'
+ TOKN 'I'
+ TOKN 'P'
  EQUB VE
 
- CHAR 'B'
+ TOKN 'B'
  TOKN 255
  TOKN 255
- CHAR 'A'
+ TOKN 'A'
  EQUB VE
 
- CHAR 'C'
+ TOKN 'C'
  TOKN 253
- CHAR 'N'
+ TOKN 'N'
  EQUB VE
 
  TOKN 18
- CHAR 'W'
- CHAR 'E'
+ TOKN 'W'
+ TOKN 'E'
  TOKN 252
  EQUB VE
 
@@ -36605,34 +38022,34 @@ ENDMACRO
  EQUB VE
 
  TOKN 17
- CHAR ' '
+ TOKN ' '
  TOKN 18
  EQUB VE
 
  TOKN 17
- CHAR ' '
+ TOKN ' '
  TOKN 104
  EQUB VE
 
  TOKN 240
- CHAR 'H'
- CHAR 'A'
+ TOKN 'H'
+ TOKN 'A'
  TOKN 234
- CHAR 'T'
+ TOKN 'T'
  TOKN 255
- CHAR 'T'
+ TOKN 'T'
  EQUB VE
 
  TOKN 191
  EQUB VE
 
  TOKN 240
- CHAR 'G'
- CHAR ' '
+ TOKN 'G'
+ TOKN ' '
  EQUB VE
 
  TOKN 252
- CHAR ' '
+ TOKN ' '
  EQUB VE
 
 \EQUB 0 EOR VE
@@ -36644,155 +38061,155 @@ ENDMACRO
 \EQUB 0 EOR VE
  EQUB VE
 
- CHAR ' '
- CHAR 'N'
- CHAR 'A'
- CHAR 'M'
- CHAR 'E'
- CHAR '?'
- CHAR ' '
+ TOKN ' '
+ TOKN 'N'
+ TOKN 'A'
+ TOKN 'M'
+ TOKN 'E'
+ TOKN '?'
+ TOKN ' '
  EQUB VE
 
- CHAR ' '
- CHAR 'T'
- CHAR 'O'
- CHAR ' '
+ TOKN ' '
+ TOKN 'T'
+ TOKN 'O'
+ TOKN ' '
  EQUB VE
 
- CHAR ' '
- CHAR 'I'
- CHAR 'S'
- CHAR ' '
+ TOKN ' '
+ TOKN 'I'
+ TOKN 'S'
+ TOKN ' '
  EQUB VE
 
- CHAR 'W'
- CHAR 'A'
- CHAR 'S'
- CHAR ' '
+ TOKN 'W'
+ TOKN 'A'
+ TOKN 'S'
+ TOKN ' '
  TOKN 249
  TOKN 222
- CHAR ' '
+ TOKN ' '
  TOKN 218
  TOKN 246
- CHAR ' '
+ TOKN ' '
  TOKN 245
- CHAR ' '
+ TOKN ' '
  TOKN 19
  EQUB VE
 
- CHAR '.'
+ TOKN '.'
  TOKN 12
- CHAR ' '
+ TOKN ' '
  TOKN 19
  EQUB VE
 
- CHAR 'D'
- CHAR 'O'
- CHAR 'C'
- CHAR 'K'
+ TOKN 'D'
+ TOKN 'O'
+ TOKN 'C'
+ TOKN 'K'
  TOKN 252
  EQUB VE
 
  TOKN 1
- CHAR '('
- CHAR 'Y'
- CHAR '/'
- CHAR 'N'
- CHAR ')'
- CHAR '?'
+ TOKN '('
+ TOKN 'Y'
+ TOKN '/'
+ TOKN 'N'
+ TOKN ')'
+ TOKN '?'
  EQUB VE
 
- CHAR 'S'
- CHAR 'H'
- CHAR 'I'
- CHAR 'P'
+ TOKN 'S'
+ TOKN 'H'
+ TOKN 'I'
+ TOKN 'P'
  EQUB VE
 
- CHAR ' '
- CHAR 'A'
- CHAR ' '
+ TOKN ' '
+ TOKN 'A'
+ TOKN ' '
  EQUB VE
 
- CHAR ' '
+ TOKN ' '
  TOKN 244
- CHAR 'R'
- CHAR 'I'
+ TOKN 'R'
+ TOKN 'I'
  TOKN 236
  EQUB VE
 
- CHAR ' '
- CHAR 'N'
- CHAR 'E'
- CHAR 'W'
- CHAR ' '
+ TOKN ' '
+ TOKN 'N'
+ TOKN 'E'
+ TOKN 'W'
+ TOKN ' '
  EQUB VE
 
  TOKN 2
- CHAR ' '
- CHAR 'H'
+ TOKN ' '
+ TOKN 'H'
  TOKN 244
- CHAR ' '
+ TOKN ' '
  TOKN 239
- CHAR 'J'
+ TOKN 'J'
  TOKN 237
- CHAR 'T'
- CHAR 'Y'
- CHAR 39
- CHAR 'S'
- CHAR ' '
- CHAR 'S'
- CHAR 'P'
- CHAR 'A'
+ TOKN 'T'
+ TOKN 'Y'
+ TOKN 39
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'P'
+ TOKN 'A'
  TOKN 233
- CHAR ' '
- CHAR 'N'
- CHAR 'A'
- CHAR 'V'
- CHAR 'Y'
+ TOKN ' '
+ TOKN 'N'
+ TOKN 'A'
+ TOKN 'V'
+ TOKN 'Y'
  TOKN 13
  EQUB VE
 
  TOKN 177
  TOKN 8
  TOKN 1
- CHAR ' '
- CHAR ' '
- CHAR 'M'
+ TOKN ' '
+ TOKN ' '
+ TOKN 'M'
  TOKN 237
- CHAR 'S'
- CHAR 'A'
+ TOKN 'S'
+ TOKN 'A'
  TOKN 231
- CHAR ' '
+ TOKN ' '
  TOKN 246
- CHAR 'D'
- CHAR 'S'
+ TOKN 'D'
+ TOKN 'S'
  EQUB VE
 
- CHAR ' '
+ TOKN ' '
  TOKN 154
- CHAR ' '
+ TOKN ' '
  TOKN 4
- CHAR ','
- CHAR ' '
- CHAR 'I'
- CHAR ' '
+ TOKN ','
+ TOKN ' '
+ TOKN 'I'
+ TOKN ' '
  TOKN 13
- CHAR 'A'
- CHAR 'M'
+ TOKN 'A'
+ TOKN 'M'
  TOKN 2
- CHAR ' '
- CHAR 'C'
- CHAR 'A'
- CHAR 'P'
- CHAR 'T'
- CHAR 'A'
+ TOKN ' '
+ TOKN 'C'
+ TOKN 'A'
+ TOKN 'P'
+ TOKN 'T'
+ TOKN 'A'
  TOKN 240
- CHAR ' '
+ TOKN ' '
  TOKN 27
- CHAR ' '
+ TOKN ' '
  TOKN 13
- CHAR 'O'
- CHAR 'F'
+ TOKN 'O'
+ TOKN 'F'
  TOKN 211
  EQUB VE
 
@@ -36800,14 +38217,14 @@ ENDMACRO
  EQUB VE
 
  TOKN 15
- CHAR ' '
- CHAR 'U'
- CHAR 'N'
- CHAR 'K'
+ TOKN ' '
+ TOKN 'U'
+ TOKN 'N'
+ TOKN 'K'
  TOKN 227
- CHAR 'W'
- CHAR 'N'
- CHAR ' '
+ TOKN 'W'
+ TOKN 'N'
+ TOKN ' '
  TOKN 145
  EQUB VE
 
@@ -36817,48 +38234,48 @@ ENDMACRO
  TOKN 30
  TOKN 1
  TOKN 240
- CHAR 'C'
- CHAR 'O'
- CHAR 'M'
+ TOKN 'C'
+ TOKN 'O'
+ TOKN 'M'
  TOKN 195
- CHAR 'M'
+ TOKN 'M'
  TOKN 237
- CHAR 'S'
- CHAR 'A'
+ TOKN 'S'
+ TOKN 'A'
  TOKN 231
  EQUB VE
 
- CHAR 'C'
- CHAR 'U'
- CHAR 'R'
- CHAR 'R'
- CHAR 'U'
+ TOKN 'C'
+ TOKN 'U'
+ TOKN 'R'
+ TOKN 'R'
+ TOKN 'U'
  TOKN 226
  TOKN 244
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
- CHAR 'F'
- CHAR 'O'
- CHAR 'S'
- CHAR 'D'
- CHAR 'Y'
- CHAR 'K'
- CHAR 'E'
- CHAR ' '
- CHAR 'S'
- CHAR 'M'
- CHAR 'Y'
+ TOKN 'F'
+ TOKN 'O'
+ TOKN 'S'
+ TOKN 'D'
+ TOKN 'Y'
+ TOKN 'K'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'M'
+ TOKN 'Y'
  TOKN 226
- CHAR 'E'
+ TOKN 'E'
  EQUB VE
 
- CHAR 'F'
+ TOKN 'F'
  TOKN 253
- CHAR 'T'
+ TOKN 'T'
  TOKN 237
  TOKN 254
- CHAR 'E'
+ TOKN 'E'
  EQUB VE
 
  TOKN 203
@@ -36868,32 +38285,32 @@ ENDMACRO
  TOKN 233
  EQUB VE
 
- CHAR 'I'
- CHAR 'S'
- CHAR ' '
+ TOKN 'I'
+ TOKN 'S'
+ TOKN ' '
  TOKN 247
- CHAR 'L'
- CHAR 'I'
- CHAR 'E'
- CHAR 'V'
+ TOKN 'L'
+ TOKN 'I'
+ TOKN 'E'
+ TOKN 'V'
  TOKN 252
  TOKN 201
- CHAR 'H'
- CHAR 'A'
+ TOKN 'H'
+ TOKN 'A'
  TOKN 250
- CHAR ' '
- CHAR 'J'
- CHAR 'U'
- CHAR 'M'
- CHAR 'P'
+ TOKN ' '
+ TOKN 'J'
+ TOKN 'U'
+ TOKN 'M'
+ TOKN 'P'
  TOKN 252
  TOKN 201
  TOKN 148
- CHAR 'G'
+ TOKN 'G'
  TOKN 228
- CHAR 'A'
- CHAR 'X'
- CHAR 'Y'
+ TOKN 'A'
+ TOKN 'X'
+ TOKN 'Y'
  EQUB VE
 
  TOKN 25
@@ -36902,472 +38319,472 @@ ENDMACRO
  TOKN 29
  TOKN 14
  TOKN 2
- CHAR 'G'
- CHAR 'O'
- CHAR 'O'
- CHAR 'D'
- CHAR ' '
- CHAR 'D'
- CHAR 'A'
- CHAR 'Y'
- CHAR ' '
+ TOKN 'G'
+ TOKN 'O'
+ TOKN 'O'
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'D'
+ TOKN 'A'
+ TOKN 'Y'
+ TOKN ' '
  TOKN 154
- CHAR ' '
+ TOKN ' '
  TOKN 4
  TOKN 204
- CHAR 'I'
+ TOKN 'I'
  TOKN 13
- CHAR ' '
- CHAR 'A'
- CHAR 'M'
- CHAR ' '
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'M'
+ TOKN ' '
  TOKN 19
- CHAR 'A'
- CHAR 'G'
+ TOKN 'A'
+ TOKN 'G'
  TOKN 246
- CHAR 'T'
- CHAR ' '
+ TOKN 'T'
+ TOKN ' '
  TOKN 19
- CHAR 'B'
+ TOKN 'B'
  TOKN 249
- CHAR 'K'
- CHAR 'E'
- CHAR ' '
- CHAR 'O'
- CHAR 'F'
- CHAR ' '
+ TOKN 'K'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'O'
+ TOKN 'F'
+ TOKN ' '
  TOKN 19
- CHAR 'N'
- CHAR 'A'
- CHAR 'V'
- CHAR 'A'
- CHAR 'L'
- CHAR ' '
+ TOKN 'N'
+ TOKN 'A'
+ TOKN 'V'
+ TOKN 'A'
+ TOKN 'L'
+ TOKN ' '
  TOKN 19
  TOKN 240
- CHAR 'T'
- CHAR 'E'
- CHAR 'L'
+ TOKN 'T'
+ TOKN 'E'
+ TOKN 'L'
  TOKN 229
- CHAR 'G'
+ TOKN 'G'
  TOKN 246
  TOKN 233
  TOKN 204
- CHAR 'A'
- CHAR 'S'
- CHAR ' '
+ TOKN 'A'
+ TOKN 'S'
+ TOKN ' '
  TOKN 179
- CHAR ' '
- CHAR 'K'
+ TOKN ' '
+ TOKN 'K'
  TOKN 227
- CHAR 'W'
- CHAR ','
- CHAR ' '
+ TOKN 'W'
+ TOKN ','
+ TOKN ' '
  TOKN 147
  TOKN 19
- CHAR 'N'
- CHAR 'A'
- CHAR 'V'
- CHAR 'Y'
- CHAR ' '
- CHAR 'H'
- CHAR 'A'
+ TOKN 'N'
+ TOKN 'A'
+ TOKN 'V'
+ TOKN 'Y'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'A'
  TOKN 250
- CHAR ' '
+ TOKN ' '
  TOKN 247
  TOKN 246
- CHAR ' '
- CHAR 'K'
- CHAR 'E'
- CHAR 'E'
- CHAR 'P'
+ TOKN ' '
+ TOKN 'K'
+ TOKN 'E'
+ TOKN 'E'
+ TOKN 'P'
  TOKN 195
  TOKN 147
  TOKN 19
  TOKN 226
  TOKN 238
- CHAR 'G'
- CHAR 'O'
- CHAR 'I'
- CHAR 'D'
- CHAR 'S'
-\CHAR '#'
+ TOKN 'G'
+ TOKN 'O'
+ TOKN 'I'
+ TOKN 'D'
+ TOKN 'S'
+\TOKN '#'
 \EQUB VE
 
- CHAR ' '
- CHAR 'O'
- CHAR 'F'
- CHAR 'F'
- CHAR ' '
+ TOKN ' '
+ TOKN 'O'
+ TOKN 'F'
+ TOKN 'F'
+ TOKN ' '
  TOKN 179
- CHAR 'R'
- CHAR ' '
- CHAR 'A'
- CHAR 'S'
- CHAR 'S'
- CHAR ' '
+ TOKN 'R'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'S'
+ TOKN 'S'
+ TOKN ' '
  TOKN 217
- CHAR 'T'
- CHAR ' '
+ TOKN 'T'
+ TOKN ' '
  TOKN 240
- CHAR ' '
- CHAR 'D'
- CHAR 'E'
- CHAR 'E'
- CHAR 'P'
- CHAR ' '
- CHAR 'S'
- CHAR 'P'
- CHAR 'A'
+ TOKN ' '
+ TOKN 'D'
+ TOKN 'E'
+ TOKN 'E'
+ TOKN 'P'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'P'
+ TOKN 'A'
  TOKN 233
- CHAR ' '
- CHAR 'F'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
- CHAR ' '
+ TOKN ' '
  TOKN 239
- CHAR 'N'
- CHAR 'Y'
- CHAR ' '
- CHAR 'Y'
- CHAR 'E'
+ TOKN 'N'
+ TOKN 'Y'
+ TOKN ' '
+ TOKN 'Y'
+ TOKN 'E'
  TOKN 238
- CHAR 'S'
- CHAR ' '
+ TOKN 'S'
+ TOKN ' '
  TOKN 227
- CHAR 'W'
- CHAR '.'
- CHAR ' '
+ TOKN 'W'
+ TOKN '.'
+ TOKN ' '
  TOKN 19
- CHAR 'W'
- CHAR 'E'
- CHAR 'L'
- CHAR 'L'
- CHAR ' '
+ TOKN 'W'
+ TOKN 'E'
+ TOKN 'L'
+ TOKN 'L'
+ TOKN ' '
  TOKN 147
- CHAR 'S'
+ TOKN 'S'
  TOKN 219
- CHAR 'U'
- CHAR 'A'
+ TOKN 'U'
+ TOKN 'A'
  TOKN 251
  TOKN 223
- CHAR ' '
- CHAR 'H'
- CHAR 'A'
- CHAR 'S'
- CHAR ' '
- CHAR 'C'
- CHAR 'H'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'A'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'C'
+ TOKN 'H'
  TOKN 255
- CHAR 'G'
+ TOKN 'G'
  TOKN 252
  TOKN 204
  TOKN 217
- CHAR 'R'
- CHAR ' '
- CHAR 'B'
- CHAR 'O'
- CHAR 'Y'
- CHAR 'S'
- CHAR ' '
+ TOKN 'R'
+ TOKN ' '
+ TOKN 'B'
+ TOKN 'O'
+ TOKN 'Y'
+ TOKN 'S'
+ TOKN ' '
  TOKN 238
- CHAR 'E'
- CHAR ' '
+ TOKN 'E'
+ TOKN ' '
  TOKN 242
- CHAR 'A'
- CHAR 'D'
- CHAR 'Y'
- CHAR ' '
- CHAR 'F'
+ TOKN 'A'
+ TOKN 'D'
+ TOKN 'Y'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
  TOKN 208
- CHAR 'P'
- CHAR 'U'
- CHAR 'S'
- CHAR 'H'
- CHAR ' '
- CHAR 'R'
- CHAR 'I'
- CHAR 'G'
- CHAR 'H'
- CHAR 'T'
+ TOKN 'P'
+ TOKN 'U'
+ TOKN 'S'
+ TOKN 'H'
+ TOKN ' '
+ TOKN 'R'
+ TOKN 'I'
+ TOKN 'G'
+ TOKN 'H'
+ TOKN 'T'
  TOKN 201
  TOKN 147
-\CHAR '#'
+\TOKN '#'
 \EQUB VE
 
- CHAR 'H'
- CHAR 'O'
- CHAR 'M'
- CHAR 'E'
- CHAR ' '
- CHAR 'S'
- CHAR 'Y'
- CHAR 'S'
- CHAR 'T'
- CHAR 'E'
- CHAR 'M'
- CHAR ' '
- CHAR 'O'
- CHAR 'F'
- CHAR ' '
+ TOKN 'H'
+ TOKN 'O'
+ TOKN 'M'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'Y'
+ TOKN 'S'
+ TOKN 'T'
+ TOKN 'E'
+ TOKN 'M'
+ TOKN ' '
+ TOKN 'O'
+ TOKN 'F'
+ TOKN ' '
  TOKN 226
- CHAR 'O'
+ TOKN 'O'
  TOKN 218
- CHAR ' '
- CHAR 'M'
- CHAR 'O'
+ TOKN ' '
+ TOKN 'M'
+ TOKN 'O'
  TOKN 226
  TOKN 244
- CHAR 'S'
+ TOKN 'S'
  TOKN 204
  TOKN 24
  TOKN 9
  TOKN 30
  TOKN 29
- CHAR 'I'
+ TOKN 'I'
  TOKN 13
- CHAR ' '
- CHAR 'H'
- CHAR 'A'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'A'
  TOKN 250
- CHAR ' '
- CHAR 'O'
- CHAR 'B'
- CHAR 'T'
- CHAR 'A'
+ TOKN ' '
+ TOKN 'O'
+ TOKN 'B'
+ TOKN 'T'
+ TOKN 'A'
  TOKN 240
  TOKN 196
  TOKN 147
- CHAR 'D'
- CHAR 'E'
- CHAR 'F'
+ TOKN 'D'
+ TOKN 'E'
+ TOKN 'F'
  TOKN 246
  TOKN 233
- CHAR ' '
- CHAR 'P'
+ TOKN ' '
+ TOKN 'P'
  TOKN 249
- CHAR 'N'
- CHAR 'S'
- CHAR ' '
- CHAR 'F'
+ TOKN 'N'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
- CHAR ' '
+ TOKN ' '
  TOKN 226
- CHAR 'E'
- CHAR 'I'
- CHAR 'R'
- CHAR ' '
+ TOKN 'E'
+ TOKN 'I'
+ TOKN 'R'
+ TOKN ' '
  TOKN 19
- CHAR 'H'
- CHAR 'I'
+ TOKN 'H'
+ TOKN 'I'
  TOKN 250
- CHAR ' '
+ TOKN ' '
  TOKN 19
- CHAR 'W'
+ TOKN 'W'
  TOKN 253
- CHAR 'L'
- CHAR 'D'
- CHAR 'S'
+ TOKN 'L'
+ TOKN 'D'
+ TOKN 'S'
  TOKN 204
  TOKN 147
  TOKN 247
  TOKN 221
  TOKN 229
- CHAR 'S'
- CHAR ' '
- CHAR 'K'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'K'
  TOKN 227
- CHAR 'W'
- CHAR ' '
- CHAR 'W'
- CHAR 'E'
- CHAR 39
+ TOKN 'W'
+ TOKN ' '
+ TOKN 'W'
+ TOKN 'E'
+ TOKN 39
  TOKN 250
- CHAR ' '
- CHAR 'G'
- CHAR 'O'
- CHAR 'T'
- CHAR ' '
+ TOKN ' '
+ TOKN 'G'
+ TOKN 'O'
+ TOKN 'T'
+ TOKN ' '
  TOKN 235
- CHAR 'M'
- CHAR 'E'
+ TOKN 'M'
+ TOKN 'E'
  TOKN 226
-\CHAR '#'
+\TOKN '#'
 \EQUB VE
 
  TOKN 195
- CHAR 'B'
- CHAR 'U'
- CHAR 'T'
- CHAR ' '
+ TOKN 'B'
+ TOKN 'U'
+ TOKN 'T'
+ TOKN ' '
  TOKN 227
- CHAR 'T'
- CHAR ' '
- CHAR 'W'
- CHAR 'H'
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'W'
+ TOKN 'H'
  TOKN 245
  TOKN 204
- CHAR 'I'
- CHAR 'F'
- CHAR ' '
+ TOKN 'I'
+ TOKN 'F'
+ TOKN ' '
  TOKN 19
- CHAR 'I'
- CHAR ' '
- CHAR 'T'
+ TOKN 'I'
+ TOKN ' '
+ TOKN 'T'
  TOKN 248
- CHAR 'N'
- CHAR 'S'
- CHAR 'M'
+ TOKN 'N'
+ TOKN 'S'
+ TOKN 'M'
  TOKN 219
- CHAR ' '
+ TOKN ' '
  TOKN 147
- CHAR 'P'
+ TOKN 'P'
  TOKN 249
- CHAR 'N'
- CHAR 'S'
+ TOKN 'N'
+ TOKN 'S'
  TOKN 201
  TOKN 217
- CHAR 'R'
- CHAR ' '
- CHAR 'B'
- CHAR 'A'
+ TOKN 'R'
+ TOKN ' '
+ TOKN 'B'
+ TOKN 'A'
  TOKN 218
- CHAR ' '
+ TOKN ' '
  TOKN 223
- CHAR ' '
+ TOKN ' '
  TOKN 19
  TOKN 234
  TOKN 242
  TOKN 248
- CHAR ' '
+ TOKN ' '
  TOKN 226
- CHAR 'E'
- CHAR 'Y'
- CHAR 39
- CHAR 'L'
- CHAR 'L'
- CHAR ' '
+ TOKN 'E'
+ TOKN 'Y'
+ TOKN 39
+ TOKN 'L'
+ TOKN 'L'
+ TOKN ' '
  TOKN 240
- CHAR 'T'
+ TOKN 'T'
  TOKN 244
  TOKN 233
- CHAR 'P'
- CHAR 'T'
- CHAR ' '
+ TOKN 'P'
+ TOKN 'T'
+ TOKN ' '
  TOKN 147
- CHAR 'T'
- CHAR 'R'
+ TOKN 'T'
+ TOKN 'R'
  TOKN 255
- CHAR 'S'
- CHAR 'M'
- CHAR 'I'
- CHAR 'S'
- CHAR 'S'
- CHAR 'I'
+ TOKN 'S'
+ TOKN 'M'
+ TOKN 'I'
+ TOKN 'S'
+ TOKN 'S'
+ TOKN 'I'
  TOKN 223
- CHAR '.'
-\CHAR '#'
+ TOKN '.'
+\TOKN '#'
 \EQUB VE
 
- CHAR ' '
+ TOKN ' '
  TOKN 19
- CHAR 'I'
- CHAR ' '
- CHAR 'N'
- CHAR 'E'
+ TOKN 'I'
+ TOKN ' '
+ TOKN 'N'
+ TOKN 'E'
  TOKN 252
  TOKN 208
  TOKN 207
  TOKN 201
  TOKN 239
- CHAR 'K'
- CHAR 'E'
- CHAR ' '
+ TOKN 'K'
+ TOKN 'E'
+ TOKN ' '
  TOKN 147
- CHAR 'R'
- CHAR 'U'
- CHAR 'N'
+ TOKN 'R'
+ TOKN 'U'
+ TOKN 'N'
  TOKN 204
  TOKN 179
- CHAR 39
+ TOKN 39
  TOKN 242
- CHAR ' '
- CHAR 'E'
+ TOKN ' '
+ TOKN 'E'
  TOKN 229
- CHAR 'C'
- CHAR 'T'
+ TOKN 'C'
+ TOKN 'T'
  TOKN 252
-\CHAR '#'
+\TOKN '#'
 \EQUB VE
 
  TOKN 204
  TOKN 147
- CHAR 'P'
+ TOKN 'P'
  TOKN 249
- CHAR 'N'
- CHAR 'S'
- CHAR ' '
- CHAR 'A'
+ TOKN 'N'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'A'
  TOKN 242
- CHAR ' '
- CHAR 'U'
- CHAR 'N'
- CHAR 'I'
- CHAR 'P'
- CHAR 'U'
- CHAR 'L'
+ TOKN ' '
+ TOKN 'U'
+ TOKN 'N'
+ TOKN 'I'
+ TOKN 'P'
+ TOKN 'U'
+ TOKN 'L'
  TOKN 218
- CHAR ' '
- CHAR 'C'
- CHAR 'O'
- CHAR 'D'
+ TOKN ' '
+ TOKN 'C'
+ TOKN 'O'
+ TOKN 'D'
  TOKN 196
- CHAR 'W'
- CHAR 'I'
+ TOKN 'W'
+ TOKN 'I'
  TOKN 226
  TOKN 240
- CHAR ' '
+ TOKN ' '
  TOKN 148
- CHAR 'T'
- CHAR 'R'
+ TOKN 'T'
+ TOKN 'R'
  TOKN 255
- CHAR 'S'
- CHAR 'M'
- CHAR 'I'
- CHAR 'S'
- CHAR 'S'
- CHAR 'I'
+ TOKN 'S'
+ TOKN 'M'
+ TOKN 'I'
+ TOKN 'S'
+ TOKN 'S'
+ TOKN 'I'
  TOKN 223
  TOKN 204
  TOKN 8
  TOKN 179
- CHAR ' '
- CHAR 'W'
+ TOKN ' '
+ TOKN 'W'
  TOKN 220
- CHAR 'L'
- CHAR ' '
+ TOKN 'L'
+ TOKN ' '
  TOKN 247
- CHAR ' '
- CHAR 'P'
- CHAR 'A'
- CHAR 'I'
- CHAR 'D'
+ TOKN ' '
+ TOKN 'P'
+ TOKN 'A'
+ TOKN 'I'
+ TOKN 'D'
  TOKN 204
- CHAR ' '
- CHAR ' '
- CHAR ' '
- CHAR ' '
+ TOKN ' '
+ TOKN ' '
+ TOKN ' '
+ TOKN ' '
  TOKN 19
- CHAR 'G'
- CHAR 'O'
- CHAR 'O'
- CHAR 'D'
- CHAR ' '
- CHAR 'L'
- CHAR 'U'
- CHAR 'C'
- CHAR 'K'
- CHAR ' '
+ TOKN 'G'
+ TOKN 'O'
+ TOKN 'O'
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'L'
+ TOKN 'U'
+ TOKN 'C'
+ TOKN 'K'
+ TOKN ' '
  TOKN 154
  TOKN 212
  TOKN 24
@@ -37381,141 +38798,141 @@ ENDMACRO
  TOKN 14
  TOKN 13
  TOKN 19
- CHAR 'W'
- CHAR 'E'
- CHAR 'L'
- CHAR 'L'
- CHAR ' '
- CHAR 'D'
+ TOKN 'W'
+ TOKN 'E'
+ TOKN 'L'
+ TOKN 'L'
+ TOKN ' '
+ TOKN 'D'
  TOKN 223
- CHAR 'E'
- CHAR ' '
+ TOKN 'E'
+ TOKN ' '
  TOKN 154
  TOKN 204
  TOKN 179
- CHAR ' '
- CHAR 'H'
- CHAR 'A'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'A'
  TOKN 250
- CHAR ' '
+ TOKN ' '
  TOKN 218
- CHAR 'R'
- CHAR 'V'
+ TOKN 'R'
+ TOKN 'V'
  TOKN 196
- CHAR 'U'
- CHAR 'S'
- CHAR ' '
- CHAR 'W'
- CHAR 'E'
- CHAR 'L'
- CHAR 'L'
+ TOKN 'U'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'W'
+ TOKN 'E'
+ TOKN 'L'
+ TOKN 'L'
  TOKN 178
- CHAR 'W'
- CHAR 'E'
- CHAR ' '
- CHAR 'S'
- CHAR 'H'
+ TOKN 'W'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'H'
  TOKN 228
- CHAR 'L'
- CHAR ' '
+ TOKN 'L'
+ TOKN ' '
  TOKN 242
- CHAR 'M'
- CHAR 'E'
- CHAR 'M'
- CHAR 'B'
+ TOKN 'M'
+ TOKN 'E'
+ TOKN 'M'
+ TOKN 'B'
  TOKN 244
  TOKN 204
-\CHAR '#'
+\TOKN '#'
 \EQUB VE
 
- CHAR 'W'
- CHAR 'E'
- CHAR ' '
- CHAR 'D'
- CHAR 'I'
- CHAR 'D'
- CHAR ' '
+ TOKN 'W'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'D'
+ TOKN 'I'
+ TOKN 'D'
+ TOKN ' '
  TOKN 227
- CHAR 'T'
- CHAR ' '
- CHAR 'E'
- CHAR 'X'
- CHAR 'P'
- CHAR 'E'
- CHAR 'C'
- CHAR 'T'
- CHAR ' '
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'E'
+ TOKN 'X'
+ TOKN 'P'
+ TOKN 'E'
+ TOKN 'C'
+ TOKN 'T'
+ TOKN ' '
  TOKN 147
  TOKN 19
  TOKN 226
  TOKN 238
- CHAR 'G'
- CHAR 'O'
- CHAR 'I'
- CHAR 'D'
- CHAR 'S'
+ TOKN 'G'
+ TOKN 'O'
+ TOKN 'I'
+ TOKN 'D'
+ TOKN 'S'
  TOKN 201
- CHAR 'F'
+ TOKN 'F'
  TOKN 240
- CHAR 'D'
- CHAR ' '
+ TOKN 'D'
+ TOKN ' '
  TOKN 217
- CHAR 'T'
- CHAR ' '
- CHAR 'A'
- CHAR 'B'
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'B'
  TOKN 217
- CHAR 'T'
- CHAR ' '
+ TOKN 'T'
+ TOKN ' '
  TOKN 179
  TOKN 204
-\CHAR '#'
+\TOKN '#'
 \EQUB VE
 
- CHAR 'F'
+ TOKN 'F'
  TOKN 253
- CHAR ' '
+ TOKN ' '
  TOKN 147
- CHAR 'M'
- CHAR 'O'
- CHAR 'M'
+ TOKN 'M'
+ TOKN 'O'
+ TOKN 'M'
  TOKN 246
- CHAR 'T'
- CHAR ' '
- CHAR 'P'
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'P'
  TOKN 229
- CHAR 'A'
+ TOKN 'A'
  TOKN 218
- CHAR ' '
- CHAR 'A'
- CHAR 'C'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'C'
  TOKN 233
- CHAR 'P'
- CHAR 'T'
- CHAR ' '
+ TOKN 'P'
+ TOKN 'T'
+ TOKN ' '
  TOKN 148
-\CHAR '#'
+\TOKN '#'
 \EQUB VE
 
  TOKN 19
- CHAR 'N'
- CHAR 'A'
- CHAR 'V'
- CHAR 'Y'
- CHAR ' '
+ TOKN 'N'
+ TOKN 'A'
+ TOKN 'V'
+ TOKN 'Y'
+ TOKN ' '
  TOKN 6
  TOKN 114
  TOKN 5
- CHAR ' '
- CHAR 'A'
- CHAR 'S'
- CHAR ' '
- CHAR 'P'
- CHAR 'A'
- CHAR 'Y'
- CHAR 'M'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'P'
+ TOKN 'A'
+ TOKN 'Y'
+ TOKN 'M'
  TOKN 246
- CHAR 'T'
+ TOKN 'T'
  TOKN 212
  TOKN 24
  EQUB VE
@@ -37523,191 +38940,191 @@ ENDMACRO
 \EQUB 0 EOR VE
  EQUB VE
 
- CHAR 'S'
- CHAR 'H'
+ TOKN 'S'
+ TOKN 'H'
  TOKN 242
- CHAR 'W'
+ TOKN 'W'
  EQUB VE
 
  TOKN 247
- CHAR 'A'
+ TOKN 'A'
  TOKN 222
  EQUB VE
 
- CHAR 'B'
- CHAR 'I'
- CHAR 'S'
+ TOKN 'B'
+ TOKN 'I'
+ TOKN 'S'
  TOKN 223
  EQUB VE
 
- CHAR 'S'
- CHAR 'N'
- CHAR 'A'
- CHAR 'K'
- CHAR 'E'
+ TOKN 'S'
+ TOKN 'N'
+ TOKN 'A'
+ TOKN 'K'
+ TOKN 'E'
  EQUB VE
 
- CHAR 'W'
- CHAR 'O'
- CHAR 'L'
- CHAR 'F'
+ TOKN 'W'
+ TOKN 'O'
+ TOKN 'L'
+ TOKN 'F'
  EQUB VE
 
  TOKN 229
- CHAR 'O'
- CHAR 'P'
+ TOKN 'O'
+ TOKN 'P'
  TOKN 238
- CHAR 'D'
+ TOKN 'D'
  EQUB VE
 
- CHAR 'C'
+ TOKN 'C'
  TOKN 245
  EQUB VE
 
- CHAR 'M'
+ TOKN 'M'
  TOKN 223
- CHAR 'K'
- CHAR 'E'
- CHAR 'Y'
+ TOKN 'K'
+ TOKN 'E'
+ TOKN 'Y'
  EQUB VE
 
- CHAR 'G'
- CHAR 'O'
+ TOKN 'G'
+ TOKN 'O'
  TOKN 245
  EQUB VE
 
- CHAR 'F'
- CHAR 'I'
- CHAR 'S'
- CHAR 'H'
+ TOKN 'F'
+ TOKN 'I'
+ TOKN 'S'
+ TOKN 'H'
  EQUB VE
 
  TOKN 106
- CHAR ' '
+ TOKN ' '
  TOKN 105
  EQUB VE
 
  TOKN 17
- CHAR ' '
+ TOKN ' '
  TOKN 120
- CHAR ' '
+ TOKN ' '
  TOKN 123
  EQUB VE
 
  TOKN 175
  TOKN 107
- CHAR ' '
+ TOKN ' '
  TOKN 121
- CHAR ' '
+ TOKN ' '
  TOKN 123
  EQUB VE
 
  TOKN 124
- CHAR ' '
+ TOKN ' '
  TOKN 125
  EQUB VE
 
  TOKN 106
- CHAR ' '
+ TOKN ' '
  TOKN 105
  EQUB VE
 
- CHAR 'M'
- CHAR 'E'
+ TOKN 'M'
+ TOKN 'E'
  TOKN 245
  EQUB VE
 
- CHAR 'C'
- CHAR 'U'
- CHAR 'T'
- CHAR 'L'
+ TOKN 'C'
+ TOKN 'U'
+ TOKN 'T'
+ TOKN 'L'
  TOKN 221
  EQUB VE
 
  TOKN 222
- CHAR 'E'
- CHAR 'A'
- CHAR 'K'
+ TOKN 'E'
+ TOKN 'A'
+ TOKN 'K'
  EQUB VE
 
- CHAR 'B'
- CHAR 'U'
- CHAR 'R'
- CHAR 'G'
+ TOKN 'B'
+ TOKN 'U'
+ TOKN 'R'
+ TOKN 'G'
  TOKN 244
- CHAR 'S'
+ TOKN 'S'
  EQUB VE
 
  TOKN 235
- CHAR 'U'
- CHAR 'P'
+ TOKN 'U'
+ TOKN 'P'
  EQUB VE
 
- CHAR 'I'
+ TOKN 'I'
  TOKN 233
  EQUB VE
 
- CHAR 'M'
- CHAR 'U'
- CHAR 'D'
+ TOKN 'M'
+ TOKN 'U'
+ TOKN 'D'
  EQUB VE
 
- CHAR 'Z'
+ TOKN 'Z'
  TOKN 244
- CHAR 'O'
- CHAR '-'
+ TOKN 'O'
+ TOKN '-'
  TOKN 19
- CHAR 'G'
+ TOKN 'G'
  EQUB VE
 
- CHAR 'V'
- CHAR 'A'
- CHAR 'C'
- CHAR 'U'
- CHAR 'U'
- CHAR 'M'
+ TOKN 'V'
+ TOKN 'A'
+ TOKN 'C'
+ TOKN 'U'
+ TOKN 'U'
+ TOKN 'M'
  EQUB VE
 
  TOKN 17
- CHAR ' '
- CHAR 'U'
- CHAR 'L'
- CHAR 'T'
+ TOKN ' '
+ TOKN 'U'
+ TOKN 'L'
+ TOKN 'T'
  TOKN 248
  EQUB VE
 
- CHAR 'H'
- CHAR 'O'
- CHAR 'C'
- CHAR 'K'
- CHAR 'E'
- CHAR 'Y'
+ TOKN 'H'
+ TOKN 'O'
+ TOKN 'C'
+ TOKN 'K'
+ TOKN 'E'
+ TOKN 'Y'
  EQUB VE
 
- CHAR 'C'
- CHAR 'R'
- CHAR 'I'
- CHAR 'C'
- CHAR 'K'
+ TOKN 'C'
+ TOKN 'R'
+ TOKN 'I'
+ TOKN 'C'
+ TOKN 'K'
  TOKN 221
  EQUB VE
 
- CHAR 'K'
+ TOKN 'K'
  TOKN 238
  TOKN 245
- CHAR 'E'
+ TOKN 'E'
  EQUB VE
 
- CHAR 'P'
- CHAR 'O'
+ TOKN 'P'
+ TOKN 'O'
  TOKN 224
  EQUB VE
 
- CHAR 'T'
+ TOKN 'T'
  TOKN 246
- CHAR 'N'
- CHAR 'I'
- CHAR 'S'
+ TOKN 'N'
+ TOKN 'I'
+ TOKN 'S'
  EQUB VE
 
  EQUB VE
@@ -37787,241 +39204,241 @@ ENDMACRO
  EQUB VE
 
  TOKN 147
- CHAR 'C'
- CHAR 'O'
+ TOKN 'C'
+ TOKN 'O'
  TOKN 224
- CHAR 'N'
- CHAR 'I'
+ TOKN 'N'
+ TOKN 'I'
  TOKN 222
- CHAR 'S'
- CHAR ' '
- CHAR 'H'
- CHAR 'E'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'E'
  TOKN 242
- CHAR ' '
- CHAR 'H'
- CHAR 'A'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'A'
  TOKN 250
- CHAR ' '
- CHAR 'V'
- CHAR 'I'
- CHAR 'O'
- CHAR 'L'
+ TOKN ' '
+ TOKN 'V'
+ TOKN 'I'
+ TOKN 'O'
+ TOKN 'L'
  TOKN 245
  TOKN 252
  TOKN 2
- CHAR ' '
+ TOKN ' '
  TOKN 240
- CHAR 'T'
+ TOKN 'T'
  TOKN 244
- CHAR 'G'
+ TOKN 'G'
  TOKN 228
- CHAR 'A'
- CHAR 'C'
+ TOKN 'A'
+ TOKN 'C'
  TOKN 251
- CHAR 'C'
- CHAR ' '
- CHAR 'C'
+ TOKN 'C'
+ TOKN ' '
+ TOKN 'C'
  TOKN 224
- CHAR 'N'
+ TOKN 'N'
  TOKN 195
- CHAR 'P'
- CHAR 'R'
- CHAR 'O'
- CHAR 'T'
- CHAR 'O'
- CHAR 'C'
- CHAR 'O'
- CHAR 'L'
+ TOKN 'P'
+ TOKN 'R'
+ TOKN 'O'
+ TOKN 'T'
+ TOKN 'O'
+ TOKN 'C'
+ TOKN 'O'
+ TOKN 'L'
  TOKN 13
  TOKN 178
- CHAR 'S'
- CHAR 'H'
+ TOKN 'S'
+ TOKN 'H'
  TOKN 217
- CHAR 'L'
- CHAR 'D'
- CHAR ' '
+ TOKN 'L'
+ TOKN 'D'
+ TOKN ' '
  TOKN 247
- CHAR ' '
- CHAR 'A'
- CHAR 'V'
- CHAR 'O'
- CHAR 'I'
- CHAR 'D'
+ TOKN ' '
+ TOKN 'A'
+ TOKN 'V'
+ TOKN 'O'
+ TOKN 'I'
+ TOKN 'D'
  TOKN 252
  EQUB VE
 
  TOKN 147
- CHAR 'C'
+ TOKN 'C'
  TOKN 223
  TOKN 222
- CHAR 'R'
- CHAR 'I'
- CHAR 'C'
- CHAR 'T'
+ TOKN 'R'
+ TOKN 'I'
+ TOKN 'C'
+ TOKN 'T'
  TOKN 253
- CHAR ' '
+ TOKN ' '
  TOKN 203
  TOKN 242
  TOKN 237
  TOKN 241
  TOKN 233
- CHAR ','
- CHAR ' '
+ TOKN ','
+ TOKN ' '
  TOKN 154
  EQUB VE
 
- CHAR 'A'
- CHAR ' '
+ TOKN 'A'
+ TOKN ' '
  TOKN 114
- CHAR ' '
+ TOKN ' '
  TOKN 224
- CHAR 'O'
- CHAR 'K'
+ TOKN 'O'
+ TOKN 'K'
  TOKN 195
  TOKN 207
- CHAR ' '
+ TOKN ' '
  TOKN 229
- CHAR 'F'
- CHAR 'T'
- CHAR ' '
- CHAR 'H'
- CHAR 'E'
+ TOKN 'F'
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'E'
  TOKN 242
  TOKN 208
- CHAR 'W'
- CHAR 'H'
- CHAR 'I'
+ TOKN 'W'
+ TOKN 'H'
+ TOKN 'I'
  TOKN 229
- CHAR ' '
- CHAR 'B'
- CHAR 'A'
- CHAR 'C'
- CHAR 'K'
- CHAR '.'
- CHAR ' '
- CHAR 'L'
- CHAR 'O'
- CHAR 'O'
- CHAR 'K'
+ TOKN ' '
+ TOKN 'B'
+ TOKN 'A'
+ TOKN 'C'
+ TOKN 'K'
+ TOKN '.'
+ TOKN ' '
+ TOKN 'L'
+ TOKN 'O'
+ TOKN 'O'
+ TOKN 'K'
  TOKN 196
- CHAR 'B'
+ TOKN 'B'
  TOKN 217
- CHAR 'N'
- CHAR 'D'
- CHAR ' '
- CHAR 'F'
+ TOKN 'N'
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
- CHAR ' '
+ TOKN ' '
  TOKN 238
- CHAR 'E'
+ TOKN 'E'
  TOKN 230
  EQUB VE
 
- CHAR 'Y'
- CHAR 'E'
- CHAR 'P'
- CHAR ','
+ TOKN 'Y'
+ TOKN 'E'
+ TOKN 'P'
+ TOKN ','
  TOKN 208
  TOKN 114
  TOKN 210
  TOKN 207
- CHAR ' '
- CHAR 'H'
- CHAR 'A'
- CHAR 'D'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'A'
+ TOKN 'D'
  TOKN 208
- CHAR 'G'
+ TOKN 'G'
  TOKN 228
- CHAR 'A'
- CHAR 'C'
+ TOKN 'A'
+ TOKN 'C'
  TOKN 251
- CHAR 'C'
- CHAR ' '
- CHAR 'H'
- CHAR 'Y'
- CHAR 'P'
+ TOKN 'C'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'Y'
+ TOKN 'P'
  TOKN 244
- CHAR 'D'
- CHAR 'R'
- CHAR 'I'
+ TOKN 'D'
+ TOKN 'R'
+ TOKN 'I'
  TOKN 250
- CHAR ' '
- CHAR 'F'
+ TOKN ' '
+ TOKN 'F'
  TOKN 219
- CHAR 'T'
+ TOKN 'T'
  TOKN 196
- CHAR 'H'
- CHAR 'E'
+ TOKN 'H'
+ TOKN 'E'
  TOKN 242
- CHAR '.'
- CHAR ' '
+ TOKN '.'
+ TOKN ' '
  TOKN 236
  TOKN 196
  TOKN 219
- CHAR ' '
- CHAR 'T'
- CHAR 'O'
- CHAR 'O'
+ TOKN ' '
+ TOKN 'T'
+ TOKN 'O'
+ TOKN 'O'
  EQUB VE
 
  TOKN 148
- CHAR ' '
+ TOKN ' '
  TOKN 114
- CHAR ' '
+ TOKN ' '
  TOKN 207
- CHAR ' '
- CHAR 'D'
- CHAR 'E'
- CHAR 'H'
- CHAR 'Y'
- CHAR 'P'
+ TOKN ' '
+ TOKN 'D'
+ TOKN 'E'
+ TOKN 'H'
+ TOKN 'Y'
+ TOKN 'P'
  TOKN 196
- CHAR 'H'
- CHAR 'E'
+ TOKN 'H'
+ TOKN 'E'
  TOKN 242
- CHAR ' '
- CHAR 'F'
- CHAR 'R'
- CHAR 'O'
- CHAR 'M'
- CHAR ' '
+ TOKN ' '
+ TOKN 'F'
+ TOKN 'R'
+ TOKN 'O'
+ TOKN 'M'
+ TOKN ' '
  TOKN 227
- CHAR 'W'
- CHAR 'H'
- CHAR 'E'
+ TOKN 'W'
+ TOKN 'H'
+ TOKN 'E'
  TOKN 242
- CHAR ','
- CHAR ' '
- CHAR 'S'
- CHAR 'U'
- CHAR 'N'
- CHAR ' '
- CHAR 'S'
- CHAR 'K'
- CHAR 'I'
- CHAR 'M'
- CHAR 'M'
+ TOKN ','
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'U'
+ TOKN 'N'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'K'
+ TOKN 'I'
+ TOKN 'M'
+ TOKN 'M'
  TOKN 252
  TOKN 178
- CHAR 'J'
- CHAR 'U'
- CHAR 'M'
- CHAR 'P'
+ TOKN 'J'
+ TOKN 'U'
+ TOKN 'M'
+ TOKN 'P'
  TOKN 252
- CHAR '.'
- CHAR ' '
- CHAR 'I'
- CHAR ' '
- CHAR 'H'
- CHAR 'E'
+ TOKN '.'
+ TOKN ' '
+ TOKN 'I'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'E'
  TOKN 238
- CHAR ' '
+ TOKN ' '
  TOKN 219
- CHAR ' '
- CHAR 'W'
+ TOKN ' '
+ TOKN 'W'
  TOKN 246
- CHAR 'T'
+ TOKN 'T'
  TOKN 201
  TOKN 240
  TOKN 234
@@ -38029,221 +39446,221 @@ ENDMACRO
  EQUB VE
 
  TOKN 115
- CHAR ' '
+ TOKN ' '
  TOKN 207
- CHAR ' '
- CHAR 'W'
+ TOKN ' '
+ TOKN 'W'
  TOKN 246
- CHAR 'T'
- CHAR ' '
- CHAR 'F'
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'F'
  TOKN 253
- CHAR ' '
- CHAR 'M'
- CHAR 'E'
- CHAR ' '
+ TOKN ' '
+ TOKN 'M'
+ TOKN 'E'
+ TOKN ' '
  TOKN 245
- CHAR ' '
- CHAR 'A'
+ TOKN ' '
+ TOKN 'A'
  TOKN 236
  TOKN 238
- CHAR '.'
- CHAR ' '
- CHAR 'M'
- CHAR 'Y'
- CHAR ' '
+ TOKN '.'
+ TOKN ' '
+ TOKN 'M'
+ TOKN 'Y'
+ TOKN ' '
  TOKN 249
- CHAR 'S'
+ TOKN 'S'
  TOKN 244
- CHAR 'S'
- CHAR ' '
- CHAR 'D'
- CHAR 'I'
- CHAR 'D'
- CHAR 'N'
- CHAR 39
- CHAR 'T'
- CHAR ' '
- CHAR 'E'
- CHAR 'V'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'D'
+ TOKN 'I'
+ TOKN 'D'
+ TOKN 'N'
+ TOKN 39
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'E'
+ TOKN 'V'
  TOKN 246
- CHAR ' '
- CHAR 'S'
- CHAR 'C'
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'C'
  TOKN 248
- CHAR 'T'
- CHAR 'C'
- CHAR 'H'
- CHAR ' '
+ TOKN 'T'
+ TOKN 'C'
+ TOKN 'H'
+ TOKN ' '
  TOKN 147
  TOKN 115
  EQUB VE
 
- CHAR 'O'
- CHAR 'H'
- CHAR ' '
- CHAR 'D'
- CHAR 'E'
+ TOKN 'O'
+ TOKN 'H'
+ TOKN ' '
+ TOKN 'D'
+ TOKN 'E'
  TOKN 238
- CHAR ' '
- CHAR 'M'
- CHAR 'E'
- CHAR ' '
- CHAR 'Y'
+ TOKN ' '
+ TOKN 'M'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'Y'
  TOKN 237
- CHAR '.'
+ TOKN '.'
  TOKN 208
- CHAR 'F'
- CHAR 'R'
- CHAR 'I'
- CHAR 'G'
- CHAR 'H'
- CHAR 'T'
- CHAR 'F'
- CHAR 'U'
- CHAR 'L'
- CHAR ' '
- CHAR 'R'
- CHAR 'O'
- CHAR 'G'
- CHAR 'U'
- CHAR 'E'
- CHAR ' '
- CHAR 'W'
- CHAR 'I'
+ TOKN 'F'
+ TOKN 'R'
+ TOKN 'I'
+ TOKN 'G'
+ TOKN 'H'
+ TOKN 'T'
+ TOKN 'F'
+ TOKN 'U'
+ TOKN 'L'
+ TOKN ' '
+ TOKN 'R'
+ TOKN 'O'
+ TOKN 'G'
+ TOKN 'U'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'W'
+ TOKN 'I'
  TOKN 226
- CHAR ' '
- CHAR 'W'
- CHAR 'H'
+ TOKN ' '
+ TOKN 'W'
+ TOKN 'H'
  TOKN 245
- CHAR ' '
- CHAR 'I'
- CHAR ' '
+ TOKN ' '
+ TOKN 'I'
+ TOKN ' '
  TOKN 247
- CHAR 'L'
- CHAR 'I'
- CHAR 'E'
+ TOKN 'L'
+ TOKN 'I'
+ TOKN 'E'
  TOKN 250
- CHAR ' '
+ TOKN ' '
  TOKN 179
- CHAR ' '
- CHAR 'P'
- CHAR 'E'
- CHAR 'O'
- CHAR 'P'
+ TOKN ' '
+ TOKN 'P'
+ TOKN 'E'
+ TOKN 'O'
+ TOKN 'P'
  TOKN 229
- CHAR ' '
- CHAR 'C'
+ TOKN ' '
+ TOKN 'C'
  TOKN 228
- CHAR 'L'
+ TOKN 'L'
  TOKN 208
  TOKN 229
- CHAR 'A'
- CHAR 'D'
- CHAR ' '
- CHAR 'P'
- CHAR 'O'
+ TOKN 'A'
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'P'
+ TOKN 'O'
  TOKN 222
  TOKN 244
- CHAR 'I'
+ TOKN 'I'
  TOKN 253
- CHAR ' '
- CHAR 'S'
- CHAR 'H'
- CHAR 'O'
- CHAR 'T'
- CHAR ' '
- CHAR 'U'
- CHAR 'P'
- CHAR ' '
+ TOKN ' '
+ TOKN 'S'
+ TOKN 'H'
+ TOKN 'O'
+ TOKN 'T'
+ TOKN ' '
+ TOKN 'U'
+ TOKN 'P'
+ TOKN ' '
  TOKN 224
- CHAR 'T'
- CHAR 'S'
- CHAR ' '
- CHAR 'O'
- CHAR 'F'
- CHAR ' '
+ TOKN 'T'
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'O'
+ TOKN 'F'
+ TOKN ' '
  TOKN 226
- CHAR 'O'
+ TOKN 'O'
  TOKN 218
- CHAR ' '
+ TOKN ' '
  TOKN 247
- CHAR 'A'
+ TOKN 'A'
  TOKN 222
- CHAR 'L'
- CHAR 'Y'
- CHAR ' '
- CHAR 'P'
- CHAR 'I'
+ TOKN 'L'
+ TOKN 'Y'
+ TOKN ' '
+ TOKN 'P'
+ TOKN 'I'
  TOKN 248
- CHAR 'T'
+ TOKN 'T'
  TOKN 237
  TOKN 178
- CHAR 'W'
+ TOKN 'W'
  TOKN 246
- CHAR 'T'
+ TOKN 'T'
  TOKN 201
  TOKN 236
  TOKN 229
- CHAR 'R'
- CHAR 'I'
+ TOKN 'R'
+ TOKN 'I'
  EQUB VE
 
  TOKN 179
- CHAR ' '
- CHAR 'C'
+ TOKN ' '
+ TOKN 'C'
  TOKN 255
- CHAR ' '
- CHAR 'T'
- CHAR 'A'
- CHAR 'C'
- CHAR 'K'
+ TOKN ' '
+ TOKN 'T'
+ TOKN 'A'
+ TOKN 'C'
+ TOKN 'K'
  TOKN 229
- CHAR ' '
+ TOKN ' '
  TOKN 147
  TOKN 104
- CHAR ' '
+ TOKN ' '
  TOKN 115
- CHAR ' '
- CHAR 'I'
- CHAR 'F'
- CHAR ' '
+ TOKN ' '
+ TOKN 'I'
+ TOKN 'F'
+ TOKN ' '
  TOKN 179
- CHAR ' '
- CHAR 'L'
- CHAR 'I'
- CHAR 'K'
- CHAR 'E'
- CHAR '.'
- CHAR ' '
- CHAR 'H'
- CHAR 'E'
- CHAR 39
- CHAR 'S'
- CHAR ' '
+ TOKN ' '
+ TOKN 'L'
+ TOKN 'I'
+ TOKN 'K'
+ TOKN 'E'
+ TOKN '.'
+ TOKN ' '
+ TOKN 'H'
+ TOKN 'E'
+ TOKN 39
+ TOKN 'S'
+ TOKN ' '
  TOKN 245
- CHAR ' '
+ TOKN ' '
  TOKN 253
  TOKN 238
  TOKN 248
  EQUB VE
 
  TOKN 1
- CHAR 'C'
- CHAR 'O'
- CHAR 'M'
+ TOKN 'C'
+ TOKN 'O'
+ TOKN 'M'
  TOKN 195
  TOKN 235
  TOKN 223
- CHAR ':'
- CHAR ' '
- CHAR 'E'
- CHAR 'L'
+ TOKN ':'
+ TOKN ' '
+ TOKN 'E'
+ TOKN 'L'
  TOKN 219
- CHAR 'E'
- CHAR ' '
- CHAR 'I'
- CHAR 'I'
+ TOKN 'E'
+ TOKN ' '
+ TOKN 'I'
+ TOKN 'I'
  EQUB VE
 
  TOKN 116
@@ -38285,150 +39702,150 @@ ENDMACRO
  TOKN 116
  EQUB VE
 
- CHAR 'B'
- CHAR 'O'
- CHAR 'Y'
- CHAR ' '
- CHAR 'A'
+ TOKN 'B'
+ TOKN 'O'
+ TOKN 'Y'
+ TOKN ' '
+ TOKN 'A'
  TOKN 242
- CHAR ' '
+ TOKN ' '
  TOKN 179
- CHAR ' '
+ TOKN ' '
  TOKN 240
- CHAR ' '
+ TOKN ' '
  TOKN 147
- CHAR 'W'
- CHAR 'R'
+ TOKN 'W'
+ TOKN 'R'
  TOKN 223
- CHAR 'G'
- CHAR ' '
- CHAR 'G'
+ TOKN 'G'
+ TOKN ' '
+ TOKN 'G'
  TOKN 228
- CHAR 'A'
- CHAR 'X'
- CHAR 'Y'
- CHAR '!'
+ TOKN 'A'
+ TOKN 'X'
+ TOKN 'Y'
+ TOKN '!'
  EQUB VE
 
  TOKN 226
  TOKN 244
- CHAR 'E'
- CHAR 39
- CHAR 'S'
+ TOKN 'E'
+ TOKN 39
+ TOKN 'S'
  TOKN 208
  TOKN 242
  TOKN 228
- CHAR ' '
+ TOKN ' '
  TOKN 115
- CHAR ' '
- CHAR 'P'
- CHAR 'I'
+ TOKN ' '
+ TOKN 'P'
+ TOKN 'I'
  TOKN 248
- CHAR 'T'
- CHAR 'E'
- CHAR ' '
+ TOKN 'T'
+ TOKN 'E'
+ TOKN ' '
  TOKN 217
- CHAR 'T'
- CHAR ' '
+ TOKN 'T'
+ TOKN ' '
  TOKN 226
  TOKN 244
- CHAR 'E'
+ TOKN 'E'
  EQUB VE
 
  TOKN 147
  TOKN 193
- CHAR 'S'
- CHAR ' '
- CHAR 'O'
- CHAR 'F'
- CHAR ' '
+ TOKN 'S'
+ TOKN ' '
+ TOKN 'O'
+ TOKN 'F'
+ TOKN ' '
  TOKN 109
- CHAR ' '
- CHAR 'A'
+ TOKN ' '
+ TOKN 'A'
  TOKN 242
- CHAR ' '
+ TOKN ' '
  TOKN 235
- CHAR ' '
- CHAR 'A'
+ TOKN ' '
+ TOKN 'A'
  TOKN 239
- CHAR 'Z'
+ TOKN 'Z'
  TOKN 240
- CHAR 'G'
- CHAR 'L'
- CHAR 'Y'
- CHAR ' '
- CHAR 'P'
- CHAR 'R'
- CHAR 'I'
- CHAR 'M'
- CHAR 'I'
+ TOKN 'G'
+ TOKN 'L'
+ TOKN 'Y'
+ TOKN ' '
+ TOKN 'P'
+ TOKN 'R'
+ TOKN 'I'
+ TOKN 'M'
+ TOKN 'I'
  TOKN 251
  TOKN 250
- CHAR ' '
+ TOKN ' '
  TOKN 226
  TOKN 245
- CHAR ' '
+ TOKN ' '
  TOKN 226
- CHAR 'E'
- CHAR 'Y'
- CHAR ' '
+ TOKN 'E'
+ TOKN 'Y'
+ TOKN ' '
  TOKN 222
  TOKN 220
- CHAR 'L'
- CHAR ' '
+ TOKN 'L'
+ TOKN ' '
  TOKN 226
  TOKN 240
- CHAR 'K'
- CHAR ' '
+ TOKN 'K'
+ TOKN ' '
  TOKN 19
- CHAR '*'
- CHAR '*'
- CHAR '*'
- CHAR '*'
- CHAR '*'
- CHAR ' '
- CHAR '*'
- CHAR '*'
- CHAR '*'
- CHAR '*'
- CHAR '*'
- CHAR '*'
+ TOKN '*'
+ TOKN '*'
+ TOKN '*'
+ TOKN '*'
+ TOKN '*'
+ TOKN ' '
+ TOKN '*'
+ TOKN '*'
+ TOKN '*'
+ TOKN '*'
+ TOKN '*'
+ TOKN '*'
  TOKN 202
- CHAR ' '
- CHAR '3'
- CHAR 'D'
+ TOKN ' '
+ TOKN '3'
+ TOKN 'D'
  EQUB VE
 
  TOKN 2
- CHAR 'B'
- CHAR 'I'
- CHAR 'T'
- CHAR 'S'
- CHAR 39
- CHAR 'N'
- CHAR ' '
- CHAR 'P'
- CHAR 'I'
- CHAR 'E'
- CHAR 'C'
- CHAR 'E'
- CHAR 'S'
- CHAR ' '
- CHAR '-'
- CHAR ' '
- CHAR 'E'
- CHAR 'N'
- CHAR 'D'
- CHAR ' '
- CHAR 'O'
- CHAR 'F'
- CHAR ' '
- CHAR 'P'
- CHAR 'A'
- CHAR 'R'
- CHAR 'T'
- CHAR ' '
- CHAR '1'
+ TOKN 'B'
+ TOKN 'I'
+ TOKN 'T'
+ TOKN 'S'
+ TOKN 39
+ TOKN 'N'
+ TOKN ' '
+ TOKN 'P'
+ TOKN 'I'
+ TOKN 'E'
+ TOKN 'C'
+ TOKN 'E'
+ TOKN 'S'
+ TOKN ' '
+ TOKN '-'
+ TOKN ' '
+ TOKN 'E'
+ TOKN 'N'
+ TOKN 'D'
+ TOKN ' '
+ TOKN 'O'
+ TOKN 'F'
+ TOKN ' '
+ TOKN 'P'
+ TOKN 'A'
+ TOKN 'R'
+ TOKN 'T'
+ TOKN ' '
+ TOKN '1'
  EQUB VE
 
 \ ******************************************************************************
