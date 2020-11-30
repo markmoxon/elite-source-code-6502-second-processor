@@ -774,6 +774,8 @@ ORG CODE_WORDS%
 \
 \   CHAR 'x'            Insert ASCII character "x"
 \
+\ To include an apostrophe, use a backtick character, as in i.e. CHAR '`'.
+\
 \ See the deep dive on "Printing text tokens" for details on how characters are
 \ stored in the recursive token table.
 \
@@ -785,7 +787,11 @@ ORG CODE_WORDS%
 
 MACRO CHAR x
 
-  EQUB x EOR 35
+  IF x = '`'
+    EQUB 39 EOR 35
+  ELSE
+    EQUB x EOR 35
+  ENDIF
 
 ENDMACRO
 
@@ -931,7 +937,7 @@ ENDMACRO
 \       Name: QQ18
 \       Type: Variable
 \   Category: Text
-\    Summary: Recursive token table for tokens 0-148
+\    Summary: The recursive token table for tokens 0-148
 \  Deep dive: Printing text tokens
 \
 \ ******************************************************************************
@@ -939,20 +945,20 @@ ENDMACRO
 .QQ18
 
  RTOK 111               \ Token 0:      "FUEL SCOOPS ON {beep}"
- RTOK 131               \ Encoded as:   "[111][131]{7}"
- CTRL 7
+ RTOK 131               \
+ CTRL 7                 \ Encoded as:   "[111][131]{7}"
  EQUB 0
 
  CHAR ' '               \ Token 1:      " CHART"
- CHAR 'C'               \ Encoded as:   " CH<138>T"
- CHAR 'H'
+ CHAR 'C'               \
+ CHAR 'H'               \ Encoded as:   " CH<138>T"
  TWOK 'A', 'R'
  CHAR 'T'
  EQUB 0
 
  CHAR 'G'               \ Token 2:      "GOVERNMENT"
- CHAR 'O'               \ Encoded as:   "GO<150>RNM<146>T"
- TWOK 'V', 'E'
+ CHAR 'O'               \
+ TWOK 'V', 'E'          \ Encoded as:   "GO<150>RNM<146>T"
  CHAR 'R'
  CHAR 'N'
  CHAR 'M'
@@ -961,36 +967,36 @@ ENDMACRO
  EQUB 0
 
  CHAR 'D'               \ Token 3:      "DATA ON {selected system name}"
- TWOK 'A', 'T'          \ Encoded as:   "D<145>A[131]{3}"
- CHAR 'A'
+ TWOK 'A', 'T'          \
+ CHAR 'A'               \ Encoded as:   "D<145>A[131]{3}"
  RTOK 131
  CTRL 3
  EQUB 0
 
- TWOK 'I', 'N'          \ Token 4:      "INVENTORY{crlf}"
- TWOK 'V', 'E'          \ Encoded as:   "<140><150>NT<153>Y{12}"
- CHAR 'N'
- CHAR 'T'
+ TWOK 'I', 'N'          \ Token 4:      "INVENTORY{cr}
+ TWOK 'V', 'E'          \               "
+ CHAR 'N'               \
+ CHAR 'T'               \ Encoded as:   "<140><150>NT<153>Y{12}"
  TWOK 'O', 'R'
  CHAR 'Y'
  CTRL 12
  EQUB 0
 
  CHAR 'S'               \ Token 5:      "SYSTEM"
- CHAR 'Y'               \ Encoded as:   "SYS<156>M"
- CHAR 'S'
+ CHAR 'Y'               \
+ CHAR 'S'               \ Encoded as:   "SYS<156>M"
  TWOK 'T', 'E'
  CHAR 'M'
  EQUB 0
 
  CHAR 'P'               \ Token 6:      "PRICE"
- TWOK 'R', 'I'          \ Encoded as:   "P<158><133>"
- TWOK 'C', 'E'
+ TWOK 'R', 'I'          \
+ TWOK 'C', 'E'          \ Encoded as:   "P<158><133>"
  EQUB 0
 
  CTRL 2                 \ Token 7:      "{current system name} MARKET PRICES"
- CHAR ' '               \ Encoded as:   "{2} <139>RKET [6]S"
- TWOK 'M', 'A'
+ CHAR ' '               \
+ TWOK 'M', 'A'          \ Encoded as:   "{2} <139>RKET [6]S"
  CHAR 'R'
  CHAR 'K'
  CHAR 'E'
@@ -1001,16 +1007,16 @@ ENDMACRO
  EQUB 0
 
  TWOK 'I', 'N'          \ Token 8:      "INDUSTRIAL"
- CHAR 'D'               \ Encoded as:   "<140>D<136>T<158><128>"
- TWOK 'U', 'S'
+ CHAR 'D'               \
+ TWOK 'U', 'S'          \ Encoded as:   "<140>D<136>T<158><128>"
  CHAR 'T'
  TWOK 'R', 'I'
  TWOK 'A', 'L'
  EQUB 0
 
  CHAR 'A'               \ Token 9:      "AGRICULTURAL"
- CHAR 'G'               \ Encoded as:   "AG<158>CULTU<148>L"
- TWOK 'R', 'I'
+ CHAR 'G'               \
+ TWOK 'R', 'I'          \ Encoded as:   "AG<158>CULTU<148>L"
  CHAR 'C'
  CHAR 'U'
  CHAR 'L'
@@ -1021,92 +1027,92 @@ ENDMACRO
  EQUB 0
 
  TWOK 'R', 'I'          \ Token 10:     "RICH "
- CHAR 'C'               \ Encoded as:   "<158>CH "
- CHAR 'H'
+ CHAR 'C'               \
+ CHAR 'H'               \ Encoded as:   "<158>CH "
  CHAR ' '
  EQUB 0
 
  CHAR 'A'               \ Token 11:     "AVERAGE "
- TWOK 'V', 'E'          \ Encoded as:   "A<150><148><131> "
- TWOK 'R', 'A'
+ TWOK 'V', 'E'          \
+ TWOK 'R', 'A'          \ Encoded as:   "A<150><148><131> "
  TWOK 'G', 'E'
  CHAR ' '
  EQUB 0
 
  CHAR 'P'               \ Token 12:     "POOR "
- CHAR 'O'               \ Encoded as:   "PO<153> "
- TWOK 'O', 'R'
+ CHAR 'O'               \
+ TWOK 'O', 'R'          \ Encoded as:   "PO<153> "
  CHAR ' '
- EQUB 0                 \ Encoded as:   "PO<153> "
+ EQUB 0
 
  TWOK 'M', 'A'          \ Token 13:     "MAINLY "
- TWOK 'I', 'N'          \ Encoded as:   "<139><140>LY "
- CHAR 'L'
+ TWOK 'I', 'N'          \
+ CHAR 'L'               \ Encoded as:   "<139><140>LY "
  CHAR 'Y'
  CHAR ' '
  EQUB 0
 
  CHAR 'U'               \ Token 14:     "UNIT"
- CHAR 'N'               \ Encoded as:   "UNIT"
- CHAR 'I'
+ CHAR 'N'               \
+ CHAR 'I'               \ Encoded as:   "UNIT"
  CHAR 'T'
  EQUB 0
 
  CHAR 'V'               \ Token 15:     "VIEW "
- CHAR 'I'               \ Encoded as:   "VIEW "
- CHAR 'E'
+ CHAR 'I'               \
+ CHAR 'E'               \ Encoded as:   "VIEW "
  CHAR 'W'
  CHAR ' '
  EQUB 0
 
  TWOK 'Q', 'U'          \ Token 16:     "QUANTITY"
- TWOK 'A', 'N'          \ Encoded as:   "<154><155><151>TY"
- TWOK 'T', 'I'
+ TWOK 'A', 'N'          \
+ TWOK 'T', 'I'          \ Encoded as:   "<154><155><151>TY"
  CHAR 'T'
  CHAR 'Y'
  EQUB 0
 
  TWOK 'A', 'N'          \ Token 17:     "ANARCHY"
- TWOK 'A', 'R'          \ Encoded as:   "<155><138>CHY"
- CHAR 'C'
+ TWOK 'A', 'R'          \
+ CHAR 'C'               \ Encoded as:   "<155><138>CHY"
  CHAR 'H'
  CHAR 'Y'
  EQUB 0
 
  CHAR 'F'               \ Token 18:     "FEUDAL"
- CHAR 'E'               \ Encoded as:   "FEUD<128>"
- CHAR 'U'
+ CHAR 'E'               \
+ CHAR 'U'               \ Encoded as:   "FEUD<128>"
  CHAR 'D'
  TWOK 'A', 'L'
  EQUB 0
 
  CHAR 'M'               \ Token 19:     "MULTI-GOVERNMENT"
- CHAR 'U'               \ Encoded as:   "MUL<151>-[2]"
- CHAR 'L'
+ CHAR 'U'               \
+ CHAR 'L'               \ Encoded as:   "MUL<151>-[2]"
  TWOK 'T', 'I'
  CHAR '-'
  RTOK 2
  EQUB 0
 
  TWOK 'D', 'I'          \ Token 20:     "DICTATORSHIP"
- CHAR 'C'               \ Encoded as:   "<141>CT<145><153>[25]"
- CHAR 'T'
+ CHAR 'C'               \
+ CHAR 'T'               \ Encoded as:   "<141>CT<145><153>[25]"
  TWOK 'A', 'T'
  TWOK 'O', 'R'
  RTOK 25
  EQUB 0
 
  RTOK 91                \ Token 21:     "COMMUNIST"
- CHAR 'M'               \ Encoded as:   "[91]MUN<157>T"
- CHAR 'U'
+ CHAR 'M'               \
+ CHAR 'U'               \ Encoded as:   "[91]MUN<157>T"
  CHAR 'N'
  TWOK 'I', 'S'
  CHAR 'T'
  EQUB 0
 
  CHAR 'C'               \ Token 22:     "CONFEDERACY"
- TWOK 'O', 'N'          \ Encoded as:   "C<159>F<152><144>ACY"
- CHAR 'F'
+ TWOK 'O', 'N'          \
+ CHAR 'F'               \ Encoded as:   "C<159>F<152><144>ACY"
  TWOK 'E', 'D'
  TWOK 'E', 'R'
  CHAR 'A'
@@ -1115,8 +1121,8 @@ ENDMACRO
  EQUB 0
 
  CHAR 'D'               \ Token 23:     "DEMOCRACY"
- CHAR 'E'               \ Encoded as:   "DEMOC<148>CY"
- CHAR 'M'
+ CHAR 'E'               \
+ CHAR 'M'               \ Encoded as:   "DEMOC<148>CY"
  CHAR 'O'
  CHAR 'C'
  TWOK 'R', 'A'
@@ -1125,8 +1131,8 @@ ENDMACRO
  EQUB 0
 
  CHAR 'C'               \ Token 24:     "CORPORATE STATE"
- TWOK 'O', 'R'          \ Encoded as:   "C<153>P<153><145>E [43]<145>E"
- CHAR 'P'
+ TWOK 'O', 'R'          \
+ CHAR 'P'               \ Encoded as:   "C<153>P<153><145>E [43]<145>E"
  TWOK 'O', 'R'
  TWOK 'A', 'T'
  CHAR 'E'
@@ -1137,28 +1143,28 @@ ENDMACRO
  EQUB 0
 
  CHAR 'S'               \ Token 25:     "SHIP"
- CHAR 'H'               \ Encoded as:   "SHIP"
- CHAR 'I'
+ CHAR 'H'               \
+ CHAR 'I'               \ Encoded as:   "SHIP"
  CHAR 'P'
  EQUB 0
 
  CHAR 'P'               \ Token 26:     "PRODUCT"
- RTOK 94                \ Encoded as:   "P[94]]DUCT"
- CHAR 'D'
+ RTOK 94                \
+ CHAR 'D'               \ Encoded as:   "P[94]]DUCT"
  CHAR 'U'
  CHAR 'C'
  CHAR 'T'
  EQUB 0
 
  CHAR ' '               \ Token 27:     " LASER"
- TWOK 'L', 'A'          \ Encoded as:   " <149>S<144>"
- CHAR 'S'
+ TWOK 'L', 'A'          \
+ CHAR 'S'               \ Encoded as:   " <149>S<144>"
  TWOK 'E', 'R'
  EQUB 0
 
  CHAR 'H'               \ Token 28:     "HUMAN COLONIAL"
- CHAR 'U'               \ Encoded as:   "HUM<155> COL<159>I<128>"
- CHAR 'M'
+ CHAR 'U'               \
+ CHAR 'M'               \ Encoded as:   "HUM<155> COL<159>I<128>"
  TWOK 'A', 'N'
  CHAR ' '
  CHAR 'C'
@@ -1170,8 +1176,8 @@ ENDMACRO
  EQUB 0
 
  CHAR 'H'               \ Token 29:     "HYPERSPACE "
- CHAR 'Y'               \ Encoded as:   "HYP<144>SPA<133> "
- CHAR 'P'
+ CHAR 'Y'               \
+ CHAR 'P'               \ Encoded as:   "HYP<144>SPA<133> "
  TWOK 'E', 'R'
  CHAR 'S'
  CHAR 'P'
@@ -1181,8 +1187,8 @@ ENDMACRO
  EQUB 0
 
  CHAR 'S'               \ Token 30:     "SHORT RANGE CHART"
- CHAR 'H'               \ Encoded as:   "SH<153>T [42][1]"
- TWOK 'O', 'R'
+ CHAR 'H'               \
+ TWOK 'O', 'R'          \ Encoded as:   "SH<153>T [42][1]"
  CHAR 'T'
  CHAR ' '
  RTOK 42
@@ -1190,14 +1196,14 @@ ENDMACRO
  EQUB 0
 
  TWOK 'D', 'I'          \ Token 31:     "DISTANCE"
- RTOK 43                \ Encoded as:   "<141>[43]<155><133>"
- TWOK 'A', 'N'
+ RTOK 43                \
+ TWOK 'A', 'N'          \ Encoded as:   "<141>[43]<155><133>"
  TWOK 'C', 'E'
  EQUB 0
 
  CHAR 'P'               \ Token 32:     "POPULATION"
- CHAR 'O'               \ Encoded as:   "POPUL<145>I<159>"
- CHAR 'P'
+ CHAR 'O'               \
+ CHAR 'P'               \ Encoded as:   "POPUL<145>I<159>"
  CHAR 'U'
  CHAR 'L'
  TWOK 'A', 'T'
@@ -1206,8 +1212,8 @@ ENDMACRO
  EQUB 0
 
  CHAR 'G'               \ Token 33:     "GROSS PRODUCTIVITY"
- RTOK 94                \ Encoded as:   "G[94]SS [26]IVITY"
- CHAR 'S'
+ RTOK 94                \
+ CHAR 'S'               \ Encoded as:   "G[94]SS [26]IVITY"
  CHAR 'S'
  CHAR ' '
  RTOK 26
@@ -1219,16 +1225,16 @@ ENDMACRO
  EQUB 0
 
  CHAR 'E'               \ Token 34:     "ECONOMY"
- CHAR 'C'               \ Encoded as:   "EC<159>OMY"
- TWOK 'O', 'N'
+ CHAR 'C'               \
+ TWOK 'O', 'N'          \ Encoded as:   "EC<159>OMY"
  CHAR 'O'
  CHAR 'M'
  CHAR 'Y'
  EQUB 0
 
  CHAR ' '               \ Token 35:     " LIGHT YEARS"
- CHAR 'L'               \ Encoded as:   " LIGHT YE<138>S"
- CHAR 'I'
+ CHAR 'L'               \
+ CHAR 'I'               \ Encoded as:   " LIGHT YE<138>S"
  CHAR 'G'
  CHAR 'H'
  CHAR 'T'
@@ -1240,8 +1246,8 @@ ENDMACRO
  EQUB 0
 
  TWOK 'T', 'E'          \ Token 36:     "TECH.LEVEL"
- CHAR 'C'               \ Encoded as:   "<156>CH.<129><150>L"
- CHAR 'H'
+ CHAR 'C'               \
+ CHAR 'H'               \ Encoded as:   "<156>CH.<129><150>L"
  CHAR '.'
  TWOK 'L', 'E'
  TWOK 'V', 'E'
@@ -1249,26 +1255,26 @@ ENDMACRO
  EQUB 0
 
  CHAR 'C'               \ Token 37:     "CASH"
- CHAR 'A'               \ Encoded as:   "CASH"
- CHAR 'S'
+ CHAR 'A'               \
+ CHAR 'S'               \ Encoded as:   "CASH"
  CHAR 'H'
  EQUB 0
 
  CHAR ' '               \ Token 38:     " BILLION"
- TWOK 'B', 'I'          \ Encoded as:   " <134>[129]I<159>"
- RTOK 129
+ TWOK 'B', 'I'          \
+ RTOK 129               \ Encoded as:   " <134>[129]I<159>"
  CHAR 'I'
  TWOK 'O', 'N'
  EQUB 0
 
- RTOK 122               \ Token 39:     "GALACTIC CHART{galaxy number
- RTOK 1                 \                right-aligned to width 3}"
+ RTOK 122               \ Token 39:     "GALACTIC CHART{galaxy number}"
+ RTOK 1                 \
  CTRL 1                 \ Encoded as:   "[122][1]{1}"
  EQUB 0
 
  CHAR 'T'               \ Token 40:     "TARGET LOST"
- TWOK 'A', 'R'          \ Encoded as:   "T<138><131>T LO[43]"
- TWOK 'G', 'E'
+ TWOK 'A', 'R'          \
+ TWOK 'G', 'E'          \ Encoded as:   "T<138><131>T LO[43]"
  CHAR 'T'
  CHAR ' '
  CHAR 'L'
@@ -1277,8 +1283,8 @@ ENDMACRO
  EQUB 0
 
  RTOK 106               \ Token 41:     "MISSILE JAMMED"
- CHAR ' '               \ Encoded as:   "[106] JAMM<152>"
- CHAR 'J'
+ CHAR ' '               \
+ CHAR 'J'               \ Encoded as:   "[106] JAMM<152>"
  CHAR 'A'
  CHAR 'M'
  CHAR 'M'
@@ -1286,56 +1292,56 @@ ENDMACRO
  EQUB 0
 
  CHAR 'R'               \ Token 42:     "RANGE"
- TWOK 'A', 'N'          \ Encoded as:   "R<155><131>"
- TWOK 'G', 'E'
+ TWOK 'A', 'N'          \
+ TWOK 'G', 'E'          \ Encoded as:   "R<155><131>"
  EQUB 0
 
  CHAR 'S'               \ Token 43:     "ST"
- CHAR 'T'               \ Encoded as:   "ST"
- EQUB 0
+ CHAR 'T'               \
+ EQUB 0                 \ Encoded as:   "ST"
 
  RTOK 16                \ Token 44:     "QUANTITY OF "
- CHAR ' '               \ Encoded as:   "[16] OF "
- CHAR 'O'
+ CHAR ' '               \
+ CHAR 'O'               \ Encoded as:   "[16] OF "
  CHAR 'F'
  CHAR ' '
  EQUB 0
 
  CHAR 'S'               \ Token 45:     "SELL"
- CHAR 'E'               \ Encoded as:   "SE[129]"
- RTOK 129
+ CHAR 'E'               \
+ RTOK 129               \ Encoded as:   "SE[129]"
  EQUB 0
 
- CHAR ' '               \ Token 46:     " CARGO{switch to sentence case}"
- CHAR 'C'               \ Encoded as:   " C<138>GO{6}"
- TWOK 'A', 'R'
+ CHAR ' '               \ Token 46:     " CARGO{sentence case}"
+ CHAR 'C'               \
+ TWOK 'A', 'R'          \ Encoded as:   " C<138>GO{6}"
  CHAR 'G'
  CHAR 'O'
  CTRL 6
  EQUB 0
 
  CHAR 'E'               \ Token 47:     "EQUIP"
- TWOK 'Q', 'U'          \ Encoded as:   "E<154>IP"
- CHAR 'I'
+ TWOK 'Q', 'U'          \
+ CHAR 'I'               \ Encoded as:   "E<154>IP"
  CHAR 'P'
  EQUB 0
 
  CHAR 'F'               \ Token 48:     "FOOD"
+ CHAR 'O'               \
  CHAR 'O'               \ Encoded as:   "FOOD"
- CHAR 'O'
  CHAR 'D'
  EQUB 0
 
  TWOK 'T', 'E'          \ Token 49:     "TEXTILES"
- CHAR 'X'               \ Encoded as:   "<156>X<151>L<137>"
- TWOK 'T', 'I'
+ CHAR 'X'               \
+ TWOK 'T', 'I'          \ Encoded as:   "<156>X<151>L<137>"
  CHAR 'L'
  TWOK 'E', 'S'
  EQUB 0
 
  TWOK 'R', 'A'          \ Token 50:     "RADIOACTIVES"
- TWOK 'D', 'I'          \ Encoded as:   "<148><141>OAC<151><150>S"
- CHAR 'O'
+ TWOK 'D', 'I'          \
+ CHAR 'O'               \ Encoded as:   "<148><141>OAC<151><150>S"
  CHAR 'A'
  CHAR 'C'
  TWOK 'T', 'I'
@@ -1344,14 +1350,14 @@ ENDMACRO
  EQUB 0
 
  CHAR 'S'               \ Token 51:     "SLAVES"
- TWOK 'L', 'A'          \ Encoded as:   "S<149><150>S"
- TWOK 'V', 'E'
+ TWOK 'L', 'A'          \
+ TWOK 'V', 'E'          \ Encoded as:   "S<149><150>S"
  CHAR 'S'
  EQUB 0
 
  CHAR 'L'               \ Token 52:     "LIQUOR/WINES"
- CHAR 'I'               \ Encoded as:   "LI<154><153>/W<140><137>"
- TWOK 'Q', 'U'
+ CHAR 'I'               \
+ TWOK 'Q', 'U'          \ Encoded as:   "LI<154><153>/W<140><137>"
  TWOK 'O', 'R'
  CHAR '/'
  CHAR 'W'
@@ -1360,16 +1366,16 @@ ENDMACRO
  EQUB 0
 
  CHAR 'L'               \ Token 53:     "LUXURIES"
- CHAR 'U'               \ Encoded as:   "LUXU<158><137>"
- CHAR 'X'
+ CHAR 'U'               \
+ CHAR 'X'               \ Encoded as:   "LUXU<158><137>"
  CHAR 'U'
  TWOK 'R', 'I'
  TWOK 'E', 'S'
  EQUB 0
 
  CHAR 'N'               \ Token 54:     "NARCOTICS"
- TWOK 'A', 'R'          \ Encoded as:   "N<138>CO<151>CS"
- CHAR 'C'
+ TWOK 'A', 'R'          \
+ CHAR 'C'               \ Encoded as:   "N<138>CO<151>CS"
  CHAR 'O'
  TWOK 'T', 'I'
  CHAR 'C'
@@ -1377,150 +1383,151 @@ ENDMACRO
  EQUB 0
 
  RTOK 91                \ Token 55:     "COMPUTERS"
- CHAR 'P'               \ Encoded as:   "[91]PUT<144>S"
- CHAR 'U'
+ CHAR 'P'               \
+ CHAR 'U'               \ Encoded as:   "[91]PUT<144>S"
  CHAR 'T'
  TWOK 'E', 'R'
  CHAR 'S'
  EQUB 0
 
  TWOK 'M', 'A'          \ Token 56:     "MACHINERY"
- CHAR 'C'               \ Encoded as:   "<139>CH<140><144>Y"
- CHAR 'H'
+ CHAR 'C'               \
+ CHAR 'H'               \ Encoded as:   "<139>CH<140><144>Y"
  TWOK 'I', 'N'
  TWOK 'E', 'R'
  CHAR 'Y'
  EQUB 0
 
  CHAR 'A'               \ Token 57:     "ALLOYS"
+ CHAR 'L'               \
  CHAR 'L'               \ Encoded as:   "ALLOYS"
- CHAR 'L'
  CHAR 'O'
  CHAR 'Y'
  CHAR 'S'
  EQUB 0
 
  CHAR 'F'               \ Token 58:     "FIREARMS"
- CHAR 'I'               \ Encoded as:   "FI<142><138>MS"
- TWOK 'R', 'E'
+ CHAR 'I'               \
+ TWOK 'R', 'E'          \ Encoded as:   "FI<142><138>MS"
  TWOK 'A', 'R'
  CHAR 'M'
  CHAR 'S'
  EQUB 0
 
  CHAR 'F'               \ Token 59:     "FURS"
- CHAR 'U'               \ Encoded as:   "FURS"
- CHAR 'R'
+ CHAR 'U'               \
+ CHAR 'R'               \ Encoded as:   "FURS"
  CHAR 'S'
  EQUB 0
 
  CHAR 'M'               \ Token 60:     "MINERALS"
- TWOK 'I', 'N'          \ Encoded as:   "M<140><144><128>S"
- TWOK 'E', 'R'
+ TWOK 'I', 'N'          \
+ TWOK 'E', 'R'          \ Encoded as:   "M<140><144><128>S"
  TWOK 'A', 'L'
  CHAR 'S'
  EQUB 0
 
  CHAR 'G'               \ Token 61:     "GOLD"
- CHAR 'O'               \ Encoded as:   "GOLD"
- CHAR 'L'
+ CHAR 'O'               \
+ CHAR 'L'               \ Encoded as:   "GOLD"
  CHAR 'D'
  EQUB 0
 
  CHAR 'P'               \ Token 62:     "PLATINUM"
- CHAR 'L'               \ Encoded as:   "PL<145><140>UM"
- TWOK 'A', 'T'
+ CHAR 'L'               \
+ TWOK 'A', 'T'          \ Encoded as:   "PL<145><140>UM"
  TWOK 'I', 'N'
  CHAR 'U'
  CHAR 'M'
  EQUB 0
 
  TWOK 'G', 'E'          \ Token 63:     "GEM-STONES"
- CHAR 'M'               \ Encoded as:   "<131>M-[43]<159><137>"
- CHAR '-'
+ CHAR 'M'               \
+ CHAR '-'               \ Encoded as:   "<131>M-[43]<159><137>"
  RTOK 43
  TWOK 'O', 'N'
  TWOK 'E', 'S'
  EQUB 0
 
  TWOK 'A', 'L'          \ Token 64:     "ALIEN ITEMS"
- CHAR 'I'               \ Encoded as:   "<128>I<146> [127]S"
- TWOK 'E', 'N'
+ CHAR 'I'               \
+ TWOK 'E', 'N'          \ Encoded as:   "<128>I<146> [127]S"
  CHAR ' '
  RTOK 127
  CHAR 'S'
  EQUB 0
 
- CTRL 12                \ Token 65:     "{crlf}10{cash right-aligned to width 9}
- CHAR '1'               \                 CR5{cash right-aligned to width 9} CR"
- CHAR '0'               \ Encoded as:   "{12}10{0}5{0}"
- CTRL 0
+ CTRL 12                \ Token 65:     "{cr}
+ CHAR '1'               \                10{cash} CR5{cash} CR"
+ CHAR '0'               \
+ CTRL 0                 \ Encoded as:   "{12}10{0}5{0}"
  CHAR '5'
  CTRL 0
  EQUB 0
 
  CHAR ' '               \ Token 66:     " CR"
- CHAR 'C'               \ Encoded as:   " CR"
- CHAR 'R'
+ CHAR 'C'               \
+ CHAR 'R'               \ Encoded as:   " CR"
  EQUB 0
 
  CHAR 'L'               \ Token 67:     "LARGE"
- TWOK 'A', 'R'          \ Encoded as:   "L<138><131>"
- TWOK 'G', 'E'
+ TWOK 'A', 'R'          \
+ TWOK 'G', 'E'          \ Encoded as:   "L<138><131>"
  EQUB 0
 
  CHAR 'F'               \ Token 68:     "FIERCE"
- CHAR 'I'               \ Encoded as:   "FI<144><133>"
- TWOK 'E', 'R'
+ CHAR 'I'               \
+ TWOK 'E', 'R'          \ Encoded as:   "FI<144><133>"
  TWOK 'C', 'E'
  EQUB 0
 
  CHAR 'S'               \ Token 69:     "SMALL"
- TWOK 'M', 'A'          \ Encoded as:   "S<139>[129]"
- RTOK 129
+ TWOK 'M', 'A'          \
+ RTOK 129               \ Encoded as:   "S<139>[129]"
  EQUB 0
 
  CHAR 'G'               \ Token 70:     "GREEN"
- TWOK 'R', 'E'          \ Encoded as:   "G<142><146>"
- TWOK 'E', 'N'
+ TWOK 'R', 'E'          \
+ TWOK 'E', 'N'          \ Encoded as:   "G<142><146>"
  EQUB 0
 
  CHAR 'R'               \ Token 71:     "RED"
- TWOK 'E', 'D'          \ Encoded as:   "R<152>"
- EQUB 0
+ TWOK 'E', 'D'          \
+ EQUB 0                 \ Encoded as:   "R<152>"
 
  CHAR 'Y'               \ Token 72:     "YELLOW"
- CHAR 'E'               \ Encoded as:   "YE[129]OW"
- RTOK 129
+ CHAR 'E'               \
+ RTOK 129               \ Encoded as:   "YE[129]OW"
  CHAR 'O'
  CHAR 'W'
  EQUB 0
 
  CHAR 'B'               \ Token 73:     "BLUE"
- CHAR 'L'               \ Encoded as:   "BLUE"
- CHAR 'U'
+ CHAR 'L'               \
+ CHAR 'U'               \ Encoded as:   "BLUE"
  CHAR 'E'
  EQUB 0
 
  CHAR 'B'               \ Token 74:     "BLACK"
- TWOK 'L', 'A'          \ Encoded as:   "B<149>CK"
- CHAR 'C'
+ TWOK 'L', 'A'          \
+ CHAR 'C'               \ Encoded as:   "B<149>CK"
  CHAR 'K'
  EQUB 0
 
  RTOK 136               \ Token 75:     "HARMLESS"
- EQUB 0                 \ Encoded as:   "[136]"
+ EQUB 0                 \
+                        \ Encoded as:   "[136]"
 
  CHAR 'S'               \ Token 76:     "SLIMY"
- CHAR 'L'               \ Encoded as:   "SLIMY"
- CHAR 'I'
+ CHAR 'L'               \
+ CHAR 'I'               \ Encoded as:   "SLIMY"
  CHAR 'M'
  CHAR 'Y'
  EQUB 0
 
  CHAR 'B'               \ Token 77:     "BUG-EYED"
- CHAR 'U'               \ Encoded as:   "BUG-EY<152>"
- CHAR 'G'
+ CHAR 'U'               \
+ CHAR 'G'               \ Encoded as:   "BUG-EY<152>"
  CHAR '-'
  CHAR 'E'
  CHAR 'Y'
@@ -1528,60 +1535,60 @@ ENDMACRO
  EQUB 0
 
  CHAR 'H'               \ Token 78:     "HORNED"
- TWOK 'O', 'R'          \ Encoded as:   "H<153>N<152>"
- CHAR 'N'
+ TWOK 'O', 'R'          \
+ CHAR 'N'               \ Encoded as:   "H<153>N<152>"
  TWOK 'E', 'D'
  EQUB 0
 
  CHAR 'B'               \ Token 79:     "BONY"
- TWOK 'O', 'N'          \ Encoded as:   "B<159>Y"
- CHAR 'Y'
+ TWOK 'O', 'N'          \
+ CHAR 'Y'               \ Encoded as:   "B<159>Y"
  EQUB 0
 
  CHAR 'F'               \ Token 80:     "FAT"
- TWOK 'A', 'T'          \ Encoded as:   "F<145>"
- EQUB 0
+ TWOK 'A', 'T'          \
+ EQUB 0                 \ Encoded as:   "F<145>"
 
  CHAR 'F'               \ Token 81:     "FURRY"
- CHAR 'U'               \ Encoded as:   "FURRY"
- CHAR 'R'
+ CHAR 'U'               \
+ CHAR 'R'               \ Encoded as:   "FURRY"
  CHAR 'R'
  CHAR 'Y'
  EQUB 0
 
  RTOK 94                \ Token 82:     "RODENT"
- CHAR 'D'               \ Encoded as:   "[94]D<146>T"
- TWOK 'E', 'N'
+ CHAR 'D'               \
+ TWOK 'E', 'N'          \ Encoded as:   "[94]D<146>T"
  CHAR 'T'
  EQUB 0
 
  CHAR 'F'               \ Token 83:     "FROG"
- RTOK 94                \ Encoded as:   "F[94]G"
- CHAR 'G'
+ RTOK 94                \
+ CHAR 'G'               \ Encoded as:   "F[94]G"
  EQUB 0
 
  CHAR 'L'               \ Token 84:     "LIZARD"
- CHAR 'I'               \ Encoded as:   "LI<132>RD"
- TWOK 'Z', 'A'
+ CHAR 'I'               \
+ TWOK 'Z', 'A'          \ Encoded as:   "LI<132>RD"
  CHAR 'R'
  CHAR 'D'
  EQUB 0
 
  CHAR 'L'               \ Token 85:     "LOBSTER"
- CHAR 'O'               \ Encoded as:   "LOB[43]<144>"
- CHAR 'B'
+ CHAR 'O'               \
+ CHAR 'B'               \ Encoded as:   "LOB[43]<144>"
  RTOK 43
  TWOK 'E', 'R'
  EQUB 0
 
  TWOK 'B', 'I'          \ Token 86:     "BIRD"
- CHAR 'R'               \ Encoded as:   "<134>RD"
- CHAR 'D'
+ CHAR 'R'               \
+ CHAR 'D'               \ Encoded as:   "<134>RD"
  EQUB 0
 
  CHAR 'H'               \ Token 87:     "HUMANOID"
- CHAR 'U'               \ Encoded as:   "HUM<155>OID"
- CHAR 'M'
+ CHAR 'U'               \
+ CHAR 'M'               \ Encoded as:   "HUM<155>OID"
  TWOK 'A', 'N'
  CHAR 'O'
  CHAR 'I'
@@ -1589,40 +1596,40 @@ ENDMACRO
  EQUB 0
 
  CHAR 'F'               \ Token 88:     "FELINE"
- CHAR 'E'               \ Encoded as:   "FEL<140>E"
- CHAR 'L'
+ CHAR 'E'               \
+ CHAR 'L'               \ Encoded as:   "FEL<140>E"
  TWOK 'I', 'N'
  CHAR 'E'
  EQUB 0
 
  TWOK 'I', 'N'          \ Token 89:     "INSECT"
- CHAR 'S'               \ Encoded as:   "<140>SECT"
- CHAR 'E'
+ CHAR 'S'               \
+ CHAR 'E'               \ Encoded as:   "<140>SECT"
  CHAR 'C'
  CHAR 'T'
  EQUB 0
 
  RTOK 11                \ Token 90:     "AVERAGE RADIUS"
- TWOK 'R', 'A'          \ Encoded as:   "[11]<148><141><136>"
- TWOK 'D', 'I'
+ TWOK 'R', 'A'          \
+ TWOK 'D', 'I'          \ Encoded as:   "[11]<148><141><136>"
  TWOK 'U', 'S'
  EQUB 0
 
  CHAR 'C'               \ Token 91:     "COM"
- CHAR 'O'               \ Encoded as:   "COM"
- CHAR 'M'
+ CHAR 'O'               \
+ CHAR 'M'               \ Encoded as:   "COM"
  EQUB 0
 
  RTOK 91                \ Token 92:     "COMMANDER"
- CHAR 'M'               \ Encoded as:   "[91]M<155>D<144>"
- TWOK 'A', 'N'
+ CHAR 'M'               \
+ TWOK 'A', 'N'          \ Encoded as:   "[91]M<155>D<144>"
  CHAR 'D'
  TWOK 'E', 'R'
  EQUB 0
 
  CHAR ' '               \ Token 93:     " DESTROYED"
- CHAR 'D'               \ Encoded as:   " D<137>T[94]Y<152>"
- TWOK 'E', 'S'
+ CHAR 'D'               \
+ TWOK 'E', 'S'          \ Encoded as:   " D<137>T[94]Y<152>"
  CHAR 'T'
  RTOK 94
  CHAR 'Y'
@@ -1630,15 +1637,15 @@ ENDMACRO
  EQUB 0
 
  CHAR 'R'               \ Token 94:     "RO"
- CHAR 'O'               \ Encoded as:   "RO"
- EQUB 0
+ CHAR 'O'               \
+ EQUB 0                 \ Encoded as:   "RO"
 
- RTOK 14                \ Token 95:     "UNIT  QUANTITY{crlf} PRODUCT   UNIT
- CHAR ' '               \                 PRICE FOR SALE{crlf}{lf}"
- CHAR ' '               \ Encoded as:   "[14]  [16]{12} [26]   [14] [6] F<153>
- RTOK 16                \                 SA<129>{12}{10}"
- CTRL 12
- CHAR ' '
+ RTOK 14                \ Token 95:     "UNIT  QUANTITY{cr}
+ CHAR ' '               \                 PRODUCT   UNIT PRICE FOR SALE{cr}{lf}
+ CHAR ' '               \               "
+ RTOK 16                \
+ CTRL 12                \ Encoded as:   "[14]  [16]{13} [26]   [14] [6] F<153>
+ CHAR ' '               \                 SA<129>{12}{10}"
  RTOK 26
  CHAR ' '
  CHAR ' '
@@ -1658,75 +1665,75 @@ ENDMACRO
  EQUB 0
 
  CHAR 'F'               \ Token 96:     "FRONT"
- CHAR 'R'               \ Encoded as:   "FR<159>T"
- TWOK 'O', 'N'
+ CHAR 'R'               \
+ TWOK 'O', 'N'          \ Encoded as:   "FR<159>T"
  CHAR 'T'
  EQUB 0
 
  TWOK 'R', 'E'          \ Token 97:     "REAR"
- TWOK 'A', 'R'          \ Encoded as:   "<142><138>"
- EQUB 0
+ TWOK 'A', 'R'          \
+ EQUB 0                 \ Encoded as:   "<142><138>"
 
  TWOK 'L', 'E'          \ Token 98:     "LEFT"
- CHAR 'F'               \ Encoded as:   "<129>FT"
- CHAR 'T'
+ CHAR 'F'               \
+ CHAR 'T'               \ Encoded as:   "<129>FT"
  EQUB 0
 
  TWOK 'R', 'I'          \ Token 99:     "RIGHT"
- CHAR 'G'               \ Encoded as:   "<158>GHT"
- CHAR 'H'
+ CHAR 'G'               \
+ CHAR 'H'               \ Encoded as:   "<158>GHT"
  CHAR 'T'
  EQUB 0
 
  RTOK 121               \ Token 100:    "ENERGY LOW{beep}"
- CHAR 'L'               \ Encoded as:   "[121]LOW{7}"
- CHAR 'O'
+ CHAR 'L'               \
+ CHAR 'O'               \ Encoded as:   "[121]LOW{7}"
  CHAR 'W'
  CTRL 7
  EQUB 0
 
  RTOK 99                \ Token 101:    "RIGHT ON COMMANDER!"
- RTOK 131               \ Encoded as:   "[99][131][92]!"
- RTOK 92
+ RTOK 131               \
+ RTOK 92                \ Encoded as:   "[99][131][92]!"
  CHAR '!'
  EQUB 0
 
  CHAR 'E'               \ Token 102:    "EXTRA "
- CHAR 'X'               \ Encoded as:   "EXT<148> "
- CHAR 'T'
+ CHAR 'X'               \
+ CHAR 'T'               \ Encoded as:   "EXT<148> "
  TWOK 'R', 'A'
  CHAR ' '
  EQUB 0
 
  CHAR 'P'               \ Token 103:    "PULSE LASER"
- CHAR 'U'               \ Encoded as:   "PULSE[27]"
- CHAR 'L'
+ CHAR 'U'               \
+ CHAR 'L'               \ Encoded as:   "PULSE[27]"
  CHAR 'S'
  CHAR 'E'
  RTOK 27
  EQUB 0
 
  TWOK 'B', 'E'          \ Token 104:    "BEAM LASER"
- CHAR 'A'               \ Encoded as:   "<147>AM[27]"
- CHAR 'M'
+ CHAR 'A'               \
+ CHAR 'M'               \ Encoded as:   "<147>AM[27]"
  RTOK 27
  EQUB 0
 
  CHAR 'F'               \ Token 105:    "FUEL"
- CHAR 'U'               \ Encoded as:   "FUEL"
- CHAR 'E'
+ CHAR 'U'               \
+ CHAR 'E'               \ Encoded as:   "FUEL"
  CHAR 'L'
  EQUB 0
 
  CHAR 'M'               \ Token 106:    "MISSILE"
- TWOK 'I', 'S'          \ Encoded as:   "M<157>SI<129>"
- CHAR 'S'
+ TWOK 'I', 'S'          \
+ CHAR 'S'               \ Encoded as:   "M<157>SI<129>"
  CHAR 'I'
  TWOK 'L', 'E'
  EQUB 0
 
- RTOK 67                \ Token 107:    "LARGE CARGO{switch to sentence
- RTOK 46                \                 case} BAY"
+ RTOK 67                \ Token 107:    "LARGE CARGO{sentence case} BAY"
+ RTOK 46                \
  CHAR ' '               \ Encoded as:   "[67][46] BAY"
  CHAR 'B'
  CHAR 'A'
@@ -1734,8 +1741,8 @@ ENDMACRO
  EQUB 0
 
  CHAR 'E'               \ Token 108:    "E.C.M.SYSTEM"
- CHAR '.'               \ Encoded as:   "E.C.M.[5]"
- CHAR 'C'
+ CHAR '.'               \
+ CHAR 'C'               \ Encoded as:   "E.C.M.[5]"
  CHAR '.'
  CHAR 'M'
  CHAR '.'
@@ -1743,18 +1750,18 @@ ENDMACRO
  EQUB 0
 
  RTOK 102               \ Token 109:    "EXTRA PULSE LASERS"
- RTOK 103               \ Encoded as:   "[102][103]S"
- CHAR 'S'
+ RTOK 103               \
+ CHAR 'S'               \ Encoded as:   "[102][103]S"
  EQUB 0
 
  RTOK 102               \ Token 110:    "EXTRA BEAM LASERS"
- RTOK 104               \ Encoded as:   "[102][104]S"
- CHAR 'S'
+ RTOK 104               \
+ CHAR 'S'               \ Encoded as:   "[102][104]S"
  EQUB 0
 
  RTOK 105               \ Token 111:    "FUEL SCOOPS"
- CHAR ' '               \ Encoded as:   "[105] SCOOPS"
- CHAR 'S'
+ CHAR ' '               \
+ CHAR 'S'               \ Encoded as:   "[105] SCOOPS"
  CHAR 'C'
  CHAR 'O'
  CHAR 'O'
@@ -1763,8 +1770,8 @@ ENDMACRO
  EQUB 0
 
  TWOK 'E', 'S'          \ Token 112:    "ESCAPE POD"
- CHAR 'C'               \ Encoded as:   "<137>CAPE POD"
- CHAR 'A'
+ CHAR 'C'               \
+ CHAR 'A'               \ Encoded as:   "<137>CAPE POD"
  CHAR 'P'
  CHAR 'E'
  CHAR ' '
@@ -1774,20 +1781,20 @@ ENDMACRO
  EQUB 0
 
  RTOK 121               \ Token 113:    "ENERGY BOMB"
- CHAR 'B'               \ Encoded as:   "[121]BOMB"
- CHAR 'O'
+ CHAR 'B'               \
+ CHAR 'O'               \ Encoded as:   "[121]BOMB"
  CHAR 'M'
  CHAR 'B'
  EQUB 0
 
  RTOK 102               \ Token 114:    "EXTRA ENERGY UNIT"
- RTOK 121                \ Encoded as:   "[102][121][14]"
- RTOK 14
+ RTOK 121               \
+ RTOK 14                \ Encoded as:   "[102][121][14]"
  EQUB 0
 
  CHAR 'D'               \ Token 115:    "DOCKING COMPUTERS"
- CHAR 'O'               \ Encoded as:   "DOCK<140>G [55]"
- CHAR 'C'
+ CHAR 'O'               \
+ CHAR 'C'               \ Encoded as:   "DOCK<140>G [55]"
  CHAR 'K'
  TWOK 'I', 'N'
  CHAR 'G'
@@ -1796,13 +1803,13 @@ ENDMACRO
  EQUB 0
 
  RTOK 122               \ Token 116:    "GALACTIC HYPERSPACE "
- CHAR ' '               \ Encoded as:   "[122] [29]"
- RTOK 29
+ CHAR ' '               \
+ RTOK 29                \ Encoded as:   "[122] [29]"
  EQUB 0
 
  CHAR 'M'               \ Token 117:    "MILITARY  LASER"
- CHAR 'I'               \ Encoded as:   "MILIT<138>Y [27]"
- CHAR 'L'
+ CHAR 'I'               \
+ CHAR 'L'               \ Encoded as:   "MILIT<138>Y [27]"
  CHAR 'I'
  CHAR 'T'
  TWOK 'A', 'R'
@@ -1812,74 +1819,74 @@ ENDMACRO
  EQUB 0
 
  CHAR 'M'               \ Token 118:    "MINING  LASER"
+ TWOK 'I', 'N'          \
  TWOK 'I', 'N'          \ Encoded as:   "M<140><140>G [27]"
- TWOK 'I', 'N'
  CHAR 'G'
  CHAR ' '
  RTOK 27
  EQUB 0
 
- RTOK 37                \ Token 119:    "CASH:{cash right-aligned to width 9}
- CHAR ':'               \                 CR{crlf}"
- CTRL 0                 \ Encoded as:   "[37]:{0}"
- EQUB 0
+ RTOK 37                \ Token 119:    "CASH:{cash} CR{cr}
+ CHAR ':'               \               "
+ CTRL 0                 \
+ EQUB 0                 \ Encoded as:   "[37]:{0}"
 
  TWOK 'I', 'N'          \ Token 120:    "INCOMING MISSILE"
- RTOK 91                \ Encoded as:   "<140>[91]<140>G [106]"
- TWOK 'I', 'N'
+ RTOK 91                \
+ TWOK 'I', 'N'          \ Encoded as:   "<140>[91]<140>G [106]"
  CHAR 'G'
  CHAR ' '
  RTOK 106
  EQUB 0
 
  TWOK 'E', 'N'          \ Token 121:    "ENERGY "
- TWOK 'E', 'R'          \ Encoded as:   "<146><144>GY "
- CHAR 'G'
+ TWOK 'E', 'R'          \
+ CHAR 'G'               \ Encoded as:   "<146><144>GY "
  CHAR 'Y'
  CHAR ' '
  EQUB 0
 
  CHAR 'G'               \ Token 122:    "GALACTIC"
- CHAR 'A'               \ Encoded as:   "GA<149>C<151>C"
- TWOK 'L', 'A'
+ CHAR 'A'               \
+ TWOK 'L', 'A'          \ Encoded as:   "GA<149>C<151>C"
  CHAR 'C'
  TWOK 'T', 'I'
  CHAR 'C'
  EQUB 0
 
  RTOK 115               \ Token 123:    "DOCKING COMPUTERS ON"
- CHAR ' '               \ Encoded as:   "[115] ON"
- CHAR 'O'
+ CHAR ' '               \
+ CHAR 'O'               \ Encoded as:   "[115] ON"
  CHAR 'N'
  EQUB 0
 
  CHAR 'A'               \ Token 124:    "ALL"
- RTOK 129               \ Encoded as:   "A[129]"
- EQUB 0
+ RTOK 129               \
+ EQUB 0                 \ Encoded as:   "A[129]"
 
- CTRL 5                 \ Token 125:    "FUEL: {fuel level} LIGHT YEARS{crlf}
- TWOK 'L', 'E'          \                CASH:{cash right-aligned to width 9}
- CHAR 'G'               \                 CR{crlf}LEGAL STATUS:"
- TWOK 'A', 'L'          \ Encoded as:   "{5}<129>G<128> [43]<145><136>:"
- CHAR ' '
+ CTRL 5                 \ Token 125:    "FUEL: {fuel level} LIGHT YEARS{cr}
+ TWOK 'L', 'E'          \                CASH:{cash} CR{cr}
+ CHAR 'G'               \                LEGAL STATUS:"
+ TWOK 'A', 'L'          \
+ CHAR ' '               \ Encoded as:   "{5}<129>G<128> [43]<145><136>:"
  RTOK 43
  TWOK 'A', 'T'
  TWOK 'U', 'S'
  CHAR ':'
  EQUB 0
 
- RTOK 92                \ Token 126:    "COMMANDER {commander name}{crlf}{crlf}
- CHAR ' '               \                {crlf}{switch to sentence case}PRESENT
- CTRL 4                 \                 SYSTEM{tab to column 21}:{current
- CTRL 12                \                system name}{crlf}HYPERSPACE SYSTEM
- CTRL 12                \                {tab to column 21}:{selected system
- CTRL 12                \                name}{crlf}CONDITION{tab to column
- CTRL 6                 \                21}:"
- RTOK 145               \ Encoded as:   "[92] {4}{12}{12}{12}{6}[145] [5]{9}{2}
- CHAR ' '               \                {12}[29][5]{9}{3}{12}C<159><141><151>
- RTOK 5                 \                <159>{9}"
- CTRL 9
- CTRL 2
+ RTOK 92                \ Token 126:    "COMMANDER {commander name}{cr}
+ CHAR ' '               \                {cr}
+ CTRL 4                 \                {cr}
+ CTRL 12                \                {sentence case}PRESENT SYSTEM{tab to
+ CTRL 12                \                column 21}:{current system name}{cr}
+ CTRL 12                \                HYPERSPACE SYSTEM{tab to column 21}:
+ CTRL 6                 \                {selected system name}{cr}
+ RTOK 145               \                CONDITION{tab to column 21}:"
+ CHAR ' '               \
+ RTOK 5                 \ Encoded as:   "[92] {4}{12}{12}{12}{6}[145] [5]{9}{2}
+ CTRL 9                 \                {12}[29][5]{9}{3}{13}C<159><141><151>
+ CTRL 2                 \                <159>{9}"
  CTRL 12
  RTOK 29
  RTOK 5
@@ -1895,32 +1902,34 @@ ENDMACRO
  EQUB 0
 
  CHAR 'I'               \ Token 127:    "ITEM"
- TWOK 'T', 'E'          \ Encoded as:   "I<156>M"
- CHAR 'M'
+ TWOK 'T', 'E'          \
+ CHAR 'M'               \ Encoded as:   "I<156>M"
  EQUB 0
 
  EQUB 0                 \ Token 128:    ""
+                        \
+                        \ Encoded as:   ""
 
  CHAR 'L'               \ Token 129:    "LL"
- CHAR 'L'               \ Encoded as:   "LL"
- EQUB 0
+ CHAR 'L'               \
+ EQUB 0                 \ Encoded as:   "LL"
 
  TWOK 'R', 'A'          \ Token 130:    "RATING:"
- TWOK 'T', 'I'          \ Encoded as:   "<148><151>NG:"
- CHAR 'N'
+ TWOK 'T', 'I'          \
+ CHAR 'N'               \ Encoded as:   "<148><151>NG:"
  CHAR 'G'
  CHAR ':'
  EQUB 0
 
  CHAR ' '               \ Token 131:    " ON "
- TWOK 'O', 'N'          \ Encoded as:   " <159> "
- CHAR ' '
+ TWOK 'O', 'N'          \
+ CHAR ' '               \ Encoded as:   " <159> "
  EQUB 0
 
- CTRL 12                \ Token 132:    "{crlf}{switch to all caps}EQUIPMENT:
- CTRL 8                 \                {switch to sentence case}"
- RTOK 47                \ Encoded as:   "{12}{8}[47]M<146>T:{6}"
- CHAR 'M'
+ CTRL 12                \ Token 132:    "{cr}
+ CTRL 8                 \                {all caps}EQUIPMENT: {sentence case}"
+ RTOK 47                \
+ CHAR 'M'               \ Encoded as:   "{12}{8}[47]M<146>T:{6}"
  TWOK 'E', 'N'
  CHAR 'T'
  CHAR ':'
@@ -1928,37 +1937,37 @@ ENDMACRO
  EQUB 0
 
  CHAR 'C'               \ Token 133:    "CLEAN"
- TWOK 'L', 'E'          \ Encoded as:   "C<129><155>"
- TWOK 'A', 'N'
+ TWOK 'L', 'E'          \
+ TWOK 'A', 'N'          \ Encoded as:   "C<129><155>"
  EQUB 0
 
  CHAR 'O'               \ Token 134:    "OFFENDER"
+ CHAR 'F'               \
  CHAR 'F'               \ Encoded as:   "OFF<146>D<144>"
- CHAR 'F'
  TWOK 'E', 'N'
  CHAR 'D'
  TWOK 'E', 'R'
  EQUB 0
 
  CHAR 'F'               \ Token 135:    "FUGITIVE"
- CHAR 'U'               \ Encoded as:   "FUGI<151><150>"
- CHAR 'G'
+ CHAR 'U'               \
+ CHAR 'G'               \ Encoded as:   "FUGI<151><150>"
  CHAR 'I'
  TWOK 'T', 'I'
  TWOK 'V', 'E'
  EQUB 0
 
  CHAR 'H'               \ Token 136:    "HARMLESS"
- TWOK 'A', 'R'          \ Encoded as:   "H<138>M<129>SS"
- CHAR 'M'
+ TWOK 'A', 'R'          \
+ CHAR 'M'               \ Encoded as:   "H<138>M<129>SS"
  TWOK 'L', 'E'
  CHAR 'S'
  CHAR 'S'
  EQUB 0
 
  CHAR 'M'               \ Token 137:    "MOSTLY HARMLESS"
- CHAR 'O'               \ Encoded as:   "MO[43]LY [136]"
- RTOK 43
+ CHAR 'O'               \
+ RTOK 43                \ Encoded as:   "MO[43]LY [136]"
  CHAR 'L'
  CHAR 'Y'
  CHAR ' '
@@ -1966,45 +1975,47 @@ ENDMACRO
  EQUB 0
 
  RTOK 12                \ Token 138:    "POOR "
- EQUB 0                 \ Encoded as:   "[12]"
+ EQUB 0                 \
+                        \ Encoded as:   "[12]"
 
  RTOK 11                \ Token 139:    "AVERAGE "
- EQUB 0                 \ Encoded as:   "[11]"
+ EQUB 0                 \
+                        \ Encoded as:   "[11]"
 
  CHAR 'A'               \ Token 140:    "ABOVE AVERAGE "
- CHAR 'B'               \ Encoded as:   "ABO<150> [11]"
- CHAR 'O'
+ CHAR 'B'               \
+ CHAR 'O'               \ Encoded as:   "ABO<150> [11]"
  TWOK 'V', 'E'
  CHAR ' '
  RTOK 11
  EQUB 0
 
  RTOK 91                \ Token 141:    "COMPETENT"
- CHAR 'P'               \ Encoded as:   "[91]PET<146>T"
- CHAR 'E'
+ CHAR 'P'               \
+ CHAR 'E'               \ Encoded as:   "[91]PET<146>T"
  CHAR 'T'
  TWOK 'E', 'N'
  CHAR 'T'
  EQUB 0
 
  CHAR 'D'               \ Token 142:    "DANGEROUS"
- TWOK 'A', 'N'          \ Encoded as:   "D<155><131>[94]<136>"
- TWOK 'G', 'E'
+ TWOK 'A', 'N'          \
+ TWOK 'G', 'E'          \ Encoded as:   "D<155><131>[94]<136>"
  RTOK 94
  TWOK 'U', 'S'
  EQUB 0
 
  CHAR 'D'               \ Token 143:    "DEADLY"
- CHAR 'E'               \ Encoded as:   "DEADLY"
- CHAR 'A'
+ CHAR 'E'               \
+ CHAR 'A'               \ Encoded as:   "DEADLY"
  CHAR 'D'
  CHAR 'L'
  CHAR 'Y'
  EQUB 0
 
  CHAR '-'               \ Token 144:    "---- E L I T E ----"
+ CHAR '-'               \
  CHAR '-'               \ Encoded as:   "---- E L I T E ----"
- CHAR '-'
  CHAR '-'
  CHAR ' '
  CHAR 'E'
@@ -2024,15 +2035,15 @@ ENDMACRO
  EQUB 0
 
  CHAR 'P'               \ Token 145:    "PRESENT"
- TWOK 'R', 'E'          \ Encoded as:   "P<142>S<146>T"
- CHAR 'S'
+ TWOK 'R', 'E'          \
+ CHAR 'S'               \ Encoded as:   "P<142>S<146>T"
  TWOK 'E', 'N'
  CHAR 'T'
  EQUB 0
 
- CTRL 8                 \ Token 146:    "{switch to all caps}GAME OVER"
- CHAR 'G'               \ Encoded as:   "{8}GAME O<150>R"
- CHAR 'A'
+ CTRL 8                 \ Token 146:    "{all caps}GAME OVER"
+ CHAR 'G'               \
+ CHAR 'A'               \ Encoded as:   "{8}GAME O<150>R"
  CHAR 'M'
  CHAR 'E'
  CHAR ' '
@@ -3675,6 +3686,10 @@ ENDIF
 
  JMP BAY
 
+\ ******************************************************************************
+\       Name: BRKBK
+\ ******************************************************************************
+
 .BRKBK
 
  LDA #(BRBR MOD256)
@@ -5315,384 +5330,742 @@ ENDIF
  RTS
 
 \ ******************************************************************************
+\
 \       Name: MT27
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print extended token 217-219 depending on the galaxy number (0-2)
+\
 \ ******************************************************************************
 
 .MT27
 
- LDA #217
- EQUB &2C
+ LDA #217               \ Set A = 217, so when we fall through into MT28, the
+                        \ 217 gets added to the current galaxy number, so the
+                        \ extended token that is printed is 217-219 (as this is
+                        \ only called in galaxies 0 through 2)
+
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &A9 &06, or BIT &06A9, which does nothing apart
+                        \ from affect the flags
 
 \ ******************************************************************************
+\
 \       Name: MT28
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print extended token 220-221 depending on the galaxy number (0-1)
+\
 \ ******************************************************************************
 
 .MT28
 
- LDA #220
- CLC
- ADC GCNT
- BNE DETOK
+ LDA #220               \ Set A = galaxy number in GCNT + 220, which is in the
+ CLC                    \ range 220-221, as this is only called in galaxies 0
+ ADC GCNT               \ and 1
+
+ BNE DETOK              \ Jump to DETOK to print extended token 220-221,
+                        \ returning from the subroutine using a tail call (this
+                        \ BNE is effectively a JMP as A is never zero)
 
 \ ******************************************************************************
+\
 \       Name: DETOK3
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print an extended recursive token from the RUTOK token table
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The recursive token to be printed, in the range 0-255
+\
+\ Returns:
+\
+\   A                   A is preserved
+\
+\   Y                   Y is preserved
+\
+\   V(1 0)              V(1 0) is preserved
+\
 \ ******************************************************************************
 
 .DETOK3
 
+ PHA                    \ Store A on the stack, so we can retrieve it later
+
+ TAX                    \ Copy the token number from A into X
+
+ TYA                    \ Store Y on the stack
  PHA
- TAX
- TYA
- PHA
- LDA V
+
+ LDA V                  \ Store V(1 0) on the stack
  PHA
  LDA V+1
  PHA
- LDA #(RUTOK MOD256)
+
+ LDA #LO(RUTOK)         \ Set V to the low byte of RUTOK
  STA V
- LDA #(RUTOK DIV256)
- BNE DTEN
+
+ LDA #HI(RUTOK)         \ Set A to the high byte of RUTOK
+
+ BNE DTEN               \ Call DTEN to print token number X from the RUTOK
+                        \ table and restore the values of A, Y and V(1 0) from
+                        \ the stack, returning from the subroutine using a tail
+                        \ call (this BNE is effectively a JMP as A is never
+                        \ zero)
 
 \ ******************************************************************************
+\
 \       Name: DETOK
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print an extended recursive token from the TKN1 token table
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The recursive token to be printed, in the range 1-???
+\
+\ Returns:
+\
+\   A                   A is preserved
+\
+\   Y                   Y is preserved
+\
+\   V(1 0)              V(1 0) is preserved
+\
+\ Other entry points:
+\
+\   DTEN                Print recursive token number X from the token table
+\                       pointed to by (A V), used to print tokens from the RUTOK
+\                       table via calls to DETOK3
+\ 
 \ ******************************************************************************
 
 .DETOK
 
+ PHA                    \ Store A on the stack, so we can retrieve it later
+
+ TAX                    \ Copy the token number from A into X
+
+ TYA                    \ Store Y on the stack
  PHA
- TAX
- TYA
- PHA
- LDA V
+
+ LDA V                  \ Store V(1 0) on the stack
  PHA
  LDA V+1
  PHA
- LDA #(TKN1 MOD256)
+
+ LDA #LO(TKN1)          \ Set V to the low byte of TKN1
  STA V
- LDA #(TKN1 DIV256)
+
+ LDA #HI(TKN1)          \ Set A to the high byte of TKN1, so when we fall
+                        \ through into DTEN, V(1 0) gets set to the address of
+                        \ the TKN1 token table
 
 .DTEN
 
- STA V+1
- LDY #0
+ STA V+1                \ Set the high byte of V(1 0) to A, so V(1 0) now points
+                        \ to the start of the token table to use
 
+ LDY #0                 \ First, we need to work our way through the table until
+                        \ we get to the token that we want to print. Tokens are
+                        \ delimited by #VE, and VE EOR VE = 0, so we work our
+                        \ way through the table in, counting #VE delimiters
+                        \ until we have passed X of them, at which point we jump
+                        \ down to DTL2 to do the actual printing. So first, we
+                        \ set a counter Y to point to the character offset as we
+                        \ scan through the table
 .DTL1
 
- LDA (V),Y
- EOR #VE
- BNE DT1
- DEX
- BEQ DTL2
+ LDA (V),Y              \ Load the character at offset Y in the token table,
+                        \ which is the next character from the token table
+
+ EOR #VE                \ Tokens are stored in memory having been EOR'd with
+                        \ #VE, so we repeat the EOR to get the actual character
+                        \ in this token
+
+ BNE DT1                \ If the result is non-zero, then this is a character
+                        \ in a token rather than the delimiter (which is #VE),
+                        \ so jump to DT1
+
+ DEX                    \ We have just scanned the end of a token, so decrement
+                        \ X, which contains the token number we are looking for
+
+ BEQ DTL2               \ If X has now reached zero, then we have found the token
+                        \ we are looking for, so jump down to DTL2 to print it
 
 .DT1
 
- INY
- BNE DTL1
- INC V+1
- BNE DTL1
+ INY                    \ Otherwise this isn't the token we are looking for, so
+                        \ increment the character pointer
+
+ BNE DTL1               \ If Y hasn't just wrapped around to 0, loop back to
+                        \ DTL1 to process the next character
+
+ INC V+1                \ We have just crossed into a new page, so increment
+                        \ V+1 so that V points to the start of the new page
+
+ BNE DTL1               \ Jump back to DTL1 to process the next character (this
+                        \ BNE is effectively a JMP as V+1 won't reach zero
+                        \ before we reach the end of the token table)
 
 .DTL2
 
- INY
- BNE P%+4
- INC V+1
- LDA (V),Y
- EOR #VE
- BEQ DTEX
- JSR DETOK2
- JMP DTL2
+ INY                    \ We just detected the delimiter byte before the token
+                        \ that we want to print, so increment the character
+                        \ pointer to point to the first character of the token,
+                        \ rather than the delimiter
+
+ BNE P%+4               \ If Y hasn't just wrapped around to 0, skip the next
+                        \ instruction
+
+ INC V+1                \ We have just crossed into a new page, so increment
+                        \ V+1 so that V points to the start of the new page
+
+ LDA (V),Y              \ Load the character at offset Y in the token table,
+                        \ which is the next character from the token we want to
+                        \ print
+
+ EOR #VE                \ Tokens are stored in memory having been EOR'd with
+                        \ #VE, so we repeat the EOR to get the actual character
+                        \ in this token
+
+ BEQ DTEX               \ If the result is zero, then this is the delimiter at
+                        \ the end of the token to print (which is #VE), so jump
+                        \ to DTEX to return from the subroutine, as we are done
+                        \ printing
+
+ JSR DETOK2             \ Otherwise call DETOK2 to print this part of the token
+
+ JMP DTL2               \ Jump back to DTL2 to process the next character
 
 .DTEX
 
- PLA
- STA V+1
+ PLA                    \ Restore V(1 0) from the stack, so it is preserved
+ STA V+1                \ through calls to this routine
  PLA
  STA V
- PLA
- TAY
- PLA
- RTS
+
+ PLA                    \ Restore Y from the stack, so it is preserved through
+ TAY                    \ calls to this routine
+
+ PLA                    \ Restore A from the stack, so it is preserved through
+                        \ calls to this routine
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: DETOK2
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print an extended text token (1-255)
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The token to be printed (1-255)
+\
+\ Returns:
+\
+\   A                   A is preserved
+\
+\   Y                   Y is preserved
+\
+\   V(1 0)              V(1 0) is preserved
+\
+\
+\ Other entry points:
+\
+\   DTS                 Print the single letter pointed to by A, where A is an
+\                       address within the extended two-letter token tables of
+\                       TKN2 and QQ16
+\
 \ ******************************************************************************
 
 .DETOK2
 
- CMP #32
- BCC DT3
- BIT DTW3
- BPL DT8
- TAX
- TYA
+ CMP #32                \ If A < 32 then this is a jump token, so skip to DT3 to
+ BCC DT3                \ process it
+
+ BIT DTW3               \ If bit 7 of DTW3 is clear, then extended tokens are
+ BPL DT8                \ enabled, so jump to DT8 to process them
+
+                        \ If we get there then this is not a jump token and
+                        \ extended tokens are not enabled, so we can call the
+                        \ standard text token routine at TT27 to print the token
+
+ TAX                    \ Copy the token number from A into X
+
+ TYA                    \ Store Y on the stack
  PHA
- LDA V
+
+ LDA V                  \ Store V(1 0) on the stack
  PHA
  LDA V+1
  PHA
- TXA
- JSR TT27
- JMP DT7  \TT27
+
+ TXA                    \ Copy the token number from X back into A
+
+ JSR TT27               \ Call TT27 to print the text token
+
+ JMP DT7                \ Jump to DT7 to restore V(1 0) and Y from the stack and
+                        \ return from the subroutine
 
 .DT8
 
- CMP #91
- BCC DTS
- CMP #129
- BCC DT6
- CMP #215
- BCC DETOK
- SBC #215
- ASL A
- PHA
+                        \ If we get here then this is not a jump token and
+                        \ extended tokens are enabled
+
+ CMP #'['               \ If A < ASCII "[" (i.e. A <= ASCII "Z", or 90) then
+ BCC DTS                \ this is a printable ASCII character, so jump down to
+                        \ DTS to print it
+
+ CMP #129               \ If A < 129, so A is in the range 91-128, jump down to
+ BCC DT6                \ DT6 to print a randomised token from the MTIN table
+
+ CMP #215               \ If A < 215, so A is in the range 129-214, jump to
+ BCC DETOK              \ DETOK as this is a recursive token, returning from the
+                        \ subroutine using a tail call
+
+                        \ If we get here then A >= 215, so this is a two-letter
+                        \ token from the extended TKN2/QQ16 table
+
+ SBC #215               \ Subtract 215 to get a token number in the range 0-12
+                        \ (the C flag is set as we passed through the BCC above,
+                        \ so this subtraction is correct)
+
+ ASL A                  \ Set A = A * 2, so it can be used as a pointer into the
+                        \ two-letter token tables at TKN2 and QQ16
+
+ PHA                    \ Store A on the stack, so we can restore it for the
+                        \ second letter below
+
+ TAX                    \ Fetch the first letter of the two-letter token from
+ LDA TKN2,X             \ TKN2, which is at TKN2 + X
+
+ JSR DTS                \ Call DTS to print it
+
+ PLA                    \ Restore A from the stack and transfer it into X
  TAX
- LDA TKN2,X
- JSR DTS
- PLA
- TAX
- LDA TKN2+1,X  \letter pair
+
+ LDA TKN2+1,X           \ Fetch the second letter of the two-letter token from
+                        \ TKN2, which is at TKN2 + X + 1, and fall through into
+                        \ DTS to print it
 
 .DTS
 
- CMP #&41
+ CMP #'A'               \ If A < ASCII "A", jump to DT9 to print this as ASCII
  BCC DT9
- BIT DTW6
+
+ BIT DTW6               \ If bit 7 of DTW6 is set, jump to DT10
  BMI DT10
- BIT DTW2
+
+ BIT DTW2               \ If bit 7 of DTW2 is set, jump to DT5
  BMI DT5
 
 .DT10
 
- ORA DTW1
+ ORA DTW1               \ Set the character value to at least DTW1
 
 .DT5
 
- AND DTW8
+ AND DTW8               \ Mask the character value with DTW8
 
 .DT9
 
- JMP DASC  \ascii
+ JMP DASC               \ Jump to DASC to print the ASCII character in A,
+                        \ returning from the routine with a tail call
 
 .DT3
 
- TAX
- TYA
+                        \ The token number is in the range 1 to 32, so this
+                        \ refers to a value in the jump table JMTB
+
+ TAX                    \ Copy the token number from A into X
+
+ TYA                    \ Store Y on the stack
  PHA
- LDA V
+
+ LDA V                  \ Store V(1 0) on the stack
  PHA
  LDA V+1
- PHA  \Magic
- TXA
- ASL A
- TAX
- LDA JMTB-2,X
- STA DTM+1
- LDA JMTB-1,X
- STA DTM+2
- TXA
- LSR A
+ PHA
+
+ TXA                    \ Copy the token number from X back into A
+
+ ASL A                  \ Set A = A * 2, so it can be used as a pointer into the
+                        \ jump table at JMTB, though because the original range
+                        \ of values is 1-32, so the doubled range is 2-64, we
+                        \ need to take the offset into the jump table from
+                        \ JMTB-2 rather than JMTB
+
+ TAX                    \ Copy the doubled token number from A into X
+
+ LDA JMTB-2,X           \ Set DTM(2 1) to the X-th address from the table at
+ STA DTM+1              \ JTM-2, which modifies the JSR DASC instruction at
+ LDA JMTB-1,X           \ label DTM below so that it calls the subroutine at the
+ STA DTM+2              \ relevant address from the JMTB table
+
+ TXA                    \ Copy the doubled token number from X back into A
+
+ LSR A                  \ Halve A to get the original token number
 
 .DTM
 
- JSR DASC
+ JSR DASC               \ Call DASC to print the ASCII character in A (or, if
+                        \ the token number is less than 32, call the relevant
+                        \ JMTB subroutine, as this instruction will have been
+                        \ modified)
 
 .DT7
 
- PLA
- STA V+1
+ PLA                    \ Restore V(1 0) from the stack, so it is preserved
+ STA V+1                \ through calls to this routine
  PLA
  STA V
- PLA
- TAY
- RTS
+
+ PLA                    \ Restore Y from the stack, so it is preserved through
+ TAY                    \ calls to this routine
+
+ RTS                    \ Return from the subroutine
 
 .DT6
 
- STA SC
- TYA
+                        \ If we get here then A is in the range 91-128, so we
+                        \ print a randomly picked token from the MTIN table
+
+ STA SC                 \ Store the token number in SC
+
+ TYA                    \ Store Y on the stack
  PHA
- LDA V
+
+ LDA V                  \ Store V(1 0) on the stack
  PHA
  LDA V+1
  PHA
- JSR DORND
+
+ JSR DORND              \ Set X to a random number
  TAX
- LDA #0
- CPX #51
+
+ LDA #0                 \ Set A to 0, so we can build a random number from 0 to
+                        \ 4 in A plus the C flag, with each number being equally
+                        \ likely
+
+ CPX #51                \ Add 1 to A if X >= 51
  ADC #0
- CPX #102
+
+ CPX #102               \ Add 1 to A if X >= 102
  ADC #0
- CPX #153
+
+ CPX #153               \ Add 1 to A if X >= 153
  ADC #0
- CPX #204
- LDX SC
- ADC MTIN-91,X
- JSR DETOK
- JMP DT7  \Multitoken
+
+ CPX #204               \ Set the C flag if X >= 204
+
+ LDX SC                 \ Fetch the token number from SC into X, so X is now in
+                        \ the range 91-128
+
+ ADC MTIN-91,X          \ Set A = MTIN-91 + token number (91-128) + random (0-4)
+                        \       = MTIN + token number (0-37) + random (0-4)
+
+ JSR DETOK              \ Call DETOK to print the extended recursive token in A
+
+ JMP DT7                \ Jump to DT7 to restore V(1 0) and Y from the stack and
+                        \ return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: MT1
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Clear all bits of DTW1 and DTW6
+\
 \ ******************************************************************************
 
 .MT1
 
- LDA #0
- EQUB &2C
+ LDA #0                 \ Set A = 0, so when we fall through into MT2, DTW1 gets
+                        \ set to 0
+
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &A9 &20, or BIT &20A9, which does nothing apart
+                        \ from affect the flags
 
 \ ******************************************************************************
+\
 \       Name: MT2
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Set bit 5 of DTW1 and clear all bits of DTW6
+\
 \ ******************************************************************************
 
 .MT2
 
- LDA #32
+ LDA #%00100000         \ Set bit 5 of DTW1
  STA DTW1
- LDA #0
+
+ LDA #0                 \ Clear bit 7 of DTW6
  STA DTW6
- RTS
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: MT8
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Tab to column 6 and set all bits on DTW2
+\
 \ ******************************************************************************
 
 .MT8
 
- LDA #6
+ LDA #6                 \ Move the text cursor to column 6
  JSR DOXC
- LDA #FF
+
+ LDA #%11111111         \ Set all the bits in DTW2
  STA DTW2
- RTS
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: MT9
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Tab to column 1 and set the current view type to 1
+\
 \ ******************************************************************************
 
 .MT9
 
- LDA #1
+ LDA #1                 \ Call DOXC to move the text cursor to column 1
  JSR DOXC
- JMP TT66
+
+ JMP TT66               \ Jump to TT66 to clear the screen and set the current
+                        \ view type to 1, returning from the subroutine using a
+                        \ tail call
 
 \ ******************************************************************************
+\
 \       Name: MT13
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Set bit 7 of DTW6 and bit 5 of DTW1
+\
 \ ******************************************************************************
 
 .MT13
 
- LDA #128
+ LDA #%10000000         \ Set bit 7 of DTW6
  STA DTW6
- LDA #32
+
+ LDA #%00100000         \ Set bit 5 of DTW1
  STA DTW1
- RTS
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: MT6
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Switch to Sentence Case and set all bits in DTW3
+\
 \ ******************************************************************************
 
 .MT6
 
- LDA #128
+ LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
  STA QQ17
- LDA #FF
- EQUB &2C
+
+ LDA #%11111111         \ Set A = %11111111, so when we fall through into MT5,
+                        \ DTW3 gets set to %11111111
+
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &A9 &00, or BIT &00A9, which does nothing apart
+                        \ from affect the flags
 
 \ ******************************************************************************
+\
 \       Name: MT5
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Clear all bits of DTW3
+\
 \ ******************************************************************************
 
 .MT5
 
- LDA #0
+ LDA #0                 \ Set DTW3 = 0
  STA DTW3
- RTS
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: MT14
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Set bit 7 of DTW4 and set DTW5 to 0
+\
 \ ******************************************************************************
 
 .MT14
 
- LDA #128
- EQUB &2C
+ LDA #%10000000         \ Set A = %10000000, so when we fall through into MT15,
+                        \ DTW4 gets set to %10000000
+
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &A9 &00, or BIT &00A9, which does nothing apart
+                        \ from affect the flags
 
 \ ******************************************************************************
+\
 \       Name: MT15
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Set DTW4 and DTW5 to 0
+\
 \ ******************************************************************************
 
 .MT15
 
- LDA #0
+ LDA #0                 \ Set DTW4 = 0
  STA DTW4
- ASL A
- STA DTW5
- RTS
+
+ ASL A                  \ Set DTW5 = 0 (even when we fall through from MT14 with
+ STA DTW5               \ A set to %10000000)
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: MT17
+\       Type: Subroutine
+\   Category: Text
+\    Summary: 
+\
 \ ******************************************************************************
 
 .MT17
 
- LDA QQ17
- AND #191
+ LDA QQ17               \ Clear bit 6 of QQ17 to switch to ALL CAPS
+ AND #%10111111
  STA QQ17
- LDA #3
+
+ LDA #3                 \ Print control code 3 (selected system name)
  JSR TT27
- LDX DTW5
+
+ LDX DTW5               \ Set A to the DTW5-th byte of BUF
  LDA BUF-1,X
- JSR VOWEL
- BCC MT171
- DEC DTW5
+
+ JSR VOWEL              \ Test whether the character is a vowel, in which case
+                        \ this will set the C flag
+
+ BCC MT171              \ If the character is not a vowel, skip the following
+                        \ instruction
+
+ DEC DTW5               \ The character is a vowel, so decrement DTW5
 
 .MT171
 
- LDA #153
+ LDA #153               \ Print extended token 153
  JMP DETOK
 
 \ ******************************************************************************
+\
 \       Name: MT18
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print a random number (1-4) of extended two-letter tokens
+\
 \ ******************************************************************************
 
 .MT18
 
- JSR MT19
- JSR DORND
- AND #3
- TAY
+ JSR MT19               \ Call MT19 to set upper case for the first letter ???
+
+ JSR DORND              \ Set A and X to random numbers and reduce A to a
+ AND #3                 \ random number in the range 0-3
+
+ TAY                    \ Copy the random number into Y, so Y contains the
+                        \ number of words to print (i.e. we print 1-4 words)
 
 .MT18L
 
- JSR DORND
- AND #62
- TAX
- LDA TKN2+2,X
+ JSR DORND              \ Set A and X to random numbers and reduce A to an even
+ AND #62                \ random number in the range 0-62 (as bit 0 of 62 is 0)
+
+ TAX                    \ Copy the random number into X, so X contains the table
+                        \ offset of a random extended two-letter token from 0-31
+                        \ which we can use to pick a token from the combined
+                        \ tables at TKN2+2 and QQ16 (we exclude the first token
+                        \ in TKN2, which contains a newline)
+
+ LDA TKN2+2,X           \ Print the first letter of the token at TKN2 + 2 + X
  JSR DTS
- LDA TKN2+3,X
+
+ LDA TKN2+3,X           \ Print the first letter of the token at TKN2 + 3 + X
  JSR DTS
- DEY
- BPL MT18L
- RTS
+
+ DEY                    \ Decrement the loop counter
+
+ BPL MT18L              \ Loop back to MT18L to print another two-letter token
+                        \ until we have printed Y+1 of them
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: MT19
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Clear bit 5 of DTW8 (only)
+\
 \ ******************************************************************************
 
 .MT19
 
- LDA #&DF
- STA DTW8
- RTS
+ LDA #%11011111         \ Clear bit 5 of DTW8 (only) so it can be used as a mask
+ STA DTW8               \ to make letters upper case
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: VOWEL
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Test whether a character is a vowel
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The character to be tested
+\
+\ Returns:
+\
+\   C flag              The C flag is set if the character is a vowel, otherwise
+\                       it is clear
+\
 \ ******************************************************************************
 
 .VOWEL
 
- ORA #32
- CMP #'a'
- BEQ VRTS
- CMP #'e'
+ ORA #%00100000         \ Set bit 5 of the character to make it lower case
+
+ CMP #'a'               \ If the letter is a vowel, jump to VRTS to return from
+ BEQ VRTS               \ the subroutine with the C flag set (as the CMP will
+ CMP #'e'               \ set the C flag if the comparison is equal)
  BEQ VRTS
  CMP #'i'
  BEQ VRTS
@@ -5700,71 +6073,102 @@ ENDIF
  BEQ VRTS
  CMP #'u'
  BEQ VRTS
- CLC
+
+ CLC                    \ The character is not a vowel, so clear the C flag
 
 .VRTS
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: WHITETEXT
+\       Type: Subroutine
+\   Category: Text
+\    Summary: 
+\
 \ ******************************************************************************
 
 .WHITETEXT
 
  LDA #32
  JSR DOVDU19
+
  LDA #RED
  JMP DOCOL
 
 \ ******************************************************************************
+\
 \       Name: JMTB
+\       Type: Variable
+\   Category: Text
+\    Summary: The extended token table for jump tokens 1-32 (DETOK)
+\
 \ ******************************************************************************
 
 .JMTB
 
- EQUW MT1
- EQUW MT2
- EQUW TT27
- EQUW TT27
- EQUW MT5
- EQUW MT6
- EQUW DASC
- EQUW MT8
- EQUW MT9
- EQUW DASC
- EQUW NLIN4
- EQUW DASC
- EQUW MT13
- EQUW MT14
- EQUW MT15
- EQUW MT16
- EQUW MT17
- EQUW MT18
- EQUW MT19
- EQUW DASC
- EQUW CLYNS
- EQUW PAUSE
- EQUW MT23
- EQUW PAUSE2
- EQUW BRIS
- EQUW MT26
- EQUW MT27
- EQUW MT28
- EQUW MT29
- EQUW WHITETEXT
- EQUW DASC
- EQUW DASC
+ EQUW MT1               \ Token  1: Switch to ALL CAPS
+ EQUW MT2               \ Token  2: Switch to Sentence Case
+ EQUW TT27              \ Token  3: Print selected system name
+ EQUW TT27              \ Token  4: Print commander's name
+ EQUW MT5               \ Token  5: Switch to extended tokens
+ EQUW MT6               \ Token  6: Switch to standard tokens, in Sentence Case
+ EQUW DASC              \ Token  7: Beep
+ EQUW MT8               \ Token  8: ??? Tab to column 6, apply lower case
+ EQUW MT9               \ Token  9: Tab to column 1, current view type to 1
+ EQUW DASC              \ Token 10: Line feed
+ EQUW NLIN4             \ Token 11: Draw a horizontal line at pixel row 19
+ EQUW DASC              \ Token 12: ??? Newline
+ EQUW MT13              \ Token 13: Switch to lower case
+ EQUW MT14              \ Token 14: Switch to justified text
+ EQUW MT15              \ Token 15: Switch to left-aligned text
+ EQUW MT16              \ Token 16: Print the character in DTW7 (drive number)
+ EQUW MT17              \ Token 17: 
+ EQUW MT18              \ Token 18: Randomly print 1 to 4 two-letter tokens
+ EQUW MT19              \ Token 19: Capitalise first letter of next word only
+ EQUW DASC              \ Token 20: 
+ EQUW CLYNS             \ Token 21: 
+ EQUW PAUSE             \ Token 22: 
+ EQUW MT23              \ Token 23: 
+ EQUW PAUSE2            \ Token 24: 
+ EQUW BRIS              \ Token 25: 
+ EQUW MT26              \ Token 26: 
+ EQUW MT27              \ Token 27: Print mission 1 captain's name (217-219)
+ EQUW MT28              \ Token 28: Print mission 1 location hint (220-221)
+ EQUW MT29              \ Token 29: 
+ EQUW WHITETEXT         \ Token 30: 
+ EQUW DASC              \ Token 31: 
+ EQUW DASC              \ Token 32: 
 
 \ ******************************************************************************
+\
 \       Name: TKN2
+\       Type: Variable
+\   Category: Text
+\    Summary: The extended two-letter token lookup table
+\
+\ ------------------------------------------------------------------------------
+\
+\ Two-letter token lookup table for extended tokens 215-227.
+\
 \ ******************************************************************************
 
 .TKN2
 
- EQUB 12
- EQUB 10
- EQUS "ABOUSEITILETSTONLONUTHNO"
+ EQUB 12, 10            \ Token 215 = {crlf}
+ EQUS "AB"              \ Token 216
+ EQUS "OU"              \ Token 217
+ EQUS "SE"              \ Token 218
+ EQUS "IT"              \ Token 219
+ EQUS "IL"              \ Token 220
+ EQUS "ET"              \ Token 221
+ EQUS "ST"              \ Token 222
+ EQUS "ON"              \ Token 223
+ EQUS "LO"              \ Token 224
+ EQUS "NU"              \ Token 225
+ EQUS "TH"              \ Token 226
+ EQUS "NO"              \ Token 227
 
 \ ******************************************************************************
 \
@@ -5775,45 +6179,50 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ Two-letter token lookup table for tokens 128-159. See variable QQ18 for
-\ details of how the two-letter token system works.
+\ Two-letter token lookup table for tokens 128-159. See the deep dive on
+\ "Printing text tokens" for details of how the two-letter token system works.
+\
+\ These two-letter tokens can also be used in the extended text token system, by
+\ adding 100 to the token number. So the extended two-letter token 228 is "AL",
+\ the same as the standard two-letter token 128. In this system, the last four
+\ tokens are not available, as they would have numbers greater than 255.
 \
 \ ******************************************************************************
 
 .QQ16
 
- EQUS "AL"
- EQUS "LE"
- EQUS "XE"
- EQUS "GE"
- EQUS "ZA"
- EQUS "CE"
- EQUS "BI"
- EQUS "SO"
- EQUS "US"
- EQUS "ES"
- EQUS "AR"
- EQUS "MA"
- EQUS "IN"
- EQUS "DI"
- EQUS "RE"
- EQUS "A?"
- EQUS "ER"
- EQUS "AT"
- EQUS "EN"
- EQUS "BE"
- EQUS "RA"
- EQUS "LA"
- EQUS "VE"
- EQUS "TI"
- EQUS "ED"
- EQUS "OR"
- EQUS "QU"
- EQUS "AN"
- EQUS "TE"
- EQUS "IS"
- EQUS "RI"
- EQUS "ON"
+ EQUS "AL"              \ Token 128
+ EQUS "LE"              \ Token 129
+ EQUS "XE"              \ Token 130
+ EQUS "GE"              \ Token 131
+ EQUS "ZA"              \ Token 132
+ EQUS "CE"              \ Token 133
+ EQUS "BI"              \ Token 134
+ EQUS "SO"              \ Token 135
+ EQUS "US"              \ Token 136
+ EQUS "ES"              \ Token 137
+ EQUS "AR"              \ Token 138
+ EQUS "MA"              \ Token 139
+ EQUS "IN"              \ Token 140
+ EQUS "DI"              \ Token 141
+ EQUS "RE"              \ Token 142
+ EQUS "A?"              \ Token 143
+ EQUS "ER"              \ Token 144
+ EQUS "AT"              \ Token 145
+ EQUS "EN"              \ Token 146
+ EQUS "BE"              \ Token 147
+ EQUS "RA"              \ Token 148
+ EQUS "LA"              \ Token 149
+ EQUS "VE"              \ Token 150
+ EQUS "TI"              \ Token 151
+ EQUS "ED"              \ Token 152
+ EQUS "OR"              \ Token 153
+ EQUS "QU"              \ Token 154
+ EQUS "AN"              \ Token 155
+ EQUS "TE"              \ Token 156
+ EQUS "IS"              \ Token 157
+ EQUS "RI"              \ Token 158
+ EQUS "ON"              \ Token 159
 
 \ ******************************************************************************
 \       Name: shpcol
@@ -6274,7 +6683,7 @@ ENDIF
 \ Returns:
 \
 \   Y                   Y is preserved
-
+\
 \ ******************************************************************************
 
 .HLOIN2
@@ -7826,8 +8235,7 @@ ENDIF
                         \ and draw a horizontal line at pixel row 19 to box
                         \ in the title
 
- LDA #15                \ Set A to token 129 ("{switch to sentence case}
-                        \ DOCKED")
+ LDA #15                \ Set A to token 129 ("sentence case}DOCKED")
 
  LDY QQ12               \ Fetch the docked status from QQ12, and if we are
  BNE wearedocked        \ docked, jump to wearedocked
@@ -7866,7 +8274,7 @@ ENDIF
  JSR spc                \ three lines of the Status Mode screen:
                         \
                         \   Fuel: {fuel level} Light Years
-                        \   Cash: {cash right-aligned to width 9} Cr
+                        \   Cash: {cash} Cr
                         \   Legal Status:
                         \
                         \ followed by a space
@@ -7956,9 +8364,8 @@ ENDIF
  BCC P%+7               \ instructions
 
  LDA #107               \ We do have a cargo bay extension, so print recursive
- JSR plf2               \ token 107 ("LARGE CARGO{switch to sentence case}
-                        \ BAY"), followed by a newline and an indent of 6
-                        \ characters
+ JSR plf2               \ token 107 ("LARGE CARGO{sentence case} BAY"), followed
+                        \ by a newline and an indent of 6 characters
 
  LDA BST                \ If we don't have fuel scoops fitted, skip the
  BEQ P%+7               \ following two instructions
@@ -8874,169 +9281,275 @@ ENDIF
  EQUB &2C
 
 \ ******************************************************************************
+\
 \       Name: MT16
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print the character given in DTW7
+\
 \ ******************************************************************************
 
 .MT16
 
- LDA #65
+ LDA #'A'               \ Set A to the contents of DTW7, as DTW7 points to the
+                        \ second byte of this instruction (the default value is
+                        \ to print an "A")
 
-DTW7 = MT16+1
+DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
+                        \ so that modifying DTW7 changes the value loaded into A
+
 \ ******************************************************************************
+\
 \       Name: TT26
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print a character at the text cursor, supporting right-alignment
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The character to print
+\
+\ Other entry points:
+\
+\  rT9                  Contains an RTS
+\
 \ ******************************************************************************
-
-\ New TT26 entry for right justified text
 
 .DASC
 
 .TT26
 
- STX SC
- LDX #FF
+ STX SC                 \ Store X in SC, so we can retrieve it below
+
+ LDX #%11111111         \ Set DTW8 = %11111111, so we don't change case
  STX DTW8
- CMP #'.'
+
+ CMP #'.'               \ If the character in A is a word terminator:
+ BEQ DA8                \
+ CMP #':'               \   * Full stop
+ BEQ DA8                \   * Colon
+ CMP #10                \   * Line feed
+ BEQ DA8                \   * Carriage return
+ CMP #12                \   * Space
+ BEQ DA8                \
+ CMP #' '               \ then skip the following instruction
  BEQ DA8
- CMP #':'
- BEQ DA8
- CMP #10
- BEQ DA8
- CMP #12
- BEQ DA8
- CMP #32
- BEQ DA8
- INX
+
+ INX                    \ Increment X to 0, so DTW2 gets set to 0 below
 
 .DA8
 
- STX DTW2
- LDX SC
- BIT DTW4
- BMI P%+5
- JMP CHPR
- BVS P%+6
- CMP #12
- BEQ DA1
- LDX DTW5
+ STX DTW2               \ Store X in DTW2, so DTW2 is now:
+                        \
+                        \   * 0 if this character is a word terminator
+                        \   * %11111111 if it isn't
+
+ LDX SC                 \ Retrieve the original value of X from SC
+
+ BIT DTW4               \ If bit 7 of DTW4 is set, skip the following
+ BMI P%+5               \ instruction
+
+ JMP CHPR               \ Bit 7 of DTW4 is clear, so jump down to DHPR to print
+                        \ the character
+
+ BVS P%+6               \ If bit 6 of DTW4 is set, skip the following two
+                        \ instructions
+
+ CMP #12                \ If the character in A is a carriage return, jump down
+ BEQ DA1                \ to DA1
+
+                        \ If we get here, bit 7 of DTW4 is set, and either bit 6
+                        \ of DTW4 is set or this is a carriage return
+
+ LDX DTW5               \ Store the character in A in byte #DTW5 in BUF
  STA BUF,X
- LDX SC
- INC DTW5
- CLC
- RTS
+
+ LDX SC                 \ Retrieve the original value of X from SC
+
+ INC DTW5               \ Increment DTW5 to point to the next byte in BUF
+
+ CLC                    \ Clear the C flag
+
+ RTS                    \ Return from the subroutine
 
 .DA1
 
- TXA
+                        \ If we get here, bit 7 of DTW4 is set, bit 6
+                        \ of DTW4 is clear and this is a carriage return
+
+ TXA                    \ Store X and Y on the stack
  PHA
  TYA
  PHA
 
 .DA5
 
- LDX DTW5
+ LDX DTW5               \ If DTW5 = 0 then jump down to DA6+3 to print a newline
  BEQ DA6+3
- CPX #(LL+1)
- BCC DA6
- LSR SC+1
+
+ CPX #(LL+1)            \ If X < LL+1, i.e. X <= LL, jump down to DA6 to print
+ BCC DA6                \ the contents of BUF followed by a newline
+
+                        \ Otherwise X > LL, so this word does not fit on the
+                        \ line
+
+ LSR SC+1               \ Shift SC+1 to the right
 
 .DA11
 
- LDA SC+1
- BMI P%+6
- LDA #64
+ LDA SC+1               \ If bit 7 of SC+1 is set, skip the following two
+ BMI P%+6               \ instructions
+
+ LDA #%01000000         \ Set bit 6 of SC+1
  STA SC+1
- LDY #(LL-1)
+
+ LDY #(LL-1)            \ Set Y = line length
 
 .DAL1
 
- LDA BUF+LL
- CMP #32
+ LDA BUF+LL             \ If the LL-th byte in BUF is a space, jump down to DA2
+ CMP #' '
  BEQ DA2
 
 .DAL2
 
- DEY
- BMI DA11
+ DEY                    \ Decrement the loop counter in Y
+
+ BMI DA11               \ If Y <= 0, loop back to DA11
  BEQ DA11
- LDA BUF,Y
- CMP #32
+
+ LDA BUF,Y              \ If the Y-th byte in BUF is not a space, jump down to
+ CMP #' '               \ DAL2
  BNE DAL2
- ASL SC+1
+
+ ASL SC+1               \ 
  BMI DAL2
- STY SC
- LDY DTW5
+
+                        \ We now want to insert a character into the buffer BUF at position SC
+
+ STY SC                 \ Store Y in SC
+
+ LDY DTW5               \ Fetch the buffer pointer from DTW5 into Y
 
 .DAL6
 
- LDA BUF,Y
- STA BUF+1,Y
- DEY
- CPY SC
- BCS DAL6
- INC DTW5
-\LDA#32
+ LDA BUF,Y              \ Copy the Y-th character from BUF into the Y+1-th
+ STA BUF+1,Y            \ position
+
+ DEY                    \ Decrement the loop counter in Y
+
+ CPY SC                 \ Loop back to shift the next character along, until we
+ BCS DAL6               \ have moved the SC-th character (i.e. Y < SC)
+
+ INC DTW5               \ Increment the buffer pointer in DTW5
+
+\LDA #' '
 
 .DAL3
 
- CMP BUF,Y
+ CMP BUF,Y              \ If the 
  BNE DAL1
+
  DEY
+
  BPL DAL3
+
  BMI DA11
 
 .DA2
 
- LDX #LL
- JSR DAS1
- LDA #12
+                        \ This subroutine prints out a full line of characters
+                        \ from the start of the line buffer in BUF, followed by
+                        \ a newline. It then removes that line from the buffer,
+                        \ shuffling the rest of the buffer contents down
+
+ LDX #LL                \ Call DAS1 to print out the first LL characters from
+ JSR DAS1               \ the line buffer in BUF
+
+ LDA #12                \ Print a newline
  JSR CHPR
- LDA DTW5
-\CLC
- SBC #LL
- STA DTW5
- TAX
- BEQ DA6+3
- LDY #0
- INX
+
+ LDA DTW5               \ Subtract #LL from the end-of-buffer pointer in DTW5
+\CLC                    \
+ SBC #LL                \ The CLC instruction is commented out in the original
+ STA DTW5               \ source. It isn't needed as CHPR clears the C flag
+
+ TAX                    \ Copy the new value of DTW5 into X
+
+ BEQ DA6+3              \ If DTW5 = 0 then jump down to DA6+3 to print a newline
+                        \ as the buffer is now empty
+
+                        \ If we get here then we have printed our line but there
+                        \ is more in the buffer, so we now want to remove the
+                        \ line we just printed from the start of BUF
+
+ LDY #0                 \ Set Y = 0 to count through the characters in BUF
+
+ INX                    \ Increment X, so it now contains the number of
+                        \ characters in the buffer (as DTW5 is a zero-based
+                        \ pointer and is therefore equal to the number of
+                        \ characters minus 1)
 
 .DAL4
 
- LDA BUF+LL+1,Y
+ LDA BUF+LL+1,Y         \ Copy the Y-th character from BUF+LL to BUF
  STA BUF,Y
- INY
- DEX
- BNE DAL4
- BEQ DA5
+
+ INY                    \ Increment the character pointer
+
+ DEX                    \ Decrement the character count
+
+ BNE DAL4               \ Loop back to copy the next character until we have
+                        \ shuffled down the whole buffer
+
+ BEQ DA5                \ Jump back to DA5 (this BEQ is effectively a JMP as we
+                        \ have already passed through the BNE above)
 
 .DAS1
 
- LDY #0
+                        \ This subroutine prints out X characters from BUF,
+                        \ returning with X = 0
+
+ LDY #0                 \ Set Y = 0 to point to the first character in BUF
 
 .DAL5
 
- LDA BUF,Y
+ LDA BUF,Y              \ Print the Y-th character in BUF
  JSR CHPR
- INY
- DEX
- BNE DAL5
+
+ INY                    \ Increment Y to point to the next character
+
+ DEX                    \ Decrement the loop counter
+
+ BNE DAL5               \ Loop back for the next character until we have printed
+                        \ X characters from BUF
 
 .rT9
 
- RTS
+ RTS                    \ Return from the subroutine
 
 .DA6
 
- JSR DAS1
- STX DTW5
- PLA
+ JSR DAS1               \ Call DAS1 to print X characters from BUF, returning
+                        \ with X = 0
+
+ STX DTW5               \ Set DTW5 = 0
+
+ PLA                    \ Restore Y and X from the stack
  TAY
  PLA
  TAX
- LDA #12
+
+ LDA #12                \ Set A = 12, so when we skip BELL and fall through into
+                        \ CHPR, we print character 12, which is a newline
 
 .DA7
 
- EQUB &2C
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &A9 &07, or BIT &07A9, which does nothing apart
+                        \ from affect the flags
 
 \ ******************************************************************************
 \
@@ -9053,12 +9566,28 @@ DTW7 = MT16+1
 
 .BELL
 
- LDA #7                 \ Control code 7 makes a beep, so load this into A so
-                        \ we can fall through into the TT27 print routine to
+ LDA #7                 \ Control code 7 makes a beep, so load this into A
+
+                        \ Fall through into the CHPR print routine to
                         \ actually make the sound
 
 \ ******************************************************************************
+\
 \       Name: CHPR
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Send a character to the I/O processor to print on-screen
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The character to print
+\
+\ Returns:
+\
+\   C flag              The C flag is cleared
+\
 \ ******************************************************************************
 
 .CHPR
@@ -9067,24 +9596,33 @@ DTW7 = MT16+1
 
 .CHPRD
 
- STA K3
- CMP #32
- BCC P%+4
- INC XC
- LDA QQ17
-INA \++
- BEQ rT9
- BIT printflag
+ STA K3                 \ Store the character to print in K3
+
+ CMP #' '               \ If A < ASCII " ", i.e. this is a control character,
+ BCC P%+4               \ skip the following instruction so the text cursor
+                        \ doesn't move to the right
+
+ INC XC                 \ Increment XC to move the text cursor one character to
+                        \ the right
+
+ LDA QQ17               \ If all bits of QQ17 are set (i.e. text printing is
+ INA                    \ disabled), the return from the subroutine, as rT9
+ BEQ rT9                \ contains an RTS
+
+ BIT printflag          \ If bit 7 of printflag is clear, jump to noprinter
  BPL noprinter
- LDA #printcode
- JSR OSWRCH
+
+ LDA #printcode         \ Bit 7 of printflag is set, so send a printcode code
+ JSR OSWRCH             \ to the I/O processor
 
 .noprinter
 
- LDA K3
- JSR OSWRCH
- CLC
- RTS
+ LDA K3                 \ Send the character we want to print to the I/O
+ JSR OSWRCH             \ processor
+
+ CLC                    \ Clear the C flag
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \       Name: printflag
@@ -13930,24 +14468,42 @@ LOAD_C% = LOAD% +P% - CODE%
  JSR LL9
 
 \ ******************************************************************************
+\
 \       Name: MT23
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Move the text cursor to row 10
+\
 \ ******************************************************************************
 
 .MT23
 
- LDA #10
- EQUB &2C
+ LDA #10                \ Set A = 10, so when we fall through into MT29, the
+                        \ text cursor gets moved to row 10
+
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &A9 &06, or BIT &06A9, which does nothing apart
+                        \ from affect the flags
 
 \ ******************************************************************************
+\
 \       Name: MT29
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Move the text cursor to row 6, white text, set bit 7 of DTW6 and
+\             bit 5 of DTW1
+\
 \ ******************************************************************************
 
 .MT29
 
- LDA #6
+ LDA #6                 \ Move the text cursor to row 6
  JSR DOYC
- JSR WHITETEXT
- JMP MT13
+
+ JSR WHITETEXT          \ Set white text ????
+
+ JMP MT13               \ Jump to MT13 to set bit 7 of DTW6 and bit 5 of DTW1,
+                        \ returning from the subroutine using a tail call
 
 \ ******************************************************************************
 \       Name: PAS1
@@ -14130,7 +14686,12 @@ LOAD_D% = LOAD% + P% - CODE%
  NOP
 
 \ ******************************************************************************
+\
 \       Name: DOXC
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Move the text cursor to a specified column
+\
 \ ******************************************************************************
 
 .DOXC
@@ -14170,20 +14731,39 @@ LOAD_D% = LOAD% + P% - CODE%
  JMP DOX1
 
 \ ******************************************************************************
+\
 \       Name: DOYC
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Move the text cursor to a specified row
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The row number
+\
 \ ******************************************************************************
 
 .DOYC
 
- STA YC
- PHA
- LDA #SETYC
+ STA YC                 \ Store A in YC, which sets the text cursor row number
+
+ PHA                    \ Store the row number on the stack
+
+ LDA #SETYC             \ Set A to the character for moving the text cursor to
+                        \ the value in YC
 
 .label
 
- JSR OSWRCH
- PLA
- JMP OSWRCH
+ JSR OSWRCH             \ Send the character in A to the I/O processor for
+                        \ printing
+
+ PLA                    \ Retrieve the row number from the stack
+
+ JMP OSWRCH             \ Send the character in A to the I/O processor for
+                        \ printing, returning from the subroutine using a tail
+                        \ call
 
 \ ******************************************************************************
 \       Name: INCYC
@@ -14199,24 +14779,56 @@ LOAD_D% = LOAD% + P% - CODE%
  RTS
 
 \ ******************************************************************************
+\
 \       Name: DOCOL
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Set the text colour
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The text colour
+\
 \ ******************************************************************************
 
 .DOCOL
 
- PHA
- LDA #SETCOL
- BNE label
+ PHA                    \ Store A on the stack
+
+ LDA #SETCOL            \ Set A to the character for setting the text colour
+
+ BNE label              \ Jump to label to print the character in A followed by
+                        \ the character on the stack, returning from the
+                        \ subroutine using a tail call (this BNE is effectively
+                        \ a JMP as A is never zero)
 
 \ ******************************************************************************
+\
 \       Name: DOVDU19
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Define a logical colour
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The colour number to define
+\
 \ ******************************************************************************
 
 .DOVDU19
 
- PHA
- LDA #SETVDU19
- BNE label
+ PHA                    \ Store A on the stack
+
+ LDA #SETVDU19          \ Set A to the character for doing a VDU 19
+
+ BNE label              \ Jump to label to print the character in A followed by
+                        \ the character on the stack, returning from the
+                        \ subroutine using a tail call (this BNE is effectively
+                        \ a JMP as A is never zero)
 
 \ ******************************************************************************
 \       Name: TRADEMODE
@@ -15401,9 +16013,8 @@ LOAD_D% = LOAD% + P% - CODE%
 
  LDY #206               \ If the C flag is set, then there is no room in the
  BCS Tc                 \ cargo hold, so set Y to the recursive token 46
-                        \ (" CARGO{switch to sentence case}") and jump up to
-                        \ Tc to print a "Cargo?" error, beep, clear the number
-                        \ and try again
+                        \ (" CARGO{sentence case}") and jump up to Tc to print a
+                        \ "Cargo?" error, beep, clear the number and try again
 
  LDA QQ24               \ There is room in the cargo hold, so now to check
  STA Q                  \ whether we have enough cash, so fetch the item's
@@ -15818,8 +16429,7 @@ LOAD_D% = LOAD% + P% - CODE%
  BCC P%+7               \ instructions
 
  LDA #107               \ We do have a cargo bay extension, so print recursive
- JSR TT27               \ token 107 ("LARGE CARGO{switch to sentence case}
-                        \ BAY")
+ JSR TT27               \ token 107 ("LARGE CARGO{sentence case} BAY")
 
  JMP TT210              \ Jump to TT210 to print the contents of our cargo bay
                         \ and return from the subroutine using a tail call
@@ -18291,8 +18901,8 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .et1
 
- LDY #107               \ Set Y to recursive token 107 ("LARGE CARGO{switch to
-                        \ sentence case} BAY")
+ LDY #107               \ Set Y to recursive token 107 ("LARGE CARGO{sentence
+                        \ case} BAY")
 
  CMP #2                 \ If A is not 2 (i.e. the item we've just bought is not
  BNE et2                \ a large cargo bay), skip to et2
@@ -18523,8 +19133,8 @@ LOAD_D% = LOAD% + P% - CODE%
 
  JSR TT162              \ Print a space
 
- LDA #119               \ Print recursive token 119 ("CASH:{cash right-aligned
- JSR spc                \ to width 9} CR{crlf}") followed by a space
+ LDA #119               \ Print recursive token 119 ("CASH:{cash} CR{crlf}")
+ JSR spc                \ followed by a space
 
                         \ Fall through into dn2 to make a beep and delay for
                         \ 1 second before returning from the subroutine
@@ -19214,10 +19824,10 @@ LOAD_E% = LOAD% + P% - CODE%
 
  BMI TT43               \ If token > 127, this is either a two-letter token
                         \ (128-159) or a recursive token (160-255), so jump
-                        \ to .TT43 to process tokens
+                        \ to TT43 to process tokens
 
- DEX                    \ If token = 1, this is control code 1 (current
- BEQ tal                \ galaxy number), so jump to tal
+ DEX                    \ If token = 1, this is control code 1 (current galaxy
+ BEQ tal                \ number), so jump to tal
 
  DEX                    \ If token = 2, this is control code 2 (current system
  BEQ ypl                \ name), so jump to ypl
@@ -25784,8 +26394,8 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA #YELLOW
  JSR DOCOL
 
- LDA #146               \ Print recursive token 146 ("{switch to all caps}GAME
- JSR ex                 \ OVER"
+ LDA #146               \ Print recursive token 146 ("{all caps}GAME OVER")
+ JSR ex
 
 .D1
 
@@ -26361,28 +26971,42 @@ LOAD_F% = LOAD% + P% - CODE%
  RTS
 
 \ ******************************************************************************
+\
 \       Name: MT26
+\       Type: Subroutine
+\   Category: Text
+\    Summary: 
+\
 \ ******************************************************************************
 
 .MT26
 
  LDA #VIAE
  JSR OSWRCH
+
  LDA #&81
  JSR OSWRCH
+
  LDY #8
  JSR DELAY
+
  JSR FLKB
- LDX #(RLINE MOD256)
- LDY #(RLINE DIV256)
+
+ LDX #LO(RLINE)
+ LDY #HI(RLINE)
  LDA #0
  JSR OSWORD
+
  BCC P%+4
+
  LDY #0
+
  LDA #VIAE
  JSR OSWRCH
+
  LDA #1
  JSR OSWRCH
+
  JMP FEED
 
 \ ******************************************************************************
@@ -28500,7 +29124,7 @@ LOAD_F% = LOAD% + P% - CODE%
  STA MCH                \ Set MCH to the token we are about to display and fall
                         \ through to mes9 to print the token
 
- LDA #&C0
+ LDA #%11000000
  STA DTW4
  LDA de
  LSR A
@@ -35960,3178 +36584,3418 @@ SAVE "output/ELTI.bin", CODE_I%, P%, LOAD%
 CODE_J% = P%
 LOAD_J% = LOAD% + P% - CODE%
 
-MACRO TOKN n
+\ ******************************************************************************
+\
+\       Name: EJMP
+\       Type: Macro
+\   Category: Text
+\    Summary: Macro definition for jump tokens in the extended token table
+\  Deep dive: Printing extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used when building the extended token table:
+\
+\   EJMP n              Insert a jump to address n in the JMTB table
+\
+\ See the deep dive on "Printing extended text tokens" for details on how jump
+\ tokens are stored in the extended token table.
+\
+\ Arguments:
+\
+\   n                   The jump number to insert into the table
+\
+\ ******************************************************************************
 
-  PRINT n
+MACRO EJMP n
+
   EQUB n EOR VE
 
 ENDMACRO
 
+\ ******************************************************************************
+\
+\       Name: ECHR
+\       Type: Macro
+\   Category: Text
+\    Summary: Macro definition for characters in the extended token table
+\  Deep dive: Printing extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used when building the extended token table:
+\
+\   ECHR 'x'            Insert ASCII character "x"
+\
+\ To include an apostrophe, use a backtick character, as in i.e. CHAR '`'.
+\
+\ See the deep dive on "Printing extended text tokens" for details on how
+\ characters are stored in the extended token table.
+\
+\ Arguments:
+\
+\   'x'                 The character to insert into the table
+\
+\ ******************************************************************************
+
+MACRO ECHR x
+
+  IF x = '`'
+    EQUB 39 EOR VE
+  ELSE
+    EQUB x EOR VE
+  ENDIF
+
+ENDMACRO
+
+\ ******************************************************************************
+\
+\       Name: ETOK
+\       Type: Macro
+\   Category: Text
+\    Summary: Macro definition for recursive tokens in the extended token table
+\  Deep dive: Printing extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used when building the extended token table:
+\
+\   ETOK n              Insert extended recursive token [n]
+\
+\ See the deep dive on "Printing extended text tokens" for details on how
+\ recursive tokens are stored in the extended token table.
+\
+\ Arguments:
+\
+\   n                   The number of the recursive token to insert into the
+\                       table, in the range 129 to 214
+\
+\ ******************************************************************************
+
+MACRO ETOK n
+
+  EQUB n EOR VE
+
+ENDMACRO
+
+\ ******************************************************************************
+\
+\       Name: ETWO
+\       Type: Macro
+\   Category: Text
+\    Summary: Macro definition for two-letter tokens in the extended token table
+\  Deep dive: Printing extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used when building the extended token table:
+\
+\   ETWO 'x', 'y'       Insert two-letter token "xy"
+\
+\ The newline token can be entered using ETWO '-', '-'.
+\
+\ See the deep dive on "Printing extended text tokens" for details on how
+\ two-letter tokens are stored in the extended token table.
+\
+\ Arguments:
+\
+\   'x'                 The first letter of the two-letter token to insert into
+\                       the table
+\
+\   'y'                 The second letter of the two-letter token to insert into
+\                       the table
+\
+\ ******************************************************************************
+
+MACRO ETWO t, k
+
+  IF t = '-' AND k = '-' : EQUB 215 EOR VE : ENDIF
+  IF t = 'A' AND k = 'B' : EQUB 216 EOR VE : ENDIF
+  IF t = 'O' AND k = 'U' : EQUB 217 EOR VE : ENDIF
+  IF t = 'S' AND k = 'E' : EQUB 218 EOR VE : ENDIF
+  IF t = 'I' AND k = 'T' : EQUB 219 EOR VE : ENDIF
+  IF t = 'I' AND k = 'L' : EQUB 220 EOR VE : ENDIF
+  IF t = 'E' AND k = 'T' : EQUB 221 EOR VE : ENDIF
+  IF t = 'S' AND k = 'T' : EQUB 222 EOR VE : ENDIF
+  IF t = 'O' AND k = 'N' : EQUB 223 EOR VE : ENDIF
+  IF t = 'L' AND k = 'O' : EQUB 224 EOR VE : ENDIF
+  IF t = 'N' AND k = 'U' : EQUB 225 EOR VE : ENDIF
+  IF t = 'T' AND k = 'H' : EQUB 226 EOR VE : ENDIF
+  IF t = 'N' AND k = 'O' : EQUB 227 EOR VE : ENDIF
+
+  IF t = 'A' AND k = 'L' : EQUB 228 EOR VE : ENDIF
+  IF t = 'L' AND k = 'E' : EQUB 229 EOR VE : ENDIF
+  IF t = 'X' AND k = 'E' : EQUB 230 EOR VE : ENDIF
+  IF t = 'G' AND k = 'E' : EQUB 231 EOR VE : ENDIF
+  IF t = 'Z' AND k = 'A' : EQUB 232 EOR VE : ENDIF
+  IF t = 'C' AND k = 'E' : EQUB 233 EOR VE : ENDIF
+  IF t = 'B' AND k = 'I' : EQUB 234 EOR VE : ENDIF
+  IF t = 'S' AND k = 'O' : EQUB 235 EOR VE : ENDIF
+  IF t = 'U' AND k = 'S' : EQUB 236 EOR VE : ENDIF
+  IF t = 'E' AND k = 'S' : EQUB 237 EOR VE : ENDIF
+  IF t = 'A' AND k = 'R' : EQUB 238 EOR VE : ENDIF
+  IF t = 'M' AND k = 'A' : EQUB 239 EOR VE : ENDIF
+  IF t = 'I' AND k = 'N' : EQUB 240 EOR VE : ENDIF
+  IF t = 'D' AND k = 'I' : EQUB 241 EOR VE : ENDIF
+  IF t = 'R' AND k = 'E' : EQUB 242 EOR VE : ENDIF
+  IF t = 'A' AND k = '?' : EQUB 243 EOR VE : ENDIF
+  IF t = 'E' AND k = 'R' : EQUB 244 EOR VE : ENDIF
+  IF t = 'A' AND k = 'T' : EQUB 245 EOR VE : ENDIF
+  IF t = 'E' AND k = 'N' : EQUB 246 EOR VE : ENDIF
+  IF t = 'B' AND k = 'E' : EQUB 247 EOR VE : ENDIF
+  IF t = 'R' AND k = 'A' : EQUB 248 EOR VE : ENDIF
+  IF t = 'L' AND k = 'A' : EQUB 249 EOR VE : ENDIF
+  IF t = 'V' AND k = 'E' : EQUB 250 EOR VE : ENDIF
+  IF t = 'T' AND k = 'I' : EQUB 251 EOR VE : ENDIF
+  IF t = 'E' AND k = 'D' : EQUB 252 EOR VE : ENDIF
+  IF t = 'O' AND k = 'R' : EQUB 253 EOR VE : ENDIF
+  IF t = 'Q' AND k = 'U' : EQUB 254 EOR VE : ENDIF
+  IF t = 'A' AND k = 'N' : EQUB 255 EOR VE : ENDIF
+
+ENDMACRO
+
+\ ******************************************************************************
+\
+\       Name: ERND
+\       Type: Macro
+\   Category: Text
+\    Summary: Macro definition for random tokens in the extended token table
+\  Deep dive: Printing extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used when building the extended token table:
+\
+\   ERND n              Insert recursive token [n]
+\
+\                         * Tokens 0-123 get stored as n + 91
+\
+\ See the deep dive on "Printing extended text tokens" for details on how
+\ random tokens are stored in the extended token table.
+\
+\ Arguments:
+\
+\   n                   The number of the random token to insert into the
+\                       table, in the range 0 to 37
+\
+\ ******************************************************************************
+
+MACRO ERND n
+
+  EQUB (n + 91) EOR VE
+
+ENDMACRO
+
+\ ******************************************************************************
+\
+\       Name: TOKN
+\       Type: Macro
+\   Category: Text
+\    Summary: Macro definition for standard tokens in the extended token table
+\  Deep dive: Printing text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used when building the recursive token table:
+\
+\   TOKN n              Insert recursive token [n]
+\
+\                         * Tokens 0-95 get stored as n + 160
+\
+\                         * Tokens 128-145 get stored as n - 114
+\
+\                         * Tokens 96-127 get stored as n
+\
+\ See the deep dive on "Printing text tokens" for details on how recursive
+\ tokens are stored in the recursive token table.
+\
+\ Arguments:
+\
+\   n                   The number of the recursive token to insert into the
+\                       table, in the range 0 to 145
+\
+\ ******************************************************************************
+
+MACRO TOKN n
+
+  IF n >= 0 AND n <= 95
+    t = n + 160
+  ELIF n >= 128
+    t = n - 114
+  ELSE
+    t = n
+  ENDIF
+
+  EQUB t EOR VE
+
+ENDMACRO
+
+\ ******************************************************************************
+\
+\       Name: TKN1
+\       Type: Variable
+\   Category: Text
+\    Summary: The first extended token table for recursive tokens 0-255 (DETOK)
+\
+\ ******************************************************************************
+
 .TKN1
 
+ EQUB VE                \ Token 0:      ""
+                        \
+                        \ Encoded as:   ""
+
+ EJMP 9                 \ Token 1:      "{clear screen}
+ EJMP 11                \                {draw box around title}
+ EJMP 30                \                {white}
+ EJMP 1                 \                {all caps}
+ EJMP 8                 \                {tab 6} DISK ACCESS MENU{crlf}
+ ECHR ' '               \                {lf}
+ ETWO 'D', 'I'          \                {sentence case}
+ ECHR 'S'               \                1. LOAD NEW {single cap}COMMANDER{crlf}
+ ECHR 'K'               \                2. SAVE {single cap}COMMANDER
+ ECHR ' '               \                   {commander name}{crlf}
+ ECHR 'A'               \                3. CATALOGUE{crlf}
+ ECHR 'C'               \                4. DELETE A FILE{crlf}
+ ETWO 'C', 'E'          \                5. EXIT{crlf}
+ ECHR 'S'               \               "
+ ECHR 'S'               \
+ ECHR ' '               \ Encoded as:   "{9}{11}{30}{1}{8} <241>SK AC<233>SS ME
+ ECHR 'M'               \                <225><215>{10}{2}1. [149]<215>2. SA
+ ECHR 'E'               \                <250> [154] {4}<215>3. C<245>A<224>GUE
+ ETWO 'N', 'U'          \                <215>4. DEL<221>E[208]FI<229><215>5. EX
+ ETWO '-', '-'          \                <219><215>"
+ EJMP 10
+ EJMP 2
+ ECHR '1'
+ ECHR '.'
+ ECHR ' '
+ ETOK 149
+ ETWO '-', '-'
+ ECHR '2'
+ ECHR '.'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'A'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ETOK 154
+ ECHR ' '
+ EJMP 4
+ ETWO '-', '-'
+ ECHR '3'
+ ECHR '.'
+ ECHR ' '
+ ECHR 'C'
+ ETWO 'A', 'T'
+ ECHR 'A'
+ ETWO 'L', 'O'
+ ECHR 'G'
+ ECHR 'U'
+ ECHR 'E'
+ ETWO '-', '-'
+ ECHR '4'
+ ECHR '.'
+ ECHR ' '
+ ECHR 'D'
+ ECHR 'E'
+ ECHR 'L'
+ ETWO 'E', 'T'
+ ECHR 'E'
+ ETOK 208
+ ECHR 'F'
+ ECHR 'I'
+ ETWO 'L', 'E'
+ ETWO '-', '-'
+ ECHR '5'
+ ECHR '.'
+ ECHR ' '
+ ECHR 'E'
+ ECHR 'X'
+ ETWO 'I', 'T'
+ ETWO '-', '-'
  EQUB VE
 
- TOKN 9
- TOKN 11
- TOKN 30
- TOKN 1
- TOKN 8
- TOKN ' '
- TOKN 241
- TOKN 'S'
- TOKN 'K'
- TOKN ' '
- TOKN 'A'
- TOKN 'C'
- TOKN 233
- TOKN 'S'
- TOKN 'S'
- TOKN ' '
- TOKN 'M'
- TOKN 'E'
- TOKN 225
- TOKN 215
- TOKN 10
- TOKN 2
- TOKN '1'
- TOKN '.'
- TOKN ' '
- TOKN 149
- TOKN 215
- TOKN '2'
- TOKN '.'
- TOKN ' '
- TOKN 'S'
- TOKN 'A'
- TOKN 250
- TOKN ' '
- TOKN 154
- TOKN ' '
- TOKN 4
- TOKN 215
- TOKN '3'
- TOKN '.'
- TOKN ' '
- TOKN 'C'
- TOKN 245
- TOKN 'A'
- TOKN 224
- TOKN 'G'
- TOKN 'U'
- TOKN 'E'
- TOKN 215
- TOKN '4'
- TOKN '.'
- TOKN ' '
- TOKN 'D'
- TOKN 'E'
- TOKN 'L'
- TOKN 221
- TOKN 'E'
- TOKN 208
- TOKN 'F'
- TOKN 'I'
- TOKN 229
- TOKN 215
- TOKN '5'
- TOKN '.'
- TOKN ' '
- TOKN 'E'
- TOKN 'X'
- TOKN 219
- TOKN 215
+ EJMP 12                \ Token 2:      "{cr}
+ ECHR 'W'               \                WHICH DRIVE?"
+ ECHR 'H'               \
+ ECHR 'I'               \ Encoded as:   "{12}WHICH [151]?"
+ ECHR 'C'
+ ECHR 'H'
+ ECHR ' '
+ ETOK 151
+ ECHR '?'
  EQUB VE
 
- TOKN 12
- TOKN 'W'
- TOKN 'H'
- TOKN 'I'
- TOKN 'C'
- TOKN 'H'
- TOKN ' '
- TOKN 151
- TOKN '?'
+ ECHR 'C'               \ Token 3:      "COMPETITION NUMBER:"
+ ECHR 'O'               \
+ ECHR 'M'               \ Encoded as:   "COMPE<251><251><223> <225>MB<244>:"
+ ECHR 'P'
+ ECHR 'E'
+ ETWO 'T', 'I'
+ ETWO 'T', 'I'
+ ETWO 'O', 'N'
+ ECHR ' '
+ ETWO 'N', 'U'
+ ECHR 'M'
+ ECHR 'B'
+ ETWO 'E', 'R'
+ ECHR ':'
  EQUB VE
 
- TOKN 'C'
- TOKN 'O'
- TOKN 'M'
- TOKN 'P'
- TOKN 'E'
- TOKN 251    \ <251)
- TOKN 251
- TOKN 223
- TOKN ' '
- TOKN 225
- TOKN 'M'
- TOKN 'B'
- TOKN 244
- TOKN ':'
+ ETOK 150               \ Token 4:      "{clear screen}
+ ETOK 151               \                {draw box around title}
+ ECHR ' '               \                {all caps}
+ EJMP 16                \                {tab 6}DRIVE {drive number} CATALOGUE
+ ETOK 152               \                {crlf}
+ ETWO '-', '-'          \               "
+ EQUB VE                \
+                        \ Encoded as:   "[150][151] {16}[152]<215>"
+
+ ETOK 176               \ Token 5:      "{lower case}
+ ERND 18                \                {justify}
+ ETOK 202               \                {single cap}[86-90] IS [140-144].{cr}
+ ERND 19                \                {left align}"
+ ETOK 177               \
+ EQUB VE                \ Encoded as:   "[176][18?][202][19?][177]"
+
+ ECHR ' '               \ Token 6:      "  LOAD NEW {single cap}COMMANDER {all
+ ECHR ' '               \                caps}(Y/N)?{sentence case}{cr}{cr}"
+ ETOK 149               \
+ ECHR ' '               \ Encoded as:   "  [149] {1}(Y/N)?{2}{12}{12}"
+ EJMP 1
+ ECHR '('
+ ECHR 'Y'
+ ECHR '/'
+ ECHR 'N'
+ ECHR ')'
+ ECHR '?'
+ EJMP 2
+ EJMP 12
+ EJMP 12
  EQUB VE
 
- TOKN 150
- TOKN 151
- TOKN ' '
- TOKN 16
- TOKN 152
- TOKN 215
+ ECHR 'P'               \ Token 7:      "PRESS SPACE OR FIRE,{single cap}
+ ETWO 'R', 'E'          \                COMMANDER.{cr}{cr}"
+ ECHR 'S'               \
+ ECHR 'S'               \ Encoded as:   "P<242>SS SPA<233> <253> FI<242>,[154].
+ ECHR ' '               \                {12}{12}"
+ ECHR 'S'
+ ECHR 'P'
+ ECHR 'A'
+ ETWO 'C', 'E'
+ ECHR ' '
+ ETWO 'O', 'R'
+ ECHR ' '
+ ECHR 'F'
+ ECHR 'I'
+ ETWO 'R', 'E'
+ ECHR ','
+ ETOK 154
+ ECHR '.'
+ EJMP 12
+ EJMP 12
  EQUB VE
 
- TOKN 176
- TOKN 109
- TOKN 202
- TOKN 110
- TOKN 177
+ ETOK 154               \ Token 8:      "{single cap}COMMANDER'S NAME? "
+ ECHR '`'               \
+ ECHR 'S'               \ Encoded as:   "[154][39]S[200]"
+ ETOK 200
  EQUB VE
 
- TOKN ' '
- TOKN ' '
- TOKN 149
- TOKN ' '
- TOKN 1
- TOKN '('
- TOKN 'Y'
- TOKN '/'
- TOKN 'N'
- TOKN ')'
- TOKN '?'
- TOKN 2
- TOKN 12
- TOKN 12
+ EJMP 21                \ Token 9:      "{clear bottom of screen}
+ ECHR 'F'               \                FILE TO DELETE?"
+ ECHR 'I'               \
+ ETWO 'L', 'E'          \ Encoded as:   "{21}FI<229>[201]DEL<221>E?"
+ ETOK 201
+ ECHR 'D'
+ ECHR 'E'
+ ECHR 'L'
+ ETWO 'E', 'T'
+ ECHR 'E'
+ ECHR '?'
  EQUB VE
 
- TOKN 'P'
- TOKN 242
- TOKN 'S'
- TOKN 'S'
- TOKN ' '
- TOKN 'S'
- TOKN 'P'
- TOKN 'A'
- TOKN 233
- TOKN ' '
- TOKN 253
- TOKN ' '
- TOKN 'F'
- TOKN 'I'
- TOKN 242
- TOKN ','
- TOKN 154
- TOKN '.'
- TOKN 12
- TOKN 12
- EQUB VE
-
- TOKN 154
- TOKN 39
- TOKN 'S'
- TOKN 200
- EQUB VE
-
- TOKN 21
- TOKN 'F'
- TOKN 'I'
- TOKN 229
- TOKN 201
- TOKN 'D'
- TOKN 'E'
- TOKN 'L'
- TOKN 221
- TOKN 'E'
- TOKN '?'
- EQUB VE
-
- TOKN 23
- TOKN 14
- TOKN 2
- TOKN 'G'
- TOKN 242
- TOKN 221
- TOKN 240
- TOKN 'G'
- TOKN 'S'
- TOKN 213
- TOKN 178
- TOKN 19
- TOKN 'I'
- TOKN ' '
- TOKN 247
- TOKN 'G'
- TOKN 208
- TOKN 'M'
- TOKN 'O'
- TOKN 'M'
- TOKN 246
- TOKN 'T'
- TOKN ' '
- TOKN 'O'
- TOKN 'F'
- TOKN ' '
- TOKN 179
- TOKN 'R'
- TOKN ' '
- TOKN 'V'
- TOKN 228
- TOKN 'U'
- TOKN 216
- TOKN 229
- TOKN ' '
- TOKN 251
- TOKN 'M'
- TOKN 'E'
- TOKN 204
-\TOKN '#'
-\EQUB VE
-
- TOKN 'W'
- TOKN 'E'
- TOKN ' '
- TOKN 'W'
- TOKN 217
- TOKN 'L'
- TOKN 'D'
- TOKN ' '
- TOKN 'L'
- TOKN 'I'
- TOKN 'K'
- TOKN 'E'
- TOKN ' '
- TOKN 179
- TOKN 201
- TOKN 'D'
- TOKN 'O'
- TOKN 208
- TOKN 'L'
- TOKN 219
- TOKN 'T'
- TOKN 229
- TOKN ' '
- TOKN 'J'
- TOKN 'O'
- TOKN 'B'
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN ' '
- TOKN 236
- TOKN 204
- TOKN 147
- TOKN 207
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 218
- TOKN 'E'
- TOKN ' '
- TOKN 'H'
- TOKN 'E'
- TOKN 242
- TOKN 202
- TOKN 'A'
- TOKN 210
- TOKN 'M'
- TOKN 'O'
- TOKN 'D'
- TOKN 'E'
- TOKN 'L'
- TOKN ','
- TOKN ' '
- TOKN 147
- TOKN 19
- TOKN 'C'
- TOKN 223
- TOKN 222
- TOKN 'R'
- TOKN 'I'
- TOKN 'C'
- TOKN 'T'
- TOKN 253
- TOKN ','
- TOKN ' '
- TOKN 'E'
- TOKN 254
- TOKN 'I'
- TOKN 'P'
- TOKN 196
- TOKN 'W'
- TOKN 'I'
- TOKN 226
- TOKN 208
- TOKN 'T'
- TOKN 'O'
- TOKN 'P'
-\TOKN '#'
-\EQUB VE
-
- TOKN ' '
- TOKN 218
- TOKN 'C'
- TOKN 'R'
- TOKN 221
- TOKN 210
- TOKN 'S'
- TOKN 'H'
- TOKN 'I'
- TOKN 'E'
- TOKN 'L'
- TOKN 'D'
- TOKN ' '
- TOKN 'G'
- TOKN 246
- TOKN 244
- TOKN 245
- TOKN 253
- TOKN 204
- TOKN 'U'
- TOKN 'N'
- TOKN 'F'
- TOKN 253
- TOKN 'T'
- TOKN 'U'
- TOKN 'N'
- TOKN 245
- TOKN 'E'
- TOKN 'L'
- TOKN 'Y'
- TOKN ' '
- TOKN 219
- TOKN 39
- TOKN 'S'
- TOKN ' '
- TOKN 247
- TOKN 246
- TOKN ' '
- TOKN 222
- TOKN 'O'
- TOKN 'L'
- TOKN 246
- TOKN 204
- TOKN 22
-\TOKN '#'
-\EQUB VE
-
- TOKN 219
- TOKN ' '
- TOKN 'W'
- TOKN 246
- TOKN 'T'
- TOKN ' '
- TOKN 'M'
- TOKN 'I'
- TOKN 'S'
- TOKN 'S'
- TOKN 195
- TOKN 'F'
- TOKN 'R'
- TOKN 'O'
- TOKN 'M'
- TOKN ' '
- TOKN 217
- TOKN 'R'
- TOKN ' '
- TOKN 207
- TOKN ' '
- TOKN 'Y'
- TOKN 238
- TOKN 'D'
- TOKN ' '
- TOKN 223
- TOKN ' '
- TOKN 19
- TOKN 230
- TOKN 244
- TOKN ' '
- TOKN 'F'
- TOKN 'I'
- TOKN 250
- TOKN ' '
- TOKN 'M'
- TOKN 223
- TOKN 226
- TOKN 'S'
- TOKN ' '
- TOKN 'A'
- TOKN 'G'
- TOKN 'O'
- TOKN 178
- TOKN 28
- TOKN 204
- TOKN 179
- TOKN 'R'
- TOKN ' '
- TOKN 'M'
- TOKN 'I'
- TOKN 'S'
- TOKN 'S'
- TOKN 'I'
- TOKN 223
- TOKN ','
- TOKN ' '
- TOKN 'S'
- TOKN 'H'
- TOKN 217
- TOKN 'L'
- TOKN 'D'
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 'D'
- TOKN 'E'
- TOKN 'C'
- TOKN 'I'
- TOKN 'D'
- TOKN 'E'
- TOKN 201
- TOKN 'A'
- TOKN 'C'
- TOKN 233
- TOKN 'P'
- TOKN 'T'
- TOKN ' '
- TOKN 219
- TOKN ','
- TOKN ' '
- TOKN 'I'
- TOKN 'S'
- TOKN 201
- TOKN 218
- TOKN 'E'
- TOKN 'K'
- TOKN 178
- TOKN 'D'
- TOKN 237
- TOKN 'T'
- TOKN 'R'
- TOKN 'O'
- TOKN 'Y'
- TOKN ' '
-\TOKN '#'
-\EQUB VE
-
- TOKN 148
- TOKN 207
- TOKN 204
- TOKN 179
- TOKN ' '
- TOKN 'A'
- TOKN 242
- TOKN ' '
- TOKN 'C'
- TOKN 'A'
- TOKN 'U'
- TOKN 251
- TOKN 223
- TOKN 196
- TOKN 226
- TOKN 245
- TOKN ' '
- TOKN 223
- TOKN 'L'
- TOKN 'Y'
- TOKN ' '
- TOKN 6
+ EJMP 23                \ Token 10:     "{move to row 10, white, lower case}
+ EJMP 14                \                {justify}
+ EJMP 2                 \                {sentence case}
+ ECHR 'G'               \                GREETINGS {single cap}COMMANDER 
+ ETWO 'R', 'E'          \                {commander name}, I {lower case}AM
+ ETWO 'E', 'T'          \                {sentence case} CAPTAIN {mission 1
+ ETWO 'I', 'N'          \                captain's name} {lower case}OF{sentence
+ ECHR 'G'               \                case} HER MAJESTY'S SPACE NAVY{lower
+ ECHR 'S'               \                case} AND {single cap}I BEG A MOMENT OF
+ ETOK 213               \                YOUR VALUABLE TIME.{cr}
+ ETOK 178               \                 {single cap}WE WOULD LIKE YOU TO DO A
+ EJMP 19                \                LITTLE JOB FOR US.{cr}
+ ECHR 'I'               \                 {single cap}THE SHIP YOU SEE HERE IS A
+ ECHR ' '               \                NEW MODEL, THE {single cap}CONSTRICTOR,
+ ETWO 'B', 'E'          \                EQUIPED WITH A TOP SECRET NEW SHIELD
+ ECHR 'G'               \                GENERATOR.{cr}
+ ETOK 208               \                 {single cap}UNFORTUNATELY IT'S BEEN
+ ECHR 'M'               \                STOLEN.{cr}
+ ECHR 'O'               \                 {single cap}{display ship, wait for
+ ECHR 'M'               \                keypress}IT WENT MISSING FROM OUR SHIP
+ ETWO 'E', 'N'          \                YARD ON {single cap}XEER FIVE MONTHS
+ ECHR 'T'               \                AGO AND {mission 1 location hint}.{cr}
+ ECHR ' '               \                 {single cap}YOUR MISSION, SHOULD YOU
+ ECHR 'O'               \                DECIDE TO ACCEPT IT, IS TO SEEK AND
+ ECHR 'F'               \                DESTROY THIS SHIP.{cr}
+ ECHR ' '               \                 {single cap}YOU ARE CAUTIONED THAT
+ ETOK 179               \                ONLY {standard tokens, sentence case}
+ ECHR 'R'               \                MILITARY  LASERS{extended tokens} WILL
+ ECHR ' '               \                PENETRATE THE NEW SHIELDS AND THAT THE
+ ECHR 'V'               \                {single cap}CONSTRICTOR IS FITTED WITH
+ ETWO 'A', 'L'          \                AN {standard tokens, sentence case}
+ ECHR 'U'               \                E.C.M.SYSTEM{extended tokens}.{cr}
+ ETWO 'A', 'B'          \                 {left align}{sentence case}{tab 6}GOOD
+ ETWO 'L', 'E'          \                LUCK, {single cap}COMMANDER.{cr}
+ ECHR ' '               \                 {left align}{tab 6}{all caps}  MESSAGE
+ ETWO 'T', 'I'          \                ENDS{display ship, wait for keypress}"
+ ECHR 'M'               \
+ ECHR 'E'               \ Encoded as:   "{23}{14}{2}G<242><221><240>GS[213][178]
+ ETOK 204               \                {19}I <247>G[208]MOM<246>T OF [179]R V
+ ECHR 'W'               \                <228>U<216><229> <251>ME[204]WE W<217>
+ ECHR 'E'               \                LD LIKE [179][201]DO[208]L<219>T<229>
+ ECHR ' '               \                 JOB F<253> <236>[204][147][207] [179]
+ ECHR 'W'               \                 <218>E HE<242>[202]A[210]MODEL, [147]
+ ETWO 'O', 'U'          \                {19}C<223><222>RICT<253>, E<254>IP[196]
+ ECHR 'L'               \                WI<226>[208]TOP <218>CR<221>[210]SHIELD
+ ECHR 'D'               \                 G<246><244><245><253>[204]UNF<253>TUN
+ ECHR ' '               \                <245>ELY <219>[39]S <247><246> <222>OL
+ ECHR 'L'               \                <246>[204]{22}<219> W<246>T MISS[195]
+ ECHR 'I'               \                FROM <217>R [207] Y<238>D <223> {19}
+ ECHR 'K'               \                <230><244> FI<250> M<223><226>S AGO
+ ECHR 'E'               \                [178]{28}[204][179]R MISSI<223>, SH
+ ECHR ' '               \                <217>LD [179] DECIDE[201]AC<233>PT
+ ETOK 179               \                 <219>, IS[201]<218>EK[178]D<237>TROY
+ ETOK 201               \                 [148][207][204][179] A<242> CAU<251>
+ ECHR 'D'               \                <223>[196]<226><245> <223>LY {6}[116]
+ ECHR 'O'               \                {5}S W<220>L P<246><221><248>TE [147]
+ ETOK 208               \                NEW SHIELDS[178]<226><245> [147]{19}
+ ECHR 'L'               \                C<223><222>RICT<253>[202]F<219>T[196]WI
+ ETWO 'I', 'T'          \                <226> <255> {6}[108]{5}[177]{2}{8}GOOD
+ ECHR 'T'               \                 LUCK, [154][212]{22}"
+ ETWO 'L', 'E'
+ ECHR ' '
+ ECHR 'J'
+ ECHR 'O'
+ ECHR 'B'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ETWO 'U', 'S'
+ ETOK 204
+ ETOK 147
+ ETOK 207
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ETWO 'S', 'E'
+ ECHR 'E'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'E'
+ ETWO 'R', 'E'
+ ETOK 202
+ ECHR 'A'
+ ETOK 210
+ ECHR 'M'
+ ECHR 'O'
+ ECHR 'D'
+ ECHR 'E'
+ ECHR 'L'
+ ECHR ','
+ ECHR ' '
+ ETOK 147
+ EJMP 19
+ ECHR 'C'
+ ETWO 'O', 'N'
+ ETWO 'S', 'T'
+ ECHR 'R'
+ ECHR 'I'
+ ECHR 'C'
+ ECHR 'T'
+ ETWO 'O', 'R'
+ ECHR ','
+ ECHR ' '
+ ECHR 'E'
+ ETWO 'Q', 'U'
+ ECHR 'I'
+ ECHR 'P'
+ ETOK 196
+ ECHR 'W'
+ ECHR 'I'
+ ETWO 'T', 'H'
+ ETOK 208
+ ECHR 'T'
+ ECHR 'O'
+ ECHR 'P'
+ ECHR ' '
+ ETWO 'S', 'E'
+ ECHR 'C'
+ ECHR 'R'
+ ETWO 'E', 'T'
+ ETOK 210
+ ECHR 'S'
+ ECHR 'H'
+ ECHR 'I'
+ ECHR 'E'
+ ECHR 'L'
+ ECHR 'D'
+ ECHR ' '
+ ECHR 'G'
+ ETWO 'E', 'N'
+ ETWO 'E', 'R'
+ ETWO 'A', 'T'
+ ETWO 'O', 'R'
+ ETOK 204
+ ECHR 'U'
+ ECHR 'N'
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR 'T'
+ ECHR 'U'
+ ECHR 'N'
+ ETWO 'A', 'T'
+ ECHR 'E'
+ ECHR 'L'
+ ECHR 'Y'
+ ECHR ' '
+ ETWO 'I', 'T'
+ ECHR '`'
+ ECHR 'S'
+ ECHR ' '
+ ETWO 'B', 'E'
+ ETWO 'E', 'N'
+ ECHR ' '
+ ETWO 'S', 'T'
+ ECHR 'O'
+ ECHR 'L'
+ ETWO 'E', 'N'
+ ETOK 204
+ EJMP 22
+ ETWO 'I', 'T'
+ ECHR ' '
+ ECHR 'W'
+ ETWO 'E', 'N'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'M'
+ ECHR 'I'
+ ECHR 'S'
+ ECHR 'S'
+ ETOK 195
+ ECHR 'F'
+ ECHR 'R'
+ ECHR 'O'
+ ECHR 'M'
+ ECHR ' '
+ ETWO 'O', 'U'
+ ECHR 'R'
+ ECHR ' '
+ ETOK 207
+ ECHR ' '
+ ECHR 'Y'
+ ETWO 'A', 'R'
+ ECHR 'D'
+ ECHR ' '
+ ETWO 'O', 'N'
+ ECHR ' '
+ EJMP 19
+ ETWO 'X', 'E'
+ ETWO 'E', 'R'
+ ECHR ' '
+ ECHR 'F'
+ ECHR 'I'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ECHR 'M'
+ ETWO 'O', 'N'
+ ETWO 'T', 'H'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'G'
+ ECHR 'O'
+ ETOK 178
+ EJMP 28
+ ETOK 204
+ ETOK 179
+ ECHR 'R'
+ ECHR ' '
+ ECHR 'M'
+ ECHR 'I'
+ ECHR 'S'
+ ECHR 'S'
+ ECHR 'I'
+ ETWO 'O', 'N'
+ ECHR ','
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'H'
+ ETWO 'O', 'U'
+ ECHR 'L'
+ ECHR 'D'
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ECHR 'D'
+ ECHR 'E'
+ ECHR 'C'
+ ECHR 'I'
+ ECHR 'D'
+ ECHR 'E'
+ ETOK 201
+ ECHR 'A'
+ ECHR 'C'
+ ETWO 'C', 'E'
+ ECHR 'P'
+ ECHR 'T'
+ ECHR ' '
+ ETWO 'I', 'T'
+ ECHR ','
+ ECHR ' '
+ ECHR 'I'
+ ECHR 'S'
+ ETOK 201
+ ETWO 'S', 'E'
+ ECHR 'E'
+ ECHR 'K'
+ ETOK 178
+ ECHR 'D'
+ ETWO 'E', 'S'
+ ECHR 'T'
+ ECHR 'R'
+ ECHR 'O'
+ ECHR 'Y'
+ ECHR ' '
+ ETOK 148
+ ETOK 207
+ ETOK 204
+ ETOK 179
+ ECHR ' '
+ ECHR 'A'
+ ETWO 'R', 'E'
+ ECHR ' '
+ ECHR 'C'
+ ECHR 'A'
+ ECHR 'U'
+ ETWO 'T', 'I'
+ ETWO 'O', 'N'
+ ETOK 196
+ ETWO 'T', 'H'
+ ETWO 'A', 'T'
+ ECHR ' '
+ ETWO 'O', 'N'
+ ECHR 'L'
+ ECHR 'Y'
+ ECHR ' '
+ EJMP 6
  TOKN 117
- TOKN 5
- TOKN 'S'
- TOKN ' '
- TOKN 'W'
- TOKN 220
- TOKN 'L'
- TOKN ' '
- TOKN 'P'
- TOKN 246
- TOKN 221
- TOKN 248
- TOKN 'T'
- TOKN 'E'
- TOKN ' '
- TOKN 147
- TOKN 'N'
- TOKN 'E'
- TOKN 'W'
- TOKN ' '
- TOKN 'S'
- TOKN 'H'
- TOKN 'I'
- TOKN 'E'
- TOKN 'L'
- TOKN 'D'
- TOKN 'S'
- TOKN 178
- TOKN 226
- TOKN 245
- TOKN ' '
- TOKN 147
- TOKN 19
- TOKN 'C'
- TOKN 223
- TOKN 222
- TOKN 'R'
- TOKN 'I'
- TOKN 'C'
- TOKN 'T'
- TOKN 253
- TOKN 202
- TOKN 'F'
- TOKN 219
- TOKN 'T'
- TOKN 196
- TOKN 'W'
- TOKN 'I'
- TOKN 226
-\TOKN '#'
-\EQUB VE
-
- TOKN ' '
- TOKN 255
- TOKN ' '
- TOKN 6
+ EJMP 5
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'W'
+ ETWO 'I', 'L'
+ ECHR 'L'
+ ECHR ' '
+ ECHR 'P'
+ ETWO 'E', 'N'
+ ETWO 'E', 'T'
+ ETWO 'R', 'A'
+ ECHR 'T'
+ ECHR 'E'
+ ECHR ' '
+ ETOK 147
+ ECHR 'N'
+ ECHR 'E'
+ ECHR 'W'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'H'
+ ECHR 'I'
+ ECHR 'E'
+ ECHR 'L'
+ ECHR 'D'
+ ECHR 'S'
+ ETOK 178
+ ETWO 'T', 'H'
+ ETWO 'A', 'T'
+ ECHR ' '
+ ETOK 147
+ EJMP 19
+ ECHR 'C'
+ ETWO 'O', 'N'
+ ETWO 'S', 'T'
+ ECHR 'R'
+ ECHR 'I'
+ ECHR 'C'
+ ECHR 'T'
+ ETWO 'O', 'R'
+ ETOK 202
+ ECHR 'F'
+ ETWO 'I', 'T'
+ ECHR 'T'
+ ETOK 196
+ ECHR 'W'
+ ECHR 'I'
+ ETWO 'T', 'H'
+ ECHR ' '
+ ETWO 'A', 'N'
+ ECHR ' '
+ EJMP 6
  TOKN 108
- TOKN 5
- TOKN 177
- TOKN 2
- TOKN 8
- TOKN 'G'
- TOKN 'O'
- TOKN 'O'
- TOKN 'D'
- TOKN ' '
- TOKN 'L'
- TOKN 'U'
- TOKN 'C'
- TOKN 'K'
- TOKN ','
- TOKN ' '
- TOKN 154
- TOKN 212
- TOKN 22
+ EJMP 5
+ ETOK 177
+ EJMP 2
+ EJMP 8
+ ECHR 'G'
+ ECHR 'O'
+ ECHR 'O'
+ ECHR 'D'
+ ECHR ' '
+ ECHR 'L'
+ ECHR 'U'
+ ECHR 'C'
+ ECHR 'K'
+ ECHR ','
+ ECHR ' '
+ ETOK 154
+ ETOK 212
+ EJMP 22
  EQUB VE
 
- TOKN 25
- TOKN 9
- TOKN 30
- TOKN 23
- TOKN 14
- TOKN 2
- TOKN ' '
- TOKN ' '
- TOKN 245
- TOKN 'T'
- TOKN 246
- TOKN 251
- TOKN 223
- TOKN 213
- TOKN '.'
- TOKN ' '
- TOKN 19
- TOKN 'W'
- TOKN 'E'
- TOKN ' '
- TOKN 'H'
- TOKN 'A'
- TOKN 250
- TOKN ' '
- TOKN 'N'
- TOKN 'E'
- TOKN 196
- TOKN 'O'
- TOKN 'F'
- TOKN ' '
- TOKN 179
- TOKN 'R'
- TOKN ' '
- TOKN 218
- TOKN 'R'
- TOKN 'V'
- TOKN 'I'
- TOKN 'C'
- TOKN 237
- TOKN ' '
- TOKN 'A'
- TOKN 'G'
- TOKN 'A'
- TOKN 240
- TOKN 204
-\TOKN '#'
-\EQUB VE
-
- TOKN 'I'
- TOKN 'F'
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 'W'
- TOKN 217
- TOKN 'L'
- TOKN 'D'
- TOKN ' '
- TOKN 247
- TOKN ' '
- TOKN 235
- TOKN ' '
- TOKN 'G'
- TOKN 'O'
- TOKN 'O'
- TOKN 'D'
- TOKN ' '
- TOKN 'A'
- TOKN 'S'
- TOKN 201
- TOKN 'G'
- TOKN 'O'
- TOKN 201
- TOKN 19
- TOKN 233
- TOKN 244
- TOKN 241
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 'W'
- TOKN 220
- TOKN 'L'
- TOKN ' '
- TOKN 247
- TOKN ' '
- TOKN 'B'
- TOKN 'R'
- TOKN 'I'
- TOKN 'E'
- TOKN 'F'
- TOKN 252
- TOKN 204
- TOKN 'I'
- TOKN 'F'
- TOKN ' '
- TOKN 'S'
- TOKN 'U'
- TOKN 'C'
- TOKN 233
- TOKN 'S'
- TOKN 'S'
- TOKN 'F'
- TOKN 'U'
- TOKN 'L'
- TOKN ','
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 'W'
- TOKN 220
- TOKN 'L'
- TOKN ' '
- TOKN 247
- TOKN ' '
- TOKN 'W'
- TOKN 'E'
- TOKN 'L'
- TOKN 'L'
- TOKN ' '
- TOKN 242
- TOKN 'W'
- TOKN 238
- TOKN 'D'
- TOKN 252
- TOKN 212
- TOKN 24
+ EJMP 25                \ Token 11:     "{incoming message screen, wait 2s}
+ EJMP 9                 \                {clear screen}
+ EJMP 30                \                {white}
+ EJMP 23                \                {move to row 10, white, lower case}
+ EJMP 14                \                {justify}
+ EJMP 2                 \                {sentence case}
+ ECHR ' '               \                  ATTENTION {single cap}COMMANDER
+ ECHR ' '               \                {commander name}, I {lower case}AM
+ ETWO 'A', 'T'          \                {sentence case} CAPTAIN {mission 1
+ ECHR 'T'               \                captain's name} {lower case}OF{sentence
+ ETWO 'E', 'N'          \                case} HER MAJESTY'S SPACE NAVY{lower
+ ETWO 'T', 'I'          \                case}. {single cap}WE HAVE NEED OF YOUR
+ ETWO 'O', 'N'          \                SERVICES AGAIN.{cr}
+ ETOK 213               \                 {single cap}IF YOU WOULD BE SO GOOD AS
+ ECHR '.'               \                TO GO TO {single cap}CEERDI YOU WILL BE
+ ECHR ' '               \                BRIEFED.{cr}
+ EJMP 19                \                 {single cap}IF SUCCESSFUL, YOU WILL BE
+ ECHR 'W'               \                WELL REWARDED.{cr}
+ ECHR 'E'               \                {left align}{tab 6}{all caps}  MESSAGE
+ ECHR ' '               \                ENDS{wait for keypress}"
+ ECHR 'H'               \
+ ECHR 'A'               \ Encoded as:   "{25}{9}{30}{23}{14}{2}  <245>T<246>
+ ETWO 'V', 'E'          \                <251><223>[213]. {19}WE HA<250> NE[196]
+ ECHR ' '               \                OF [179]R <218>RVIC<237> AGA<240>[204]
+ ECHR 'N'               \                IF [179] W<217>LD <247> <235> GOOD AS
+ ECHR 'E'               \                [201]GO[201]{19}<233><244><241> [179]
+ ETOK 196               \                 W<220>L <247> BRIEF<252>[204]IF SUC
+ ECHR 'O'               \                <233>SSFUL, [179] W<220>L <247> WELL
+ ECHR 'F'               \                 <242>W<238>D<252>[212]{24}"
+ ECHR ' '
+ ETOK 179
+ ECHR 'R'
+ ECHR ' '
+ ETWO 'S', 'E'
+ ECHR 'R'
+ ECHR 'V'
+ ECHR 'I'
+ ECHR 'C'
+ ETWO 'E', 'S'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'G'
+ ECHR 'A'
+ ETWO 'I', 'N'
+ ETOK 204
+ ECHR 'I'
+ ECHR 'F'
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ECHR 'W'
+ ETWO 'O', 'U'
+ ECHR 'L'
+ ECHR 'D'
+ ECHR ' '
+ ETWO 'B', 'E'
+ ECHR ' '
+ ETWO 'S', 'O'
+ ECHR ' '
+ ECHR 'G'
+ ECHR 'O'
+ ECHR 'O'
+ ECHR 'D'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'S'
+ ETOK 201
+ ECHR 'G'
+ ECHR 'O'
+ ETOK 201
+ EJMP 19
+ ETWO 'C', 'E'
+ ETWO 'E', 'R'
+ ETWO 'D', 'I'
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ECHR 'W'
+ ETWO 'I', 'L'
+ ECHR 'L'
+ ECHR ' '
+ ETWO 'B', 'E'
+ ECHR ' '
+ ECHR 'B'
+ ECHR 'R'
+ ECHR 'I'
+ ECHR 'E'
+ ECHR 'F'
+ ETWO 'E', 'D'
+ ETOK 204
+ ECHR 'I'
+ ECHR 'F'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'U'
+ ECHR 'C'
+ ETWO 'C', 'E'
+ ECHR 'S'
+ ECHR 'S'
+ ECHR 'F'
+ ECHR 'U'
+ ECHR 'L'
+ ECHR ','
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ECHR 'W'
+ ETWO 'I', 'L'
+ ECHR 'L'
+ ECHR ' '
+ ETWO 'B', 'E'
+ ECHR ' '
+ ECHR 'W'
+ ECHR 'E'
+ ECHR 'L'
+ ECHR 'L'
+ ECHR ' '
+ ETWO 'R', 'E'
+ ECHR 'W'
+ ETWO 'A', 'R'
+ ECHR 'D'
+ ETWO 'E', 'D'
+ ETOK 212
+ EJMP 24
  EQUB VE
 
- TOKN '('
- TOKN 19
- TOKN 'C'
- TOKN ')'
- TOKN ' '
- TOKN 'A'
- TOKN 'C'
- TOKN 253
- TOKN 'N'
- TOKN 235
- TOKN 'F'
- TOKN 'T'
- TOKN ' '
- TOKN '1'
- TOKN '9'
- TOKN '8'
- TOKN '4'
+ ECHR '('               \ Token 12:     "({single cap}C) ACORNSOFT 1984"
+ EJMP 19                \
+ ECHR 'C'               \ Encoded as:   "({19}C) AC<253>N<235>FT 1984"
+ ECHR ')'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'C'
+ ETWO 'O', 'R'
+ ECHR 'N'
+ ETWO 'S', 'O'
+ ECHR 'F'
+ ECHR 'T'
+ ECHR ' '
+ ECHR '1'
+ ECHR '9'
+ ECHR '8'
+ ECHR '4'
  EQUB VE
 
- TOKN 'B'
- TOKN 'Y'
- TOKN ' '
- TOKN 'D'
- TOKN '.'
- TOKN 'B'
- TOKN 248
- TOKN 247
- TOKN 'N'
- TOKN ' '
- TOKN '&'
- TOKN ' '
- TOKN 'I'
- TOKN '.'
- TOKN 247
- TOKN 'L'
- TOKN 'L'
+ ECHR 'B'               \ Token 13:     "BY D.BRABEN & I.BELL"
+ ECHR 'Y'               \
+ ECHR ' '               \ Encoded as:   "BY D.B<248><247>N & I.<247>LL"
+ ECHR 'D'
+ ECHR '.'
+ ECHR 'B'
+ ETWO 'R', 'A'
+ ETWO 'B', 'E'
+ ECHR 'N'
+ ECHR ' '
+ ECHR '&'
+ ECHR ' '
+ ECHR 'I'
+ ECHR '.'
+ ETWO 'B', 'E'
+ ECHR 'L'
+ ECHR 'L'
  EQUB VE
 
- TOKN 21
- TOKN 145
- TOKN 200
- TOKN 26
+ EJMP 21                \ Token 14:     "{clear bottom of screen}
+ ETOK 145               \                PLANET NAME?
+ ETOK 200               \                {fetch line input from keyboard}"
+ EJMP 26                \
+ EQUB VE                \ Encoded as:   "{21}[145][200]{26}"
+
+ EJMP 25                \ Token 15:     "{incoming message screen, wait 2s}
+ EJMP 9                 \                {clear screen}
+ EJMP 30                \                {white}
+ EJMP 23                \                {move to row 10, white, lower case}
+ EJMP 14                \                {justify}
+ EJMP 2                 \                {sentence case}
+ ECHR ' '               \                  CONGRATULATIONS {single cap}
+ ECHR ' '               \                COMMANDER!{cr}
+ ECHR 'C'               \                {cr}
+ ETWO 'O', 'N'          \                THERE{lower case} WILL ALWAYS BE A
+ ECHR 'G'               \                PLACE FOR YOU IN{sentence case} HER
+ ETWO 'R', 'A'          \                MAJESTY'S SPACE NAVY{lower case}.{cr}
+ ECHR 'T'               \                 {single cap}AND MAYBE SOONER THAN YOU
+ ECHR 'U'               \                THINK...{cr}
+ ETWO 'L', 'A'          \                {left align}{tab 6}{all caps}  MESSAGE
+ ETWO 'T', 'I'          \                ENDS{wait for keypress}"
+ ETWO 'O', 'N'          \
+ ECHR 'S'               \ Encoded as:   "{25}{9}{30}{23}{14}{2}  C<223>G<248>TU
+ ECHR ' '               \                <249><251><223>S [154]!{12}{12}<226>
+ ETOK 154               \                <244>E{13} W<220>L <228>WAYS <247>[208]
+ ECHR '!'               \                P<249><233> F<253> [179] <240>[211]
+ EJMP 12                \                [204]<255>D <239>Y<247> <235><223><244>
+ EJMP 12                \                 <226><255> [179] <226><240>K..[212]
+ ETWO 'T', 'H'          \                {24}"
+ ETWO 'E', 'R'
+ ECHR 'E'
+ EJMP 13
+ ECHR ' '
+ ECHR 'W'
+ ETWO 'I', 'L'
+ ECHR 'L'
+ ECHR ' '
+ ETWO 'A', 'L'
+ ECHR 'W'
+ ECHR 'A'
+ ECHR 'Y'
+ ECHR 'S'
+ ECHR ' '
+ ETWO 'B', 'E'
+ ETOK 208
+ ECHR 'P'
+ ETWO 'L', 'A'
+ ETWO 'C', 'E'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ETWO 'I', 'N'
+ ETOK 211
+ ETOK 204
+ ETWO 'A', 'N'
+ ECHR 'D'
+ ECHR ' '
+ ETWO 'M', 'A'
+ ECHR 'Y'
+ ETWO 'B', 'E'
+ ECHR ' '
+ ETWO 'S', 'O'
+ ETWO 'O', 'N'
+ ETWO 'E', 'R'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ETWO 'A', 'N'
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ETWO 'T', 'H'
+ ETWO 'I', 'N'
+ ECHR 'K'
+ ECHR '.'
+ ECHR '.'
+ ETOK 212
+ EJMP 24
  EQUB VE
 
- TOKN 25
- TOKN 9
- TOKN 30
- TOKN 23
- TOKN 14
- TOKN 2
- TOKN ' '
- TOKN ' '
- TOKN 'C'
- TOKN 223
- TOKN 'G'
- TOKN 248
- TOKN 'T'
- TOKN 'U'
- TOKN 249
- TOKN 251
- TOKN 223
- TOKN 'S'
- TOKN ' '
- TOKN 154
- TOKN '!'
- TOKN 12
- TOKN 12
- TOKN 226
- TOKN 244
- TOKN 'E'
- TOKN 13
- TOKN ' '
- TOKN 'W'
- TOKN 220
- TOKN 'L'
- TOKN ' '
- TOKN 228
- TOKN 'W'
- TOKN 'A'
- TOKN 'Y'
- TOKN 'S'
- TOKN ' '
- TOKN 247
- TOKN 208
- TOKN 'P'
- TOKN 249
- TOKN 233
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 240
- TOKN 211
- TOKN 204
- TOKN 255
- TOKN 'D'
- TOKN ' '
- TOKN 239
- TOKN 'Y'
- TOKN 247
- TOKN ' '
- TOKN 235
- TOKN 223
- TOKN 244
- TOKN ' '
- TOKN 226
- TOKN 255
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 226
- TOKN 240
- TOKN 'K'
-\TOKN '#'
-\EQUB VE
-
- TOKN '.'
- TOKN '.'
- TOKN 212
- TOKN 24
+ ECHR 'F'               \ Token 16:     "FABLED"
+ ETWO 'A', 'B'          \
+ ETWO 'L', 'E'          \ Encoded as:   "F<216><229>D"
+ ECHR 'D'
  EQUB VE
 
- TOKN 'F'
- TOKN 216
- TOKN 229
- TOKN 'D'
+ ETWO 'N', 'O'          \ Token 17:     "NOTABLE"
+ ECHR 'T'               \
+ ETWO 'A', 'B'          \ Encoded as:   "<227>T<216><229>"
+ ETWO 'L', 'E'
  EQUB VE
 
- TOKN 227
- TOKN 'T'
- TOKN 216
- TOKN 229
+ ECHR 'W'               \ Token 18:     "WELL KNOWN"
+ ECHR 'E'               \
+ ECHR 'L'               \ Encoded as:   "WELL K<227>WN"
+ ECHR 'L'
+ ECHR ' '
+ ECHR 'K'
+ ETWO 'N', 'O'
+ ECHR 'W'
+ ECHR 'N'
  EQUB VE
 
- TOKN 'W'
- TOKN 'E'
- TOKN 'L'
- TOKN 'L'
- TOKN ' '
- TOKN 'K'
- TOKN 227
- TOKN 'W'
- TOKN 'N'
+ ECHR 'F'               \ Token 19:     "FAMOUS"
+ ECHR 'A'               \
+ ECHR 'M'               \ Encoded as:   "FAMO<236>"
+ ECHR 'O'
+ ETWO 'U', 'S'
  EQUB VE
 
- TOKN 'F'
- TOKN 'A'
- TOKN 'M'
- TOKN 'O'
- TOKN 236
+ ETWO 'N', 'O'          \ Token 20:     "NOTED"
+ ECHR 'T'               \
+ ETWO 'E', 'D'          \ Encoded as:   "<227>T<252>"
  EQUB VE
 
- TOKN 227
- TOKN 'T'
- TOKN 252
+ ETWO 'V', 'E'          \ Token 21:     "VERY"
+ ECHR 'R'               \
+ ECHR 'Y'               \ Encoded as:   "<250>RY"
  EQUB VE
 
- TOKN 250
- TOKN 'R'
- TOKN 'Y'
+ ECHR 'M'               \ Token 22:     "MILDLY"
+ ETWO 'I', 'L'          \
+ ECHR 'D'               \ Encoded as:   "M<220>DLY"
+ ECHR 'L'
+ ECHR 'Y'
  EQUB VE
 
- TOKN 'M'
- TOKN 220
- TOKN 'D'
- TOKN 'L'
- TOKN 'Y'
+ ECHR 'M'               \ Token 23:     "MOST"
+ ECHR 'O'               \
+ ETWO 'S', 'T'          \ Encoded as:   "MO<222>"
  EQUB VE
 
- TOKN 'M'
- TOKN 'O'
- TOKN 222
+ ETWO 'R', 'E'          \ Token 24:     "REASONABLY"
+ ECHR 'A'               \
+ ECHR 'S'               \ Encoded as:   "<242>AS<223><216>LY"
+ ETWO 'O', 'N'
+ ETWO 'A', 'B'
+ ECHR 'L'
+ ECHR 'Y'
  EQUB VE
 
- TOKN 242
- TOKN 'A'
- TOKN 'S'
- TOKN 223
- TOKN 216
- TOKN 'L'
- TOKN 'Y'
+ EQUB VE                \ Token 25:     ""
+                        \
+                        \ Encoded as:   ""
+
+ ETOK 165               \ Token 26:     "ANCIENT"
+ EQUB VE                \
+                        \ Encoded as:   "[165]"
+
+ ERND 23                \ Token 27:     "[130-134]"
+ EQUB VE                \
+                        \ Encoded as:   "[23?]"
+
+ ECHR 'G'               \ Token 28:     "GREAT"
+ ETWO 'R', 'E'          \
+ ETWO 'A', 'T'          \ Encoded as:   "G<242><245>"
  EQUB VE
 
-\EQUB 0 EOR VE
+ ECHR 'V'               \ Token 29:     "VAST"
+ ECHR 'A'               \
+ ETWO 'S', 'T'          \ Encoded as:   "VA<222>"
  EQUB VE
 
- TOKN 165
+ ECHR 'P'               \ Token 30:     "PINK"
+ ETWO 'I', 'N'          \
+ ECHR 'K'               \ Encoded as:   "P<240>K"
  EQUB VE
 
+ EJMP 2                 \ Token 31:     "{sentence case}[190-194] [185-189]
+ ERND 28                \                {lower case} PLANTATIONS"
+ ECHR ' '               \
+ ERND 27                \ Encoded as:   "{2}[28?] [27?]{13} [185]A<251><223>S"
+ EJMP 13
+ ECHR ' '
+ ETOK 185
+ ECHR 'A'
+ ETWO 'T', 'I'
+ ETWO 'O', 'N'
+ ECHR 'S'
+ EQUB VE
+
+ ETOK 156               \ Token 32:     "MOUNTAINS"
+ ECHR 'S'               \
+ EQUB VE                \ Encoded as:   "[156]S"
+
+ ERND 26                \ Token 33:     "[180-184]"
+ EQUB VE                \
+                        \ Encoded as:   "[26?]"
+
+ ERND 37                \ Token 34:     "[125-129] FORESTS"
+ ECHR ' '               \
+ ECHR 'F'               \ Encoded as:   "[37?] F<253><237>TS"
+ ETWO 'O', 'R'
+ ETWO 'E', 'S'
+ ECHR 'T'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'O'               \ Token 35:     "OCEANS"
+ ETWO 'C', 'E'          \
+ ETWO 'A', 'N'          \ Encoded as:   "O<233><255>S"
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'S'               \ Token 36:     "SHYNESS"
+ ECHR 'H'               \
+ ECHR 'Y'               \ Encoded as:   "SHYN<237>S"
+ ECHR 'N'
+ ETWO 'E', 'S'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'S'               \ Token 37:     "SILLINESS"
+ ETWO 'I', 'L'          \
+ ECHR 'L'               \ Encoded as:   "S<220>L<240><237>S"
+ ETWO 'I', 'N'
+ ETWO 'E', 'S'
+ ECHR 'S'
+ EQUB VE
+
+ ETWO 'M', 'A'          \ Token 38:     "MATING TRADITIONS"
+ ECHR 'T'               \
+ ETOK 195               \ Encoded as:   "<239>T[195]T<248><241><251><223>S"
+ ECHR 'T'
+ ETWO 'R', 'A'
+ ETWO 'D', 'I'
+ ETWO 'T', 'I'
+ ETWO 'O', 'N'
+ ECHR 'S'
+ EQUB VE
+
+ ETWO 'L', 'O'          \ Token 39:     "LOATHING OF [41-45]"
+ ETWO 'A', 'T'          \
+ ECHR 'H'               \ Encoded as:   "<224><245>H[195]OF [9?]"
+ ETOK 195
+ ECHR 'O'
+ ECHR 'F'
+ ECHR ' '
+ ERND 9
+ EQUB VE
+
+ ETWO 'L', 'O'          \ Token 40:     "LOVE FOR [41-45]"
+ ETWO 'V', 'E'          \
+ ECHR ' '               \ Encoded as:   "<224><250> F<253> [9?]"
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ERND 9
+ EQUB VE
+
+ ECHR 'F'               \ Token 41:     "FOOD BLENDERS"
+ ECHR 'O'               \
+ ECHR 'O'               \ Encoded as:   "FOOD B<229>ND<244>S"
+ ECHR 'D'
+ ECHR ' '
+ ECHR 'B'
+ ETWO 'L', 'E'
+ ECHR 'N'
+ ECHR 'D'
+ ETWO 'E', 'R'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'T'               \ Token 42:     "TOURISTS"
+ ETWO 'O', 'U'          \
+ ECHR 'R'               \ Encoded as:   "T<217>RI<222>S"
+ ECHR 'I'
+ ETWO 'S', 'T'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'P'               \ Token 43:     "POETRY"
+ ECHR 'O'               \
+ ETWO 'E', 'T'          \ Encoded as:   "PO<221>RY"
+ ECHR 'R'
+ ECHR 'Y'
+ EQUB VE
+
+ ETWO 'D', 'I'          \ Token 44:     "DISCOS"
+ ECHR 'S'               \
+ ECHR 'C'               \ Encoded as:   "<241>SCOS"
+ ECHR 'O'
+ ECHR 'S'
+ EQUB VE
+
+ ERND 17                \ Token 45:     "[81-85]"
+ EQUB VE                \
+                        \ Encoded as:   "[17?]"
+
+ ECHR 'W'               \ Token 46:     "WALKING TREE"
+ ETWO 'A', 'L'          \
+ ECHR 'K'               \ Encoded as:   "W<228>K[195][158]"
+ ETOK 195
+ ETOK 158
+ EQUB VE
+
+ ECHR 'C'               \ Token 47:     "CRAB"
+ ETWO 'R', 'A'          \
+ ECHR 'B'               \ Encoded as:   "C<248>B"
+ EQUB VE
+
+ ECHR 'B'               \ Token 48:     "BAT"
+ ETWO 'A', 'T'          \
+ EQUB VE                \ Encoded as:   "B<245>"
+
+ ETWO 'L', 'O'          \ Token 49:     "LOBST"
+ ECHR 'B'               \
+ ETWO 'S', 'T'          \ Encoded as:   "<224>B<222>"
+ EQUB VE
+
+ EJMP 18                \ Token 50:     "{random 1-8 letter word}"
+ EQUB VE                \
+                        \ Encoded as:   "{18}"
+
+ ETWO 'B', 'E'          \ Token 51:     "BESET"
+ ECHR 'S'               \
+ ETWO 'E', 'T'          \ Encoded as:   "<247>S<221>"
+ EQUB VE
+
+ ECHR 'P'               \ Token 52:     "PLAGUED"
+ ETWO 'L', 'A'          \
+ ECHR 'G'               \ Encoded as:   "P<249>GU<252>"
+ ECHR 'U'
+ ETWO 'E', 'D'
+ EQUB VE
+
+ ETWO 'R', 'A'          \ Token 53:     "RAVAGED"
+ ECHR 'V'               \
+ ECHR 'A'               \ Encoded as:   "<248>VAG<252>"
+ ECHR 'G'
+ ETWO 'E', 'D'
+ EQUB VE
+
+ ECHR 'C'               \ Token 54:     "CURSED"
+ ECHR 'U'               \
+ ECHR 'R'               \ Encoded as:   "CURS<252>"
+ ECHR 'S'
+ ETWO 'E', 'D'
+ EQUB VE
+
+ ECHR 'S'               \ Token 55:     "SCOURGED"
+ ECHR 'C'               \
+ ETWO 'O', 'U'          \ Encoded as:   "SC<217>RG<252>"
+ ECHR 'R'
+ ECHR 'G'
+ ETWO 'E', 'D'
+ EQUB VE
+
+ ERND 22                \ Token 56:     "[135-139] CIVIL WAR"
+ ECHR ' '               \
+ ECHR 'C'               \ Encoded as:   "[22?] CIV<220> W<238>"
+ ECHR 'I'
+ ECHR 'V'
+ ETWO 'I', 'L'
+ ECHR ' '
+ ECHR 'W'
+ ETWO 'A', 'R'
+ EQUB VE
+
+ ERND 13                \ Token 57:     "[170-174] [155-159] [160-164]S"
+ ECHR ' '               \
+ ERND 4                 \ Encoded as:   "[13?] [4?] [5?]S"
+ ECHR ' '
+ ERND 5
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'A'               \ Token 58:     "A [170-174] DISEASE"
+ ECHR ' '               \
+ ERND 13                \ Encoded as:   "A [13?] <241><218>A<218>"
+ ECHR ' '
+ ETWO 'D', 'I'
+ ETWO 'S', 'E'
+ ECHR 'A'
+ ETWO 'S', 'E'
+ EQUB VE
+
+ ERND 22                \ Token 59:     "[135-139] EARTHQUAKES"
+ ECHR ' '               \
+ ECHR 'E'               \ Encoded as:   "[22?] E<238><226><254>AK<237>"
+ ETWO 'A', 'R'
+ ETWO 'T', 'H'
+ ETWO 'Q', 'U'
+ ECHR 'A'
+ ECHR 'K'
+ ETWO 'E', 'S'
+ EQUB VE
+
+ ERND 22                \ Token 60:     "[135-139] SOLAR ACTIVITY"
+ ECHR ' '               \
+ ETWO 'S', 'O'          \ Encoded as:   "[22?] <235><249>R AC<251>V<219>Y"
+ ETWO 'L', 'A'
+ ECHR 'R'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'C'
+ ETWO 'T', 'I'
+ ECHR 'V'
+ ETWO 'I', 'T'
+ ECHR 'Y'
+ EQUB VE
+
+ ETOK 175               \ Token 61:     "ITS [26-30] [31-35]"
+ ERND 2                 \
+ ECHR ' '               \ Encoded as:   "[175][2?] [3?]"
+ ERND 3
+ EQUB VE
+
+ ETOK 147               \ Token 62:     "THE {all caps, system name adjective}
+ EJMP 17                \                [155-159] [160-164]"
+ ECHR ' '               \
+ ERND 4                 \ Encoded as:   "[147]{17} [4?] [5?]"
+ ECHR ' '
+ ERND 5
+ EQUB VE
+
+ ETOK 175               \ Token 63:     "ITS INHABITANTS' [165-169] [36-40]"
+ ETOK 193               \
+ ECHR 'S'               \ Encoded as:   "[175][193]S[39] [7?] [8?]"
+ ECHR '`'
+ ECHR ' '
+ ERND 7
+ ECHR ' '
+ ERND 8
+ EQUB VE
+
+ EJMP 2                 \ Token 64:     "{sentence case}[235-239]{lower case}"
+ ERND 31                \
+ EJMP 13                \ Encoded as:   "{2}[31?]{13}"
+ EQUB VE
+
+ ETOK 175               \ Token 65:     "ITS [76-80] [81-85]
+ ERND 16                \
+ ECHR ' '               \ Encoded as:   "[175][16?] [17?]"
+ ERND 17
+ EQUB VE
+
+ ECHR 'J'               \ Token 66:     "JUICE"
+ ECHR 'U'               \
+ ECHR 'I'               \ Encoded as:   "JUI<233>"
+ ETWO 'C', 'E'
+ EQUB VE
+
+ ECHR 'B'               \ Token 67:     "BRANDY"
+ ETWO 'R', 'A'          \
+ ECHR 'N'               \ Encoded as:   "B<248>NDY"
+ ECHR 'D'
+ ECHR 'Y'
+ EQUB VE
+
+ ECHR 'W'               \ Token 68:     "WATER"
+ ETWO 'A', 'T'          \
+ ETWO 'E', 'R'          \ Encoded as:   "W<245><244>"
+ EQUB VE
+
+ ECHR 'B'               \ Token 69:     "BREW"
+ ETWO 'R', 'E'          \
+ ECHR 'W'               \ Encoded as:   "B<242>W"
+ EQUB VE
+
+ ECHR 'G'               \ Token 70:     "GARGLE BLASTERS"
+ ETWO 'A', 'R'          \
+ ECHR 'G'               \ Encoded as:   "G<238>G<229> B<249><222><244>S"
+ ETWO 'L', 'E'
+ ECHR ' '
+ ECHR 'B'
+ ETWO 'L', 'A'
+ ETWO 'S', 'T'
+ ETWO 'E', 'R'
+ ECHR 'S'
+ EQUB VE
+
+ EJMP 18                \ Token 71:     "{random 1-8 letter word}"
+ EQUB VE                \
+                        \ Encoded as:   "{18}"
+
+ EJMP 17                \ Token 72:     "{all caps, system name adjective}
+ ECHR ' '               \                [160-164]"
+ ERND 5                 \
+ EQUB VE                \ Encoded as:   "{17} [5?]"
+
+ EJMP 17                \ Token 73:     "{all caps, system name adjective}
+ ECHR ' '               \                {random 1-8 letter word}"
+ EJMP 18                \
+ EQUB VE                \ Encoded as:   "{17} {18}"
+
+ EJMP 17                \ Token 74:     "{all caps, system name adjective}
+ ECHR ' '               \                [170-174]"
+ ERND 13                \
+ EQUB VE                \ Encoded as:   "{17} [13?]"
+
+ ERND 13                \ Token 75:     "[170-174] {random 1-8 letter word}"
+ ECHR ' '               \
+ EJMP 18                \ Encoded as:   "[13?] {18}"
+ EQUB VE
+
+ ECHR 'F'               \ Token 76:     "FABULOUS"
+ ETWO 'A', 'B'          \
+ ECHR 'U'               \ Encoded as:   "F<216>U<224><236>"
+ ETWO 'L', 'O'
+ ETWO 'U', 'S'
+ EQUB VE
+
+ ECHR 'E'               \ Token 77:     "EXOTIC"
+ ECHR 'X'               \
+ ECHR 'O'               \ Encoded as:   "EXO<251>C"
+ ETWO 'T', 'I'
+ ECHR 'C'
+ EQUB VE
+
+ ECHR 'H'               \ Token 78:     "HOOPY"
+ ECHR 'O'               \
+ ECHR 'O'               \ Encoded as:   "HOOPY"
+ ECHR 'P'
+ ECHR 'Y'
+ EQUB VE
+
+ ECHR 'U'               \ Token 79:     "UNUSUAL"
+ ETWO 'N', 'U'          \
+ ECHR 'S'               \ Encoded as:   "U<225>SU<228>"
+ ECHR 'U'
+ ETWO 'A', 'L'
+ EQUB VE
+
+ ECHR 'E'               \ Token 80:     "EXCITING"
+ ECHR 'X'               \
+ ECHR 'C'               \ Encoded as:   "EXC<219><240>G"
+ ETWO 'I', 'T'
+ ETWO 'I', 'N'
+ ECHR 'G'
+ EQUB VE
+
+ ECHR 'C'               \ Token 81:     "CUISINE"
+ ECHR 'U'               \
+ ECHR 'I'               \ Encoded as:   "CUIS<240>E"
+ ECHR 'S'
+ ETWO 'I', 'N'
+ ECHR 'E'
+ EQUB VE
+
+ ECHR 'N'               \ Token 82:     "NIGHT LIFE"
+ ECHR 'I'               \
+ ECHR 'G'               \ Encoded as:   "NIGHT LIFE"
+ ECHR 'H'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'L'
+ ECHR 'I'
+ ECHR 'F'
+ ECHR 'E'
+ EQUB VE
+
+ ECHR 'C'               \ Token 83:     "CASINOS"
+ ECHR 'A'               \
+ ECHR 'S'               \ Encoded as:   "CASI<227>S"
+ ECHR 'I'
+ ETWO 'N', 'O'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'S'               \ Token 84:     "SIT COMS"
+ ETWO 'I', 'T'          \
+ ECHR ' '               \ Encoded as:   "S<219> COMS"
+ ECHR 'C'
+ ECHR 'O'
+ ECHR 'M'
+ ECHR 'S'
+ EQUB VE
+
+ EJMP 2                 \ Token 85:     "{sentence case}[235-239]{lower case}"
+ ERND 31                \
+ EJMP 13                \ Encoded as:   "{2}[31?]{13}"
+ EQUB VE
+
+ EJMP 3                 \ Token 86:     "{selected system name}"
+ EQUB VE                \
+                        \ Encoded as:   "{3}"
+
+ ETOK 147               \ Token 87:     "THE PLANET {selected system name}"
+ ETOK 145               \
+ ECHR ' '               \ Encoded as:   "[147][145] {3}"
+ EJMP 3
+ EQUB VE
+
+ ETOK 147               \ Token 88:     "THE WORLD {selected system name}"
+ ETOK 146               \
+ ECHR ' '               \ Encoded as:   "[147][146] {3}"
+ EJMP 3
+ EQUB VE
+
+ ETOK 148               \ Token 89:     "THIS PLANET"
+ ETOK 145               \
+ EQUB VE                \ Encoded as:   "[148][145]"
+
+ ETOK 148               \ Token 90:     "THIS WORLD"
+ ETOK 146               \
+ EQUB VE                \ Encoded as:   "[148][146]"
+
+ ECHR 'S'               \ Token 91:     "SON OF A BITCH"
+ ETWO 'O', 'N'          \
+ ECHR ' '               \ Encoded as:   "S<223> OF[208]B<219>CH"
+ ECHR 'O'
+ ECHR 'F'
+ ETOK 208
+ ECHR 'B'
+ ETWO 'I', 'T'
+ ECHR 'C'
+ ECHR 'H'
+ EQUB VE
+
+ ECHR 'S'               \ Token 92:     "SCOUNDREL"
+ ECHR 'C'               \
+ ETWO 'O', 'U'          \ Encoded as:   "SC<217>ND<242>L"
+ ECHR 'N'
+ ECHR 'D'
+ ETWO 'R', 'E'
+ ECHR 'L'
+ EQUB VE
+
+ ECHR 'B'               \ Token 93:     "BLACKGUARD"
+ ETWO 'L', 'A'          \
+ ECHR 'C'               \ Encoded as:   "B<249>CKGU<238>D"
+ ECHR 'K'
+ ECHR 'G'
+ ECHR 'U'
+ ETWO 'A', 'R'
+ ECHR 'D'
+ EQUB VE
+
+ ECHR 'R'               \ Token 94:     "ROGUE"
+ ECHR 'O'               \
+ ECHR 'G'               \ Encoded as:   "ROGUE"
+ ECHR 'U'
+ ECHR 'E'
+ EQUB VE
+
+ ECHR 'W'               \ Token 95:     "WHORESON BEETLE HEADED FLAP EAR'D
+ ECHR 'H'               \                KNAVE"
+ ETWO 'O', 'R'          \
+ ETWO 'E', 'S'          \ Encoded as:   "WH<253><237><223> <247><221><229> HEAD
+ ETWO 'O', 'N'          \                [196]F<249>P E<238>[39]D KNA<250>"
+ ECHR ' '
+ ETWO 'B', 'E'
+ ETWO 'E', 'T'
+ ETWO 'L', 'E'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'E'
+ ECHR 'A'
+ ECHR 'D'
+ ETOK 196
+ ECHR 'F'
+ ETWO 'L', 'A'
+ ECHR 'P'
+ ECHR ' '
+ ECHR 'E'
+ ETWO 'A', 'R'
+ ECHR '`'
+ ECHR 'D'
+ ECHR ' '
+ ECHR 'K'
+ ECHR 'N'
+ ECHR 'A'
+ ETWO 'V', 'E'
+ EQUB VE
+
+ ECHR 'N'               \ Token 96:     "N UNREMARKABLE"
+ ECHR ' '               \
+ ECHR 'U'               \ Encoded as:   "N UN<242><239>RK<216><229>"
+ ECHR 'N'
+ ETWO 'R', 'E'
+ ETWO 'M', 'A'
+ ECHR 'R'
+ ECHR 'K'
+ ETWO 'A', 'B'
+ ETWO 'L', 'E'
+ EQUB VE
+
+ ECHR ' '               \ Token 97:     " BORING"
+ ECHR 'B'               \
+ ETWO 'O', 'R'          \ Encoded as:   " B<253><240>G"
+ ETWO 'I', 'N'
+ ECHR 'G'
+ EQUB VE
+
+ ECHR ' '               \ Token 98:     " DULL"
+ ECHR 'D'               \
+ ECHR 'U'               \ Encoded as:   " DULL"
+ ECHR 'L'
+ ECHR 'L'
+ EQUB VE
+
+ ECHR ' '               \ Token 99:     " TEDIOUS"
+ ECHR 'T'               \
+ ECHR 'E'               \ Encoded as:   " TE<241>O<236>"
+ ETWO 'D', 'I'
+ ECHR 'O'
+ ETWO 'U', 'S'
+ EQUB VE
+
+ ECHR ' '               \ Token 100:    " REVOLTING"
+ ETWO 'R', 'E'          \
+ ECHR 'V'               \ Encoded as:   " <242>VOLT<240>G"
+ ECHR 'O'
+ ECHR 'L'
+ ECHR 'T'
+ ETWO 'I', 'N'
+ ECHR 'G'
+ EQUB VE
+
+ ETOK 145               \ Token 101:    "PLANET"
+ EQUB VE                \
+                        \ Encoded as:   "[145]"
+
+ ETOK 146               \ Token 102:    "WORLD"
+ EQUB VE                \
+                        \ Encoded as:   "[146]"
+
+ ECHR 'P'               \ Token 103:    "PLACE"
+ ETWO 'L', 'A'          \
+ ETWO 'C', 'E'          \ Encoded as:   "P<249><233>"
+ EQUB VE
+
+ ECHR 'L'               \ Token 104:    "LITTLE PLANET"
+ ETWO 'I', 'T'          \
+ ECHR 'T'               \ Encoded as:   "L<219>T<229> [145]"
+ ETWO 'L', 'E'
+ ECHR ' '
+ ETOK 145
+ EQUB VE
+
+ ECHR 'D'               \ Token 105:    "DUMP"
+ ECHR 'U'               \
+ ECHR 'M'               \ Encoded as:   "DUMP"
+ ECHR 'P'
+ EQUB VE
+
+ ECHR 'I'               \ Token 106:    "I HEAR A [130-134] LOOKING SHIP
+ ECHR ' '               \                APPEARED AT ERRIUS"
+ ECHR 'H'               \
+ ECHR 'E'               \ Encoded as:   "I HE<238>[208][23?] <224>OK[195][207]
+ ETWO 'A', 'R'          \                 APPE<238>[196]<245>[209]"
+ ETOK 208
+ ERND 23
+ ECHR ' '
+ ETWO 'L', 'O'
+ ECHR 'O'
+ ECHR 'K'
+ ETOK 195
+ ETOK 207
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'P'
+ ECHR 'P'
+ ECHR 'E'
+ ETWO 'A', 'R'
+ ETOK 196
+ ETWO 'A', 'T'
+ ETOK 209
+ EQUB VE
+
+ ECHR 'Y'               \ Token 107:    "YEAH, I HEAR A [130-134] SHIP LEFT
+ ECHR 'E'               \                ERRIUS A  WHILE BACK"
+ ECHR 'A'               \
+ ECHR 'H'               \ Encoded as:   "YEAH, I HE<238>[208][23?] [207]
+ ECHR ','               \                 <229>FT[209][208] WHI<229> BACK"
+ ECHR ' '
+ ECHR 'I'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'E'
+ ETWO 'A', 'R'
+ ETOK 208
+ ERND 23
+ ECHR ' '
+ ETOK 207
+ ECHR ' '
+ ETWO 'L', 'E'
+ ECHR 'F'
+ ECHR 'T'
+ ETOK 209
+ ETOK 208
+ ECHR ' '
+ ECHR 'W'
+ ECHR 'H'
+ ECHR 'I'
+ ETWO 'L', 'E'
+ ECHR ' '
+ ECHR 'B'
+ ECHR 'A'
+ ECHR 'C'
+ ECHR 'K'
+ EQUB VE
+
+ ECHR 'G'               \ Token 108:    "GET YOUR IRON ASS OVER TO ERRIUS"
+ ETWO 'E', 'T'          \
+ ECHR ' '               \ Encoded as:   "G<221> [179]R IR<223> ASS OV<244> TO
+ ETOK 179               \                [209]"
+ ECHR 'R'
+ ECHR ' '
+ ECHR 'I'
+ ECHR 'R'
+ ETWO 'O', 'N'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'S'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'O'
+ ECHR 'V'
+ ETWO 'E', 'R'
+ ECHR ' '
+ ECHR 'T'
+ ECHR 'O'
+ ETOK 209
+ EQUB VE
+
+ ETWO 'S', 'O'          \ Token 109:    "SOME [91-95] NEW SHIP WAS SEEN AT
+ ECHR 'M'               \                ERRIUS"
+ ECHR 'E'               \
+ ECHR ' '               \ Encoded as:   "<235>ME [24?][210][207] WAS <218><246>
+ ERND 24                \                 <245>[209]"
+ ETOK 210
+ ETOK 207
+ ECHR ' '
+ ECHR 'W'
+ ECHR 'A'
+ ECHR 'S'
+ ECHR ' '
+ ETWO 'S', 'E'
+ ETWO 'E', 'N'
+ ECHR ' '
+ ETWO 'A', 'T'
+ ETOK 209
+ EQUB VE
+
+ ECHR 'T'               \ Token 110:    "TRY ERRIUS"
+ ECHR 'R'               \
+ ECHR 'Y'               \ Encoded as:   "TRY[209]"
+ ETOK 209
+ EQUB VE
+
+ EQUB VE                \ Token 111:    ""
+                        \
+                        \ Encoded as:   ""
+
+ EQUB VE                \ Token 112:    ""
+                        \
+                        \ Encoded as:   ""
+
+ EQUB VE                \ Token 113:    ""
+                        \
+                        \ Encoded as:   ""
+
+ EQUB VE                \ Token 114:    ""
+                        \
+                        \ Encoded as:   ""
+
+ ECHR 'W'               \ Token 115:    "WASP"
+ ECHR 'A'               \
+ ECHR 'S'               \ Encoded as:   "WASP"
+ ECHR 'P'
+ EQUB VE
+
+ ECHR 'M'               \ Token 116:    "MOTH"
+ ECHR 'O'               \
+ ETWO 'T', 'H'          \ Encoded as:   "MO<226>"
+ EQUB VE
+
+ ECHR 'G'               \ Token 117:    "GRUB"
+ ECHR 'R'               \
+ ECHR 'U'               \ Encoded as:   "GRUB"
+ ECHR 'B'
+ EQUB VE
+
+ ETWO 'A', 'N'          \ Token 118:    "ANT"
+ ECHR 'T'               \
+ EQUB VE                \ Encoded as:   "<255>T"
+
+ EJMP 18                \ Token 119:    "{random 1-8 letter word}"
+ EQUB VE                \
+                        \ Encoded as:   "{18}"
+
+ ECHR 'P'               \ Token 120:    "POET"
+ ECHR 'O'               \
+ ETWO 'E', 'T'          \ Encoded as:   "PO<221>"
+ EQUB VE
+
+ ETWO 'A', 'R'          \ Token 121:    "ARTS GRADUATE"
+ ECHR 'T'               \
+ ECHR 'S'               \ Encoded as:   "<238>TS G<248>DU<245>E"
+ ECHR ' '
+ ECHR 'G'
+ ETWO 'R', 'A'
+ ECHR 'D'
+ ECHR 'U'
+ ETWO 'A', 'T'
+ ECHR 'E'
+ EQUB VE
+
+ ECHR 'Y'               \ Token 122:    "YAK"
+ ECHR 'A'               \
+ ECHR 'K'               \ Encoded as:   "YAK"
+ EQUB VE
+
+ ECHR 'S'               \ Token 123:    "SNAIL"
+ ECHR 'N'               \
+ ECHR 'A'               \ Encoded as:   "SNA<220>"
+ ETWO 'I', 'L'
+ EQUB VE
+
+ ECHR 'S'               \ Token 124:    "SLUG"
+ ECHR 'L'               \
+ ECHR 'U'               \ Encoded as:   "SLUG"
+ ECHR 'G'
+ EQUB VE
+
+ ECHR 'T'               \ Token 125:    "TROPICAL"
+ ECHR 'R'               \
+ ECHR 'O'               \ Encoded as:   "TROPIC<228>"
+ ECHR 'P'
+ ECHR 'I'
+ ECHR 'C'
+ ETWO 'A', 'L'
+ EQUB VE
+
+ ECHR 'D'               \ Token 126:    "DENSE"
+ ETWO 'E', 'N'          \
+ ETWO 'S', 'E'          \ Encoded as:   "D<246><218>"
+ EQUB VE
+
+ ETWO 'R', 'A'          \ Token 127:    "RAIN"
+ ETWO 'I', 'N'          \
+ EQUB VE                \ Encoded as:   "<248><240>"
+
+ ECHR 'I'               \ Token 128:    "IMPENETRABLE"
+ ECHR 'M'               \
+ ECHR 'P'               \ Encoded as:   "IMP<246><221><248>B<229>"
+ ETWO 'E', 'N'
+ ETWO 'E', 'T'
+ ETWO 'R', 'A'
+ ECHR 'B'
+ ETWO 'L', 'E'
+ EQUB VE
+
+ ECHR 'E'               \ Token 129:    "EXUBERANT"
+ ECHR 'X'               \
+ ECHR 'U'               \ Encoded as:   "EXU<247><248>NT"
+ ETWO 'B', 'E'
+ ETWO 'R', 'A'
+ ECHR 'N'
+ ECHR 'T'
+ EQUB VE
+
+ ECHR 'F'               \ Token 130:    "FUNNY"
+ ECHR 'U'               \
+ ECHR 'N'               \ Encoded as:   "FUNNY"
+ ECHR 'N'
+ ECHR 'Y'
+ EQUB VE
+
+ ECHR 'W'               \ Token 131:    "WIERD"
+ ECHR 'I'               \
+ ETWO 'E', 'R'          \ Encoded as:   "WI<244>D"
+ ECHR 'D'
+ EQUB VE
+
+ ECHR 'U'               \ Token 132:    "UNUSUAL"
+ ETWO 'N', 'U'          \
+ ECHR 'S'               \ Encoded as:   "U<225>SU<228>"
+ ECHR 'U'
+ ETWO 'A', 'L'
+ EQUB VE
+
+ ETWO 'S', 'T'          \ Token 133:    "STRANGE"
+ ETWO 'R', 'A'          \
+ ECHR 'N'               \ Encoded as:   "<222><248>N<231>"
+ ETWO 'G', 'E'
+ EQUB VE
+
+ ECHR 'P'               \ Token 134:    "PECULIAR"
+ ECHR 'E'               \
+ ECHR 'C'               \ Encoded as:   "PECULI<238>"
+ ECHR 'U'
+ ECHR 'L'
+ ECHR 'I'
+ ETWO 'A', 'R'
+ EQUB VE
+
+ ECHR 'F'               \ Token 135:    "FREQUENT"
+ ETWO 'R', 'E'          \
+ ETWO 'Q', 'U'          \ Encoded as:   "F<242><254><246>T"
+ ETWO 'E', 'N'
+ ECHR 'T'
+ EQUB VE
+
+ ECHR 'O'               \ Token 136:    "OCCASIONAL"
+ ECHR 'C'               \
+ ECHR 'C'               \ Encoded as:   "OCCASI<223><228>"
+ ECHR 'A'
+ ECHR 'S'
+ ECHR 'I'
+ ETWO 'O', 'N'
+ ETWO 'A', 'L'
+ EQUB VE
+
+ ECHR 'U'               \ Token 137:    "UNPREDICTABLE"
+ ECHR 'N'               \
+ ECHR 'P'               \ Encoded as:   "UNP<242><241>CT<216><229>"
+ ETWO 'R', 'E'
+ ETWO 'D', 'I'
+ ECHR 'C'
+ ECHR 'T'
+ ETWO 'A', 'B'
+ ETWO 'L', 'E'
+ EQUB VE
+
+ ECHR 'D'               \ Token 138:    "DREADFUL"
+ ETWO 'R', 'E'          \
+ ECHR 'A'               \ Encoded as:   "D<242>ADFUL"
+ ECHR 'D'
+ ECHR 'F'
+ ECHR 'U'
+ ECHR 'L'
+ EQUB VE
+
+ ETOK 171               \ Token 139:    "DEADLY"
+ EQUB VE                \
+                        \ Encoded as:   "[171]"
+
+ ERND 1                 \ Token 140:    "[21-25] [16-21] FOR [61-65]"
+ ECHR ' '               \
+ ERND 0                 \ Encoded as:   "[1?] [0?] F<253> [10?]"
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ERND 10
+ EQUB VE
+
+ ETOK 140               \ Token 141:    "[21-25] [16-21] FOR [61-65] AND [61-65]"
+ ETOK 178               \
+ ERND 10                \ Encoded as:   "[140][178][10?]"
+ EQUB VE
+
+ ERND 11                \ Token 142:    "[51-55] BY [56-60]"
+ ECHR ' '               \
+ ECHR 'B'               \ Encoded as:   "[11?] BY [12?]"
+ ECHR 'Y'
+ ECHR ' '
+ ERND 12
+ EQUB VE
+
+ ETOK 140               \ Token 143:    "[21-25] [16-21] FOR [61-65] BUT [51-55]
+ ECHR ' '               \                BY [56-60]"
+ ECHR 'B'               \
+ ECHR 'U'               \ Encoded as:   "[140] BUT [142]"
+ ECHR 'T'
+ ECHR ' '
+ ETOK 142
+ EQUB VE
+
+ ECHR ' '               \ Token 144:    " A[96-100] [101-105]"
+ ECHR 'A'               \
+ ERND 20                \ Encoded as:   " A[20?] [21?]"
+ ECHR ' '
+ ERND 21
+ EQUB VE
+
+ ECHR 'P'               \ Token 145:    "PLANET"
+ ECHR 'L'               \
+ ETWO 'A', 'N'          \ Encoded as:   "PL<255><221>"
+ ETWO 'E', 'T'
+ EQUB VE
+
+ ECHR 'W'               \ Token 146:    "WORLD"
+ ETWO 'O', 'R'          \
+ ECHR 'L'               \ Encoded as:   "W<253>LD"
+ ECHR 'D'
+ EQUB VE
+
+ ETWO 'T', 'H'          \ Token 147:    "THE "
+ ECHR 'E'               \
+ ECHR ' '               \ Encoded as:   "<226>E "
+ EQUB VE
+
+ ETWO 'T', 'H'          \ Token 148:    "THIS "
+ ECHR 'I'               \
+ ECHR 'S'               \ Encoded as:   "<226>IS "
+ ECHR ' '
+ EQUB VE
+
+ ETWO 'L', 'O'          \ Token 149:    "LOAD NEW {single cap}COMMANDER"
+ ECHR 'A'               \
+ ECHR 'D'               \ Encoded as:   "<224>AD[210][154]"
+ ETOK 210
+ ETOK 154
+ EQUB VE
+
+ EJMP 9                 \ Token 150:    "{clear screen}
+ EJMP 11                \                {draw box around title}
+ EJMP 1                 \                {all caps}
+ EJMP 8                 \                {tab 6}"
+ EQUB VE                \
+                        \ Encoded as:   "{9}{11}{1}{8}"
+
+ ECHR 'D'               \ Token 151:    "DRIVE"
+ ECHR 'R'               \
+ ECHR 'I'               \ Encoded as:   "DRI<250>"
+ ETWO 'V', 'E'
+ EQUB VE
+
+ ECHR ' '               \ Token 152:    " CATALOGUE"
+ ECHR 'C'               \
+ ETWO 'A', 'T'          \ Encoded as:   " C<245>A<224>GUE"
+ ECHR 'A'
+ ETWO 'L', 'O'
+ ECHR 'G'
+ ECHR 'U'
+ ECHR 'E'
+ EQUB VE
+
+ ECHR 'I'               \ Token 153:    "IAN"
+ ETWO 'A', 'N'          \
+ EQUB VE                \ Encoded as:   "I<255>"
+
+ EJMP 19                \ Token 154:    "{single cap}COMMANDER"
+ ECHR 'C'               \
+ ECHR 'O'               \ Encoded as:   "{19}COMM<255>D<244>"
+ ECHR 'M'
+ ECHR 'M'
+ ETWO 'A', 'N'
+ ECHR 'D'
+ ETWO 'E', 'R'
+ EQUB VE
+
+ ERND 13                \ Token 155:    "[170-174]"
+ EQUB VE                \
+                        \ Encoded as:   "[13?]"
+
+ ECHR 'M'               \ Token 156:    "MOUNTAIN"
+ ETWO 'O', 'U'          \
+ ECHR 'N'               \ Encoded as:   "M<217>NTA<240>"
+ ECHR 'T'
+ ECHR 'A'
+ ETWO 'I', 'N'
+ EQUB VE
+
+ ETWO 'E', 'D'          \ Token 157:    "EDIBLE"
+ ECHR 'I'               \
+ ECHR 'B'               \ Encoded as:   "<252>IB<229>"
+ ETWO 'L', 'E'
+ EQUB VE
+
+ ECHR 'T'               \ Token 158:    "TREE"
+ ETWO 'R', 'E'          \
+ ECHR 'E'               \ Encoded as:   "T<242>E"
+ EQUB VE
+
+ ECHR 'S'               \ Token 159:    "SPOTTED"
+ ECHR 'P'               \
+ ECHR 'O'               \ Encoded as:   "SPOTT<252>"
+ ECHR 'T'
+ ECHR 'T'
+ ETWO 'E', 'D'
+ EQUB VE
+
+ ERND 29                \ Token 160:    "[225-229]"
+ EQUB VE                \
+                        \ Encoded as:   "[29?]"
+
+ ERND 30                \ Token 161:    "[230-234]"
+ EQUB VE                \
+                        \ Encoded as:   "[30?]"
+
+ ERND 6                 \ Token 162:    "[46-50]OID"
+ ECHR 'O'               \
+ ECHR 'I'               \ Encoded as:   "[6?]OID"
+ ECHR 'D'
+ EQUB VE
+
+ ERND 36                \ Token 163:    "[120-124]"
+ EQUB VE                \
+                        \ Encoded as:   "[36?]"
+
+ ERND 35                \ Token 164:    "[115-119]"
+ EQUB VE                \
+                        \ Encoded as:   "[35?]"
+
+ ETWO 'A', 'N'          \ Token 165:    "ANCIENT"
+ ECHR 'C'               \
+ ECHR 'I'               \ Encoded as:   "<255>CI<246>T"
+ ETWO 'E', 'N'
+ ECHR 'T'
+ EQUB VE
+
+ ECHR 'E'               \ Token 166:    "EXCEPTIONAL"
+ ECHR 'X'               \
+ ETWO 'C', 'E'          \ Encoded as:   "EX<233>P<251><223><228>"
+ ECHR 'P'
+ ETWO 'T', 'I'
+ ETWO 'O', 'N'
+ ETWO 'A', 'L'
+ EQUB VE
+
+ ECHR 'E'               \ Token 167:    "ECCENTRIC"
+ ECHR 'C'               \
+ ETWO 'C', 'E'          \ Encoded as:   "EC<233>NTRIC"
+ ECHR 'N'
+ ECHR 'T'
+ ECHR 'R'
+ ECHR 'I'
+ ECHR 'C'
+ EQUB VE
+
+ ETWO 'I', 'N'          \ Token 168:    "INGRAINED"
+ ECHR 'G'               \
+ ETWO 'R', 'A'          \ Encoded as:   "<240>G<248><240><252>"
+ ETWO 'I', 'N'
+ ETWO 'E', 'D'
+ EQUB VE
+
+ ERND 23                \ Token 169:    "[130-134]"
+ EQUB VE                \
+                        \ Encoded as:   "[23?]"
+
+ ECHR 'K'               \ Token 170:    "KILLER"
+ ETWO 'I', 'L'          \
+ ECHR 'L'               \ Encoded as:   "K<220>L<244>"
+ ETWO 'E', 'R'
+ EQUB VE
+
+ ECHR 'D'               \ Token 171:    "DEADLY"
+ ECHR 'E'               \
+ ECHR 'A'               \ Encoded as:   "DEADLY"
+ ECHR 'D'
+ ECHR 'L'
+ ECHR 'Y'
+ EQUB VE
+
+ ECHR 'E'               \ Token 172:    "EVIL"
+ ECHR 'V'               \
+ ETWO 'I', 'L'          \ Encoded as:   "EV<220>"
+ EQUB VE
+
+ ETWO 'L', 'E'          \ Token 173:    "LETHAL"
+ ETWO 'T', 'H'          \
+ ETWO 'A', 'L'          \ Encoded as:   "<229><226><228>"
+ EQUB VE
+
+ ECHR 'V'               \ Token 174:    "VICIOUS"
+ ECHR 'I'               \
+ ECHR 'C'               \ Encoded as:   "VICIO<236>"
+ ECHR 'I'
+ ECHR 'O'
+ ETWO 'U', 'S'
+ EQUB VE
+
+ ETWO 'I', 'T'          \ Token 175:    "ITS "
+ ECHR 'S'               \
+ ECHR ' '               \ Encoded as:   "<219>S "
+ EQUB VE
+
+ EJMP 13                \ Token 176:    "{lower case}
+ EJMP 14                \                {justify}
+ EJMP 19                \                {single cap}"
+ EQUB VE                \
+                        \ Encoded as:   "{13}{14}{19}"
+
+ ECHR '.'               \ Token 177:    ".{cr}
+ EJMP 12                \                {left align}"
+ EJMP 15                \
+ EQUB VE                \ Encoded as:   ".{12}{15}"
+
+ ECHR ' '               \ Token 178:    " AND "
+ ETWO 'A', 'N'          \
+ ECHR 'D'               \ Encoded as:   " <255>D "
+ ECHR ' '
+ EQUB VE
+
+ ECHR 'Y'               \ Token 179:    "YOU"
+ ETWO 'O', 'U'          \
+ EQUB VE                \ Encoded as:   "Y<217>"
+
+ ECHR 'P'               \ Token 180:    "PARKING METERS"
+ ETWO 'A', 'R'          \
+ ECHR 'K'               \ Encoded as:   "P<238>K[195]M<221><244>S"
+ ETOK 195
+ ECHR 'M'
+ ETWO 'E', 'T'
+ ETWO 'E', 'R'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'D'               \ Token 181:    "DUST CLOUDS"
+ ETWO 'U', 'S'          \
+ ECHR 'T'               \ Encoded as:   "D<236>T C<224>UDS"
+ ECHR ' '
+ ECHR 'C'
+ ETWO 'L', 'O'
+ ECHR 'U'
+ ECHR 'D'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'I'               \ Token 182:    "ICE BERGS"
+ ETWO 'C', 'E'          \
+ ECHR ' '               \ Encoded as:   "I<233> <247>RGS"
+ ETWO 'B', 'E'
+ ECHR 'R'
+ ECHR 'G'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'R'               \ Token 183:    "ROCK FORMATIONS"
+ ECHR 'O'               \
+ ECHR 'C'               \ Encoded as:   "ROCK F<253><239><251><223>S"
+ ECHR 'K'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ETWO 'M', 'A'
+ ETWO 'T', 'I'
+ ETWO 'O', 'N'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'V'               \ Token 184:    "VOLCANOES"
+ ECHR 'O'               \
+ ECHR 'L'               \ Encoded as:   "VOLCA<227><237>"
+ ECHR 'C'
+ ECHR 'A'
+ ETWO 'N', 'O'
+ ETWO 'E', 'S'
+ EQUB VE
+
+ ECHR 'P'               \ Token 185:    "PLANT"
+ ECHR 'L'               \
+ ETWO 'A', 'N'          \ Encoded as:   "PL<255>T"
+ ECHR 'T'
+ EQUB VE
+
+ ECHR 'T'               \ Token 186:    "TULIP"
+ ECHR 'U'               \
+ ECHR 'L'               \ Encoded as:   "TULIP"
+ ECHR 'I'
+ ECHR 'P'
+ EQUB VE
+
+ ECHR 'B'               \ Token 187:    "BANANA"
+ ETWO 'A', 'N'          \
+ ETWO 'A', 'N'          \ Encoded as:   "B<255><255>A"
+ ECHR 'A'
+ EQUB VE
+
+ ECHR 'C'               \ Token 188:    "CORN"
+ ETWO 'O', 'R'          \
+ ECHR 'N'               \ Encoded as:   "C<253>N"
+ EQUB VE
+
+ EJMP 18                \ Token 189:    "{random 1-8 letter word}WEED"
+ ECHR 'W'               \
+ ECHR 'E'               \ Encoded as:   "{18}WE<252>"
+ ETWO 'E', 'D'
+ EQUB VE
+
+ EJMP 18                \ Token 190:    "{random 1-8 letter word}"
+ EQUB VE                \
+                        \ Encoded as:   "{18}"
+
+ EJMP 17                \ Token 191:    "{all caps, system name adjective}
+ ECHR ' '               \                {random 1-8 letter word}"
+ EJMP 18                \
+ EQUB VE                \ Encoded as:   "{17} {18}"
+
+ EJMP 17                \ Token 192:    "{all caps, system name adjective}
+ ECHR ' '               \                [170-174]"
+ ERND 13                \
+ EQUB VE                \ Encoded as:   "{17} [13?]"
+
+ ETWO 'I', 'N'          \ Token 193:    "INHABITANT"
+ ECHR 'H'               \
+ ECHR 'A'               \ Encoded as:   "<240>HA<234>T<255>T"
+ ETWO 'B', 'I'
+ ECHR 'T'
+ ETWO 'A', 'N'
+ ECHR 'T'
+ EQUB VE
+
+ ETOK 191               \ Token 194:    "{all caps, system name adjective}
+ EQUB VE                \                {random 1-8 letter word}"
+                        \
+                        \ Encoded as:   "[191]"
+
+ ETWO 'I', 'N'          \ Token 195:    "ING "
+ ECHR 'G'               \
+ ECHR ' '               \ Encoded as:   "<240>G "
+ EQUB VE
+
+ ETWO 'E', 'D'          \ Token 196:    "ED "
+ ECHR ' '               \
+ EQUB VE                \ Encoded as:   "<252> "
+
+ EQUB VE                \ Token 197:    ""
+                        \
+                        \ Encoded as:   ""
+
+ EQUB VE                \ Token 198:    ""
+                        \
+                        \ Encoded as:   ""
+
+ EQUB VE                \ Token 199:    ""
+                        \
+                        \ Encoded as:   ""
+
+ ECHR ' '               \ Token 200:    " NAME? "
+ ECHR 'N'               \
+ ECHR 'A'               \ Encoded as:   " NAME? "
+ ECHR 'M'
+ ECHR 'E'
+ ECHR '?'
+ ECHR ' '
+ EQUB VE
+
+ ECHR ' '               \ Token 201:    " TO "
+ ECHR 'T'               \
+ ECHR 'O'               \ Encoded as:   " TO "
+ ECHR ' '
+ EQUB VE
+
+ ECHR ' '               \ Token 202:    " IS "
+ ECHR 'I'               \
+ ECHR 'S'               \ Encoded as:   " IS "
+ ECHR ' '
+ EQUB VE
+
+ ECHR 'W'               \ Token 203:    "WAS LAST SEEN AT {single cap}"
+ ECHR 'A'               \
+ ECHR 'S'               \ Encoded as:   "WAS <249><222> <218><246> <245> {19}"
+ ECHR ' '
+ ETWO 'L', 'A'
+ ETWO 'S', 'T'
+ ECHR ' '
+ ETWO 'S', 'E'
+ ETWO 'E', 'N'
+ ECHR ' '
+ ETWO 'A', 'T'
+ ECHR ' '
+ EJMP 19
+ EQUB VE
+
+ ECHR '.'               \ Token 204:    ".{cr}
+ EJMP 12                \                 {single cap}"
+ ECHR ' '               \
+ EJMP 19                \ Encoded as:   ".{12} {19}"
+ EQUB VE
+
+ ECHR 'D'               \ Token 205:    "DOCKED"
+ ECHR 'O'               \
+ ECHR 'C'               \ Encoded as:   "DOCK<252>"
+ ECHR 'K'
+ ETWO 'E', 'D'
+ EQUB VE
+
+ EJMP 1                 \ Token 206:    "{all caps}(Y/N)?"
+ ECHR '('               \
+ ECHR 'Y'               \ Encoded as:   "{1}(Y/N)?"
+ ECHR '/'
+ ECHR 'N'
+ ECHR ')'
+ ECHR '?'
+ EQUB VE
+
+ ECHR 'S'               \ Token 207:    "SHIP"
+ ECHR 'H'               \
+ ECHR 'I'               \ Encoded as:   "SHIP"
+ ECHR 'P'
+ EQUB VE
+
+ ECHR ' '               \ Token 208:    " A "
+ ECHR 'A'               \
+ ECHR ' '               \ Encoded as:   " A "
+ EQUB VE
+
+ ECHR ' '               \ Token 209:    " ERRIUS"
+ ETWO 'E', 'R'          \
+ ECHR 'R'               \ Encoded as:   " <244>RI<236>"
+ ECHR 'I'
+ ETWO 'U', 'S'
+ EQUB VE
+
+ ECHR ' '               \ Token 210:    " NEW "
+ ECHR 'N'               \
+ ECHR 'E'               \ Encoded as:   " NEW "
+ ECHR 'W'
+ ECHR ' '
+ EQUB VE
+
+ EJMP 2                 \ Token 211:    "{sentence case} HER MAJESTY'S SPACE
+ ECHR ' '               \                 NAVY{lower case}"
+ ECHR 'H'               \
+ ETWO 'E', 'R'          \ Encoded as:   "{2} H<244> <239>J<237>TY[39]S SPA<233>
+ ECHR ' '               \                 NAVY{13}"
+ ETWO 'M', 'A'
+ ECHR 'J'
+ ETWO 'E', 'S'
+ ECHR 'T'
+ ECHR 'Y'
+ ECHR '`'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'P'
+ ECHR 'A'
+ ETWO 'C', 'E'
+ ECHR ' '
+ ECHR 'N'
+ ECHR 'A'
+ ECHR 'V'
+ ECHR 'Y'
+ EJMP 13
+ EQUB VE
+
+ ETOK 177               \ Token 212:    ".{cr}
+ EJMP 8                 \                {left align}
+ EJMP 1                 \                {tab 6}{all caps}  MESSAGE ENDS"
+ ECHR ' '               \
+ ECHR ' '               \ Encoded as:   "[177]{8}{1}  M<237>SA<231> <246>DS"
+ ECHR 'M'
+ ETWO 'E', 'S'
+ ECHR 'S'
+ ECHR 'A'
+ ETWO 'G', 'E'
+ ECHR ' '
+ ETWO 'E', 'N'
+ ECHR 'D'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR ' '               \ Token 213:    " {single cap}COMMANDER {commander
+ ETOK 154               \                name}, I {lower case}AM{sentence case}
+ ECHR ' '               \                CAPTAIN {mission 1 captain's name}
+ EJMP 4                 \                {lower case}OF{sentence case} HER
+ ECHR ','               \                MAJESTY'S SPACE NAVY{lower case}"
+ ECHR ' '               \
+ ECHR 'I'               \ Encoded as:   " [154] {4}, I {13}AM{2} CAPTA<240> {27}
+ ECHR ' '               \                 {13}OF[211]"
+ EJMP 13
+ ECHR 'A'
+ ECHR 'M'
+ EJMP 2
+ ECHR ' '
+ ECHR 'C'
+ ECHR 'A'
+ ECHR 'P'
+ ECHR 'T'
+ ECHR 'A'
+ ETWO 'I', 'N'
+ ECHR ' '
+ EJMP 27
+ ECHR ' '
+ EJMP 13
+ ECHR 'O'
+ ECHR 'F'
+ ETOK 211
+ EQUB VE
+
+ EQUB VE                \ Token 214:    ""
+                        \
+                        \ Encoded as:   ""
+
+ EJMP 15                \ Token 215:    "{left align} UNKNOWN PLANET"
+ ECHR ' '               \
+ ECHR 'U'               \ Encoded as:   "{15} UNK<227>WN [145]"
+ ECHR 'N'
+ ECHR 'K'
+ ETWO 'N', 'O'
+ ECHR 'W'
+ ECHR 'N'
+ ECHR ' '
+ ETOK 145
+ EQUB VE
+
+ EJMP 9                 \ Token 216:    "{clear screen}
+ EJMP 8                 \                {tab 6}
+ EJMP 23                \                {move to row 10, white, lower case}
+ EJMP 30                \                {white}
+ EJMP 1                 \                {all caps}
+ ETWO 'I', 'N'          \                INCOMING MESSAGE"
+ ECHR 'C'               \
+ ECHR 'O'               \ Encoded as:   "{9}{8}{23}{30}{1}<240>COM[195]M<237>SA
+ ECHR 'M'               \                <231>"
+ ETOK 195
+ ECHR 'M'
+ ETWO 'E', 'S'
+ ECHR 'S'
+ ECHR 'A'
+ ETWO 'G', 'E'
+ EQUB VE
+
+ ECHR 'C'               \ Token 217:    "CURRUTHERS"
+ ECHR 'U'               \
+ ECHR 'R'               \ Encoded as:   "CURRU<226><244>S"
+ ECHR 'R'
+ ECHR 'U'
+ ETWO 'T', 'H'
+ ETWO 'E', 'R'
+ ECHR 'S'
+ EQUB VE
+
+ ECHR 'F'               \ Token 218:    "FOSDYKE SMYTHE"
+ ECHR 'O'               \
+ ECHR 'S'               \ Encoded as:   "FOSDYKE SMY<226>E"
+ ECHR 'D'
+ ECHR 'Y'
+ ECHR 'K'
+ ECHR 'E'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'M'
+ ECHR 'Y'
+ ETWO 'T', 'H'
+ ECHR 'E'
+ EQUB VE
+
+ ECHR 'F'               \ Token 219:    "FORTESQUE"
+ ETWO 'O', 'R'          \
+ ECHR 'T'               \ Encoded as:   "F<253>T<237><254>E"
+ ETWO 'E', 'S'
+ ETWO 'Q', 'U'
+ ECHR 'E'
+ EQUB VE
+
+ ETOK 203               \ Token 220:    "WAS LAST SEEN AT {single cap}REESDICE"
+ ETWO 'R', 'E'          \
+ ETWO 'E', 'S'          \ Encoded as:   "[203]<242><237><241><233>"
+ ETWO 'D', 'I'
+ ETWO 'C', 'E'
+ EQUB VE
+
+ ECHR 'I'               \ Token 221:    "IS BELIEVED TO HAVE JUMPED TO THIS
+ ECHR 'S'               \                GALAXY"
+ ECHR ' '               \
+ ETWO 'B', 'E'          \ Encoded as:   "IS <247>LIEV<252>[201]HA<250> JUMP<252>
+ ECHR 'L'               \                [201][148]G<228>AXY"
+ ECHR 'I'
+ ECHR 'E'
+ ECHR 'V'
+ ETWO 'E', 'D'
+ ETOK 201
+ ECHR 'H'
+ ECHR 'A'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ECHR 'J'
+ ECHR 'U'
+ ECHR 'M'
+ ECHR 'P'
+ ETWO 'E', 'D'
+ ETOK 201
+ ETOK 148
+ ECHR 'G'
+ ETWO 'A', 'L'
+ ECHR 'A'
+ ECHR 'X'
+ ECHR 'Y'
+ EQUB VE
+
+ EJMP 25                \ Token 222:    "{incoming message screen, wait 2s}
+ EJMP 9                 \                {clear screen}
+ EJMP 30                \                {white}
+ EJMP 29                \                {tab 6, white, lower case in words}
+ EJMP 14                \                {justify}
+ EJMP 2                 \                {sentence case}
+ ECHR 'G'               \                GOOD DAY {single cap}COMMANDER
+ ECHR 'O'               \                {commander name}.{cr}
+ ECHR 'O'               \                 {single cap}I{lower case} AM {single
+ ECHR 'D'               \                cap}AGENT{single cap}BLAKE OF {single
+ ECHR ' '               \                cap}NAVAL {single cap}INTELLEGENCE.{cr}
+ ECHR 'D'               \                 {single cap}AS YOU KNOW, THE {single
+ ECHR 'A'               \                cap}NAVY HAVE BEEN KEEPING THE {single
+ ECHR 'Y'               \                cap}THARGOIDS OFF YOUR ASS OUT IN DEEP
+ ECHR ' '               \                SPACE FOR MANY YEARS NOW. {single cap}
+ ETOK 154               \                WELL THE SITUATION HAS CHANGED.{cr}
+ ECHR ' '               \                 {single cap}OUR BOYS ARE READY FOR A
+ EJMP 4                 \                PUSH RIGHT TO THE HOME SYSTEM OF THOSE
+ ETOK 204               \                MOTHERS.{cr}
+ ECHR 'I'               \                 {single cap}
+ EJMP 13                \                {wait for keypress}
+ ECHR ' '               \                {clear screen}
+ ECHR 'A'               \                {white}
+ ECHR 'M'               \                {tab 6, white, lower case in words}
+ ECHR ' '               \                I{lower case} HAVE OBTAINED THE DEFENCE
+ EJMP 19                \                PLANS FOR THEIR {single cap}HIVE
+ ECHR 'A'               \                {single cap}WORLDS.{cr} {single cap}THE
+ ECHR 'G'               \                BEETLES KNOW WE'VE GOT SOMETHING BUT
+ ETWO 'E', 'N'          \                NOT WHAT.{cr} {single cap}IF {single
+ ECHR 'T'               \                cap}I TRANSMIT THE PLANS TO OUR BASE ON
+ ECHR ' '               \                {single cap}BIRERA THEY'LL INTERCEPT
+ EJMP 19                \                THE TRANSMISSION. {single cap}I NEED A
+ ECHR 'B'               \                SHIP TO MAKE THE RUN.{cr}
+ ETWO 'L', 'A'          \                 {single cap}YOU'RE ELECTED.{cr}
+ ECHR 'K'               \                 {single cap}THE PLANS ARE UNIPULSE
+ ECHR 'E'               \                CODED WITHIN THIS TRANSMISSION.{cr}
+ ECHR ' '               \                 {single cap}{tab 6}YOU WILL BE PAID.{cr}
+ ECHR 'O'               \                 {single cap}    {single cap}GOOD LUCK 
+ ECHR 'F'               \                {single cap}COMMANDER.{cr}
+ ECHR ' '               \                {left align}
+ EJMP 19                \                {tab 6}{all caps}  MESSAGE ENDS
+ ECHR 'N'               \                {wait for keypress}"
+ ECHR 'A'               \                
+ ECHR 'V'               \ Encoded as:   "{25}{9}{30}{29}{14}{2}GOOD DAY [154]
+ ECHR 'A'               \                 {4}[204]I{13} AM {19}AG<246>T {19}B
+ ECHR 'L'               \                <249>KE OF {19}NAVAL {19}<240>TEL<229>
+ ECHR ' '               \                G<246><233>[204]AS [179] K<227>W, [147]
+ EJMP 19                \                {19}NAVY HA<250> <247><246> KEEP[195]
+ ETWO 'I', 'N'          \                [147]{19}<226><238>GOIDS OFF [179]R ASS
+ ECHR 'T'               \                 <217>T <240> DEEP SPA<233> F<253>
+ ECHR 'E'               \                 <239>NY YE<238>S <227>W. {19}WELL
+ ECHR 'L'               \                 [147]S<219>UA<251><223> HAS CH<255>G
+ ETWO 'L', 'E'          \                <252>[204]<217>R BOYS <238>E <242>ADY F
+ ECHR 'G'               \                <253>[208]PUSH RIGHT[201][147]HOME
+ ETWO 'E', 'N'          \                 SYSTEM OF <226>O<218> MO<226><244>S
+ ETWO 'C', 'E'          \                [204]{24}{9}{30}{29}I{13} HA<250> OBTA
+ ETOK 204               \                <240>[196][147]DEF<246><233> P<249>NS F
+ ECHR 'A'               \                <253> <226>EIR {19}HI<250> {19}W<253>LD
+ ECHR 'S'               \                S[204][147]<247><221><229>S K<227>W WE
+ ECHR ' '               \                [39]<250> GOT <235>ME<226>[195]BUT
+ ETOK 179               \                 <227>T WH<245>[204]IF {19}I T<248>NSM
+ ECHR ' '               \                <219> [147]P<249>NS[201]<217>R BA<218>
+ ECHR 'K'               \                 <223> {19}<234><242><248> <226>EY[39]L
+ ETWO 'N', 'O'          \                L <240>T<244><233>PT [147]TR<255>SMISSI
+ ECHR 'W'               \                <223>. {19}I NE<252>[208][207][201]
+ ECHR ','               \                <239>KE [147]RUN[204][179][39]<242> E
+ ECHR ' '               \                <229>CT<252>[204][147]P<249>NS A<242>
+ ETOK 147               \                 UNIPUL<218> COD[196]WI<226><240> [148]
+ EJMP 19                \                TR<255>SMISSI<223>[204]{8}[179] W<220>L
+ ECHR 'N'               \                 <247> PAID[204]    {19}GOOD LUCK [154]
+ ECHR 'A'               \                [212]{24}"
+ ECHR 'V'
+ ECHR 'Y'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'A'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ETWO 'B', 'E'
+ ETWO 'E', 'N'
+ ECHR ' '
+ ECHR 'K'
+ ECHR 'E'
+ ECHR 'E'
+ ECHR 'P'
+ ETOK 195
+ ETOK 147
+ EJMP 19
+ ETWO 'T', 'H'
+ ETWO 'A', 'R'
+ ECHR 'G'
+ ECHR 'O'
+ ECHR 'I'
+ ECHR 'D'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'O'
+ ECHR 'F'
+ ECHR 'F'
+ ECHR ' '
+ ETOK 179
+ ECHR 'R'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'S'
+ ECHR 'S'
+ ECHR ' '
+ ETWO 'O', 'U'
+ ECHR 'T'
+ ECHR ' '
+ ETWO 'I', 'N'
+ ECHR ' '
+ ECHR 'D'
+ ECHR 'E'
+ ECHR 'E'
+ ECHR 'P'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'P'
+ ECHR 'A'
+ ETWO 'C', 'E'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ETWO 'M', 'A'
+ ECHR 'N'
+ ECHR 'Y'
+ ECHR ' '
+ ECHR 'Y'
+ ECHR 'E'
+ ETWO 'A', 'R'
+ ECHR 'S'
+ ECHR ' '
+ ETWO 'N', 'O'
+ ECHR 'W'
+ ECHR '.'
+ ECHR ' '
+ EJMP 19
+ ECHR 'W'
+ ECHR 'E'
+ ECHR 'L'
+ ECHR 'L'
+ ECHR ' '
+ ETOK 147
+ ECHR 'S'
+ ETWO 'I', 'T'
+ ECHR 'U'
+ ECHR 'A'
+ ETWO 'T', 'I'
+ ETWO 'O', 'N'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'A'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'C'
+ ECHR 'H'
+ ETWO 'A', 'N'
+ ECHR 'G'
+ ETWO 'E', 'D'
+ ETOK 204
+ ETWO 'O', 'U'
+ ECHR 'R'
+ ECHR ' '
+ ECHR 'B'
+ ECHR 'O'
+ ECHR 'Y'
+ ECHR 'S'
+ ECHR ' '
+ ETWO 'A', 'R'
+ ECHR 'E'
+ ECHR ' '
+ ETWO 'R', 'E'
+ ECHR 'A'
+ ECHR 'D'
+ ECHR 'Y'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ETOK 208
+ ECHR 'P'
+ ECHR 'U'
+ ECHR 'S'
+ ECHR 'H'
+ ECHR ' '
+ ECHR 'R'
+ ECHR 'I'
+ ECHR 'G'
+ ECHR 'H'
+ ECHR 'T'
+ ETOK 201
+ ETOK 147
+ ECHR 'H'
+ ECHR 'O'
+ ECHR 'M'
+ ECHR 'E'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'Y'
+ ECHR 'S'
+ ECHR 'T'
+ ECHR 'E'
+ ECHR 'M'
+ ECHR ' '
+ ECHR 'O'
+ ECHR 'F'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ECHR 'O'
+ ETWO 'S', 'E'
+ ECHR ' '
+ ECHR 'M'
+ ECHR 'O'
+ ETWO 'T', 'H'
+ ETWO 'E', 'R'
+ ECHR 'S'
+ ETOK 204
+ EJMP 24
+ EJMP 9
+ EJMP 30
+ EJMP 29
+ ECHR 'I'
+ EJMP 13
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'A'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ECHR 'O'
+ ECHR 'B'
+ ECHR 'T'
+ ECHR 'A'
+ ETWO 'I', 'N'
+ ETOK 196
+ ETOK 147
+ ECHR 'D'
+ ECHR 'E'
+ ECHR 'F'
+ ETWO 'E', 'N'
+ ETWO 'C', 'E'
+ ECHR ' '
+ ECHR 'P'
+ ETWO 'L', 'A'
+ ECHR 'N'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ECHR 'E'
+ ECHR 'I'
+ ECHR 'R'
+ ECHR ' '
+ EJMP 19
+ ECHR 'H'
+ ECHR 'I'
+ ETWO 'V', 'E'
+ ECHR ' '
+ EJMP 19
+ ECHR 'W'
+ ETWO 'O', 'R'
+ ECHR 'L'
+ ECHR 'D'
+ ECHR 'S'
+ ETOK 204
+ ETOK 147
+ ETWO 'B', 'E'
+ ETWO 'E', 'T'
+ ETWO 'L', 'E'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'K'
+ ETWO 'N', 'O'
+ ECHR 'W'
+ ECHR ' '
+ ECHR 'W'
+ ECHR 'E'
+ ECHR '`'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ECHR 'G'
+ ECHR 'O'
+ ECHR 'T'
+ ECHR ' '
+ ETWO 'S', 'O'
+ ECHR 'M'
+ ECHR 'E'
+ ETWO 'T', 'H'
+ ETOK 195
+ ECHR 'B'
+ ECHR 'U'
+ ECHR 'T'
+ ECHR ' '
+ ETWO 'N', 'O'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'W'
+ ECHR 'H'
+ ETWO 'A', 'T'
+ ETOK 204
+ ECHR 'I'
+ ECHR 'F'
+ ECHR ' '
+ EJMP 19
+ ECHR 'I'
+ ECHR ' '
+ ECHR 'T'
+ ETWO 'R', 'A'
+ ECHR 'N'
+ ECHR 'S'
+ ECHR 'M'
+ ETWO 'I', 'T'
+ ECHR ' '
+ ETOK 147
+ ECHR 'P'
+ ETWO 'L', 'A'
+ ECHR 'N'
+ ECHR 'S'
+ ETOK 201
+ ETWO 'O', 'U'
+ ECHR 'R'
+ ECHR ' '
+ ECHR 'B'
+ ECHR 'A'
+ ETWO 'S', 'E'
+ ECHR ' '
+ ETWO 'O', 'N'
+ ECHR ' '
+ EJMP 19
+ ETWO 'B', 'I'
+ ETWO 'R', 'E'
+ ETWO 'R', 'A'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ECHR 'E'
+ ECHR 'Y'
+ ECHR '`'
+ ECHR 'L'
+ ECHR 'L'
+ ECHR ' '
+ ETWO 'I', 'N'
+ ECHR 'T'
+ ETWO 'E', 'R'
+ ETWO 'C', 'E'
+ ECHR 'P'
+ ECHR 'T'
+ ECHR ' '
+ ETOK 147
+ ECHR 'T'
+ ECHR 'R'
+ ETWO 'A', 'N'
+ ECHR 'S'
+ ECHR 'M'
+ ECHR 'I'
+ ECHR 'S'
+ ECHR 'S'
+ ECHR 'I'
+ ETWO 'O', 'N'
+ ECHR '.'
+ ECHR ' '
+ EJMP 19
+ ECHR 'I'
+ ECHR ' '
+ ECHR 'N'
+ ECHR 'E'
+ ETWO 'E', 'D'
+ ETOK 208
+ ETOK 207
+ ETOK 201
+ ETWO 'M', 'A'
+ ECHR 'K'
+ ECHR 'E'
+ ECHR ' '
+ ETOK 147
+ ECHR 'R'
+ ECHR 'U'
+ ECHR 'N'
+ ETOK 204
+ ETOK 179
+ ECHR '`'
+ ETWO 'R', 'E'
+ ECHR ' '
+ ECHR 'E'
+ ETWO 'L', 'E'
+ ECHR 'C'
+ ECHR 'T'
+ ETWO 'E', 'D'
+ ETOK 204
+ ETOK 147
+ ECHR 'P'
+ ETWO 'L', 'A'
+ ECHR 'N'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'A'
+ ETWO 'R', 'E'
+ ECHR ' '
+ ECHR 'U'
+ ECHR 'N'
+ ECHR 'I'
+ ECHR 'P'
+ ECHR 'U'
+ ECHR 'L'
+ ETWO 'S', 'E'
+ ECHR ' '
+ ECHR 'C'
+ ECHR 'O'
+ ECHR 'D'
+ ETOK 196
+ ECHR 'W'
+ ECHR 'I'
+ ETWO 'T', 'H'
+ ETWO 'I', 'N'
+ ECHR ' '
+ ETOK 148
+ ECHR 'T'
+ ECHR 'R'
+ ETWO 'A', 'N'
+ ECHR 'S'
+ ECHR 'M'
+ ECHR 'I'
+ ECHR 'S'
+ ECHR 'S'
+ ECHR 'I'
+ ETWO 'O', 'N'
+ ETOK 204
+ EJMP 8
+ ETOK 179
+ ECHR ' '
+ ECHR 'W'
+ ETWO 'I', 'L'
+ ECHR 'L'
+ ECHR ' '
+ ETWO 'B', 'E'
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'A'
+ ECHR 'I'
+ ECHR 'D'
+ ETOK 204
+ ECHR ' '
+ ECHR ' '
+ ECHR ' '
+ ECHR ' '
+ EJMP 19
+ ECHR 'G'
+ ECHR 'O'
+ ECHR 'O'
+ ECHR 'D'
+ ECHR ' '
+ ECHR 'L'
+ ECHR 'U'
+ ECHR 'C'
+ ECHR 'K'
+ ECHR ' '
+ ETOK 154
+ ETOK 212
+ EJMP 24
+ EQUB VE
+
+ EJMP 25                \ Token 223:    "{incoming message screen, wait 2s}
+ EJMP 9                 \                {clear screen}
+ EJMP 29                \                {tab 6, white, lower case in words}
+ EJMP 30                \                {white}
+ EJMP 8                 \                {tab 6}
+ EJMP 14                \                {justify}
+ EJMP 13                \                {lower case}
+ EJMP 19                \                {single cap}WELL DONE {single cap}
+ ECHR 'W'               \                COMMANDER.{cr}
+ ECHR 'E'               \                 {single cap}YOU HAVE SERVED US WELL
+ ECHR 'L'               \                AND WE SHALL REMEMBER.{cr}
+ ECHR 'L'               \                 {single cap}WE DID NOT EXPECT THE
+ ECHR ' '               \                 {single cap}THARGOIDS TO FIND OUT
+ ECHR 'D'               \                ABOUT YOU.{cr}
+ ETWO 'O', 'N'          \                 {single cap}FOR THE MOMENT PLEASE
+ ECHR 'E'               \                ACCEPT THIS {single cap}NAVY {standard
+ ECHR ' '               \                tokens, sentence case}EXTRA ENERGY
+ ETOK 154               \                UNIT{extended tokens} AS PAYMENT.{cr}
+ ETOK 204               \                {left align}
+ ETOK 179               \                {tab 6}{all caps}  MESSAGE ENDS
+ ECHR ' '               \                {wait for keypress}"
+ ECHR 'H'               \                
+ ECHR 'A'               \ Encoded as:   "{25}{9}{29}{30}{8}{14}{13}{19}WELL D
+ ETWO 'V', 'E'          \                <223>E [154][204][179] HA<250> <218>RV
+ ECHR ' '               \                [196]US WELL[178]WE SH<228>L <242>MEMB
+ ETWO 'S', 'E'          \                <244>[204]WE DID <227>T EXPECT [147]
+ ECHR 'R'               \                {19}<226><238>GOIDS[201]F<240>D <217>T
+ ECHR 'V'               \                 AB<217>T [179][204]F<253> [147]MOM
+ ETOK 196               \                <246>T P<229>A<218> AC<233>PT [148]{19}
+ ECHR 'U'               \                NAVY {6}[114]{5} AS PAYM<246>T[212]
+ ECHR 'S'               \                {24}"
+ ECHR ' '
+ ECHR 'W'
+ ECHR 'E'
+ ECHR 'L'
+ ECHR 'L'
+ ETOK 178
+ ECHR 'W'
+ ECHR 'E'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'H'
+ ETWO 'A', 'L'
+ ECHR 'L'
+ ECHR ' '
+ ETWO 'R', 'E'
+ ECHR 'M'
+ ECHR 'E'
+ ECHR 'M'
+ ECHR 'B'
+ ETWO 'E', 'R'
+ ETOK 204
+ ECHR 'W'
+ ECHR 'E'
+ ECHR ' '
+ ECHR 'D'
+ ECHR 'I'
+ ECHR 'D'
+ ECHR ' '
+ ETWO 'N', 'O'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'E'
+ ECHR 'X'
+ ECHR 'P'
+ ECHR 'E'
+ ECHR 'C'
+ ECHR 'T'
+ ECHR ' '
+ ETOK 147
+ EJMP 19
+ ETWO 'T', 'H'
+ ETWO 'A', 'R'
+ ECHR 'G'
+ ECHR 'O'
+ ECHR 'I'
+ ECHR 'D'
+ ECHR 'S'
+ ETOK 201
+ ECHR 'F'
+ ETWO 'I', 'N'
+ ECHR 'D'
+ ECHR ' '
+ ETWO 'O', 'U'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'B'
+ ETWO 'O', 'U'
+ ECHR 'T'
+ ECHR ' '
+ ETOK 179
+ ETOK 204
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ETOK 147
+ ECHR 'M'
+ ECHR 'O'
+ ECHR 'M'
+ ETWO 'E', 'N'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'P'
+ ETWO 'L', 'E'
+ ECHR 'A'
+ ETWO 'S', 'E'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'C'
+ ETWO 'C', 'E'
+ ECHR 'P'
+ ECHR 'T'
+ ECHR ' '
+ ETOK 148
+ EJMP 19
+ ECHR 'N'
+ ECHR 'A'
+ ECHR 'V'
+ ECHR 'Y'
+ ECHR ' '
+ EJMP 6
  TOKN 114
+ EJMP 5
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'A'
+ ECHR 'Y'
+ ECHR 'M'
+ ETWO 'E', 'N'
+ ECHR 'T'
+ ETOK 212
+ EJMP 24
  EQUB VE
 
- TOKN 'G'
- TOKN 242
- TOKN 245
- EQUB VE
-
- TOKN 'V'
- TOKN 'A'
- TOKN 222
- EQUB VE
-
- TOKN 'P'
- TOKN 240
- TOKN 'K'
- EQUB VE
-
- TOKN 2
- TOKN 119
- TOKN ' '
- TOKN 118
- TOKN 13
- TOKN ' '
- TOKN 185
- TOKN 'A'
- TOKN 251
- TOKN 223
- TOKN 'S'
- EQUB VE
-
- TOKN 156
- TOKN 'S'
- EQUB VE
-
- TOKN 117
- EQUB VE
-
- TOKN 128
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN 237
- TOKN 'T'
- TOKN 'S'
- EQUB VE
-
- TOKN 'O'
- TOKN 233
- TOKN 255
- TOKN 'S'
- EQUB VE
-
- TOKN 'S'
- TOKN 'H'
- TOKN 'Y'
- TOKN 'N'
- TOKN 237
- TOKN 'S'
- EQUB VE
-
- TOKN 'S'
- TOKN 220
- TOKN 'L'
- TOKN 240
- TOKN 237
- TOKN 'S'
- EQUB VE
-
- TOKN 239
- TOKN 'T'
- TOKN 195
- TOKN 'T'
- TOKN 248
- TOKN 241
- TOKN 251
- TOKN 223
- TOKN 'S'
- EQUB VE
-
- TOKN 224
- TOKN 245
- TOKN 'H'
- TOKN 195
- TOKN 'O'
- TOKN 'F'
- TOKN ' '
- TOKN 100
- EQUB VE
-
- TOKN 224
- TOKN 250
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN ' '
- TOKN 100
- EQUB VE
-
- TOKN 'F'
- TOKN 'O'
- TOKN 'O'
- TOKN 'D'
- TOKN ' '
- TOKN 'B'
- TOKN 229
- TOKN 'N'
- TOKN 'D'
- TOKN 244
- TOKN 'S'
- EQUB VE
-
- TOKN 'T'
- TOKN 217
- TOKN 'R'
- TOKN 'I'
- TOKN 222
- TOKN 'S'
- EQUB VE
-
- TOKN 'P'
- TOKN 'O'
- TOKN 221
- TOKN 'R'
- TOKN 'Y'
- EQUB VE
-
- TOKN 241
- TOKN 'S'
- TOKN 'C'
- TOKN 'O'
- TOKN 'S'
- EQUB VE
-
- TOKN 108
- EQUB VE
-
- TOKN 'W'
- TOKN 228
- TOKN 'K'
- TOKN 195
- TOKN 158
- EQUB VE
-
- TOKN 'C'
- TOKN 248
- TOKN 'B'
- EQUB VE
-
- TOKN 'B'
- TOKN 245
- EQUB VE
-
- TOKN 224
- TOKN 'B'
- TOKN 222
- EQUB VE
-
- TOKN 18
- EQUB VE
-
- TOKN 247
- TOKN 'S'
- TOKN 221
- EQUB VE
-
- TOKN 'P'
- TOKN 249
- TOKN 'G'
- TOKN 'U'
- TOKN 252
- EQUB VE
-
- TOKN 248
- TOKN 'V'
- TOKN 'A'
- TOKN 'G'
- TOKN 252
- EQUB VE
-
- TOKN 'C'
- TOKN 'U'
- TOKN 'R'
- TOKN 'S'
- TOKN 252
- EQUB VE
-
- TOKN 'S'
- TOKN 'C'
- TOKN 217
- TOKN 'R'
- TOKN 'G'
- TOKN 252
- EQUB VE
-
- TOKN 113
- TOKN ' '
- TOKN 'C'
- TOKN 'I'
- TOKN 'V'
- TOKN 220
- TOKN ' '
- TOKN 'W'
- TOKN 238
- EQUB VE
-
- TOKN 104
- TOKN ' '
- TOKN 95
- TOKN ' '
- TOKN 96
- TOKN 'S'
- EQUB VE
-
- TOKN 'A'
- TOKN ' '
- TOKN 104
- TOKN ' '
- TOKN 241
- TOKN 218
- TOKN 'A'
- TOKN 218
- EQUB VE
-
- TOKN 113
- TOKN ' '
- TOKN 'E'
- TOKN 238
- TOKN 226
- TOKN 254
- TOKN 'A'
- TOKN 'K'
- TOKN 237
- EQUB VE
-
- TOKN 113
- TOKN ' '
- TOKN 235
- TOKN 249
- TOKN 'R'
- TOKN ' '
- TOKN 'A'
- TOKN 'C'
- TOKN 251
- TOKN 'V'
- TOKN 219
- TOKN 'Y'
- EQUB VE
-
- TOKN 175
- TOKN 93
- TOKN ' '
- TOKN 94
- EQUB VE
-
- TOKN 147
- TOKN 17
- TOKN ' '
- TOKN 95
- TOKN ' '
- TOKN 96
- EQUB VE
-
- TOKN 175
- TOKN 193
- TOKN 'S'
- TOKN 39
- TOKN ' '
- TOKN 98
- TOKN ' '
- TOKN 99
- EQUB VE
-
- TOKN 2
- TOKN 122
- TOKN 13
- EQUB VE
-
- TOKN 175
- TOKN 107
- TOKN ' '
- TOKN 108
- EQUB VE
-
- TOKN 'J'
- TOKN 'U'
- TOKN 'I'
- TOKN 233
- EQUB VE
-
- TOKN 'B'
- TOKN 248
- TOKN 'N'
- TOKN 'D'
- TOKN 'Y'
- EQUB VE
-
- TOKN 'W'
- TOKN 245
- TOKN 244
- EQUB VE
-
- TOKN 'B'
- TOKN 242
- TOKN 'W'
- EQUB VE
-
- TOKN 'G'
- TOKN 238
- TOKN 'G'
- TOKN 229
- TOKN ' '
- TOKN 'B'
- TOKN 249
- TOKN 222
- TOKN 244
- TOKN 'S'
- EQUB VE
-
- TOKN 18
- EQUB VE
-
- TOKN 17
- TOKN ' '
- TOKN 96
- EQUB VE
-
- TOKN 17
- TOKN ' '
- TOKN 18
- EQUB VE
-
- TOKN 17
- TOKN ' '
- TOKN 104
- EQUB VE
-
- TOKN 104
- TOKN ' '
- TOKN 18
- EQUB VE
-
- TOKN 'F'
- TOKN 216
- TOKN 'U'
- TOKN 224
- TOKN 236
- EQUB VE
-
- TOKN 'E'
- TOKN 'X'
- TOKN 'O'
- TOKN 251
- TOKN 'C'
- EQUB VE
-
- TOKN 'H'
- TOKN 'O'
- TOKN 'O'
- TOKN 'P'
- TOKN 'Y'
- EQUB VE
-
- TOKN 'U'
- TOKN 225
- TOKN 'S'
- TOKN 'U'
- TOKN 228
- EQUB VE
-
- TOKN 'E'
- TOKN 'X'
- TOKN 'C'
- TOKN 219
- TOKN 240
- TOKN 'G'
- EQUB VE
-
- TOKN 'C'
- TOKN 'U'
- TOKN 'I'
- TOKN 'S'
- TOKN 240
- TOKN 'E'
- EQUB VE
-
- TOKN 'N'
- TOKN 'I'
- TOKN 'G'
- TOKN 'H'
- TOKN 'T'
- TOKN ' '
- TOKN 'L'
- TOKN 'I'
- TOKN 'F'
- TOKN 'E'
- EQUB VE
-
- TOKN 'C'
- TOKN 'A'
- TOKN 'S'
- TOKN 'I'
- TOKN 227
- TOKN 'S'
- EQUB VE
-
- TOKN 'S'
- TOKN 219
- TOKN ' '
- TOKN 'C'
- TOKN 'O'
- TOKN 'M'
- TOKN 'S'
- EQUB VE
-
- TOKN 2
- TOKN 122
- TOKN 13
- EQUB VE
-
- TOKN 3
- EQUB VE
-
- TOKN 147
- TOKN 145
- TOKN ' '
- TOKN 3
- EQUB VE
-
- TOKN 147
- TOKN 146
- TOKN ' '
- TOKN 3
- EQUB VE
-
- TOKN 148
- TOKN 145
- EQUB VE
-
- TOKN 148
- TOKN 146
- EQUB VE
-
- TOKN 'S'
- TOKN 223
- TOKN ' '
- TOKN 'O'
- TOKN 'F'
- TOKN 208
- TOKN 'B'
- TOKN 219
- TOKN 'C'
- TOKN 'H'
- EQUB VE
-
- TOKN 'S'
- TOKN 'C'
- TOKN 217
- TOKN 'N'
- TOKN 'D'
- TOKN 242
- TOKN 'L'
- EQUB VE
-
- TOKN 'B'
- TOKN 249
- TOKN 'C'
- TOKN 'K'
- TOKN 'G'
- TOKN 'U'
- TOKN 238
- TOKN 'D'
- EQUB VE
-
- TOKN 'R'
- TOKN 'O'
- TOKN 'G'
- TOKN 'U'
- TOKN 'E'
- EQUB VE
-
- TOKN 'W'
- TOKN 'H'
- TOKN 253
- TOKN 237
- TOKN 223
- TOKN ' '
- TOKN 247
- TOKN 221
- TOKN 229
- TOKN ' '
- TOKN 'H'
- TOKN 'E'
- TOKN 'A'
- TOKN 'D'
- TOKN 196
- TOKN 'F'
- TOKN 249
- TOKN 'P'
- TOKN ' '
- TOKN 'E'
- TOKN 238
- TOKN 39
- TOKN 'D'
- TOKN ' '
- TOKN 'K'
- TOKN 'N'
- TOKN 'A'
- TOKN 250
- EQUB VE
-
- TOKN 'N'
- TOKN ' '
- TOKN 'U'
- TOKN 'N'
- TOKN 242
- TOKN 239
- TOKN 'R'
- TOKN 'K'
- TOKN 216
- TOKN 229
- EQUB VE
-
- TOKN ' '
- TOKN 'B'
- TOKN 253
- TOKN 240
- TOKN 'G'
- EQUB VE
-
- TOKN ' '
- TOKN 'D'
- TOKN 'U'
- TOKN 'L'
- TOKN 'L'
- EQUB VE
-
- TOKN ' '
- TOKN 'T'
- TOKN 'E'
- TOKN 241
- TOKN 'O'
- TOKN 236
- EQUB VE
-
- TOKN ' '
- TOKN 242
- TOKN 'V'
- TOKN 'O'
- TOKN 'L'
- TOKN 'T'
- TOKN 240
- TOKN 'G'
- EQUB VE
-
- TOKN 145
- EQUB VE
-
- TOKN 146
- EQUB VE
-
- TOKN 'P'
- TOKN 249
- TOKN 233
- EQUB VE
-
- TOKN 'L'
- TOKN 219
- TOKN 'T'
- TOKN 229
- TOKN ' '
- TOKN 145
- EQUB VE
-
- TOKN 'D'
- TOKN 'U'
- TOKN 'M'
- TOKN 'P'
- EQUB VE
-
- TOKN 'I'
- TOKN ' '
- TOKN 'H'
- TOKN 'E'
- TOKN 238
- TOKN 208
- TOKN 114
- TOKN ' '
- TOKN 224
- TOKN 'O'
- TOKN 'K'
- TOKN 195
- TOKN 207
- TOKN ' '
- TOKN 'A'
- TOKN 'P'
- TOKN 'P'
- TOKN 'E'
- TOKN 238
- TOKN 196
- TOKN 245
- TOKN 209
- EQUB VE
-
- TOKN 'Y'
- TOKN 'E'
- TOKN 'A'
- TOKN 'H'
- TOKN ','
- TOKN ' '
- TOKN 'I'
- TOKN ' '
- TOKN 'H'
- TOKN 'E'
- TOKN 238
- TOKN 208
- TOKN 114
- TOKN ' '
- TOKN 207
- TOKN ' '
- TOKN 229
- TOKN 'F'
- TOKN 'T'
- TOKN 209
- TOKN 208
- TOKN ' '
- TOKN 'W'
- TOKN 'H'
- TOKN 'I'
- TOKN 229
- TOKN ' '
- TOKN 'B'
- TOKN 'A'
- TOKN 'C'
- TOKN 'K'
- EQUB VE
-
- TOKN 'G'
- TOKN 221
- TOKN ' '
- TOKN 179
- TOKN 'R'
- TOKN ' '
- TOKN 'I'
- TOKN 'R'
- TOKN 223
- TOKN ' '
- TOKN 'A'
- TOKN 'S'
- TOKN 'S'
- TOKN ' '
- TOKN 'O'
- TOKN 'V'
- TOKN 244
- TOKN ' '
- TOKN 'T'
- TOKN 'O'
- TOKN 209
- EQUB VE
-
- TOKN 235
- TOKN 'M'
- TOKN 'E'
- TOKN ' '
- TOKN 115
- TOKN 210
- TOKN 207
- TOKN ' '
- TOKN 'W'
- TOKN 'A'
- TOKN 'S'
- TOKN ' '
- TOKN 218
- TOKN 246
- TOKN ' '
- TOKN 245
- TOKN 209
- EQUB VE
-
- TOKN 'T'
- TOKN 'R'
- TOKN 'Y'
- TOKN 209
- EQUB VE
-
-\EQUB 0 EOR VE
- EQUB VE
-
-\EQUB 0 EOR VE
- EQUB VE
-
-\EQUB 0 EOR VE
- EQUB VE
-
-\EQUB 0 EOR VE
- EQUB VE
-
- TOKN 'W'
- TOKN 'A'
- TOKN 'S'
- TOKN 'P'
- EQUB VE
-
- TOKN 'M'
- TOKN 'O'
- TOKN 226
- EQUB VE
-
- TOKN 'G'
- TOKN 'R'
- TOKN 'U'
- TOKN 'B'
- EQUB VE
-
- TOKN 255
- TOKN 'T'
- EQUB VE
-
- TOKN 18
- EQUB VE
-
- TOKN 'P'
- TOKN 'O'
- TOKN 221
- EQUB VE
-
- TOKN 238
- TOKN 'T'
- TOKN 'S'
- TOKN ' '
- TOKN 'G'
- TOKN 248
- TOKN 'D'
- TOKN 'U'
- TOKN 245
- TOKN 'E'
- EQUB VE
-
- TOKN 'Y'
- TOKN 'A'
- TOKN 'K'
- EQUB VE
-
- TOKN 'S'
- TOKN 'N'
- TOKN 'A'
- TOKN 220
- EQUB VE
-
- TOKN 'S'
- TOKN 'L'
- TOKN 'U'
- TOKN 'G'
- EQUB VE
-
- TOKN 'T'
- TOKN 'R'
- TOKN 'O'
- TOKN 'P'
- TOKN 'I'
- TOKN 'C'
- TOKN 228
- EQUB VE
-
- TOKN 'D'
- TOKN 246
- TOKN 218
- EQUB VE
-
- TOKN 248
- TOKN 240
- EQUB VE
-
- TOKN 'I'
- TOKN 'M'
- TOKN 'P'
- TOKN 246
- TOKN 221
- TOKN 248
- TOKN 'B'
- TOKN 229
- EQUB VE
-
- TOKN 'E'
- TOKN 'X'
- TOKN 'U'
- TOKN 247
- TOKN 248
- TOKN 'N'
- TOKN 'T'
- EQUB VE
-
- TOKN 'F'
- TOKN 'U'
- TOKN 'N'
- TOKN 'N'
- TOKN 'Y'
- EQUB VE
-
- TOKN 'W'
- TOKN 'I'
- TOKN 244
- TOKN 'D'
- EQUB VE
-
- TOKN 'U'
- TOKN 225
- TOKN 'S'
- TOKN 'U'
- TOKN 228
- EQUB VE
-
- TOKN 222
- TOKN 248
- TOKN 'N'
- TOKN 231
- EQUB VE
-
- TOKN 'P'
- TOKN 'E'
- TOKN 'C'
- TOKN 'U'
- TOKN 'L'
- TOKN 'I'
- TOKN 238
- EQUB VE
-
- TOKN 'F'
- TOKN 242
- TOKN 254
- TOKN 246
- TOKN 'T'
- EQUB VE
-
- TOKN 'O'
- TOKN 'C'
- TOKN 'C'
- TOKN 'A'
- TOKN 'S'
- TOKN 'I'
- TOKN 223
- TOKN 228
- EQUB VE
-
- TOKN 'U'
- TOKN 'N'
- TOKN 'P'
- TOKN 242
- TOKN 241
- TOKN 'C'
- TOKN 'T'
- TOKN 216
- TOKN 229
- EQUB VE
-
- TOKN 'D'
- TOKN 242
- TOKN 'A'
- TOKN 'D'
- TOKN 'F'
- TOKN 'U'
- TOKN 'L'
- EQUB VE
-
- TOKN 171
- EQUB VE
-
- TOKN 92
- TOKN ' '
- TOKN 91
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN ' '
- TOKN 101
- EQUB VE
-
- TOKN 140
- TOKN 178
- TOKN 101
- EQUB VE
-
- TOKN 102
- TOKN ' '
- TOKN 'B'
- TOKN 'Y'
- TOKN ' '
- TOKN 103
- EQUB VE
-
- TOKN 140
- TOKN ' '
- TOKN 'B'
- TOKN 'U'
- TOKN 'T'
- TOKN ' '
- TOKN 142
- EQUB VE
-
- TOKN ' '
- TOKN 'A'
- TOKN 111
- TOKN ' '
- TOKN 112
- EQUB VE
-
- TOKN 'P'
- TOKN 'L'
- TOKN 255
- TOKN 221
- EQUB VE
-
- TOKN 'W'
- TOKN 253
- TOKN 'L'
- TOKN 'D'
- EQUB VE
-
- TOKN 226
- TOKN 'E'
- TOKN ' '
- EQUB VE
-
- TOKN 226
- TOKN 'I'
- TOKN 'S'
- TOKN ' '
- EQUB VE
-
- TOKN 224
- TOKN 'A'
- TOKN 'D'
- TOKN 210
- TOKN 154
- EQUB VE
-
- TOKN 9
- TOKN 11
- TOKN 1
- TOKN 8
- EQUB VE
-
- TOKN 'D'
- TOKN 'R'
- TOKN 'I'
- TOKN 250
- EQUB VE
-
- TOKN ' '
- TOKN 'C'
- TOKN 245
- TOKN 'A'
- TOKN 224
- TOKN 'G'
- TOKN 'U'
- TOKN 'E'
- EQUB VE
-
- TOKN 'I'
- TOKN 255
- EQUB VE
-
- TOKN 19
- TOKN 'C'
- TOKN 'O'
- TOKN 'M'
- TOKN 'M'
- TOKN 255
- TOKN 'D'
- TOKN 244
- EQUB VE
-
- TOKN 104
- EQUB VE
-
- TOKN 'M'
- TOKN 217
- TOKN 'N'
- TOKN 'T'
- TOKN 'A'
- TOKN 240
- EQUB VE
-
- TOKN 252
- TOKN 'I'
- TOKN 'B'
- TOKN 229
- EQUB VE
-
- TOKN 'T'
- TOKN 242
- TOKN 'E'
- EQUB VE
-
- TOKN 'S'
- TOKN 'P'
- TOKN 'O'
- TOKN 'T'
- TOKN 'T'
- TOKN 252
- EQUB VE
-
- TOKN 120
- EQUB VE
-
- TOKN 121
- EQUB VE
-
- TOKN 97
- TOKN 'O'
- TOKN 'I'
- TOKN 'D'
- EQUB VE
-
- TOKN 127
- EQUB VE
-
- TOKN 126
- EQUB VE
-
- TOKN 255
- TOKN 'C'
- TOKN 'I'
- TOKN 246
- TOKN 'T'
- EQUB VE
-
- TOKN 'E'
- TOKN 'X'
- TOKN 233
- TOKN 'P'
- TOKN 251
- TOKN 223
- TOKN 228
- EQUB VE
-
- TOKN 'E'
- TOKN 'C'
- TOKN 233
- TOKN 'N'
- TOKN 'T'
- TOKN 'R'
- TOKN 'I'
- TOKN 'C'
- EQUB VE
-
- TOKN 240
- TOKN 'G'
- TOKN 248
- TOKN 240
- TOKN 252
- EQUB VE
-
- TOKN 114
- EQUB VE
-
- TOKN 'K'
- TOKN 220
- TOKN 'L'
- TOKN 244
- EQUB VE
-
- TOKN 'D'
- TOKN 'E'
- TOKN 'A'
- TOKN 'D'
- TOKN 'L'
- TOKN 'Y'
- EQUB VE
-
- TOKN 'E'
- TOKN 'V'
- TOKN 220
- EQUB VE
-
- TOKN 229
- TOKN 226
- TOKN 228
- EQUB VE
-
- TOKN 'V'
- TOKN 'I'
- TOKN 'C'
- TOKN 'I'
- TOKN 'O'
- TOKN 236
- EQUB VE
-
- TOKN 219
- TOKN 'S'
- TOKN ' '
- EQUB VE
-
- TOKN 13
- TOKN 14
- TOKN 19
- EQUB VE
-
- TOKN '.'
- TOKN 12
- TOKN 15
- EQUB VE
-
- TOKN ' '
- TOKN 255
- TOKN 'D'
- TOKN ' '
- EQUB VE
-
- TOKN 'Y'
- TOKN 217
- EQUB VE
+ EQUB VE                \ Token 224:    ""
+                        \
+                        \ Encoded as:   ""
 
- TOKN 'P'
- TOKN 238
- TOKN 'K'
- TOKN 195
- TOKN 'M'
- TOKN 221
- TOKN 244
- TOKN 'S'
+ ECHR 'S'               \ Token 225:    "SHREW"
+ ECHR 'H'               \
+ ETWO 'R', 'E'          \ Encoded as:   "SH<242>W"
+ ECHR 'W'
  EQUB VE
 
- TOKN 'D'
- TOKN 236
- TOKN 'T'
- TOKN ' '
- TOKN 'C'
- TOKN 224
- TOKN 'U'
- TOKN 'D'
- TOKN 'S'
+ ETWO 'B', 'E'          \ Token 226:    "BEAST"
+ ECHR 'A'               \
+ ETWO 'S', 'T'          \ Encoded as:   "<247>A<222>"
  EQUB VE
 
- TOKN 'I'
- TOKN 233
- TOKN ' '
- TOKN 247
- TOKN 'R'
- TOKN 'G'
- TOKN 'S'
+ ECHR 'B'               \ Token 227:    "BISON"
+ ECHR 'I'               \
+ ECHR 'S'               \ Encoded as:   "BIS<223>"
+ ETWO 'O', 'N'
  EQUB VE
 
- TOKN 'R'
- TOKN 'O'
- TOKN 'C'
- TOKN 'K'
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN 239
- TOKN 251
- TOKN 223
- TOKN 'S'
+ ECHR 'S'               \ Token 228:    "SNAKE"
+ ECHR 'N'               \
+ ECHR 'A'               \ Encoded as:   "SNAKE"
+ ECHR 'K'
+ ECHR 'E'
  EQUB VE
 
- TOKN 'V'
- TOKN 'O'
- TOKN 'L'
- TOKN 'C'
- TOKN 'A'
- TOKN 227
- TOKN 237
+ ECHR 'W'               \ Token 229:    "WOLF"
+ ECHR 'O'               \
+ ECHR 'L'               \ Encoded as:   "WOLF"
+ ECHR 'F'
  EQUB VE
 
- TOKN 'P'
- TOKN 'L'
- TOKN 255
- TOKN 'T'
+ ETWO 'L', 'E'          \ Token 230:    "LEOPARD"
+ ECHR 'O'               \
+ ECHR 'P'               \ Encoded as:   "<229>OP<238>D"
+ ETWO 'A', 'R'
+ ECHR 'D'
  EQUB VE
 
- TOKN 'T'
- TOKN 'U'
- TOKN 'L'
- TOKN 'I'
- TOKN 'P'
- EQUB VE
-
- TOKN 'B'
- TOKN 255
- TOKN 255
- TOKN 'A'
- EQUB VE
-
- TOKN 'C'
- TOKN 253
- TOKN 'N'
- EQUB VE
-
- TOKN 18
- TOKN 'W'
- TOKN 'E'
- TOKN 252
- EQUB VE
-
- TOKN 18
- EQUB VE
-
- TOKN 17
- TOKN ' '
- TOKN 18
- EQUB VE
-
- TOKN 17
- TOKN ' '
- TOKN 104
- EQUB VE
-
- TOKN 240
- TOKN 'H'
- TOKN 'A'
- TOKN 234
- TOKN 'T'
- TOKN 255
- TOKN 'T'
- EQUB VE
-
- TOKN 191
- EQUB VE
-
- TOKN 240
- TOKN 'G'
- TOKN ' '
- EQUB VE
-
- TOKN 252
- TOKN ' '
- EQUB VE
-
-\EQUB 0 EOR VE
- EQUB VE
-
-\EQUB 0 EOR VE
- EQUB VE
-
-\EQUB 0 EOR VE
- EQUB VE
-
- TOKN ' '
- TOKN 'N'
- TOKN 'A'
- TOKN 'M'
- TOKN 'E'
- TOKN '?'
- TOKN ' '
- EQUB VE
-
- TOKN ' '
- TOKN 'T'
- TOKN 'O'
- TOKN ' '
- EQUB VE
-
- TOKN ' '
- TOKN 'I'
- TOKN 'S'
- TOKN ' '
- EQUB VE
-
- TOKN 'W'
- TOKN 'A'
- TOKN 'S'
- TOKN ' '
- TOKN 249
- TOKN 222
- TOKN ' '
- TOKN 218
- TOKN 246
- TOKN ' '
- TOKN 245
- TOKN ' '
- TOKN 19
- EQUB VE
-
- TOKN '.'
- TOKN 12
- TOKN ' '
- TOKN 19
- EQUB VE
-
- TOKN 'D'
- TOKN 'O'
- TOKN 'C'
- TOKN 'K'
- TOKN 252
- EQUB VE
-
- TOKN 1
- TOKN '('
- TOKN 'Y'
- TOKN '/'
- TOKN 'N'
- TOKN ')'
- TOKN '?'
- EQUB VE
-
- TOKN 'S'
- TOKN 'H'
- TOKN 'I'
- TOKN 'P'
- EQUB VE
-
- TOKN ' '
- TOKN 'A'
- TOKN ' '
- EQUB VE
-
- TOKN ' '
- TOKN 244
- TOKN 'R'
- TOKN 'I'
- TOKN 236
- EQUB VE
-
- TOKN ' '
- TOKN 'N'
- TOKN 'E'
- TOKN 'W'
- TOKN ' '
- EQUB VE
-
- TOKN 2
- TOKN ' '
- TOKN 'H'
- TOKN 244
- TOKN ' '
- TOKN 239
- TOKN 'J'
- TOKN 237
- TOKN 'T'
- TOKN 'Y'
- TOKN 39
- TOKN 'S'
- TOKN ' '
- TOKN 'S'
- TOKN 'P'
- TOKN 'A'
- TOKN 233
- TOKN ' '
- TOKN 'N'
- TOKN 'A'
- TOKN 'V'
- TOKN 'Y'
- TOKN 13
- EQUB VE
-
- TOKN 177
- TOKN 8
- TOKN 1
- TOKN ' '
- TOKN ' '
- TOKN 'M'
- TOKN 237
- TOKN 'S'
- TOKN 'A'
- TOKN 231
- TOKN ' '
- TOKN 246
- TOKN 'D'
- TOKN 'S'
- EQUB VE
-
- TOKN ' '
- TOKN 154
- TOKN ' '
- TOKN 4
- TOKN ','
- TOKN ' '
- TOKN 'I'
- TOKN ' '
- TOKN 13
- TOKN 'A'
- TOKN 'M'
- TOKN 2
- TOKN ' '
- TOKN 'C'
- TOKN 'A'
- TOKN 'P'
- TOKN 'T'
- TOKN 'A'
- TOKN 240
- TOKN ' '
- TOKN 27
- TOKN ' '
- TOKN 13
- TOKN 'O'
- TOKN 'F'
- TOKN 211
- EQUB VE
-
-\EQUB 0 EOR VE
- EQUB VE
-
- TOKN 15
- TOKN ' '
- TOKN 'U'
- TOKN 'N'
- TOKN 'K'
- TOKN 227
- TOKN 'W'
- TOKN 'N'
- TOKN ' '
- TOKN 145
- EQUB VE
-
- TOKN 9
- TOKN 8
- TOKN 23
- TOKN 30
- TOKN 1
- TOKN 240
- TOKN 'C'
- TOKN 'O'
- TOKN 'M'
- TOKN 195
- TOKN 'M'
- TOKN 237
- TOKN 'S'
- TOKN 'A'
- TOKN 231
- EQUB VE
-
- TOKN 'C'
- TOKN 'U'
- TOKN 'R'
- TOKN 'R'
- TOKN 'U'
- TOKN 226
- TOKN 244
- TOKN 'S'
- EQUB VE
-
- TOKN 'F'
- TOKN 'O'
- TOKN 'S'
- TOKN 'D'
- TOKN 'Y'
- TOKN 'K'
- TOKN 'E'
- TOKN ' '
- TOKN 'S'
- TOKN 'M'
- TOKN 'Y'
- TOKN 226
- TOKN 'E'
- EQUB VE
-
- TOKN 'F'
- TOKN 253
- TOKN 'T'
- TOKN 237
- TOKN 254
- TOKN 'E'
- EQUB VE
-
- TOKN 203
- TOKN 242
- TOKN 237
- TOKN 241
- TOKN 233
- EQUB VE
-
- TOKN 'I'
- TOKN 'S'
- TOKN ' '
- TOKN 247
- TOKN 'L'
- TOKN 'I'
- TOKN 'E'
- TOKN 'V'
- TOKN 252
- TOKN 201
- TOKN 'H'
- TOKN 'A'
- TOKN 250
- TOKN ' '
- TOKN 'J'
- TOKN 'U'
- TOKN 'M'
- TOKN 'P'
- TOKN 252
- TOKN 201
- TOKN 148
- TOKN 'G'
- TOKN 228
- TOKN 'A'
- TOKN 'X'
- TOKN 'Y'
- EQUB VE
-
- TOKN 25
- TOKN 9
- TOKN 30
- TOKN 29
- TOKN 14
- TOKN 2
- TOKN 'G'
- TOKN 'O'
- TOKN 'O'
- TOKN 'D'
- TOKN ' '
- TOKN 'D'
- TOKN 'A'
- TOKN 'Y'
- TOKN ' '
- TOKN 154
- TOKN ' '
- TOKN 4
- TOKN 204
- TOKN 'I'
- TOKN 13
- TOKN ' '
- TOKN 'A'
- TOKN 'M'
- TOKN ' '
- TOKN 19
- TOKN 'A'
- TOKN 'G'
- TOKN 246
- TOKN 'T'
- TOKN ' '
- TOKN 19
- TOKN 'B'
- TOKN 249
- TOKN 'K'
- TOKN 'E'
- TOKN ' '
- TOKN 'O'
- TOKN 'F'
- TOKN ' '
- TOKN 19
- TOKN 'N'
- TOKN 'A'
- TOKN 'V'
- TOKN 'A'
- TOKN 'L'
- TOKN ' '
- TOKN 19
- TOKN 240
- TOKN 'T'
- TOKN 'E'
- TOKN 'L'
- TOKN 229
- TOKN 'G'
- TOKN 246
- TOKN 233
- TOKN 204
- TOKN 'A'
- TOKN 'S'
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 'K'
- TOKN 227
- TOKN 'W'
- TOKN ','
- TOKN ' '
- TOKN 147
- TOKN 19
- TOKN 'N'
- TOKN 'A'
- TOKN 'V'
- TOKN 'Y'
- TOKN ' '
- TOKN 'H'
- TOKN 'A'
- TOKN 250
- TOKN ' '
- TOKN 247
- TOKN 246
- TOKN ' '
- TOKN 'K'
- TOKN 'E'
- TOKN 'E'
- TOKN 'P'
- TOKN 195
- TOKN 147
- TOKN 19
- TOKN 226
- TOKN 238
- TOKN 'G'
- TOKN 'O'
- TOKN 'I'
- TOKN 'D'
- TOKN 'S'
-\TOKN '#'
-\EQUB VE
-
- TOKN ' '
- TOKN 'O'
- TOKN 'F'
- TOKN 'F'
- TOKN ' '
- TOKN 179
- TOKN 'R'
- TOKN ' '
- TOKN 'A'
- TOKN 'S'
- TOKN 'S'
- TOKN ' '
- TOKN 217
- TOKN 'T'
- TOKN ' '
- TOKN 240
- TOKN ' '
- TOKN 'D'
- TOKN 'E'
- TOKN 'E'
- TOKN 'P'
- TOKN ' '
- TOKN 'S'
- TOKN 'P'
- TOKN 'A'
- TOKN 233
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN ' '
- TOKN 239
- TOKN 'N'
- TOKN 'Y'
- TOKN ' '
- TOKN 'Y'
- TOKN 'E'
- TOKN 238
- TOKN 'S'
- TOKN ' '
- TOKN 227
- TOKN 'W'
- TOKN '.'
- TOKN ' '
- TOKN 19
- TOKN 'W'
- TOKN 'E'
- TOKN 'L'
- TOKN 'L'
- TOKN ' '
- TOKN 147
- TOKN 'S'
- TOKN 219
- TOKN 'U'
- TOKN 'A'
- TOKN 251
- TOKN 223
- TOKN ' '
- TOKN 'H'
- TOKN 'A'
- TOKN 'S'
- TOKN ' '
- TOKN 'C'
- TOKN 'H'
- TOKN 255
- TOKN 'G'
- TOKN 252
- TOKN 204
- TOKN 217
- TOKN 'R'
- TOKN ' '
- TOKN 'B'
- TOKN 'O'
- TOKN 'Y'
- TOKN 'S'
- TOKN ' '
- TOKN 238
- TOKN 'E'
- TOKN ' '
- TOKN 242
- TOKN 'A'
- TOKN 'D'
- TOKN 'Y'
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN 208
- TOKN 'P'
- TOKN 'U'
- TOKN 'S'
- TOKN 'H'
- TOKN ' '
- TOKN 'R'
- TOKN 'I'
- TOKN 'G'
- TOKN 'H'
- TOKN 'T'
- TOKN 201
- TOKN 147
-\TOKN '#'
-\EQUB VE
-
- TOKN 'H'
- TOKN 'O'
- TOKN 'M'
- TOKN 'E'
- TOKN ' '
- TOKN 'S'
- TOKN 'Y'
- TOKN 'S'
- TOKN 'T'
- TOKN 'E'
- TOKN 'M'
- TOKN ' '
- TOKN 'O'
- TOKN 'F'
- TOKN ' '
- TOKN 226
- TOKN 'O'
- TOKN 218
- TOKN ' '
- TOKN 'M'
- TOKN 'O'
- TOKN 226
- TOKN 244
- TOKN 'S'
- TOKN 204
- TOKN 24
- TOKN 9
- TOKN 30
- TOKN 29
- TOKN 'I'
- TOKN 13
- TOKN ' '
- TOKN 'H'
- TOKN 'A'
- TOKN 250
- TOKN ' '
- TOKN 'O'
- TOKN 'B'
- TOKN 'T'
- TOKN 'A'
- TOKN 240
- TOKN 196
- TOKN 147
- TOKN 'D'
- TOKN 'E'
- TOKN 'F'
- TOKN 246
- TOKN 233
- TOKN ' '
- TOKN 'P'
- TOKN 249
- TOKN 'N'
- TOKN 'S'
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN ' '
- TOKN 226
- TOKN 'E'
- TOKN 'I'
- TOKN 'R'
- TOKN ' '
- TOKN 19
- TOKN 'H'
- TOKN 'I'
- TOKN 250
- TOKN ' '
- TOKN 19
- TOKN 'W'
- TOKN 253
- TOKN 'L'
- TOKN 'D'
- TOKN 'S'
- TOKN 204
- TOKN 147
- TOKN 247
- TOKN 221
- TOKN 229
- TOKN 'S'
- TOKN ' '
- TOKN 'K'
- TOKN 227
- TOKN 'W'
- TOKN ' '
- TOKN 'W'
- TOKN 'E'
- TOKN 39
- TOKN 250
- TOKN ' '
- TOKN 'G'
- TOKN 'O'
- TOKN 'T'
- TOKN ' '
- TOKN 235
- TOKN 'M'
- TOKN 'E'
- TOKN 226
-\TOKN '#'
-\EQUB VE
-
- TOKN 195
- TOKN 'B'
- TOKN 'U'
- TOKN 'T'
- TOKN ' '
- TOKN 227
- TOKN 'T'
- TOKN ' '
- TOKN 'W'
- TOKN 'H'
- TOKN 245
- TOKN 204
- TOKN 'I'
- TOKN 'F'
- TOKN ' '
- TOKN 19
- TOKN 'I'
- TOKN ' '
- TOKN 'T'
- TOKN 248
- TOKN 'N'
- TOKN 'S'
- TOKN 'M'
- TOKN 219
- TOKN ' '
- TOKN 147
- TOKN 'P'
- TOKN 249
- TOKN 'N'
- TOKN 'S'
- TOKN 201
- TOKN 217
- TOKN 'R'
- TOKN ' '
- TOKN 'B'
- TOKN 'A'
- TOKN 218
- TOKN ' '
- TOKN 223
- TOKN ' '
- TOKN 19
- TOKN 234
- TOKN 242
- TOKN 248
- TOKN ' '
- TOKN 226
- TOKN 'E'
- TOKN 'Y'
- TOKN 39
- TOKN 'L'
- TOKN 'L'
- TOKN ' '
- TOKN 240
- TOKN 'T'
- TOKN 244
- TOKN 233
- TOKN 'P'
- TOKN 'T'
- TOKN ' '
- TOKN 147
- TOKN 'T'
- TOKN 'R'
- TOKN 255
- TOKN 'S'
- TOKN 'M'
- TOKN 'I'
- TOKN 'S'
- TOKN 'S'
- TOKN 'I'
- TOKN 223
- TOKN '.'
-\TOKN '#'
-\EQUB VE
+ ECHR 'C'               \ Token 231:    "CAT"
+ ETWO 'A', 'T'          \
+ EQUB VE                \ Encoded as:   "C<245>"
 
- TOKN ' '
- TOKN 19
- TOKN 'I'
- TOKN ' '
- TOKN 'N'
- TOKN 'E'
- TOKN 252
- TOKN 208
- TOKN 207
- TOKN 201
- TOKN 239
- TOKN 'K'
- TOKN 'E'
- TOKN ' '
- TOKN 147
- TOKN 'R'
- TOKN 'U'
- TOKN 'N'
- TOKN 204
- TOKN 179
- TOKN 39
- TOKN 242
- TOKN ' '
- TOKN 'E'
- TOKN 229
- TOKN 'C'
- TOKN 'T'
- TOKN 252
-\TOKN '#'
-\EQUB VE
-
- TOKN 204
- TOKN 147
- TOKN 'P'
- TOKN 249
- TOKN 'N'
- TOKN 'S'
- TOKN ' '
- TOKN 'A'
- TOKN 242
- TOKN ' '
- TOKN 'U'
- TOKN 'N'
- TOKN 'I'
- TOKN 'P'
- TOKN 'U'
- TOKN 'L'
- TOKN 218
- TOKN ' '
- TOKN 'C'
- TOKN 'O'
- TOKN 'D'
- TOKN 196
- TOKN 'W'
- TOKN 'I'
- TOKN 226
- TOKN 240
- TOKN ' '
- TOKN 148
- TOKN 'T'
- TOKN 'R'
- TOKN 255
- TOKN 'S'
- TOKN 'M'
- TOKN 'I'
- TOKN 'S'
- TOKN 'S'
- TOKN 'I'
- TOKN 223
- TOKN 204
- TOKN 8
- TOKN 179
- TOKN ' '
- TOKN 'W'
- TOKN 220
- TOKN 'L'
- TOKN ' '
- TOKN 247
- TOKN ' '
- TOKN 'P'
- TOKN 'A'
- TOKN 'I'
- TOKN 'D'
- TOKN 204
- TOKN ' '
- TOKN ' '
- TOKN ' '
- TOKN ' '
- TOKN 19
- TOKN 'G'
- TOKN 'O'
- TOKN 'O'
- TOKN 'D'
- TOKN ' '
- TOKN 'L'
- TOKN 'U'
- TOKN 'C'
- TOKN 'K'
- TOKN ' '
- TOKN 154
- TOKN 212
- TOKN 24
- EQUB VE
-
- TOKN 25
- TOKN 9
- TOKN 29
- TOKN 30
- TOKN 8
- TOKN 14
- TOKN 13
- TOKN 19
- TOKN 'W'
- TOKN 'E'
- TOKN 'L'
- TOKN 'L'
- TOKN ' '
- TOKN 'D'
- TOKN 223
- TOKN 'E'
- TOKN ' '
- TOKN 154
- TOKN 204
- TOKN 179
- TOKN ' '
- TOKN 'H'
- TOKN 'A'
- TOKN 250
- TOKN ' '
- TOKN 218
- TOKN 'R'
- TOKN 'V'
- TOKN 196
- TOKN 'U'
- TOKN 'S'
- TOKN ' '
- TOKN 'W'
- TOKN 'E'
- TOKN 'L'
- TOKN 'L'
- TOKN 178
- TOKN 'W'
- TOKN 'E'
- TOKN ' '
- TOKN 'S'
- TOKN 'H'
- TOKN 228
- TOKN 'L'
- TOKN ' '
- TOKN 242
- TOKN 'M'
- TOKN 'E'
- TOKN 'M'
- TOKN 'B'
- TOKN 244
- TOKN 204
-\TOKN '#'
-\EQUB VE
-
- TOKN 'W'
- TOKN 'E'
- TOKN ' '
- TOKN 'D'
- TOKN 'I'
- TOKN 'D'
- TOKN ' '
- TOKN 227
- TOKN 'T'
- TOKN ' '
- TOKN 'E'
- TOKN 'X'
- TOKN 'P'
- TOKN 'E'
- TOKN 'C'
- TOKN 'T'
- TOKN ' '
- TOKN 147
- TOKN 19
- TOKN 226
- TOKN 238
- TOKN 'G'
- TOKN 'O'
- TOKN 'I'
- TOKN 'D'
- TOKN 'S'
- TOKN 201
- TOKN 'F'
- TOKN 240
- TOKN 'D'
- TOKN ' '
- TOKN 217
- TOKN 'T'
- TOKN ' '
- TOKN 'A'
- TOKN 'B'
- TOKN 217
- TOKN 'T'
- TOKN ' '
- TOKN 179
- TOKN 204
-\TOKN '#'
-\EQUB VE
-
- TOKN 'F'
- TOKN 253
- TOKN ' '
- TOKN 147
- TOKN 'M'
- TOKN 'O'
- TOKN 'M'
- TOKN 246
- TOKN 'T'
- TOKN ' '
- TOKN 'P'
- TOKN 229
- TOKN 'A'
- TOKN 218
- TOKN ' '
- TOKN 'A'
- TOKN 'C'
- TOKN 233
- TOKN 'P'
- TOKN 'T'
- TOKN ' '
- TOKN 148
-\TOKN '#'
-\EQUB VE
-
- TOKN 19
- TOKN 'N'
- TOKN 'A'
- TOKN 'V'
- TOKN 'Y'
- TOKN ' '
- TOKN 6
- TOKN 114
- TOKN 5
- TOKN ' '
- TOKN 'A'
- TOKN 'S'
- TOKN ' '
- TOKN 'P'
- TOKN 'A'
- TOKN 'Y'
- TOKN 'M'
- TOKN 246
- TOKN 'T'
- TOKN 212
- TOKN 24
- EQUB VE
-
-\EQUB 0 EOR VE
- EQUB VE
-
- TOKN 'S'
- TOKN 'H'
- TOKN 242
- TOKN 'W'
- EQUB VE
-
- TOKN 247
- TOKN 'A'
- TOKN 222
- EQUB VE
-
- TOKN 'B'
- TOKN 'I'
- TOKN 'S'
- TOKN 223
- EQUB VE
-
- TOKN 'S'
- TOKN 'N'
- TOKN 'A'
- TOKN 'K'
- TOKN 'E'
- EQUB VE
-
- TOKN 'W'
- TOKN 'O'
- TOKN 'L'
- TOKN 'F'
- EQUB VE
-
- TOKN 229
- TOKN 'O'
- TOKN 'P'
- TOKN 238
- TOKN 'D'
- EQUB VE
-
- TOKN 'C'
- TOKN 245
+ ECHR 'M'               \ Token 232:    "MONKEY"
+ ETWO 'O', 'N'          \
+ ECHR 'K'               \ Encoded as:   "M<223>KEY"
+ ECHR 'E'
+ ECHR 'Y'
  EQUB VE
 
- TOKN 'M'
- TOKN 223
- TOKN 'K'
- TOKN 'E'
- TOKN 'Y'
+ ECHR 'G'               \ Token 233:    "GOAT"
+ ECHR 'O'               \
+ ETWO 'A', 'T'          \ Encoded as:   "GO<245>"
  EQUB VE
 
- TOKN 'G'
- TOKN 'O'
- TOKN 245
+ ECHR 'F'               \ Token 234:    "FISH"
+ ECHR 'I'               \
+ ECHR 'S'               \ Encoded as:   "FISH"
+ ECHR 'H'
  EQUB VE
 
- TOKN 'F'
- TOKN 'I'
- TOKN 'S'
- TOKN 'H'
+ ERND 15                \ Token 235:    "[71-75] [66-70]"
+ ECHR ' '               \
+ ERND 14                \ Encoded as:   "[15?] [14?]"
  EQUB VE
 
- TOKN 106
- TOKN ' '
- TOKN 105
+ EJMP 17                \ Token 236:    "{all caps, system name adjective}
+ ECHR ' '               \                 [225-229] [240-244]"
+ ERND 29                \
+ ECHR ' '               \ Encoded as:   "{17} [29?] [32?]"
+ ERND 32
  EQUB VE
 
- TOKN 17
- TOKN ' '
- TOKN 120
- TOKN ' '
- TOKN 123
+ ETOK 175               \ Token 237:    "ITS [76-80] [230-234] [240-244]"
+ ERND 16                \
+ ECHR ' '               \ Encoded as:   "[175][16?] [30?] [32?]"
+ ERND 30
+ ECHR ' '
+ ERND 32
  EQUB VE
 
- TOKN 175
- TOKN 107
- TOKN ' '
- TOKN 121
- TOKN ' '
- TOKN 123
+ ERND 33                \ Token 238:    "[245-249] [250-254]"
+ ECHR ' '               \
+ ERND 34                \ Encoded as:   "[33?] [34?]"
  EQUB VE
 
- TOKN 124
- TOKN ' '
- TOKN 125
+ ERND 15                \ Token 239:    "[71-75] [66-70]"
+ ECHR ' '               \
+ ERND 14                \ Encoded as:   "[15?] [14?]"
  EQUB VE
 
- TOKN 106
- TOKN ' '
- TOKN 105
+ ECHR 'M'               \ Token 240:    "MEAT"
+ ECHR 'E'               \
+ ETWO 'A', 'T'          \ Encoded as:   "ME<245>"
  EQUB VE
 
- TOKN 'M'
- TOKN 'E'
- TOKN 245
+ ECHR 'C'               \ Token 241:    "CUTLET"
+ ECHR 'U'               \
+ ECHR 'T'               \ Encoded as:   "CUTL<221>"
+ ECHR 'L'
+ ETWO 'E', 'T'
  EQUB VE
 
- TOKN 'C'
- TOKN 'U'
- TOKN 'T'
- TOKN 'L'
- TOKN 221
+ ETWO 'S', 'T'          \ Token 242:    "STEAK"
+ ECHR 'E'               \
+ ECHR 'A'               \ Encoded as:   "<222>EAK"
+ ECHR 'K'
  EQUB VE
 
- TOKN 222
- TOKN 'E'
- TOKN 'A'
- TOKN 'K'
+ ECHR 'B'               \ Token 243:    "BURGERS"
+ ECHR 'U'               \
+ ECHR 'R'               \ Encoded as:   "BURG<244>S"
+ ECHR 'G'
+ ETWO 'E', 'R'
+ ECHR 'S'
  EQUB VE
 
- TOKN 'B'
- TOKN 'U'
- TOKN 'R'
- TOKN 'G'
- TOKN 244
- TOKN 'S'
+ ETWO 'S', 'O'          \ Token 244:    "SOUP"
+ ECHR 'U'               \
+ ECHR 'P'               \ Encoded as:   "<235>UP"
  EQUB VE
 
- TOKN 235
- TOKN 'U'
- TOKN 'P'
- EQUB VE
-
- TOKN 'I'
- TOKN 233
- EQUB VE
+ ECHR 'I'               \ Token 245:    "ICE"
+ ETWO 'C', 'E'          \
+ EQUB VE                \ Encoded as:   "I<233>"
 
- TOKN 'M'
- TOKN 'U'
- TOKN 'D'
+ ECHR 'M'               \ Token 246:    "MUD"
+ ECHR 'U'               \
+ ECHR 'D'               \ Encoded as:   "MUD"
  EQUB VE
 
- TOKN 'Z'
- TOKN 244
- TOKN 'O'
- TOKN '-'
- TOKN 19
- TOKN 'G'
+ ECHR 'Z'               \ Token 247:    "ZERO-{single cap}G"
+ ETWO 'E', 'R'          \
+ ECHR 'O'               \ Encoded as:   "Z<244>O-{19}G"
+ ECHR '-'
+ EJMP 19
+ ECHR 'G'
  EQUB VE
 
- TOKN 'V'
- TOKN 'A'
- TOKN 'C'
- TOKN 'U'
- TOKN 'U'
- TOKN 'M'
+ ECHR 'V'               \ Token 248:    "VACUUM"
+ ECHR 'A'               \
+ ECHR 'C'               \ Encoded as:   "VACUUM"
+ ECHR 'U'
+ ECHR 'U'
+ ECHR 'M'
  EQUB VE
 
- TOKN 17
- TOKN ' '
- TOKN 'U'
- TOKN 'L'
- TOKN 'T'
- TOKN 248
+ EJMP 17                \ Token 249:    "{all caps, system name adjective}
+ ECHR ' '               \                 ULTRA"
+ ECHR 'U'               \
+ ECHR 'L'               \ Encoded as:   "{17} ULT<248>"
+ ECHR 'T'
+ ETWO 'R', 'A'
  EQUB VE
 
- TOKN 'H'
- TOKN 'O'
- TOKN 'C'
- TOKN 'K'
- TOKN 'E'
- TOKN 'Y'
+ ECHR 'H'               \ Token 250:    "HOCKEY"
+ ECHR 'O'               \
+ ECHR 'C'               \ Encoded as:   "HOCKEY"
+ ECHR 'K'
+ ECHR 'E'
+ ECHR 'Y'
  EQUB VE
 
- TOKN 'C'
- TOKN 'R'
- TOKN 'I'
- TOKN 'C'
- TOKN 'K'
- TOKN 221
+ ECHR 'C'               \ Token 251:    "CRICKET"
+ ECHR 'R'               \
+ ECHR 'I'               \ Encoded as:   "CRICK<221>"
+ ECHR 'C'
+ ECHR 'K'
+ ETWO 'E', 'T'
  EQUB VE
 
- TOKN 'K'
- TOKN 238
- TOKN 245
- TOKN 'E'
+ ECHR 'K'               \ Token 252:    "KARATE"
+ ETWO 'A', 'R'          \
+ ETWO 'A', 'T'          \ Encoded as:   "K<238><245>E"
+ ECHR 'E'
  EQUB VE
 
- TOKN 'P'
- TOKN 'O'
- TOKN 224
+ ECHR 'P'               \ Token 253:    "POLO"
+ ECHR 'O'               \
+ ETWO 'L', 'O'          \ Encoded as:   "PO<224>"
  EQUB VE
 
- TOKN 'T'
- TOKN 246
- TOKN 'N'
- TOKN 'I'
- TOKN 'S'
+ ECHR 'T'               \ Token 254:    "TENNIS"
+ ETWO 'E', 'N'          \
+ ECHR 'N'               \ Encoded as:   "T<246>NIS"
+ ECHR 'I'
+ ECHR 'S'
  EQUB VE
 
- EQUB VE
+ EQUB VE                \ Token 255:    ""
+                        \
+                        \ Encoded as:   ""
 
 \ ******************************************************************************
 \       Name: RUPLA
@@ -39200,702 +40064,727 @@ ENDMACRO
  EQUB 128
 
 \ ******************************************************************************
+\
 \       Name: RUTOK
+\       Type: Variable
+\   Category: Text
+\    Summary: The second extended token table for recursive tokens 0-26 (DETOK3)
+\
 \ ******************************************************************************
 
 .RUTOK
 
+ EQUB VE                
+                        \
+                        \ Encoded as:   ""
+
+ ETOK 147               \ Token 1:      "THE COLONISTS HERE HAVE VIOLATED
+ ECHR 'C'               \                {sentence case} INTERGALACTIC CLONING
+ ECHR 'O'               \                PROTOCOL{lower case} AND SHOULD BE
+ ETWO 'L', 'O'          \                AVOIDED"
+ ECHR 'N'               \
+ ECHR 'I'               \ Encoded as:   "[147]CO<224>NI<222>S HE<242> HA<250>
+ ETWO 'S', 'T'          \                 VIOL<245><252>{2} <240>T<244>G<228>AC
+ ECHR 'S'               \                <251>C C<224>N[195]PROTOCOL{13}[178]SH
+ ECHR ' '               \                <217>LD <247> AVOID<252>"
+ ECHR 'H'
+ ECHR 'E'
+ ETWO 'R', 'E'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'A'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ECHR 'V'
+ ECHR 'I'
+ ECHR 'O'
+ ECHR 'L'
+ ETWO 'A', 'T'
+ ETWO 'E', 'D'
+ EJMP 2
+ ECHR ' '
+ ETWO 'I', 'N'
+ ECHR 'T'
+ ETWO 'E', 'R'
+ ECHR 'G'
+ ETWO 'A', 'L'
+ ECHR 'A'
+ ECHR 'C'
+ ETWO 'T', 'I'
+ ECHR 'C'
+ ECHR ' '
+ ECHR 'C'
+ ETWO 'L', 'O'
+ ECHR 'N'
+ ETOK 195
+ ECHR 'P'
+ ECHR 'R'
+ ECHR 'O'
+ ECHR 'T'
+ ECHR 'O'
+ ECHR 'C'
+ ECHR 'O'
+ ECHR 'L'
+ EJMP 13
+ ETOK 178
+ ECHR 'S'
+ ECHR 'H'
+ ETWO 'O', 'U'
+ ECHR 'L'
+ ECHR 'D'
+ ECHR ' '
+ ETWO 'B', 'E'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'V'
+ ECHR 'O'
+ ECHR 'I'
+ ECHR 'D'
+ ETWO 'E', 'D'
  EQUB VE
 
- TOKN 147
- TOKN 'C'
- TOKN 'O'
- TOKN 224
- TOKN 'N'
- TOKN 'I'
- TOKN 222
- TOKN 'S'
- TOKN ' '
- TOKN 'H'
- TOKN 'E'
- TOKN 242
- TOKN ' '
- TOKN 'H'
- TOKN 'A'
- TOKN 250
- TOKN ' '
- TOKN 'V'
- TOKN 'I'
- TOKN 'O'
- TOKN 'L'
- TOKN 245
- TOKN 252
- TOKN 2
- TOKN ' '
- TOKN 240
- TOKN 'T'
- TOKN 244
- TOKN 'G'
- TOKN 228
- TOKN 'A'
- TOKN 'C'
- TOKN 251
- TOKN 'C'
- TOKN ' '
- TOKN 'C'
- TOKN 224
- TOKN 'N'
- TOKN 195
- TOKN 'P'
- TOKN 'R'
- TOKN 'O'
- TOKN 'T'
- TOKN 'O'
- TOKN 'C'
- TOKN 'O'
- TOKN 'L'
- TOKN 13
- TOKN 178
- TOKN 'S'
- TOKN 'H'
- TOKN 217
- TOKN 'L'
- TOKN 'D'
- TOKN ' '
- TOKN 247
- TOKN ' '
- TOKN 'A'
- TOKN 'V'
- TOKN 'O'
- TOKN 'I'
- TOKN 'D'
- TOKN 252
+ ETOK 147               \ Token 2:      "THE CONSTRICTOR WAS LAST SEEN AT
+ ECHR 'C'               \                {single cap}REESDICE, {single cap}
+ ETWO 'O', 'N'          \                COMMANDER"
+ ETWO 'S', 'T'          \
+ ECHR 'R'               \ Encoded as:   "[147]C<223><222>RICT<253> [203]<242>
+ ECHR 'I'               \                <237><241><233>, [154]"
+ ECHR 'C'
+ ECHR 'T'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ETOK 203
+ ETWO 'R', 'E'
+ ETWO 'E', 'S'
+ ETWO 'D', 'I'
+ ETWO 'C', 'E'
+ ECHR ','
+ ECHR ' '
+ ETOK 154
  EQUB VE
 
- TOKN 147
- TOKN 'C'
- TOKN 223
- TOKN 222
- TOKN 'R'
- TOKN 'I'
- TOKN 'C'
- TOKN 'T'
- TOKN 253
- TOKN ' '
- TOKN 203
- TOKN 242
- TOKN 237
- TOKN 241
- TOKN 233
- TOKN ','
- TOKN ' '
- TOKN 154
+ ECHR 'A'               \ Token 3:      "A [130-134] LOOKING SHIP LEFT HERE A
+ ECHR ' '               \                WHILE BACK. LOOKED BOUND FOR AREXE"
+ ERND 23                \
+ ECHR ' '               \ Encoded as:   "A [23?] <224>OK[195][207] <229>FT HE
+ ETWO 'L', 'O'          \                <242>[208]WHI<229> BACK. LOOK[196]B
+ ECHR 'O'               \                <217>ND F<253> <238>E<230>"
+ ECHR 'K'
+ ETOK 195
+ ETOK 207
+ ECHR ' '
+ ETWO 'L', 'E'
+ ECHR 'F'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'E'
+ ETWO 'R', 'E'
+ ETOK 208
+ ECHR 'W'
+ ECHR 'H'
+ ECHR 'I'
+ ETWO 'L', 'E'
+ ECHR ' '
+ ECHR 'B'
+ ECHR 'A'
+ ECHR 'C'
+ ECHR 'K'
+ ECHR '.'
+ ECHR ' '
+ ECHR 'L'
+ ECHR 'O'
+ ECHR 'O'
+ ECHR 'K'
+ ETOK 196
+ ECHR 'B'
+ ETWO 'O', 'U'
+ ECHR 'N'
+ ECHR 'D'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ETWO 'A', 'R'
+ ECHR 'E'
+ ETWO 'X', 'E'
  EQUB VE
 
- TOKN 'A'
- TOKN ' '
- TOKN 114
- TOKN ' '
- TOKN 224
- TOKN 'O'
- TOKN 'K'
- TOKN 195
- TOKN 207
- TOKN ' '
- TOKN 229
- TOKN 'F'
- TOKN 'T'
- TOKN ' '
- TOKN 'H'
- TOKN 'E'
- TOKN 242
- TOKN 208
- TOKN 'W'
- TOKN 'H'
- TOKN 'I'
- TOKN 229
- TOKN ' '
- TOKN 'B'
- TOKN 'A'
- TOKN 'C'
- TOKN 'K'
- TOKN '.'
- TOKN ' '
- TOKN 'L'
- TOKN 'O'
- TOKN 'O'
- TOKN 'K'
- TOKN 196
- TOKN 'B'
- TOKN 217
- TOKN 'N'
- TOKN 'D'
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN ' '
- TOKN 238
- TOKN 'E'
- TOKN 230
+ ECHR 'Y'               \ Token 4:      "YEP, A [130-134] NEW SHIP HAD A
+ ECHR 'E'               \                GALACTIC HYPERDRIVE FITTED HERE. USED
+ ECHR 'P'               \                IT TOO"
+ ECHR ','               \
+ ETOK 208               \ Encoded as:   "YEP,[208][23?][210][207] HAD[208]G
+ ERND 23                \                <228>AC<251>C HYP<244>DRI<250> F<219>
+ ETOK 210               \                T[196]HE<242>. <236>[196]<219> TOO"
+ ETOK 207
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'A'
+ ECHR 'D'
+ ETOK 208
+ ECHR 'G'
+ ETWO 'A', 'L'
+ ECHR 'A'
+ ECHR 'C'
+ ETWO 'T', 'I'
+ ECHR 'C'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'Y'
+ ECHR 'P'
+ ETWO 'E', 'R'
+ ECHR 'D'
+ ECHR 'R'
+ ECHR 'I'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'I', 'T'
+ ECHR 'T'
+ ETOK 196
+ ECHR 'H'
+ ECHR 'E'
+ ETWO 'R', 'E'
+ ECHR '.'
+ ECHR ' '
+ ETWO 'U', 'S'
+ ETOK 196
+ ETWO 'I', 'T'
+ ECHR ' '
+ ECHR 'T'
+ ECHR 'O'
+ ECHR 'O'
  EQUB VE
 
- TOKN 'Y'
- TOKN 'E'
- TOKN 'P'
- TOKN ','
- TOKN 208
- TOKN 114
- TOKN 210
- TOKN 207
- TOKN ' '
- TOKN 'H'
- TOKN 'A'
- TOKN 'D'
- TOKN 208
- TOKN 'G'
- TOKN 228
- TOKN 'A'
- TOKN 'C'
- TOKN 251
- TOKN 'C'
- TOKN ' '
- TOKN 'H'
- TOKN 'Y'
- TOKN 'P'
- TOKN 244
- TOKN 'D'
- TOKN 'R'
- TOKN 'I'
- TOKN 250
- TOKN ' '
- TOKN 'F'
- TOKN 219
- TOKN 'T'
- TOKN 196
- TOKN 'H'
- TOKN 'E'
- TOKN 242
- TOKN '.'
- TOKN ' '
- TOKN 236
- TOKN 196
- TOKN 219
- TOKN ' '
- TOKN 'T'
- TOKN 'O'
- TOKN 'O'
+ ETOK 148               \ Token 5:      "THIS  [130-134] SHIP DEHYPED HERE FROM
+ ECHR ' '               \                NOWHERE, SUN SKIMMED AND JUMPED. I HEAR
+ ERND 23                \                IT WENT TO INBIBE"
+ ECHR ' '               \
+ ETOK 207               \ Encoded as:   "[148] [23?] [207] DEHYP[196]HE<242> FRO
+ ECHR ' '               \                M <227>WHE<242>, SUN SKIMM<252>[178]JUM
+ ECHR 'D'               \                P<252>. I HE<238> <219> W<246>T[201]
+ ECHR 'E'               \                <240><234><247>"
+ ECHR 'H'
+ ECHR 'Y'
+ ECHR 'P'
+ ETOK 196
+ ECHR 'H'
+ ECHR 'E'
+ ETWO 'R', 'E'
+ ECHR ' '
+ ECHR 'F'
+ ECHR 'R'
+ ECHR 'O'
+ ECHR 'M'
+ ECHR ' '
+ ETWO 'N', 'O'
+ ECHR 'W'
+ ECHR 'H'
+ ECHR 'E'
+ ETWO 'R', 'E'
+ ECHR ','
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'U'
+ ECHR 'N'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'K'
+ ECHR 'I'
+ ECHR 'M'
+ ECHR 'M'
+ ETWO 'E', 'D'
+ ETOK 178
+ ECHR 'J'
+ ECHR 'U'
+ ECHR 'M'
+ ECHR 'P'
+ ETWO 'E', 'D'
+ ECHR '.'
+ ECHR ' '
+ ECHR 'I'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'E'
+ ETWO 'A', 'R'
+ ECHR ' '
+ ETWO 'I', 'T'
+ ECHR ' '
+ ECHR 'W'
+ ETWO 'E', 'N'
+ ECHR 'T'
+ ETOK 201
+ ETWO 'I', 'N'
+ ETWO 'B', 'I'
+ ETWO 'B', 'E'
  EQUB VE
 
- TOKN 148
- TOKN ' '
- TOKN 114
- TOKN ' '
- TOKN 207
- TOKN ' '
- TOKN 'D'
- TOKN 'E'
- TOKN 'H'
- TOKN 'Y'
- TOKN 'P'
- TOKN 196
- TOKN 'H'
- TOKN 'E'
- TOKN 242
- TOKN ' '
- TOKN 'F'
- TOKN 'R'
- TOKN 'O'
- TOKN 'M'
- TOKN ' '
- TOKN 227
- TOKN 'W'
- TOKN 'H'
- TOKN 'E'
- TOKN 242
- TOKN ','
- TOKN ' '
- TOKN 'S'
- TOKN 'U'
- TOKN 'N'
- TOKN ' '
- TOKN 'S'
- TOKN 'K'
- TOKN 'I'
- TOKN 'M'
- TOKN 'M'
- TOKN 252
- TOKN 178
- TOKN 'J'
- TOKN 'U'
- TOKN 'M'
- TOKN 'P'
- TOKN 252
- TOKN '.'
- TOKN ' '
- TOKN 'I'
- TOKN ' '
- TOKN 'H'
- TOKN 'E'
- TOKN 238
- TOKN ' '
- TOKN 219
- TOKN ' '
- TOKN 'W'
- TOKN 246
- TOKN 'T'
- TOKN 201
- TOKN 240
- TOKN 234
- TOKN 247
+ ERND 24                \ Token 6:      "[91-95] SHIP WENT FOR ME AT AUSAR. MY
+ ECHR ' '               \                LASERS DIDN'T EVEN SCRATCH THE [91-95]"
+ ETOK 207               \
+ ECHR ' '               \ Encoded as:   "[24?] [207] W<246>T F<253> ME <245>
+ ECHR 'W'               \                 A<236><238>. MY <249>S<244>S DIDN[39]T
+ ETWO 'E', 'N'          \                 EV<246> SC<248>TCH [147][24?]"
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ECHR 'M'
+ ECHR 'E'
+ ECHR ' '
+ ETWO 'A', 'T'
+ ECHR ' '
+ ECHR 'A'
+ ETWO 'U', 'S'
+ ETWO 'A', 'R'
+ ECHR '.'
+ ECHR ' '
+ ECHR 'M'
+ ECHR 'Y'
+ ECHR ' '
+ ETWO 'L', 'A'
+ ECHR 'S'
+ ETWO 'E', 'R'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'D'
+ ECHR 'I'
+ ECHR 'D'
+ ECHR 'N'
+ ECHR '`'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'E'
+ ECHR 'V'
+ ETWO 'E', 'N'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'C'
+ ETWO 'R', 'A'
+ ECHR 'T'
+ ECHR 'C'
+ ECHR 'H'
+ ECHR ' '
+ ETOK 147
+ ERND 24
  EQUB VE
 
- TOKN 115
- TOKN ' '
- TOKN 207
- TOKN ' '
- TOKN 'W'
- TOKN 246
- TOKN 'T'
- TOKN ' '
- TOKN 'F'
- TOKN 253
- TOKN ' '
- TOKN 'M'
- TOKN 'E'
- TOKN ' '
- TOKN 245
- TOKN ' '
- TOKN 'A'
- TOKN 236
- TOKN 238
- TOKN '.'
- TOKN ' '
- TOKN 'M'
- TOKN 'Y'
- TOKN ' '
- TOKN 249
- TOKN 'S'
- TOKN 244
- TOKN 'S'
- TOKN ' '
- TOKN 'D'
- TOKN 'I'
- TOKN 'D'
- TOKN 'N'
- TOKN 39
- TOKN 'T'
- TOKN ' '
- TOKN 'E'
- TOKN 'V'
- TOKN 246
- TOKN ' '
- TOKN 'S'
- TOKN 'C'
- TOKN 248
- TOKN 'T'
- TOKN 'C'
- TOKN 'H'
- TOKN ' '
- TOKN 147
- TOKN 115
+ ECHR 'O'               \ Token 7:      "OH DEAR ME YES. A FRIGHTFUL ROGUE WITH
+ ECHR 'H'               \                WHAT I BELIEVE YOU PEOPLE CALL A LEAD 
+ ECHR ' '               \                POSTERIOR SHOT UP LOTS OF THOSE BEASTLY 
+ ECHR 'D'               \                PIRATES AND WENT TO USLERI"
+ ECHR 'E'               \
+ ETWO 'A', 'R'          \ Encoded as:   "OH DE<238> ME Y<237>.[208]FRIGHTFUL ROG
+ ECHR ' '               \                UE WI<226> WH<245> I <247>LIE<250>
+ ECHR 'M'               \                 [179] PEOP<229> C<228>L[208]<229>AD PO
+ ECHR 'E'               \                <222><244>I<253> SHOT UP <224>TS OF
+ ECHR ' '               \                 <226>O<218> <247>A<222>LY PI<248>T
+ ECHR 'Y'               \                <237>[178]W<246>T[201]<236><229>RI"
+ ETWO 'E', 'S' 
+ ECHR '.'
+ ETOK 208
+ ECHR 'F'
+ ECHR 'R'
+ ECHR 'I'
+ ECHR 'G'
+ ECHR 'H'
+ ECHR 'T'
+ ECHR 'F'
+ ECHR 'U'
+ ECHR 'L'
+ ECHR ' '
+ ECHR 'R'
+ ECHR 'O'
+ ECHR 'G'
+ ECHR 'U'
+ ECHR 'E'
+ ECHR ' '
+ ECHR 'W'
+ ECHR 'I'
+ ETWO 'T', 'H'
+ ECHR ' '
+ ECHR 'W'
+ ECHR 'H'
+ ETWO 'A', 'T'
+ ECHR ' '
+ ECHR 'I'
+ ECHR ' '
+ ETWO 'B', 'E'
+ ECHR 'L'
+ ECHR 'I'
+ ECHR 'E'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'E'
+ ECHR 'O'
+ ECHR 'P'
+ ETWO 'L', 'E'
+ ECHR ' '
+ ECHR 'C'
+ ETWO 'A', 'L'
+ ECHR 'L'
+ ETOK 208
+ ETWO 'L', 'E'
+ ECHR 'A'
+ ECHR 'D'
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'O'
+ ETWO 'S', 'T'
+ ETWO 'E', 'R'
+ ECHR 'I'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'H'
+ ECHR 'O'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'U'
+ ECHR 'P'
+ ECHR ' '
+ ETWO 'L', 'O'
+ ECHR 'T'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'O'
+ ECHR 'F'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ECHR 'O'
+ ETWO 'S', 'E'
+ ECHR ' '
+ ETWO 'B', 'E'
+ ECHR 'A'
+ ETWO 'S', 'T'
+ ECHR 'L'
+ ECHR 'Y'
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'I'
+ ETWO 'R', 'A'
+ ECHR 'T'
+ ETWO 'E', 'S'
+ ETOK 178
+ ECHR 'W'
+ ETWO 'E', 'N'
+ ECHR 'T'
+ ETOK 201
+ ETWO 'U', 'S'
+ ETWO 'L', 'E'
+ ECHR 'R'
+ ECHR 'I'
  EQUB VE
 
- TOKN 'O'
- TOKN 'H'
- TOKN ' '
- TOKN 'D'
- TOKN 'E'
- TOKN 238
- TOKN ' '
- TOKN 'M'
- TOKN 'E'
- TOKN ' '
- TOKN 'Y'
- TOKN 237
- TOKN '.'
- TOKN 208
- TOKN 'F'
- TOKN 'R'
- TOKN 'I'
- TOKN 'G'
- TOKN 'H'
- TOKN 'T'
- TOKN 'F'
- TOKN 'U'
- TOKN 'L'
- TOKN ' '
- TOKN 'R'
- TOKN 'O'
- TOKN 'G'
- TOKN 'U'
- TOKN 'E'
- TOKN ' '
- TOKN 'W'
- TOKN 'I'
- TOKN 226
- TOKN ' '
- TOKN 'W'
- TOKN 'H'
- TOKN 245
- TOKN ' '
- TOKN 'I'
- TOKN ' '
- TOKN 247
- TOKN 'L'
- TOKN 'I'
- TOKN 'E'
- TOKN 250
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 'P'
- TOKN 'E'
- TOKN 'O'
- TOKN 'P'
- TOKN 229
- TOKN ' '
- TOKN 'C'
- TOKN 228
- TOKN 'L'
- TOKN 208
- TOKN 229
- TOKN 'A'
- TOKN 'D'
- TOKN ' '
- TOKN 'P'
- TOKN 'O'
- TOKN 222
- TOKN 244
- TOKN 'I'
- TOKN 253
- TOKN ' '
- TOKN 'S'
- TOKN 'H'
- TOKN 'O'
- TOKN 'T'
- TOKN ' '
- TOKN 'U'
- TOKN 'P'
- TOKN ' '
- TOKN 224
- TOKN 'T'
- TOKN 'S'
- TOKN ' '
- TOKN 'O'
- TOKN 'F'
- TOKN ' '
- TOKN 226
- TOKN 'O'
- TOKN 218
- TOKN ' '
- TOKN 247
- TOKN 'A'
- TOKN 222
- TOKN 'L'
- TOKN 'Y'
- TOKN ' '
- TOKN 'P'
- TOKN 'I'
- TOKN 248
- TOKN 'T'
- TOKN 237
- TOKN 178
- TOKN 'W'
- TOKN 246
- TOKN 'T'
- TOKN 201
- TOKN 236
- TOKN 229
- TOKN 'R'
- TOKN 'I'
+ ETOK 179               \ Token 8:      "YOU CAN TACKLE THE [170-174] [91-95]
+ ECHR ' '               \                IF YOU LIKE. HE'S AT ORARRA"
+ ECHR 'C'               \
+ ETWO 'A', 'N'          \ Encoded as:   "[179] C<255> TACK<229> [147][13?] [24?]
+ ECHR ' '               \                 IF [179] LIKE. HE[39]S <245> <253>
+ ECHR 'T'               \                <238><248>"
+ ECHR 'A'
+ ECHR 'C'
+ ECHR 'K'
+ ETWO 'L', 'E'
+ ECHR ' '
+ ETOK 147
+ ERND 13
+ ECHR ' '
+ ERND 24
+ ECHR ' '
+ ECHR 'I'
+ ECHR 'F'
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ECHR 'L'
+ ECHR 'I'
+ ECHR 'K'
+ ECHR 'E'
+ ECHR '.'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'E'
+ ECHR '`'
+ ECHR 'S'
+ ECHR ' '
+ ETWO 'A', 'T'
+ ECHR ' '
+ ETWO 'O', 'R'
+ ETWO 'A', 'R'
+ ETWO 'R', 'A'
  EQUB VE
 
- TOKN 179
- TOKN ' '
- TOKN 'C'
- TOKN 255
- TOKN ' '
- TOKN 'T'
- TOKN 'A'
- TOKN 'C'
- TOKN 'K'
- TOKN 229
- TOKN ' '
- TOKN 147
- TOKN 104
- TOKN ' '
- TOKN 115
- TOKN ' '
- TOKN 'I'
- TOKN 'F'
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 'L'
- TOKN 'I'
- TOKN 'K'
- TOKN 'E'
- TOKN '.'
- TOKN ' '
- TOKN 'H'
- TOKN 'E'
- TOKN 39
- TOKN 'S'
- TOKN ' '
- TOKN 245
- TOKN ' '
- TOKN 253
- TOKN 238
- TOKN 248
+ EJMP 1                 \ Token 9:      "{all caps}COMING SOON: ELITE II"
+ ECHR 'C'               \
+ ECHR 'O'               \ Encoded as:   "{1}COM[195]<235><223>: EL<219>E II"
+ ECHR 'M'
+ ETOK 195
+ ETWO 'S', 'O'
+ ETWO 'O', 'N'
+ ECHR ':'
+ ECHR ' '
+ ECHR 'E'
+ ECHR 'L'
+ ETWO 'I', 'T'
+ ECHR 'E'
+ ECHR ' '
+ ECHR 'I'
+ ECHR 'I'
  EQUB VE
 
- TOKN 1
- TOKN 'C'
- TOKN 'O'
- TOKN 'M'
- TOKN 195
- TOKN 235
- TOKN 223
- TOKN ':'
- TOKN ' '
- TOKN 'E'
- TOKN 'L'
- TOKN 219
- TOKN 'E'
- TOKN ' '
- TOKN 'I'
- TOKN 'I'
+ ERND 25                \ Token 10:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 11:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 12:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 13:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 14:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 15:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 16:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 17:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 18:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 19:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 20:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 21:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ERND 25                \ Token 22:     "[106-110]"
+ EQUB VE                \
+                        \ Encoded as:   "[25?]"
+
+ ECHR 'B'               \ Token 23:     "BOY ARE YOU IN THE WRONG GALAXY!"
+ ECHR 'O'               \
+ ECHR 'Y'               \ Encoded as:   "BOY A<242> [179] <240> [147]WR<223>G G
+ ECHR ' '               \                <228>AXY!"
+ ECHR 'A'
+ ETWO 'R', 'E'
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ETWO 'I', 'N'
+ ECHR ' '
+ ETOK 147
+ ECHR 'W'
+ ECHR 'R'
+ ETWO 'O', 'N'
+ ECHR 'G'
+ ECHR ' '
+ ECHR 'G'
+ ETWO 'A', 'L'
+ ECHR 'A'
+ ECHR 'X'
+ ECHR 'Y'
+ ECHR '!'
  EQUB VE
 
- TOKN 116
+ ETWO 'T', 'H'          \ Token 24:     "THERE'S A REAL [91-95] PIRATE OUT
+ ETWO 'E', 'R'          \                THERE"
+ ECHR 'E'               \
+ ECHR '`'               \ Encoded as:   "<226><244>E[39]S[208]<242><228> [24?] P
+ ECHR 'S'               \                I<248>TE <217>T <226><244>E"
+ ETOK 208
+ ETWO 'R', 'E'
+ ETWO 'A', 'L'
+ ECHR ' '
+ ERND 24
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'I'
+ ETWO 'R', 'A'
+ ECHR 'T'
+ ECHR 'E'
+ ECHR ' '
+ ETWO 'O', 'U'
+ ECHR 'T'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ETWO 'E', 'R'
+ ECHR 'E'
  EQUB VE
 
- TOKN 116
+ ETOK 147               \ Token 25:     "THE INHABITANTS OF [86-90] ARE SO
+ ETOK 193               \                AMAZINGLY PRIMITIVE THAT THEY STILL
+ ECHR 'S'               \                THINK {single cap}***** ****** IS  3D"
+ ECHR ' '               \
+ ECHR 'O'               \ Encoded as:   "[147][193]S OF [18?] A<242> <235> A
+ ECHR 'F'               \                <239>Z<240>GLY PRIMI<251><250> <226>
+ ECHR ' '               \                <245> <226>EY <222><220>L <226><240>K
+ ERND 18                \                 {19}***** ******[202] 3D"
+ ECHR ' '
+ ECHR 'A'
+ ETWO 'R', 'E'
+ ECHR ' '
+ ETWO 'S', 'O'
+ ECHR ' '
+ ECHR 'A'
+ ETWO 'M', 'A'
+ ECHR 'Z'
+ ETWO 'I', 'N'
+ ECHR 'G'
+ ECHR 'L'
+ ECHR 'Y'
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'R'
+ ECHR 'I'
+ ECHR 'M'
+ ECHR 'I'
+ ETWO 'T', 'I'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ETWO 'A', 'T'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ECHR 'E'
+ ECHR 'Y'
+ ECHR ' '
+ ETWO 'S', 'T'
+ ETWO 'I', 'L'
+ ECHR 'L'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ETWO 'I', 'N'
+ ECHR 'K'
+ ECHR ' '
+ EJMP 19
+ ECHR '*'
+ ECHR '*'
+ ECHR '*'
+ ECHR '*'
+ ECHR '*'
+ ECHR ' '
+ ECHR '*'
+ ECHR '*'
+ ECHR '*'
+ ECHR '*'
+ ECHR '*'
+ ECHR '*'
+ ETOK 202
+ ECHR ' '
+ ECHR '3'
+ ECHR 'D'
  EQUB VE
 
- TOKN 116
- EQUB VE
-
- TOKN 116
- EQUB VE
-
- TOKN 116
- EQUB VE
-
- TOKN 116
- EQUB VE
-
- TOKN 116
- EQUB VE
-
- TOKN 116
- EQUB VE
-
- TOKN 116
- EQUB VE
-
- TOKN 116
- EQUB VE
-
- TOKN 116
- EQUB VE
-
- TOKN 116
- EQUB VE
-
- TOKN 116
- EQUB VE
-
- TOKN 'B'
- TOKN 'O'
- TOKN 'Y'
- TOKN ' '
- TOKN 'A'
- TOKN 242
- TOKN ' '
- TOKN 179
- TOKN ' '
- TOKN 240
- TOKN ' '
- TOKN 147
- TOKN 'W'
- TOKN 'R'
- TOKN 223
- TOKN 'G'
- TOKN ' '
- TOKN 'G'
- TOKN 228
- TOKN 'A'
- TOKN 'X'
- TOKN 'Y'
- TOKN '!'
- EQUB VE
-
- TOKN 226
- TOKN 244
- TOKN 'E'
- TOKN 39
- TOKN 'S'
- TOKN 208
- TOKN 242
- TOKN 228
- TOKN ' '
- TOKN 115
- TOKN ' '
- TOKN 'P'
- TOKN 'I'
- TOKN 248
- TOKN 'T'
- TOKN 'E'
- TOKN ' '
- TOKN 217
- TOKN 'T'
- TOKN ' '
- TOKN 226
- TOKN 244
- TOKN 'E'
- EQUB VE
-
- TOKN 147
- TOKN 193
- TOKN 'S'
- TOKN ' '
- TOKN 'O'
- TOKN 'F'
- TOKN ' '
- TOKN 109
- TOKN ' '
- TOKN 'A'
- TOKN 242
- TOKN ' '
- TOKN 235
- TOKN ' '
- TOKN 'A'
- TOKN 239
- TOKN 'Z'
- TOKN 240
- TOKN 'G'
- TOKN 'L'
- TOKN 'Y'
- TOKN ' '
- TOKN 'P'
- TOKN 'R'
- TOKN 'I'
- TOKN 'M'
- TOKN 'I'
- TOKN 251
- TOKN 250
- TOKN ' '
- TOKN 226
- TOKN 245
- TOKN ' '
- TOKN 226
- TOKN 'E'
- TOKN 'Y'
- TOKN ' '
- TOKN 222
- TOKN 220
- TOKN 'L'
- TOKN ' '
- TOKN 226
- TOKN 240
- TOKN 'K'
- TOKN ' '
- TOKN 19
- TOKN '*'
- TOKN '*'
- TOKN '*'
- TOKN '*'
- TOKN '*'
- TOKN ' '
- TOKN '*'
- TOKN '*'
- TOKN '*'
- TOKN '*'
- TOKN '*'
- TOKN '*'
- TOKN 202
- TOKN ' '
- TOKN '3'
- TOKN 'D'
- EQUB VE
-
- TOKN 2
- TOKN 'B'
- TOKN 'I'
- TOKN 'T'
- TOKN 'S'
- TOKN 39
- TOKN 'N'
- TOKN ' '
- TOKN 'P'
- TOKN 'I'
- TOKN 'E'
- TOKN 'C'
- TOKN 'E'
- TOKN 'S'
- TOKN ' '
- TOKN '-'
- TOKN ' '
- TOKN 'E'
- TOKN 'N'
- TOKN 'D'
- TOKN ' '
- TOKN 'O'
- TOKN 'F'
- TOKN ' '
- TOKN 'P'
- TOKN 'A'
- TOKN 'R'
- TOKN 'T'
- TOKN ' '
- TOKN '1'
+ EJMP 2                 \ Token 26:     "{sentence case}BITS'N PIECES - END OF
+ ECHR 'B'               \                PART 1"
+ ECHR 'I'               \
+ ECHR 'T'               \ Encoded as:   "{2}BITS[39]N PIECES - END OF PART 1"
+ ECHR 'S'
+ ECHR '`'
+ ECHR 'N'
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'I'
+ ECHR 'E'
+ ECHR 'C'
+ ECHR 'E'
+ ECHR 'S'
+ ECHR ' '
+ ECHR '-'
+ ECHR ' '
+ ECHR 'E'
+ ECHR 'N'
+ ECHR 'D'
+ ECHR ' '
+ ECHR 'O'
+ ECHR 'F'
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'A'
+ ECHR 'R'
+ ECHR 'T'
+ ECHR ' '
+ ECHR '1'
  EQUB VE
 
 \ ******************************************************************************
+\
 \       Name: MTIN
+\       Type: Variable
+\   Category: Text
+\    Summary: Lookup table for random tokens in the extended token table
+\
 \ ******************************************************************************
 
 .MTIN
 
- EQUB 16
- EQUB 21
- EQUB 26
- EQUB 31
- EQUB 155
- EQUB 160
- EQUB 46
- EQUB 165
- EQUB 36
- EQUB 41
- EQUB 61
- EQUB 51
- EQUB 56
- EQUB 170
- EQUB 66
- EQUB 71
- EQUB 76
- EQUB 81
- EQUB 86
- EQUB 140
- EQUB 96
- EQUB 101
- EQUB 135
- EQUB 130
- EQUB 91
- EQUB 106
- EQUB 180
- EQUB 185
- EQUB 190
- EQUB 225
- EQUB 230
- EQUB 235
- EQUB 240
- EQUB 245
- EQUB 250
- EQUB 115
- EQUB 120
- EQUB 125
+ EQUB 16                \ Token 0: a random extended token between 16 and 21
+ EQUB 21                \ Token 1: a random extended token between 21 and 25
+ EQUB 26                \ Token 2: a random extended token between 26 and 30
+ EQUB 31                \ Token 3: a random extended token between 31 and 35
+ EQUB 155               \ Token 4: a random extended token between 155 and 159
+ EQUB 160               \ Token 5: a random extended token between 160 and 164
+ EQUB 46                \ Token 6: a random extended token between 46 and 50
+ EQUB 165               \ Token 7: a random extended token between 165 and 169
+ EQUB 36                \ Token 8: a random extended token between 36 and 40
+ EQUB 41                \ Token 9: a random extended token between 41 and 45
+ EQUB 61                \ Token 10: a random extended token between 61 and 65
+ EQUB 51                \ Token 11: a random extended token between 51 and 55
+ EQUB 56                \ Token 12: a random extended token between 56 and 60
+ EQUB 170               \ Token 13: a random extended token between 170 and 174
+ EQUB 66                \ Token 14: a random extended token between 66 and 70
+ EQUB 71                \ Token 15: a random extended token between 71 and 75
+ EQUB 76                \ Token 16: a random extended token between 76 and 80
+ EQUB 81                \ Token 17: a random extended token between 81 and 85
+ EQUB 86                \ Token 18: a random extended token between 86 and 90
+ EQUB 140               \ Token 19: a random extended token between 140 and 144
+ EQUB 96                \ Token 20: a random extended token between 96 and 100
+ EQUB 101               \ Token 21: a random extended token between 101 and 105
+ EQUB 135               \ Token 22: a random extended token between 135 and 139
+ EQUB 130               \ Token 23: a random extended token between 130 and 134
+ EQUB 91                \ Token 24: a random extended token between 91 and 95
+ EQUB 106               \ Token 25: a random extended token between 106 and 110
+ EQUB 180               \ Token 26: a random extended token between 180 and 184
+ EQUB 185               \ Token 27: a random extended token between 185 and 189
+ EQUB 190               \ Token 28: a random extended token between 190 and 194
+ EQUB 225               \ Token 29: a random extended token between 225 and 229
+ EQUB 230               \ Token 30: a random extended token between 230 and 234
+ EQUB 235               \ Token 31: a random extended token between 235 and 239
+ EQUB 240               \ Token 32: a random extended token between 240 and 244
+ EQUB 245               \ Token 33: a random extended token between 245 and 249
+ EQUB 250               \ Token 34: a random extended token between 250 and 254
+ EQUB 115               \ Token 35: a random extended token between 115 and 119
+ EQUB 120               \ Token 36: a random extended token between 120 and 124
+ EQUB 125               \ Token 37: a random extended token between 125 and 129
 
 \ ******************************************************************************
 \       Name: COLD

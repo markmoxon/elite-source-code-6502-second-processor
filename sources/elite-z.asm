@@ -234,6 +234,16 @@ NEXT
  EQUD &8292A0B0
  EQUD &C2D2E0F0 \Trade YMW
 
+\ ******************************************************************************
+\
+\       Name: I/O Variables
+\       Type: Workspace
+\    Address: &2C40 to &2C60
+\   Category: Workspaces
+\    Summary: Various variables used by the I/O processor
+\
+\ ******************************************************************************
+
 .XC
 
  EQUB 1                 \ The x-coordinate of the text cursor (i.e. the text
@@ -265,15 +275,6 @@ NEXT
  SKIP 1                 \ Temporary storage for saving the value of the Y
                         \ register, used in a number of places
 
-\ ******************************************************************************
-\
-\       Name: svn
-\       Type: Variable
-\   Category: Save and load
-\    Summary: The "saving in progress" flag
-\
-\ ******************************************************************************
-
 .svn
 
  EQUB 0                 \ "Saving in progress" flag
@@ -293,15 +294,6 @@ NEXT
                         \ (50Hz). The WSCAN routine uses this to pause until the
                         \ vertical sync, by setting DL to 0 and then monitoring
                         \ its value until it changes to 30
-
-\ ******************************************************************************
-\
-\       Name: VEC
-\       Type: Variable
-\   Category: Screen mode
-\    Summary: The original value of the IRQ1 vector
-\
-\ ******************************************************************************
 
 .VEC
 
