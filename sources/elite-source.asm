@@ -31,6 +31,7 @@ D% = &D000
 E% = D%+2*NTY
 LS% = D%-1
 BRKV = &202
+VEC = &7FFE
 
 Q% = _ENABLE_MAX_COMMANDER
 
@@ -58,8 +59,10 @@ CON = 31
 LGO = 32
 COU = 33
 DOD = 34
+
 NOST = 18
 NOSH = 20
+
 JL = ESC
 JH = SHU+2
 PACK = SH3
@@ -71,6 +74,7 @@ Mlas = 50
 NRU% = 0
 VE = &57
 LL = 30
+
 CYAN = &FF
 RED = &F0
 YELLOW = &F
@@ -86,34 +90,38 @@ CYAN2 = &3C
 WHITE2 = &3F
 DUST = WHITE
 FF = &FF
+
 OSWRCH = &FFEE
 OSBYTE = &FFF4
 OSWORD = &FFF1
 OSFILE = &FFDD
 SCLI = &FFF7
-\XX21 = D%
+
+DOFE21 = &83
+DOhfx = &84
 SETXC = &85
 SETYC = &86
 clyns = &87
-DODIALS = &8A
 RDPARAMS = &88
-DOmsbar = 242
-wscn = 243
-onescan = 244
-DOhfx = &84
-DOdot = 245
-DOFE21 = &83
+DODIALS = &8A
 VIAE = &8B
 DOBULB = &8C
-DODKS4 = 246
 DOCATF = &8D
 SETCOL = &8E
 SETVDU19 = &8F
 DOsvn = &90
 printcode = &92
 prilf = &93
+
+DOmsbar = 242
+wscn = 243
+onescan = 244
+DOdot = 245
+DODKS4 = 246
+
 X = 128
 Y = 96
+
 f0 = &20
 f1 = &71
 f2 = &72
@@ -124,7 +132,6 @@ f6 = &75
 f7 = &16
 f8 = &76
 f9 = &77
-VEC = &7FFE
 
 W = 5
 W2 = 16
@@ -2986,7 +2993,7 @@ NT% = SVC + 2 - TP      \ This sets the variable NT% to the size of the current
 
 .BUF
 
- SKIP 100
+ SKIP 100               \ The line buffer used by DASC to print justify text
 
 \ ******************************************************************************
 \
@@ -5334,7 +5341,25 @@ ENDIF
 \       Name: MT27
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Print extended token 217-219 depending on the galaxy number (0-2)
+\    Summary: Print the captain's name during mission briefings
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine prints the following tokens, depending on the galaxy number:
+\
+\   * Token 217 ("CURRUTHERS") in galaxy 0
+\
+\   * Token 218 ("FOSDYKE SMYTHE") in galaxy 1
+\
+\   * Token 219 ("FORTESQUE") in galaxy 2
+\
+\ This is used when printing extended token 213 as part of the mission
+\ briefings, which looks like this when printed:
+\
+\   Commander {commander name}, I am Captain {mission captain's name} of Her
+\   Majesty's Space Navy
+\
+\ where {mission captain's name} is replaced by one of the names above.
 \
 \ ******************************************************************************
 
@@ -5354,7 +5379,23 @@ ENDIF
 \       Name: MT28
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Print extended token 220-221 depending on the galaxy number (0-1)
+\    Summary: Print the location hint during the mission 1 briefing
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine prints the following tokens, depending on the galaxy number:
+\
+\   * Token 220 ("WAS LAST SEEN AT {single cap}REESDICE") in galaxy 0
+\
+\   * Token 221 ("IS BELIEVED TO HAVE JUMPED TO THIS GALAXY") in galaxy 1
+\
+\ This is used when printing extended token 10 as part of the mission 1
+\ briefing, which looks like this when printed:
+\
+\   It went missing from our ship yard on Xeer five months ago and {mission 1
+\   location hint}
+\
+\ where {mission 1 location hint} is replaced by one of the names above.
 \
 \ ******************************************************************************
 
@@ -5495,7 +5536,7 @@ ENDIF
  DEX                    \ We have just scanned the end of a token, so decrement
                         \ X, which contains the token number we are looking for
 
- BEQ DTL2               \ If X has now reached zero, then we have found the token
+ BEQ DTL2               \ If X has now reached zero then we have found the token
                         \ we are looking for, so jump down to DTL2 to print it
 
 .DT1
@@ -5663,19 +5704,24 @@ ENDIF
  CMP #'A'               \ If A < ASCII "A", jump to DT9 to print this as ASCII
  BCC DT9
 
- BIT DTW6               \ If bit 7 of DTW6 is set, jump to DT10
- BMI DT10
+ BIT DTW6               \ If bit 7 of DTW6 is set, then lower case has been
+ BMI DT10               \ enabled by jump token 13, {lower case}, so jump to
+                        \ DT10 to apply the lower case and single cap masks
 
- BIT DTW2               \ If bit 7 of DTW2 is set, jump to DT5
- BMI DT5
+ BIT DTW2               \ If bit 7 of DTW2 is set, then we are not currently
+ BMI DT5                \ printing a word, so jump to DT5 so we skip the setting
+                        \ of lower case in Sentence Case (which we only want to
+                        \ do when we are already printing a word)
 
 .DT10
 
- ORA DTW1               \ Set the character value to at least DTW1
+ ORA DTW1               \ Convert the character to lower case if DTW1 is
+                        \ %00100000 (i.e. if we are in {sentence case} mode)
 
 .DT5
 
- AND DTW8               \ Mask the character value with DTW8
+ AND DTW8               \ Convert the character to upper case if DTW8 is
+                        \ %11011111 (i.e. after a {single cap} token)
 
 .DT9
 
@@ -5684,8 +5730,10 @@ ENDIF
 
 .DT3
 
-                        \ The token number is in the range 1 to 32, so this
-                        \ refers to a value in the jump table JMTB
+                        \ If we get here then the token number in A is in the
+                        \ range 1 to 32, so this is a jump token that should
+                        \ call the corresponding address in the jump table at
+                        \ JMTB
 
  TAX                    \ Copy the token number from A into X
 
@@ -5718,10 +5766,9 @@ ENDIF
 
 .DTM
 
- JSR DASC               \ Call DASC to print the ASCII character in A (or, if
-                        \ the token number is less than 32, call the relevant
-                        \ JMTB subroutine, as this instruction will have been
-                        \ modified)
+ JSR DASC               \ Call the relevant JMTB subroutine, as this instruction
+                        \ will have been modified by the above to point to the
+                        \ relevant address
 
 .DT7
 
@@ -5737,8 +5784,10 @@ ENDIF
 
 .DT6
 
-                        \ If we get here then A is in the range 91-128, so we
-                        \ print a randomly picked token from the MTIN table
+                        \ If we get here then the token number in A is in the
+                        \ range 91-128, which means we print a randomly picked
+                        \ token from the token range given in the corresponding
+                        \ entry in the MTIN table
 
  STA SC                 \ Store the token number in SC
 
@@ -5777,21 +5826,29 @@ ENDIF
  JSR DETOK              \ Call DETOK to print the extended recursive token in A
 
  JMP DT7                \ Jump to DT7 to restore V(1 0) and Y from the stack and
-                        \ return from the subroutine
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \
 \       Name: MT1
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Clear all bits of DTW1 and DTW6
+\    Summary: Switch to ALL CAPS when printing extended tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * DTW1 = %00000000 (do not change case to lower case)
+\
+\   * DTW6 = %00000000 (lower case is not enabled)
 \
 \ ******************************************************************************
 
 .MT1
 
- LDA #0                 \ Set A = 0, so when we fall through into MT2, DTW1 gets
-                        \ set to 0
+ LDA #%00000000         \ Set A = %00000000, so when we fall through into MT2,
+                        \ both DTW1 and DTW6 get set to %00000000
 
  EQUB &2C               \ Skip the next instruction by turning it into
                         \ &2C &A9 &20, or BIT &20A9, which does nothing apart
@@ -5802,16 +5859,24 @@ ENDIF
 \       Name: MT2
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Set bit 5 of DTW1 and clear all bits of DTW6
+\    Summary: Switch to Sentence Case when printing extended tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * DTW1 = %00100000 (apply lower case to the second letter of a word onwards)
+\
+\   * DTW6 = %00000000 (lower case is not enabled)
 \
 \ ******************************************************************************
 
 .MT2
 
- LDA #%00100000         \ Set bit 5 of DTW1
+ LDA #%00100000         \ Set DTW1 = %00100000
  STA DTW1
 
- LDA #0                 \ Clear bit 7 of DTW6
+ LDA #00000000          \ Set DTW6 = %00000000
  STA DTW6
 
  RTS                    \ Return from the subroutine
@@ -5821,7 +5886,15 @@ ENDIF
 \       Name: MT8
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Tab to column 6 and set all bits on DTW2
+\    Summary: Tab to column 6 and start a new word when printing extended tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * XC = 6 (tab to column 6)
+\
+\   * DTW2 = %11111111 (we are not currently printing a word)
 \
 \ ******************************************************************************
 
@@ -5840,7 +5913,15 @@ ENDIF
 \       Name: MT9
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Tab to column 1 and set the current view type to 1
+\    Summary: Clear the screen and set the current view type to 1
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * XC = 1 (tab to column 1)
+\
+\ before calling TT66 to clear the screen and set the view type to 1.
 \
 \ ******************************************************************************
 
@@ -5858,16 +5939,24 @@ ENDIF
 \       Name: MT13
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Set bit 7 of DTW6 and bit 5 of DTW1
+\    Summary: Switch to lower case when printing extended tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * DTW1 = %00100000 (apply lower case to the second letter of a word onwards)
+\
+\   * DTW6 = %10000000 (lower case is enabled)
 \
 \ ******************************************************************************
 
 .MT13
 
- LDA #%10000000         \ Set bit 7 of DTW6
+ LDA #%10000000         \ Set DTW6 = %10000000
  STA DTW6
 
- LDA #%00100000         \ Set bit 5 of DTW1
+ LDA #%00100000         \ Set DTW1 = %00100000
  STA DTW1
 
  RTS                    \ Return from the subroutine
@@ -5877,17 +5966,26 @@ ENDIF
 \       Name: MT6
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Switch to Sentence Case and set all bits in DTW3
+\    Summary: Switch to standard tokens in Sentence Case
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * QQ17 = %10000000 (set Sentence Case for standard tokens)
+\
+\   * DTW3 = %11111111 (print standard tokens)
 \
 \ ******************************************************************************
 
 .MT6
 
- LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
- STA QQ17
+ LDA #%10000000         \ Set bit 7 of QQ17 to switch standard tokens to
+ STA QQ17               \ Sentence Case
 
  LDA #%11111111         \ Set A = %11111111, so when we fall through into MT5,
-                        \ DTW3 gets set to %11111111
+                        \ DTW3 gets set to %11111111 and calls to DETOK print
+                        \ standard tokens
 
  EQUB &2C               \ Skip the next instruction by turning it into
                         \ &2C &A9 &00, or BIT &00A9, which does nothing apart
@@ -5898,14 +5996,20 @@ ENDIF
 \       Name: MT5
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Clear all bits of DTW3
+\    Summary: Switch to extended tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * DTW3 = %00000000 (print extended tokens)
 \
 \ ******************************************************************************
 
 .MT5
 
- LDA #0                 \ Set DTW3 = 0
- STA DTW3
+ LDA #%00000000         \ Set DTW3 = %00000000, so that calls to DETOK print
+ STA DTW3               \ extended tokens
 
  RTS                    \ Return from the subroutine
 
@@ -5914,7 +6018,15 @@ ENDIF
 \       Name: MT14
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Set bit 7 of DTW4 and set DTW5 to 0
+\    Summary: Switch to justified text when printing extended tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * DTW4 = %10000000 (justify text, print buffer on carriage return)
+\
+\   * DTW5 = 0 (reset line buffer size)
 \
 \ ******************************************************************************
 
@@ -5932,13 +6044,21 @@ ENDIF
 \       Name: MT15
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Set DTW4 and DTW5 to 0
+\    Summary: Switch to left-aligned text when printing extended tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * DTW4 = %00000000 (do not justify text, print buffer on carriage return)
+\
+\   * DTW5 = 0 (reset line buffer size)
 \
 \ ******************************************************************************
 
 .MT15
 
- LDA #0                 \ Set DTW4 = 0
+ LDA #0                 \ Set DTW4 = %00000000
  STA DTW4
 
  ASL A                  \ Set DTW5 = 0 (even when we fall through from MT14 with
@@ -5951,21 +6071,36 @@ ENDIF
 \       Name: MT17
 \       Type: Subroutine
 \   Category: Text
-\    Summary: 
+\    Summary: Print the selected system's adjective, e.g. Lavian for Lave
+\
+\ ------------------------------------------------------------------------------
+\
+\ The adjective for the current system is generated by taking the system name,
+\ removing the last character if it is a vowel, and adding "-ian" to the end,
+\ so:
+\
+\   * Lave gives Lavian (as in "Lavian tree grub")
+\
+\   * Leesti gives Leestian (as in "Leestian Evil Juice")
+\
+\ This routine is called by jump token 17, {system name adjective}, and it can
+\ only be used when justified text is being printed - i.e. following jump token
+\ 14, {justify} - because the routine needs to use the line buffer to work.
 \
 \ ******************************************************************************
 
 .MT17
 
- LDA QQ17               \ Clear bit 6 of QQ17 to switch to ALL CAPS
+ LDA QQ17               \ Set QQ17 = %10111111 to switch to Sentence Case
  AND #%10111111
  STA QQ17
 
- LDA #3                 \ Print control code 3 (selected system name)
- JSR TT27
+ LDA #3                 \ Print control code 3 (selected system name) into the
+ JSR TT27               \ line buffer
 
- LDX DTW5               \ Set A to the DTW5-th byte of BUF
- LDA BUF-1,X
+ LDX DTW5               \ Load the last character of the line buffer BUF into A
+ LDA BUF-1,X            \ (as DTW5 contains the buffer size, so character DTW5-1
+                        \ is the last character in the buffer BUF)
 
  JSR VOWEL              \ Test whether the character is a vowel, in which case
                         \ this will set the C flag
@@ -5973,31 +6108,34 @@ ENDIF
  BCC MT171              \ If the character is not a vowel, skip the following
                         \ instruction
 
- DEC DTW5               \ The character is a vowel, so decrement DTW5
+ DEC DTW5               \ The character is a vowel, so decrement DTW5, which
+                        \ removes the last character from the line buffer (i.e.
+                        \ it removes the trailing vowel from the system name)
 
 .MT171
 
- LDA #153               \ Print extended token 153
- JMP DETOK
+ LDA #153               \ Print extended token 153 ("IAN"), returning from the
+ JMP DETOK              \ subroutine using a tail call
 
 \ ******************************************************************************
 \
 \       Name: MT18
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Print a random number (1-4) of extended two-letter tokens
+\    Summary: Print a random 1-8 letter word in Sentence Case
 \
 \ ******************************************************************************
 
 .MT18
 
- JSR MT19               \ Call MT19 to set upper case for the first letter ???
+ JSR MT19               \ Call MT19 to capitalise the next letter (i.e. set
+                        \ Sentence Case for this word only)
 
  JSR DORND              \ Set A and X to random numbers and reduce A to a
  AND #3                 \ random number in the range 0-3
 
- TAY                    \ Copy the random number into Y, so Y contains the
-                        \ number of words to print (i.e. we print 1-4 words)
+ TAY                    \ Copy the random number into Y, so we can use Y as a
+                        \ loop counter to print 1-4 words (i.e. Y+1 words)
 
 .MT18L
 
@@ -6006,14 +6144,14 @@ ENDIF
 
  TAX                    \ Copy the random number into X, so X contains the table
                         \ offset of a random extended two-letter token from 0-31
-                        \ which we can use to pick a token from the combined
-                        \ tables at TKN2+2 and QQ16 (we exclude the first token
-                        \ in TKN2, which contains a newline)
+                        \ which we can now use to pick a token from the combined
+                        \ tables at TKN2+2 and QQ16 (we intentionally exclude
+                        \ the first token in TKN2, which contains a newline)
 
- LDA TKN2+2,X           \ Print the first letter of the token at TKN2 + 2 + X
+ LDA TKN2+2,X           \ Print the first letter of the token at TKN2+2 + X
  JSR DTS
 
- LDA TKN2+3,X           \ Print the first letter of the token at TKN2 + 3 + X
+ LDA TKN2+3,X           \ Print the second letter of the token at TKN2+2 + X
  JSR DTS
 
  DEY                    \ Decrement the loop counter
@@ -6028,14 +6166,20 @@ ENDIF
 \       Name: MT19
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Clear bit 5 of DTW8 (only)
+\    Summary: Capitalise the next letter
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * DTW8 = %11011111 (capitalise the next letter)
 \
 \ ******************************************************************************
 
 .MT19
 
- LDA #%11011111         \ Clear bit 5 of DTW8 (only) so it can be used as a mask
- STA DTW8               \ to make letters upper case
+ LDA #%11011111         \ Set DTW8 = %11011111
+ STA DTW8
 
  RTS                    \ Return from the subroutine
 
@@ -6085,17 +6229,18 @@ ENDIF
 \       Name: WHITETEXT
 \       Type: Subroutine
 \   Category: Text
-\    Summary: 
+\    Summary: Switch to white text
 \
 \ ******************************************************************************
 
 .WHITETEXT
 
- LDA #32
- JSR DOVDU19
+ LDA #32                \ Send a #SETVDU19 32 command to the I/O processor to
+ JSR DOVDU19            \ set the mode 1 palette to yellow (colour 1), white
+                        \ (colour 2) and cyan (colour 3)
 
- LDA #RED
- JMP DOCOL
+ LDA #RED               \ Send a #SETCOL &F0 command to the I/O processor to
+ JMP DOCOL              \ switch to colour 2, which is now white
 
 \ ******************************************************************************
 \
@@ -6110,36 +6255,36 @@ ENDIF
 
  EQUW MT1               \ Token  1: Switch to ALL CAPS
  EQUW MT2               \ Token  2: Switch to Sentence Case
- EQUW TT27              \ Token  3: Print selected system name
- EQUW TT27              \ Token  4: Print commander's name
+ EQUW TT27              \ Token  3: Print the selected system name
+ EQUW TT27              \ Token  4: Print the commander's name
  EQUW MT5               \ Token  5: Switch to extended tokens
  EQUW MT6               \ Token  6: Switch to standard tokens, in Sentence Case
  EQUW DASC              \ Token  7: Beep
- EQUW MT8               \ Token  8: ??? Tab to column 6, apply lower case
- EQUW MT9               \ Token  9: Tab to column 1, current view type to 1
+ EQUW MT8               \ Token  8: Tab to column 6
+ EQUW MT9               \ Token  9: Clear screen, tab to column 1, view type = 1
  EQUW DASC              \ Token 10: Line feed
- EQUW NLIN4             \ Token 11: Draw a horizontal line at pixel row 19
- EQUW DASC              \ Token 12: ??? Newline
+ EQUW NLIN4             \ Token 11: Draw box around title (line at pixel row 19)
+ EQUW DASC              \ Token 12: Carriage return
  EQUW MT13              \ Token 13: Switch to lower case
  EQUW MT14              \ Token 14: Switch to justified text
  EQUW MT15              \ Token 15: Switch to left-aligned text
  EQUW MT16              \ Token 16: Print the character in DTW7 (drive number)
- EQUW MT17              \ Token 17: 
+ EQUW MT17              \ Token 17: Print system name adjective in Sentence Case
  EQUW MT18              \ Token 18: Randomly print 1 to 4 two-letter tokens
  EQUW MT19              \ Token 19: Capitalise first letter of next word only
- EQUW DASC              \ Token 20: 
- EQUW CLYNS             \ Token 21: 
- EQUW PAUSE             \ Token 22: 
- EQUW MT23              \ Token 23: 
- EQUW PAUSE2            \ Token 24: 
- EQUW BRIS              \ Token 25: 
- EQUW MT26              \ Token 26: 
+ EQUW DASC              \ Token 20: Unused
+ EQUW CLYNS             \ Token 21: Clear the bottom few lines of the space view
+ EQUW PAUSE             \ Token 22: Display ship and wait for key press
+ EQUW MT23              \ Token 23: Move to row 10, white text, set lower case
+ EQUW PAUSE2            \ Token 24: Wait for a key press
+ EQUW BRIS              \ Token 25: Show incoming message screen, wait 2 seconds
+ EQUW MT26              \ Token 26: Fetch line input from keyboard (filename)
  EQUW MT27              \ Token 27: Print mission 1 captain's name (217-219)
  EQUW MT28              \ Token 28: Print mission 1 location hint (220-221)
- EQUW MT29              \ Token 29: 
- EQUW WHITETEXT         \ Token 30: 
- EQUW DASC              \ Token 31: 
- EQUW DASC              \ Token 32: 
+ EQUW MT29              \ Token 29: Column 6, white text, lower case in words
+ EQUW WHITETEXT         \ Token 30: White text
+ EQUW DASC              \ Token 31: Unused
+ EQUW DASC              \ Token 32: Unused
 
 \ ******************************************************************************
 \
@@ -9216,31 +9361,139 @@ ENDIF
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: DTW1
+\       Type: Variable
+\   Category: Text
+\    Summary: A mask for applying the lower case part of Sentence Case to
+\             extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This variable is used to change characters to lower case as part of applying
+\ Sentence Case to extended text tokens. It has two values:
+\
+\   * %00100000 = apply lower case to the second letter of a word onwards
+\
+\   * %00000000 = do not change case to lower case
+\
+\ The default value is %00100000 (apply lower case).
+\
+\ The flag is set to %00100000 (apply lower case) by jump token 2, {sentence
+\ case}, which calls routine MT2 to change the value of DTW1.
+\
+\ The flag is set to %00000000 (do not change case to lower case) by jump token
+\ 1, {all caps}, which calls routine MT1 to change the value of DTW1.
+\
+\ The letter to print is OR'd with DTW1 in DETOK2, which lower-cases the letter
+\ by setting bit 5 (if DTW1 is %00100000). However, this OR is only done if bit
+\ 7 of DTW2 is clear, i.e. we are printing a word, so this doesn't affect the
+\ first letter of the word, which remains capitalised.
+\ 
 \ ******************************************************************************
 
 .DTW1
 
- EQUB 32
+ EQUB %00100000
 
 \ ******************************************************************************
+\
 \       Name: DTW2
+\       Type: Variable
+\   Category: Text
+\    Summary: A flag that indicates whether we are currently printing a word
+\
+\ ------------------------------------------------------------------------------
+\
+\ This variable is used to indicate whether we are currently printing a word. It
+\ has two values:
+\
+\   * %00000000 = we are currently printing a word
+\
+\   * %11111111 = we are not currently printing a word
+\
+\ The default value is %11111111 (we are not currently printing a word).
+\
+\ The flag is set to %00000000 (we are currently printing a word) whenever a
+\ non-terminator character is passed to DASC for printing.
+\
+\ The flag is set to %11111111 (we are not currently printing a word) whenever a
+\ terminator character (full stop, colon, carriage return, line feed, space) is
+\ passed to DASC for printing. It is also set to %11111111 by jump token 8,
+\ {tab 6}, which calls routine MT8 to change the value of DTW2.
+\
 \ ******************************************************************************
 
 .DTW2
 
- EQUB &FF
+ EQUB %11111111
 
 \ ******************************************************************************
+\
 \       Name: DTW3
+\       Type: Variable
+\   Category: Text
+\    Summary: A flag for switching between standard and extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This variable is used to indicate whether standard or extended text tokens
+\ should be printed by calls to DETOK. It allows us to mix standard tokens in
+\ with extended tokens. It has two values:
+\
+\   * %00000000 = print extended tokens (i.e. those in TKN1 and RUTOK)
+\
+\   * %11111111 = print standard tokens (i.e. those in QQ18)
+\
+\ The default value is %00000000 (extended tokens).
+\
+\ Standard tokens are set by jump token {6}, which calls routine MT6 to change
+\ the value of DTW3 to %11111111.
+\
+\ Extended tokens are set by jump token {5}, which calls routine MT5 to change
+\ the value of DTW3 to %00000000.
+\
 \ ******************************************************************************
 
 .DTW3
 
- EQUB 0
+ EQUB %00000000
 
 \ ******************************************************************************
+\
 \       Name: DTW4
+\       Type: Variable
+\   Category: Text
+\    Summary: Flags that govern how justified extended text tokens are printed
+\
+\ ------------------------------------------------------------------------------
+\
+\ This variable is used to control how justified text tokens are printed as part
+\ of the extended text token system. There are two bits that affect justified
+\ text:
+\
+\   * Bit 7: 1 = justify text
+\            0 = do not justify text
+\
+\   * Bit 6: 1 = buffer the entire token before printing, including carriage
+\                returns (used for in-flight messages only)
+\            0 = print the contents of the buffer whenever a carriage return
+\                appears in the token
+\
+\ The default value is %00000000 (do not justify text, print buffer on carriage
+\ return).
+\
+\ The flag is set to %10000000 (justify text, print buffer on carriage return)
+\ by jump token 14, {justify}, which calls routine MT14 to change the value of
+\ DTW4.
+\
+\ The flag is set to %11000000 (justify text, buffer entire token) by routine
+\ MESS, which printe in-flight messages.
+\
+\ The flag is set to %00000000 (do not justify text, print buffer on carriage
+\ return) by jump token 15, {left align}, which calls routine MT1 to change the
+\ value of DTW4.
+\
 \ ******************************************************************************
 
 .DTW4
@@ -9248,62 +9501,150 @@ ENDIF
  BRK
 
 \ ******************************************************************************
+\
 \       Name: DTW5
+\       Type: Variable
+\   Category: Text
+\    Summary: The size of the justified text buffer at BUF
+\
+\ ------------------------------------------------------------------------------
+\
+\ When justified text is enabled by jump token 14, {justify}, during printing of
+\ extended text tokens, text is fed into a buffer at BUF instead of being
+\ printed straight away, so it can be padded out with spaces to justify the
+\ text. DTW5 contains the size of the buffer, so BUF + DTW5 points to the first
+\ free byte after the end of the buffer.
+\
 \ ******************************************************************************
 
 .DTW5
 
- BRK
+ EQUB 0
 
 \ ******************************************************************************
+\
 \       Name: DTW6
+\       Type: Variable
+\   Category: Text
+\    Summary: A flag to denote whether printing in lower case is enabled for
+\             extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This variable is used to indicate whether lower case is currently enabled. It
+\ has two values:
+\
+\   * %10000000 = lower case is enabled
+\
+\   * %00000000 = lower case is not enabled
+\
+\ The default value is %00000000 (lower case is not enabled).
+\
+\ The flag is set to %10000000 (lower case is enabled) by jump token 13 {lower
+\ case}, which calls routine MT10 to change the value of DTW6.
+\
+\ The flag is set to %00000000 (lower case is not enabled) by jump token 1, {all
+\ caps}, and jump token 1, {sentence case}, which call routines MT1 and MT2 to
+\ change the value of DTW6.
+\
 \ ******************************************************************************
 
 .DTW6
 
- BRK
+ EQUB %00000000
 
 \ ******************************************************************************
+\
 \       Name: DTW8
+\       Type: Variable
+\   Category: Text
+\    Summary: A mask for capitalising the next letter in an extended text token
+\
+\ ------------------------------------------------------------------------------
+\
+\ This variable is only used by one specific extended token, the {single cap}
+\ jump token, which capitalises the next letter only. It has two values:
+\
+\   * %11011111 = capitalise the next letter
+\
+\   * %11111111 = do not change case
+\
+\ The default value is %11111111 (do not change case).
+\
+\ The flag is set to %11011111 (capitalise the next letter) by jump token 19,
+\ {single cap}, which calls routine MT19 to change the value of DTW.
+\
+\ The flag is set to %11111111 (do not change case) at the start of DASC, after
+\ the letter has been capitalised in DETOK2, so the effect is to capitalise one
+\ letter only.
+\
+\ The letter to print is AND'd with DTW8 in DETOK2, which capitalises the letter
+\ by clearing bit 5 (if DTW8 is %11011111). However, this AND is only done if at
+\ least one of the following is true:
+\
+\   * Bit 7 of DTW2 is set (we are not currently printing a word)
+\
+\   * Bit 7 of DTW6 is set (lower case has been enabled by jump token 13, {lower
+\     case}
+\
+\ In other words, we only capitalise the next letter if it's the first letter in
+\ a word, or we are printing in lower case.
+\
 \ ******************************************************************************
 
 .DTW8
 
- EQUB &FF
+ EQUB %11111111
 
 \ ******************************************************************************
+\
 \       Name: FEED
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print a newline
+\
 \ ******************************************************************************
 
 .FEED
 
- LDA #12
- EQUB &2C
+ LDA #12                \ Set A = 12, so when we skip MT16 and fall through into
+                        \ TT26, we print character 12, which is a newline
+
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &A9 &41, or BIT &41A9, which does nothing apart
+                        \ from affect the flags
+
+                        \ Fall through into TT26 (skipping MT16) to print the
+                        \ newline character
 
 \ ******************************************************************************
 \
 \       Name: MT16
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Print the character given in DTW7
+\    Summary: Print the character in variable DTW7
 \
 \ ******************************************************************************
 
 .MT16
 
  LDA #'A'               \ Set A to the contents of DTW7, as DTW7 points to the
-                        \ second byte of this instruction (the default value is
-                        \ to print an "A")
+                        \ second byte of this instruction, so updating DTW7 will
+                        \ modify this instruction (the default value of DTW7 is
+                        \ an "A")
 
 DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
                         \ so that modifying DTW7 changes the value loaded into A
+
+                        \ Fall through into TT26 to print the character in A
 
 \ ******************************************************************************
 \
 \       Name: TT26
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Print a character at the text cursor, supporting right-alignment
+\    Summary: Print a character at the text cursor, with support for verified
+\             text in extended tokens
 \
 \ ------------------------------------------------------------------------------
 \
@@ -9311,7 +9652,17 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 \
 \   A                   The character to print
 \
+\ Returns:
+\
+\   X                   X is preserved
+\
+\   C flag              The C flag is cleared
+\
 \ Other entry points:
+\
+\  DASC                 DASC does exactly the same as TT26 and prints a
+\                       character at the text cursor, with support for verified
+\                       text in extended tokens
 \
 \  rT9                  Contains an RTS
 \
@@ -9323,8 +9674,8 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 
  STX SC                 \ Store X in SC, so we can retrieve it below
 
- LDX #%11111111         \ Set DTW8 = %11111111, so we don't change case
- STX DTW8
+ LDX #%11111111         \ Set DTW8 = %11111111, to disable the effect of {19} if
+ STX DTW8               \ it was set (as {19} capitalises one character only)
 
  CMP #'.'               \ If the character in A is a word terminator:
  BEQ DA8                \
@@ -9337,38 +9688,52 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  CMP #' '               \ then skip the following instruction
  BEQ DA8
 
- INX                    \ Increment X to 0, so DTW2 gets set to 0 below
+ INX                    \ Increment X to 0, so DTW2 gets set to %00000000 below
 
 .DA8
 
  STX DTW2               \ Store X in DTW2, so DTW2 is now:
                         \
-                        \   * 0 if this character is a word terminator
+                        \   * %00000000 if this character is a word terminator
+                        \
                         \   * %11111111 if it isn't
+                        \
+                        \ so DTW2 indicates whether or not we are currently
+                        \ printing a word
 
  LDX SC                 \ Retrieve the original value of X from SC
 
- BIT DTW4               \ If bit 7 of DTW4 is set, skip the following
- BMI P%+5               \ instruction
+ BIT DTW4               \ If bit 7 of DTW4 is set then we are currently printing
+ BMI P%+5               \ justified text, so skip the next instruction
 
- JMP CHPR               \ Bit 7 of DTW4 is clear, so jump down to DHPR to print
-                        \ the character
+ JMP CHPR               \ Bit 7 of DTW4 is clear, so jump down to CHPR to print
+                        \ this character, as we are not printing justified text
 
- BVS P%+6               \ If bit 6 of DTW4 is set, skip the following two
-                        \ instructions
+                        \ If we get here then we are printing justified text, so
+                        \ we need to buffer the text until we reach the end of
+                        \ the paragraph, so we can then pad it out with spaces
 
- CMP #12                \ If the character in A is a carriage return, jump down
- BEQ DA1                \ to DA1
+ BVS P%+6               \ If bit 6 of DTW4 is set, then this is an in-flight
+                        \ message and we should buffer the carriage return
+                        \ character {12}, so skip the following two instructions
 
-                        \ If we get here, bit 7 of DTW4 is set, and either bit 6
-                        \ of DTW4 is set or this is a carriage return
+ CMP #12                \ If the character in A is a carriage return, then we
+ BEQ DA1                \ have reached the end of the paragraph, so jump down to
+                        \ DA1 to print out the contents of the buffer,
+                        \ justifying it as we go
 
- LDX DTW5               \ Store the character in A in byte #DTW5 in BUF
- STA BUF,X
+                        \ If we get here then we need to buffer this character
+                        \ in the line buffer at BUF
 
- LDX SC                 \ Retrieve the original value of X from SC
+ LDX DTW5               \ DTW5 contains the current size of the buffer, so this
+ STA BUF,X              \ stores the character in A at BUF + DTW5, the next free
+                        \ space in the buffer
 
- INC DTW5               \ Increment DTW5 to point to the next byte in BUF
+ LDX SC                 \ Retrieve the original value of X from SC so we can
+                        \ preserve it through this subroutine call
+
+ INC DTW5               \ Increment the size of the BUF buffer that is stored in
+                        \ DTW5
 
  CLC                    \ Clear the C flag
 
@@ -9376,8 +9741,9 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 
 .DA1
 
-                        \ If we get here, bit 7 of DTW4 is set, bit 6
-                        \ of DTW4 is clear and this is a carriage return
+                        \ If we get here then we are justifying text and we have
+                        \ reached the end of the paragraph, so we need to print
+                        \ out the contents of the buffer, justifying it as we go
 
  TXA                    \ Store X and Y on the stack
  PHA
@@ -9386,52 +9752,75 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 
 .DA5
 
- LDX DTW5               \ If DTW5 = 0 then jump down to DA6+3 to print a newline
- BEQ DA6+3
+ LDX DTW5               \ Set X = DTW5, which contains the size of the buffer
 
- CPX #(LL+1)            \ If X < LL+1, i.e. X <= LL, jump down to DA6 to print
- BCC DA6                \ the contents of BUF followed by a newline
+ BEQ DA6+3              \ If X = 0 then the buffer is empty, so jump down to
+                        \ DA6+3 to print a newline
 
-                        \ Otherwise X > LL, so this word does not fit on the
-                        \ line
+ CPX #(LL+1)            \ If X < LL+1, i.e. X <= LL, then the buffer contains
+ BCC DA6                \ fewer than LL characters, which is less then a line
+                        \ length, so jump down to DA6 to print the contents of
+                        \ BUF followed by a newline, as we don't justify the
+                        \ last line of the paragraph
 
- LSR SC+1               \ Shift SC+1 to the right
+                        \ Otherwise X > LL, so the buffer does not fit into one
+                        \ line, and we therefore need to justify the text, which
+                        \ we do one line at a time
+
+ LSR SC+1               \ Shift SC+1 to the right, which clears bit 7 of SC+1,
+                        \ so we pass through the following comparison on the
+                        \ first iteration of the loop and set SC+1 to %01000000
 
 .DA11
 
  LDA SC+1               \ If bit 7 of SC+1 is set, skip the following two
  BMI P%+6               \ instructions
 
- LDA #%01000000         \ Set bit 6 of SC+1
+ LDA #%01000000         \ Set SC+1 = %01000000
  STA SC+1
 
- LDY #(LL-1)            \ Set Y = line length
+ LDY #(LL-1)            \ Set Y = line length, so we can loop backwards from the
+                        \ end of the first line in the buffer using Y as the
+                        \ loop counter
 
 .DAL1
 
  LDA BUF+LL             \ If the LL-th byte in BUF is a space, jump down to DA2
- CMP #' '
- BEQ DA2
+ CMP #' '               \ to print out the first line from the buffer, as it
+ BEQ DA2                \ fits the line width exactly (i.e. it's justified)
+
+                        \ We now want to find the last space character in the
+                        \ first line in the buffer, so we loop through the line
+                        \ using Y as a counter
 
 .DAL2
 
  DEY                    \ Decrement the loop counter in Y
 
- BMI DA11               \ If Y <= 0, loop back to DA11
- BEQ DA11
+ BMI DA11               \ If Y <= 0, loop back to DA11, as we have now looped
+ BEQ DA11               \ through the whole line
 
- LDA BUF,Y              \ If the Y-th byte in BUF is not a space, jump down to
- CMP #' '               \ DAL2
+ LDA BUF,Y              \ If the Y-th byte in BUF is not a space, loop back up
+ CMP #' '               \ to DAL2 to check the next character
  BNE DAL2
 
- ASL SC+1               \ 
- BMI DAL2
+                        \ Y now points to a space character in the line buffer
 
-                        \ We now want to insert a character into the buffer BUF at position SC
+ ASL SC+1               \ Shift SC+1 to the left
 
- STY SC                 \ Store Y in SC
+ BMI DAL2               \ If bit 7 of SC+1 is set, jump to DAL2 to find the next
+                        \ space character
 
- LDY DTW5               \ Fetch the buffer pointer from DTW5 into Y
+                        \ We now want to insert a space into the line buffer at
+                        \ position Y, which we do by shifting every character
+                        \ after position Y along by 1, and then inserting the
+                        \ space
+
+ STY SC                 \ Store Y in SC, so we want to insert the space at
+                        \ position SC
+
+ LDY DTW5               \ Fetch the buffer size from DTW5 into Y, to act as a
+                        \ loop counter for moving the line buffer along by 1
 
 .DAL6
 
@@ -9443,20 +9832,39 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  CPY SC                 \ Loop back to shift the next character along, until we
  BCS DAL6               \ have moved the SC-th character (i.e. Y < SC)
 
- INC DTW5               \ Increment the buffer pointer in DTW5
+ INC DTW5               \ Increment the buffer size in DTW5
 
-\LDA #' '
+\LDA #' '               \ This instruction is commented out in the original
+                        \ source, as it has no effect because A already contains
+                        \ ASCII " ". This is because the last character that is
+                        \ tested in the above loop is at position SC, which we
+                        \ know contains a space, so we know A contains a space
+                        \ character when the loop finishes
+
+                        \ We've now shifted the line to the right by 1 from
+                        \ position SC onwards, so SC and SC+1 both contain
+                        \ spaces, and Y is now SC-1 as we did a DEY just before
+                        \ the end of the loop - in other words, we have inserted
+                        \ a space at position SC, and Y points to the character
+                        \ before the newly inserted space
+
+                        \ We now want to move the pointer Y left to find the
+                        \ next space in the line buffer, before looping back to
+                        \ check whether we are done, and if not, insert another
+                        \ space
 
 .DAL3
 
- CMP BUF,Y              \ If the 
- BNE DAL1
+ CMP BUF,Y              \ If the character at position Y is not a space, jump to
+ BNE DAL1               \ DAL1 to see whether we have now justified the line
 
- DEY
+ DEY                    \ Decrement the loop counter in Y
 
- BPL DAL3
+ BPL DAL3               \ Loop back to check the next character to the left,
+                        \ until we have found a space
 
- BMI DA11
+ BMI DA11               \ Jump back to DA11 (this BMI is effectively a JMP as
+                        \ we already passed through a BPL to get here)
 
 .DA2
 
@@ -9516,8 +9924,9 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 
 .DAL5
 
- LDA BUF,Y              \ Print the Y-th character in BUF
- JSR CHPR
+ LDA BUF,Y              \ Print the Y-th character in BUF using CHPR, which also
+ JSR CHPR               \ clears the C flag for when we return from the
+                        \ subroutine below
 
  INY                    \ Increment Y to point to the next character
 
@@ -9535,7 +9944,8 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  JSR DAS1               \ Call DAS1 to print X characters from BUF, returning
                         \ with X = 0
 
- STX DTW5               \ Set DTW5 = 0
+ STX DTW5               \ Set the buffer size in DTW5 to 0, as the buffer is now
+                        \ empty
 
  PLA                    \ Restore Y and X from the stack
  TAY
@@ -9550,6 +9960,9 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  EQUB &2C               \ Skip the next instruction by turning it into
                         \ &2C &A9 &07, or BIT &07A9, which does nothing apart
                         \ from affect the flags
+
+                        \ Fall through into CHPR (skipping BELL) to print the
+                        \ character and return with the C flag cleared
 
 \ ******************************************************************************
 \
@@ -9576,7 +9989,7 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 \       Name: CHPR
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Send a character to the I/O processor to print on-screen
+\    Summary: Send a character to the I/O processor for printing or processing
 \
 \ ------------------------------------------------------------------------------
 \
@@ -9592,9 +10005,8 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 
 .CHPR
 
-\PRINT
-
-.CHPRD
+.CHPRD                  \ This label is in the original source but is not used
+                        \ anywhere
 
  STA K3                 \ Store the character to print in K3
 
@@ -9602,18 +10014,20 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  BCC P%+4               \ skip the following instruction so the text cursor
                         \ doesn't move to the right
 
- INC XC                 \ Increment XC to move the text cursor one character to
-                        \ the right
+ INC XC                 \ We are printing a visible character, so increment XC
+                        \ to move the text cursor one character to the right
 
- LDA QQ17               \ If all bits of QQ17 are set (i.e. text printing is
- INA                    \ disabled), the return from the subroutine, as rT9
- BEQ rT9                \ contains an RTS
+ LDA QQ17               \ If all bits of QQ17 are set, i.e. text printing is
+ INA                    \ disabled, then return from the subroutine without
+ BEQ rT9                \ printing anything (as rT9 contains an RTS)
 
- BIT printflag          \ If bit 7 of printflag is clear, jump to noprinter
- BPL noprinter
+ BIT printflag          \ If bit 7 of printflag is clear (printer output is not
+ BPL noprinter          \ enabled), jump to noprinter
 
- LDA #printcode         \ Bit 7 of printflag is set, so send a printcode code
- JSR OSWRCH             \ to the I/O processor
+ LDA #printcode         \ Bit 7 of printflag is set, which means we should send
+ JSR OSWRCH             \ the output to the printer as well as the screen, so
+                        \ send a #printcode command to the I/O processor to do
+                        \ this
 
 .noprinter
 
@@ -9625,12 +10039,29 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: printflag
+\       Type: Variable
+\   Category: Text
+\    Summary: A flag that determines whether to send text output to the printer
+\             as well as the screen
+\
+\ ------------------------------------------------------------------------------
+\
+\ This flag can have the following values:
+\
+\   * Bit 7: 1 = printer enabled
+\            0 = printer disabled
+\
+\ If the printer is enabled, then text output is sent to the printer as well as
+\ the screen. This is set when CTRL is held down when displaying a text screen,
+\ such as CTRL-f7 to print out the market prices for the current system.
+\
 \ ******************************************************************************
 
 .printflag
 
- BRK
+ EQUB 0
 
 \ ******************************************************************************
 \       Name: DIALS
@@ -14472,7 +14903,8 @@ LOAD_C% = LOAD% +P% - CODE%
 \       Name: MT23
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Move the text cursor to row 10
+\    Summary: Move to row 10, switch to white text, and switch to lower case
+\             when printing extended tokens
 \
 \ ******************************************************************************
 
@@ -14485,13 +14917,25 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ &2C &A9 &06, or BIT &06A9, which does nothing apart
                         \ from affect the flags
 
+                        \ Fall through into MT29 to move to the row in A, switch
+                        \ to white text, and switch to lower case
+
 \ ******************************************************************************
 \
 \       Name: MT29
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Move the text cursor to row 6, white text, set bit 7 of DTW6 and
-\             bit 5 of DTW1
+\    Summary: Move to row 6, switch to white text, and switch to lower case when
+\             printing extended tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * YC = 6 (move to row 6)
+\
+\ Then it calls WHITETEXT to switch to white text, before jumping to MT13 to
+\ switch to lower case when printing extended tokens.
 \
 \ ******************************************************************************
 
@@ -14500,7 +14944,7 @@ LOAD_C% = LOAD% +P% - CODE%
  LDA #6                 \ Move the text cursor to row 6
  JSR DOYC
 
- JSR WHITETEXT          \ Set white text ????
+ JSR WHITETEXT          \ Set white text
 
  JMP MT13               \ Jump to MT13 to set bit 7 of DTW6 and bit 5 of DTW1,
                         \ returning from the subroutine using a tail call
@@ -14692,43 +15136,77 @@ LOAD_D% = LOAD% + P% - CODE%
 \   Category: Text
 \    Summary: Move the text cursor to a specified column
 \
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The new column number
+\
 \ ******************************************************************************
 
 .DOXC
 
- PHA
- BIT printflag
- BPL DOX1
- CMP XC
- BCC DOXLF
- BEQ DOX1
- PHY
- PHX \++
- SBC XC
- TAX
+ PHA                    \ Store the new column number on the stack
+
+ BIT printflag          \ If bit 7 of printflag is clear (printer output is not
+ BPL DOX1               \ enabled), jump to DOX1 to skip the printer-specific
+                        \ code below
+
+                        \ The following code moves the printer text cursor
+
+ CMP XC                 \ If the new column in A is less than the current column
+ BCC DOXLF              \ in XC, jump down to DOXLF to do a carriage return, as
+                        \ we need to move the print head to the left, which we
+                        \ do by moving it all the way to the left first, before
+                        \ tabbing along to the new column value
+
+ BEQ DOX1               \ If the new column in A is equal to the current column
+                        \ in XC, we don't need to move the print head, so jump
+                        \ to DOX1 to move on to the screen code
+
+ PHY                    \ Store X and Y on the stack, so we can restore them
+ PHX                    \ after the following loop
+
+ SBC XC                 \ Set X = A - XC, which is the number of spaces by which
+ TAX                    \ we should move the print head to the right
 
 .DOXL1
 
- LDA #32
+ LDA #32                \ Print a space to move the print head to the right
  JSR TT26
- DEX
- BNE DOXL1
- PLX
- PLY \++
+
+ DEX                    \ Decrement the number of spaces to move
+
+ BNE DOXL1              \ Loop back until we have moved the print head to the
+                        \ right by X spaces
+
+ PLX                    \ Retrieve X and Y from the stack
+ PLY
 
 .DOX1
 
- LDA #SETXC
- JSR OSWRCH
- PLA
- STA XC
- JMP OSWRCH
+                        \ The following moves the screen text cursor
+
+ LDA #SETXC             \ Send the first part of a #SETXC command to the I/O
+ JSR OSWRCH             \ processor
+
+ PLA                    \ Retrieve the new column number from the stack
+
+ STA XC                 \ Set the text cursor x-coordinate in XC to the new
+                        \ column number
+
+ JMP OSWRCH             \ Send the column number to the I/O processor, so
+                        \ we've now sent a #SETXC <column> command, and return
+                        \ from the subroutine using a tail call
 
 .DOXLF
 
- LDA #13
- JSR TT26
- JMP DOX1
+ LDA #13                \ Print a carriage return to send the print head to the
+ JSR TT26               \ beginning of the current line (note, this is not a
+                        \ newline, which is both a carriage return and a line
+                        \ feed, it's just a carriage return)
+
+ JMP DOX1               \ Jump up to DOX1 to update the screen text cursor
 
 \ ******************************************************************************
 \
@@ -14741,7 +15219,7 @@ LOAD_D% = LOAD% + P% - CODE%
 \
 \ Arguments:
 \
-\   A                   The row number
+\   A                   The new row number
 \
 \ ******************************************************************************
 
@@ -14749,34 +15227,63 @@ LOAD_D% = LOAD% + P% - CODE%
 
  STA YC                 \ Store A in YC, which sets the text cursor row number
 
- PHA                    \ Store the row number on the stack
+ PHA                    \ Store the new row number on the stack
 
- LDA #SETYC             \ Set A to the character for moving the text cursor to
-                        \ the value in YC
+ LDA #SETYC             \ Set A to #SETYC, ready to send to the I/O processor 
+
+                        \ Fall through into label to send a #SETYC <row> command
+                        \ to the I/O processor
+
+\ ******************************************************************************
+\
+\       Name: label
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Write a two-byte command to the I/O processor
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sends a command to the I/O processor, along with the parameter
+\ byte from the top of the stack.
+\
+\ Arguments:
+\
+\   A                   The command byte to send to the I/O processor
+\
+\   Top of stack        The parameter to send to the I/O processor
+\
+\ ******************************************************************************
 
 .label
 
- JSR OSWRCH             \ Send the character in A to the I/O processor for
-                        \ printing
+ JSR OSWRCH             \ Send the command byte in A to the I/O processor
 
- PLA                    \ Retrieve the row number from the stack
+ PLA                    \ Retrieve the parameter from the stack
 
- JMP OSWRCH             \ Send the character in A to the I/O processor for
-                        \ printing, returning from the subroutine using a tail
-                        \ call
+ JMP OSWRCH             \ Send the parameter in A to the I/O processor, and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: INCYC
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Move the text cursor to the next row
+\
 \ ******************************************************************************
 
 .INCYC
 
- PHA
- LDA YC
- INA \++
- JSR DOYC
- PLA
- RTS
+ PHA                    \ Store A on the stack so we can preserve it
+
+ LDA YC                 \ Set A = YC + 1, so A is the number of the next row
+ INA
+
+ JSR DOYC               \ Call DOYC to move the text cursor to the new row in A
+
+ PLA                    \ Retrieve the original value of A from the stack
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -14795,14 +15302,14 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .DOCOL
 
- PHA                    \ Store A on the stack
+ PHA                    \ Store A, the colour number, on the stack
 
- LDA #SETCOL            \ Set A to the character for setting the text colour
+ LDA #SETCOL            \ Set A to #SETCOL, ready to send to the I/O processor
 
- BNE label              \ Jump to label to print the character in A followed by
-                        \ the character on the stack, returning from the
-                        \ subroutine using a tail call (this BNE is effectively
-                        \ a JMP as A is never zero)
+ BNE label              \ Jump to label to send a #SETCOL <colour> command to
+                        \ the I/O processor, returning from the subroutine
+                        \ using a tail call (this BNE is effectively a JMP as A
+                        \ is never zero)
 
 \ ******************************************************************************
 \
@@ -14821,14 +15328,15 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .DOVDU19
 
- PHA                    \ Store A on the stack
+ PHA                    \ Store A, the colour number, on the stack
 
- LDA #SETVDU19          \ Set A to the character for doing a VDU 19
+ LDA #SETVDU19          \ Set A to #SETVDU19, ready to write to the I/O
+                        \ processor
 
- BNE label              \ Jump to label to print the character in A followed by
-                        \ the character on the stack, returning from the
-                        \ subroutine using a tail call (this BNE is effectively
-                        \ a JMP as A is never zero)
+ BNE label              \ Jump to label to write #SETVDU19 <colour> to the I/O
+                        \ processor, returning from the subroutine using a tail
+                        \ call (this BNE is effectively a JMP as A is never
+                        \ zero)
 
 \ ******************************************************************************
 \       Name: TRADEMODE
@@ -23469,7 +23977,7 @@ LOAD_E% = LOAD% + P% - CODE%
 \
 \ Returns:
 \
-\   C flag              The C flag is clear
+\   C flag              The C flag is cleared
 \
 \ ******************************************************************************
 
@@ -25879,8 +26387,10 @@ LOAD_F% = LOAD% + P% - CODE%
 
  JSR DIALS              \ Call DIALS to update the dashboard
 
- BIT printflag
- BPL dontdolinefeedontheprinternow
+ BIT printflag          \ If bit 7 of printflag is clear (printer output is not
+ BPL dontdolinefeedontheprinternow \ enabled), jump to
+                        \ dontdolinefeedontheprinternow to skip the following
+
  LDA #prilf
  JSR OSWRCH
  JSR OSWRCH
@@ -25889,15 +26399,14 @@ LOAD_F% = LOAD% + P% - CODE%
 
  STZ printflag
 
- LDA QQ11               \ If this is a space view, skip the following four
+ LDA QQ11               \ If this is a space view, skip the following five
  BEQ P%+13              \ instructions (i.e. jump to JSR TT17 below)
 
  AND PATG               \ If PATG = &FF (author names are shown on start-up)
  LSR A                  \ and bit 0 of QQ11 is 1 (the current view is type 1),
- BCS P%+7               \ then skip the following instruction
+ BCS P%+7               \ then skip the following two instructions
 
  LDY #2
-
  JSR DELAY
 
  JSR TT17               \ Scan the keyboard for the cursor keys or joystick,
@@ -26975,50 +27484,73 @@ LOAD_F% = LOAD% + P% - CODE%
 \       Name: MT26
 \       Type: Subroutine
 \   Category: Text
-\    Summary: 
+\    Summary: Fetch a line of text from keyboard
+\
+\ ------------------------------------------------------------------------------
+\
+\ If Escape is pressed or a blank name is entered, then an empty string is
+\ returned.
+\
+\ Returns:
+\
+\   Y                   The size of the entered text, or 0 if Escape was pressed
+\
+\   INWK+5              The entered text, terminated by a carriage return
 \
 \ ******************************************************************************
 
 .MT26
 
- LDA #VIAE
+ LDA #VIAE              \ Send a #VIAE %10000001 command to the I/O processor to
+ JSR OSWRCH             \ clear 6522 System VIA interrupt enable register IER
+ LDA #%10000001         \ (SHEILA &4E) bit 1 (i.e. enable the CA2 interrupt,
+                        \ which comes from the keyboard)
  JSR OSWRCH
 
- LDA #&81
- JSR OSWRCH
-
- LDY #8
+ LDY #8                 \ Wait for 8/50 of a second (0.16 seconds)
  JSR DELAY
 
- JSR FLKB
+ JSR FLKB               \ Call FLKB to flush the keyboard buffer
 
- LDX #LO(RLINE)
- LDY #HI(RLINE)
- LDA #0
+ LDX #LO(RLINE)         \ Call OSWORD with A = 0 and (Y X) pointing to the
+ LDY #HI(RLINE)         \ configuration block in RLINE, which reads a line from
+ LDA #0                 \ the current input stream (i.e. the keyboard)
  JSR OSWORD
 
- BCC P%+4
+ BCC P%+4               \ The C flag will be set if we pressed Escape when
+                        \ entering the name, otherwise it will be clear, so
+                        \ skip the next instruction is Escape is not pressed
 
- LDY #0
+ LDY #0                 \ Escape was pressed, so set Y = 0 (as the OSWORD call
+                        \ returns the length of the entered string in Y)
 
- LDA #VIAE
- JSR OSWRCH
+ LDA #VIAE              \ Send a #VIAE %00000001 command to the I/O processor to
+ JSR OSWRCH             \ set 6522 System VIA interrupt enable register IER
+ LDA #%00000001         \ (SHEILA &4E) bit 1 (i.e. disable the CA2 interrupt,
+ JSR OSWRCH             \ which comes from the keyboard)
 
- LDA #1
- JSR OSWRCH
-
- JMP FEED
+ JMP FEED               \ Jump to FEED to print a newline, returning from the
+                        \ subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: RLINE
+\       Type: Variable
+\   Category: Text
+\    Summary: The OSWORD configuration block used to fetch a line of text from
+\             the keyboard
+\
 \ ******************************************************************************
 
 .RLINE
 
- EQUW (INWK+5)
- EQUB 9
- EQUB &21
- EQUB &7B
+ EQUW INWK+5            \ The address to store the input, so the text entered
+                        \ will be stored in INWK+5 as it is typed
+
+ EQUB 9                 \ Maximum line length = 9
+
+ EQUB '!'               \ Allow ASCII characters from "!" through to "{" in
+ EQUB '{'               \ the input
 
 \ ******************************************************************************
 \
@@ -27529,10 +28061,11 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .backtonormal
 
- LDA #VIAE
- JSR OSWRCH
- LDA #1
- JSR OSWRCH
+ LDA #VIAE              \ Send a #VIAE %00000001 command to the I/O processor to
+ JSR OSWRCH             \ set 6522 System VIA interrupt enable register IER
+ LDA #%00000001         \ (SHEILA &4E) bit 1 (i.e. disable the CA2 interrupt,
+ JSR OSWRCH             \ which comes from the keyboard)
+
  LDA #0
  BEQ DODOSVN
 
@@ -37035,7 +37568,7 @@ ENDMACRO
  ETOK 208               \                 {single cap}UNFORTUNATELY IT'S BEEN
  ECHR 'M'               \                STOLEN.{cr}
  ECHR 'O'               \                 {single cap}{display ship, wait for
- ECHR 'M'               \                keypress}IT WENT MISSING FROM OUR SHIP
+ ECHR 'M'               \                key press}IT WENT MISSING FROM OUR SHIP
  ETWO 'E', 'N'          \                YARD ON {single cap}XEER FIVE MONTHS
  ECHR 'T'               \                AGO AND {mission 1 location hint}.{cr}
  ECHR ' '               \                 {single cap}YOUR MISSION, SHOULD YOU
@@ -37051,7 +37584,7 @@ ENDMACRO
  ETWO 'A', 'B'          \                 {left align}{sentence case}{tab 6}GOOD
  ETWO 'L', 'E'          \                LUCK, {single cap}COMMANDER.{cr}
  ECHR ' '               \                 {left align}{tab 6}{all caps}  MESSAGE
- ETWO 'T', 'I'          \                ENDS{display ship, wait for keypress}"
+ ETWO 'T', 'I'          \                ENDS{display ship, wait for key press}"
  ECHR 'M'               \
  ECHR 'E'               \ Encoded as:   "{23}{14}{2}G<242><221><240>GS[213][178]
  ETOK 204               \                {19}I <247>G[208]MOM<246>T OF [179]R V
@@ -37386,7 +37919,7 @@ ENDMACRO
  EJMP 19                \                 {single cap}IF SUCCESSFUL, YOU WILL BE
  ECHR 'W'               \                WELL REWARDED.{cr}
  ECHR 'E'               \                {left align}{tab 6}{all caps}  MESSAGE
- ECHR ' '               \                ENDS{wait for keypress}"
+ ECHR ' '               \                ENDS{wait for key press}"
  ECHR 'H'               \
  ECHR 'A'               \ Encoded as:   "{25}{9}{30}{23}{14}{2}  <245>T<246>
  ETWO 'V', 'E'          \                <251><223>[213]. {19}WE HA<250> NE[196]
@@ -37552,7 +38085,7 @@ ENDMACRO
  ECHR 'T'               \                 {single cap}AND MAYBE SOONER THAN YOU
  ECHR 'U'               \                THINK...{cr}
  ETWO 'L', 'A'          \                {left align}{tab 6}{all caps}  MESSAGE
- ETWO 'T', 'I'          \                ENDS{wait for keypress}"
+ ETWO 'T', 'I'          \                ENDS{wait for key press}"
  ETWO 'O', 'N'          \
  ECHR 'S'               \ Encoded as:   "{25}{9}{30}{23}{14}{2}  C<223>G<248>TU
  ECHR ' '               \                <249><251><223>S [154]!{12}{12}<226>
@@ -37942,8 +38475,8 @@ ENDMACRO
  ERND 3
  EQUB VE
 
- ETOK 147               \ Token 62:     "THE {all caps, system name adjective}
- EJMP 17                \                [155-159] [160-164]"
+ ETOK 147               \ Token 62:     "THE {system name adjective} [155-159]
+ EJMP 17                \                 [160-164]"
  ECHR ' '               \
  ERND 4                 \ Encoded as:   "[147]{17} [4?] [5?]"
  ECHR ' '
@@ -38010,20 +38543,20 @@ ENDMACRO
  EQUB VE                \
                         \ Encoded as:   "{18}"
 
- EJMP 17                \ Token 72:     "{all caps, system name adjective}
- ECHR ' '               \                [160-164]"
- ERND 5                 \
- EQUB VE                \ Encoded as:   "{17} [5?]"
+ EJMP 17                \ Token 72:     "{system name adjective} [160-164]"
+ ECHR ' '               \
+ ERND 5                 \ Encoded as:   "{17} [5?]"
+ EQUB VE
 
- EJMP 17                \ Token 73:     "{all caps, system name adjective}
- ECHR ' '               \                {random 1-8 letter word}"
+ EJMP 17                \ Token 73:     "{system name adjective} {random 1-8
+ ECHR ' '               \                letter word}"
  EJMP 18                \
  EQUB VE                \ Encoded as:   "{17} {18}"
 
- EJMP 17                \ Token 74:     "{all caps, system name adjective}
- ECHR ' '               \                [170-174]"
- ERND 13                \
- EQUB VE                \ Encoded as:   "{17} [13?]"
+ EJMP 17                \ Token 74:     "{system name adjective} [170-174]"
+ ECHR ' '               \
+ ERND 13                \ Encoded as:   "{17} [13?]"
+ EQUB VE
 
  ERND 13                \ Token 75:     "[170-174] {random 1-8 letter word}"
  ECHR ' '               \
@@ -38904,15 +39437,15 @@ ENDMACRO
  EQUB VE                \
                         \ Encoded as:   "{18}"
 
- EJMP 17                \ Token 191:    "{all caps, system name adjective}
- ECHR ' '               \                {random 1-8 letter word}"
+ EJMP 17                \ Token 191:    "{system name adjective} {random 1-8
+ ECHR ' '               \                letter word}"
  EJMP 18                \
  EQUB VE                \ Encoded as:   "{17} {18}"
 
- EJMP 17                \ Token 192:    "{all caps, system name adjective}
- ECHR ' '               \                [170-174]"
- ERND 13                \
- EQUB VE                \ Encoded as:   "{17} [13?]"
+ EJMP 17                \ Token 192:    "{system name adjective} [170-174]"
+ ECHR ' '               \
+ ERND 13                \ Encoded as:   "{17} [13?]"
+ EQUB VE
 
  ETWO 'I', 'N'          \ Token 193:    "INHABITANT"
  ECHR 'H'               \
@@ -38923,8 +39456,8 @@ ENDMACRO
  ECHR 'T'
  EQUB VE
 
- ETOK 191               \ Token 194:    "{all caps, system name adjective}
- EQUB VE                \                {random 1-8 letter word}"
+ ETOK 191               \ Token 194:    "{system name adjective} {random 1-8
+ EQUB VE                \                letter word}"
                         \
                         \ Encoded as:   "[191]"
 
@@ -39075,7 +39608,7 @@ ENDMACRO
 
  ECHR ' '               \ Token 213:    " {single cap}COMMANDER {commander
  ETOK 154               \                name}, I {lower case}AM{sentence case}
- ECHR ' '               \                CAPTAIN {mission 1 captain's name}
+ ECHR ' '               \                CAPTAIN {mission captain's name}
  EJMP 4                 \                {lower case}OF{sentence case} HER
  ECHR ','               \                MAJESTY'S SPACE NAVY{lower case}"
  ECHR ' '               \
@@ -39222,7 +39755,7 @@ ENDMACRO
  EJMP 4                 \                PUSH RIGHT TO THE HOME SYSTEM OF THOSE
  ETOK 204               \                MOTHERS.{cr}
  ECHR 'I'               \                 {single cap}
- EJMP 13                \                {wait for keypress}
+ EJMP 13                \                {wait for key press}
  ECHR ' '               \                {clear screen}
  ECHR 'A'               \                {white}
  ECHR 'M'               \                {tab 6, white, lower case in words}
@@ -39243,7 +39776,7 @@ ENDMACRO
  ECHR 'F'               \                {single cap}COMMANDER.{cr}
  ECHR ' '               \                {left align}
  EJMP 19                \                {tab 6}{all caps}  MESSAGE ENDS
- ECHR 'N'               \                {wait for keypress}"
+ ECHR 'N'               \                {wait for key press}"
  ECHR 'A'               \                
  ECHR 'V'               \ Encoded as:   "{25}{9}{30}{29}{14}{2}GOOD DAY [154]
  ECHR 'A'               \                 {4}[204]I{13} AM {19}AG<246>T {19}B
@@ -39684,7 +40217,7 @@ ENDMACRO
  ETOK 154               \                UNIT{extended tokens} AS PAYMENT.{cr}
  ETOK 204               \                {left align}
  ETOK 179               \                {tab 6}{all caps}  MESSAGE ENDS
- ECHR ' '               \                {wait for keypress}"
+ ECHR ' '               \                {wait for key press}"
  ECHR 'H'               \                
  ECHR 'A'               \ Encoded as:   "{25}{9}{29}{30}{8}{14}{13}{19}WELL D
  ETWO 'V', 'E'          \                <223>E [154][204][179] HA<250> <218>RV
@@ -39870,8 +40403,8 @@ ENDMACRO
  ERND 14                \ Encoded as:   "[15?] [14?]"
  EQUB VE
 
- EJMP 17                \ Token 236:    "{all caps, system name adjective}
- ECHR ' '               \                 [225-229] [240-244]"
+ EJMP 17                \ Token 236:    "{system name adjective} [225-229]
+ ECHR ' '               \                 [240-244]"
  ERND 29                \
  ECHR ' '               \ Encoded as:   "{17} [29?] [32?]"
  ERND 32
@@ -39951,10 +40484,10 @@ ENDMACRO
  ECHR 'M'
  EQUB VE
 
- EJMP 17                \ Token 249:    "{all caps, system name adjective}
- ECHR ' '               \                 ULTRA"
- ECHR 'U'               \
- ECHR 'L'               \ Encoded as:   "{17} ULT<248>"
+ EJMP 17                \ Token 249:    "{system name adjective} ULTRA"
+ ECHR ' '               \
+ ECHR 'U'               \ Encoded as:   "{17} ULT<248>"
+ ECHR 'L'
  ECHR 'T'
  ETWO 'R', 'A'
  EQUB VE
@@ -40741,22 +41274,33 @@ ENDMACRO
 \       Name: MTIN
 \       Type: Variable
 \   Category: Text
-\    Summary: Lookup table for random tokens in the extended token table
+\    Summary: Lookup table for random tokens in the extended token table (0-37)
+\
+\ ------------------------------------------------------------------------------
+\
+\ The ERND token type, which is part of the extended token system, takes an
+\ argument between 0 and 37, and returns a randomly chosen token in the range
+\ specified in this table. This is used to generate the extended description of
+\ each system.
+\
+\ For example, the entry at position 13 in this table (counting from 0) is 66,
+\ so ERND 14 will expand into a random token in the range 66-70, i.e. one of
+\ "JUICE", "BRANDY", "WATER", "BREW" and "GARGLE BLASTERS".
 \
 \ ******************************************************************************
 
 .MTIN
 
- EQUB 16                \ Token 0: a random extended token between 16 and 21
- EQUB 21                \ Token 1: a random extended token between 21 and 25
- EQUB 26                \ Token 2: a random extended token between 26 and 30
- EQUB 31                \ Token 3: a random extended token between 31 and 35
- EQUB 155               \ Token 4: a random extended token between 155 and 159
- EQUB 160               \ Token 5: a random extended token between 160 and 164
- EQUB 46                \ Token 6: a random extended token between 46 and 50
- EQUB 165               \ Token 7: a random extended token between 165 and 169
- EQUB 36                \ Token 8: a random extended token between 36 and 40
- EQUB 41                \ Token 9: a random extended token between 41 and 45
+ EQUB 16                \ Token  0: a random extended token between 16 and 21
+ EQUB 21                \ Token  1: a random extended token between 21 and 25
+ EQUB 26                \ Token  2: a random extended token between 26 and 30
+ EQUB 31                \ Token  3: a random extended token between 31 and 35
+ EQUB 155               \ Token  4: a random extended token between 155 and 159
+ EQUB 160               \ Token  5: a random extended token between 160 and 164
+ EQUB 46                \ Token  6: a random extended token between 46 and 50
+ EQUB 165               \ Token  7: a random extended token between 165 and 169
+ EQUB 36                \ Token  8: a random extended token between 36 and 40
+ EQUB 41                \ Token  9: a random extended token between 41 and 45
  EQUB 61                \ Token 10: a random extended token between 61 and 65
  EQUB 51                \ Token 11: a random extended token between 51 and 55
  EQUB 56                \ Token 12: a random extended token between 56 and 60

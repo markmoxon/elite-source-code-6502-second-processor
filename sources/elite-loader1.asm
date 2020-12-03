@@ -38,7 +38,10 @@ T = &95
 Z1 = ZP
 Z2 = P
 FF = &FF
-VIA = &FE40
+
+VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
+                        \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
+                        \ known as SHEILA)
 
 CODE% = &2000
 LOAD% = &2000
@@ -388,10 +391,10 @@ ENDMACRO
                         \ or 768 times, and draws the planet part of the
                         \ loading screen's Saturn
 
- LDA VIA+4              \ Read the 6522 System VIA T1C-L timer 1 low-order
- STA RAND+1             \ counter, which increments 1000 times a second so this
-                        \ will be pretty random, and store it in RAND+1 among
-                        \ the hard-coded random seeds in RAND
+ LDA VIA+&44            \ Read the 6522 System VIA T1C-L timer 1 low-order
+ STA RAND+1             \ counter (SHEILA &44), which increments 1000 times a
+                        \ second so this will be pretty random, and store it in
+                        \ RAND+1 among the hard-coded random seeds in RAND
 
  JSR DORND              \ Set A and X to random numbers, say A = r1
 

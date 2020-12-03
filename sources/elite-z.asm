@@ -43,9 +43,11 @@ OSBYTE = &FFF4
 OSWORD = &FFF1
 OSFILE = &FFDD
 SCLI = &FFF7
-SHEILA = &FE00
-VIA = &FE40
-USVIA = VIA
+
+VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
+                        \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
+                        \ known as SHEILA)
+
 IRQ1V = &204
 VSCAN = 57
 XX21 = D%
@@ -212,27 +214,75 @@ FOR I%, 0, 255
 NEXT
 
 \ ******************************************************************************
+\
 \       Name: TVT3
+\       Type: Variable
+\   Category: Screen mode
+\    Summary: Palette data for the mode 1 part of the screen (the top part)
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following table contains four different mode 1 palettes, each of which
+\ sets a four-colour palatte for the top part of the screen. Mode 1 supports
+\ four colours on-screen and in Elite colour 0 is always set to black, so each
+\ of the palettes in this table defines the three other colours (1 to 3).
+\
+\ The palettes are set in the IRQ1 handler that implements the split screen
+\ mode, and can be changed by the parasite sending a #SETVDU19 <offset> command
+\ to point to the offset of the new palette in this table.
+\
+\ This table must start on a page boundary (i.e. an address that ends in two
+\ zeroes in hexadecimal). In the release version of the game TVT3 is at &2C00.
+\ This is so the #SETVDU19 command can switch palettes properly, as it does this
+\ by overwriting the low byte of the palette data address with a new offset, so
+\ the low byte for first palette's address must be 0.
+\
+\ Palette data is given as a set of bytes, with each byte mapping a logical
+\ colour to a physical one. In each byte, the logical colour is given in bits
+\ 4-7 and the physical colour in bits 0-3. See p.379 of the Advanced User Guide
+\ for details of how palette mapping works, as in modes 1 and 2 we have to do
+\ multiple palette commands to change the colours correctly, and the physical
+\ colour value is EOR'd with 7, just to make things even more confusing.
+\
 \ ******************************************************************************
 
 .TVT3
 
- EQUD &17243400
- EQUD &47576474
- EQUD &8696A1B1
- EQUD &C6D6E1F1 \View  YRC
- EQUD &17243400
- EQUD &47576474
- EQUD &8696A0B0
- EQUD &C6D6E0F0 \Trade YRW
- EQUD &17243400
- EQUD &47576474
- EQUD &8090A1B1
- EQUD &C0D0E1F1 \Title YWC
- EQUD &17243400
- EQUD &47576474
- EQUD &8292A0B0
- EQUD &C2D2E0F0 \Trade YMW
+ EQUB &00, &34          \ 1 = yellow, 2 = red, 3 = cyan (space view)
+ EQUB &24, &17          \
+ EQUB &74, &64          \ Set with a #SETVDU19 0 command
+ EQUB &57, &47
+ EQUB &B1, &A1
+ EQUB &96, &86
+ EQUB &F1, &E1
+ EQUB &D6, &C6
+
+ EQUB &00, &34          \ 1 = yellow, 2 = red, 3 = white (charts)
+ EQUB &24, &17          \
+ EQUB &74, &64          \ Set with a #SETVDU19 16 command
+ EQUB &57, &47
+ EQUB &B0, &A0
+ EQUB &96, &86
+ EQUB &F0, &E0
+ EQUB &D6, &C6
+
+ EQUB &00, &34          \ 1 = yellow, 2 = white, 3 = cyan (title screen)
+ EQUB &24, &17          \
+ EQUB &74, &64          \ Set with a #SETVDU19 32 command
+ EQUB &57, &47
+ EQUB &B1, &A1
+ EQUB &90, &80
+ EQUB &F1, &E1
+ EQUB &D0, &C0
+
+ EQUB &00, &34          \ 1 = yellow, 2 = magenta, 3 = white (trading)
+ EQUB &24, &17          \
+ EQUB &74, &64          \ Set with a #SETVDU19 48 command
+ EQUB &57, &47
+ EQUB &B0, &A0
+ EQUB &92, &82
+ EQUB &F0, &E0
+ EQUB &D2, &C2
 
 \ ******************************************************************************
 \
@@ -460,34 +510,42 @@ NEXT
                         \   * &FF = fitted
 
 \ ******************************************************************************
+\
 \       Name: JMPTAB
+\       Type: Variable
+\   Category: Text
+\    Summary: The lookup table for OSWRCH jump commands (128-147)
+\
+\ ------------------------------------------------------------------------------
+\
+\ Once they have finished, routines in this table should reset WRCHV to point
+\ back to USOSWRCH again by calling the PUTBACK routine with a JMP as their last
+\ instruction.
+\
 \ ******************************************************************************
-
-\ Vectors for OSWRCH - routine should end with JMPPUTBACK once it has had its fill of data
 
 .JMPTAB
 
-\Vector lookup table
- EQUW USOSWRCH
- EQUW BEGINLIN
- EQUW ADDBYT
- EQUW DOFE21 \3
- EQUW DOHFX
- EQUW SETXC \5
- EQUW SETYC \6
- EQUW CLYNS \7
- EQUW RDPARAMS \8-GAME PARAMETERS
- EQUW ADPARAMS \9
- EQUW DODIALS\10
- EQUW DOVIAE\11
- EQUW DOBULB\12
- EQUW DOCATF\13
- EQUW DOCOL \14
- EQUW SETVDU19 \15
- EQUW DOSVN \16
- EQUW DOBRK \17
- EQUW printer
- EQUW prilf
+ EQUW USOSWRCH          \              128 (&80)     0 = Put back to USOSWRCH
+ EQUW BEGINLIN          \              129 (&81)     1 = Begin drawing a line
+ EQUW ADDBYT            \              130 (&82)     2 = Add a byte to a line
+ EQUW DOFE21            \ #DOFE21    = 131 (&83)     3 = Show energy bomb effect
+ EQUW DOHFX             \ #DOhfx     = 132 (&84)     4 = Show hyperspace colours
+ EQUW SETXC             \ #SETXC     = 133 (&85)     5 = Set text cursor column
+ EQUW SETYC             \ #SETYC     = 134 (&86)     6 = Set text cursor row
+ EQUW CLYNS             \ #clyns     = 135 (&87)     7 = Clear bottom of screen
+ EQUW RDPARAMS          \ #RDPARAMS  = 136 (&88)     8 = Reset dashboard params
+ EQUW ADPARAMS          \              137 (&89)     9 = Add dashboard parameter
+ EQUW DODIALS           \ #DODIALS   = 138 (&8A)    10 = Hide dials on death
+ EQUW DOVIAE            \ #VIAE      = 139 (&8B)    11 = Set 6522 System VIA IER
+ EQUW DOBULB            \ #DOBULB    = 140 (&8C)    12 = Toggle dashboard bulb
+ EQUW DOCATF            \ #DOCATF    = 141 (&8D)    13 = Set disc catalogue flag
+ EQUW DOCOL             \ #SETCOL    = 142 (&8E)    14 = Set the current colour
+ EQUW SETVDU19          \ #SETVDU19  = 143 (&8F)    15 = Change mode 1 palette
+ EQUW DOSVN             \ #DOsvn     = 144 (&90)    16 = Set file saving flag
+ EQUW DOBRK             \              145 (&91)    17 = Execute BRK instruction
+ EQUW printer           \ #printcode = 146 (&92)    18 = Write to printer/screen
+ EQUW prilf             \ #prilf     = 147 (&93)    19 = Blank line on printer
 
 \ ******************************************************************************
 \       Name: STARTUP
@@ -505,7 +563,7 @@ NEXT
  LDA #(newosrdch DIV256)
  STA RDCHV+1 \~~
  LDA #&39
- STA VIA+&E
+ STA VIA+&4E
  LDA #&7F
  STA &FE6E
  LDA IRQ1V
@@ -517,7 +575,7 @@ NEXT
  LDA #IRQ1 DIV256
  STA IRQ1V+1
  LDA #VSCAN
- STA USVIA+5
+ STA VIA+&45
  CLI
 
 .NOINT
@@ -549,44 +607,110 @@ NEXT
  JSR Tina+4
 
 \ ******************************************************************************
+\
 \       Name: PUTBACK
+\       Type: Subroutine
+\   Category: Tube
+\    Summary: Reset the OSWRCH vector in WRCHV to point to USOSWRCH
+\
 \ ******************************************************************************
-
-\ ............. OSWRCH revectored bumbling .....................
 
 .PUTBACK
 
- LDA #128
+ LDA #128               \ Set A = 128 to denote the first entry in JMPTAB, i.e.
+                        \ USOSWRCH
+
+                        \ Fall through into USOSWRCH to set WRCHV to the first
+                        \ entry in JMPTAB - in other words, put WRCHV back to
+                        \ its original value of USOSWRCH
 
 \ ******************************************************************************
+\
 \       Name: USOSWRCH
+\       Type: Subroutine
+\   Category: Tube
+\    Summary: The custom OSWRCH routine for writing characters and implementing
+\             jump table commands
+\
+\ ------------------------------------------------------------------------------
+\
+\ WRCHV is set to point to this routine in the STARTUP routine that runs when
+\ the I/O processor code first loads (it's set via a call to PUTBACK).
+\
+\ This routine prints characters to the I/O processor's screen. For special jump
+\ table commands with characters in the range 128-147, the routine calls the
+\ corresponding routines in the JMPTAB table; all other characters are printed
+\ normally using TT26.
+\
+\ To implement the special jump table commands, this routine sets the address
+\ in WRCHV so that calls to OSWRCH get vectored via the appropriate address from
+\ JMPTAB. The routine does the following, depending on the value in A:
+\
+\   * If A is in the range 128-147, it sets WRCHV to entry number A - 128 in
+\     the JMPTAB table (so 128 is the first entry, 129 the second, and so on)
+\
+\   * Otherwise it prints the character in A by calling TT26
+\
+\ The vector can be reset to USOSWRCH by calling the PUTBACK routine, which is
+\ done at the end of all of the routines that are pointed to by JMPTAB.
+\
+\ Arguments:
+\
+\   A                   The character to print:
+\                       
+\                         * 128-147: Run the jump command in A (see JMPTAB)
+\
+\                         * All others: Print the character in A
+\
 \ ******************************************************************************
 
 .USOSWRCH
 
- STX SC
- TAX
- BPL OHMYGOD
- ASL A
- TAX
- CPX #39
- BCS OHMYGOD
- LDA JMPTAB,X
- SEI
- STA WRCHV
- LDA JMPTAB+1,X
- STA WRCHV+1
- CLI
- RTS
+ STX SC                 \ Store X in SC so we can retrieve it later
+
+ TAX                    \ Store A in X
+
+ BPL OHMYGOD            \ If A < 128 jump to OHMYGOD to print the character in A
+
+ ASL A                  \ Set X = A << 2
+ TAX                    \       = (A - 128) * 2 (because A >= 128)
+                        \
+                        \ so X can be used as an index into a jump table, where
+                        \ the table entries correspond to original values of A
+                        \ of 128 for entry 0, 129 for entry 1, 130 for entry 2,
+                        \ and so on
+
+ CPX #39                \ If X >= 39 then it is past the end of the jump table
+ BCS OHMYGOD            \ (JMPTAB contains addresses 0-19, so the last entry is
+                        \ for X = 38), so jump to OHMYGOD to print the
+                        \ character in A
+
+ LDA JMPTAB,X           \ Fetch the low byte of the jump table address pointed
+                        \ to by X from JMPTAB + X
+
+ SEI                    \ Disable interrupts while we update the WRCHV vector
+
+ STA WRCHV              \ Store the low byte of the jump table entry in the low
+                        \ byte of WRCHV 
+
+ LDA JMPTAB+1,X         \ Fetch the high byte of the jump table address pointed
+ STA WRCHV+1            \ to by X from JMPTAB+1 + X, and store it in the high
+                        \ byte of WRCHV
+
+ CLI                    \ Enable interrupts again
+
+ RTS                    \ Return from the subroutine
 
 .OHMYGOD
 
- LDX SC
- JMP TT26
+ LDX SC                 \ Retrieve X from SC
+
+ JMP TT26               \ Jump to TT26 to print the character in A, returning
+                        \ from the subroutine with a tail call
 
 \ ******************************************************************************
 \
-\       Name: DET1
+\       Name: DODIALS
 \       Type: Subroutine
 \   Category: Screen mode
 \    Summary: Hide the dashboard (for when we die)
@@ -613,19 +737,20 @@ NEXT
 
 .DODIALS
 
-TAX
+ TAX
 
  LDA #6                 \ Set A to 6 so we can update 6845 register R6 below
 
  SEI                    \ Disable interrupts so we can update the 6845
 
- STA SHEILA+&00         \ Set 6845 register R6 to the value in X. Register R6
- STX SHEILA+&01         \ is the "vertical displayed" register, which sets the
+ STA VIA+&00            \ Set 6845 register R6 to the value in X. Register R6
+ STX VIA+&01            \ is the "vertical displayed" register, which sets the
                         \ number of rows shown on the screen
 
  CLI                    \ Re-enable interrupts
 
- JMP PUTBACK\hide dials on death
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \       Name: DOFE21
@@ -634,25 +759,62 @@ TAX
 .DOFE21
 
  STA &FE21
- JMP PUTBACK \Shimmer on energy bomb
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: DOHFX
+\       Type: Subroutine
+\   Category: Drawing circles
+\    Summary: Implement the #DOHFX <flag> command (update the hyperspace effect
+\             flag)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #DOHFX <flag> command. It
+\ updates the hyperspace effect flag in HFX.
+\
+\ Arguments:
+\
+\   A                   The new value of the hyperspace effect flag
+\                       
 \ ******************************************************************************
 
 .DOHFX
 
- STA HFX
- JMP PUTBACK \Hyperspace colours
+ STA HFX                \ Store the new hyperspace effect flag in HFX
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: DOVIAE
+\       Type: Subroutine
+\   Category: Keyboard
+\    Summary: Implement the #VIAE <flag> command (enable/disable interrupts)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #VIAE <flag> command. It updates
+\ the 6522 System VIA interrupt enable register (IER) at SHEILA &4E, which
+\ allows us to enable and disable interrupts. It is used for enabling and
+\ disabling the keyboard interrupt.
+\
+\ Arguments:
+\
+\   A                   The new value of the interrupt enable register (IER)
+\
 \ ******************************************************************************
 
 .DOVIAE
 
- STA VIA+&E
- JMP PUTBACK \Keyboard interrupt
+ STA VIA+&4E            \ Store A in SHEILA &4E
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \       Name: DOCATF
@@ -664,22 +826,56 @@ TAX
  JMP PUTBACK
 
 \ ******************************************************************************
+\
 \       Name: DOCOL
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Implement the #SETCOL <colour> command (set the current colour)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #SETCOL <colour> command. It
+\ updates the current colour in COL.
+\
+\ Arguments:
+\
+\   A                   The new colour
+\                       
 \ ******************************************************************************
 
 .DOCOL
 
- STA COL
- JMP PUTBACK
+ STA COL                \ Store the new colour in COL
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: DOSVN
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Implement the #DOSVN <flag> command (update the "save in progress"
+\             flag)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #DOSVN <flag> command. It
+\ updates the "save in progress" flag in svn
+\
+\ Arguments:
+\
+\   A                   The new value of the "save in progress" flag
+\                       
 \ ******************************************************************************
 
 .DOSVN
 
- STA svn
- JMP PUTBACK
+ STA svn                \ Store the new "save in progress" flag in svn
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
+
 \ ******************************************************************************
 \       Name: DOBRK
 \ ******************************************************************************
@@ -691,80 +887,164 @@ TAX
  EQUW 13
 
 \ ******************************************************************************
+\
 \       Name: printer
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Implement the #printcode <char> command (print a character on the
+\             printer and screen)
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The character to print on the printer and screen
+\
 \ ******************************************************************************
 
 .printer
 
- PHA
- JSR TT26
- PLA
- CMP #11
- BEQ nottosend
- PHA
- LDA #2
- JSR NVOSWRCH
- PLA
- PHA
- CMP #32
- BCS tosend
- CMP #10
- BEQ tosend2
- LDA #13
- JSR POSWRCH
- JMP sent
+ PHA                    \ Store A on the stack so we can retrieve it after the
+                        \ following call to TT26
+ 
+ JSR TT26               \ Call TT26 to print the character in A on-screen
+
+ PLA                    \ Retrieve A from the stack
+
+ CMP #11                \ If A = 11, which normally means "move the cursor up
+ BEQ nottosend          \ one line", jump to nottosend to skip sending this
+                        \ character to the printer, as you can't roll back time
+                        \ when you're printing hard copy
+ 
+ PHA                    \ Store A on the stack so we can retrieve it after the
+                        \ following call to NVOSWRCH
+
+ LDA #2                 \ Send ASCII 2 to the printer using the non-vectored
+ JSR NVOSWRCH           \ OSWRCH, which means "start sending characters to the
+                        \ printer"
+
+ PLA                    \ Retrieve A from the stack, though this is a bit
+                        \ pointless given the next instruction, as they cancel
+                        \ each other out
+ 
+ PHA                    \ Store A on the stack so we can retrieve it after the
+                        \ following calls to POSWRCH and/or NVOSWRCH
+ 
+ CMP #' '               \ If A is greater than ASCII " ", then it's a printable
+ BCS tosend             \ character, so jump to tosend to print the character
+                        \ and jump back to sent to turn the printer off and
+                        \ finish
+
+ CMP #10                \ If we are printing a line feed, jump to tosend2 to
+ BEQ tosend2            \ send it to POSWRCH
+
+ LDA #13                \ Otherwise print a carriage return instead of whatever
+ JSR POSWRCH            \ was in A, and jump to sent to turn the printer off and
+ JMP sent               \ finish
 
 .tosend2
 
-\CMP#13\BEQsent
- LDA #10
+\CMP #13                \ These instructions are commented out in the original
+\BEQ sent               \ source; perhaps they were replaced by the above JMP
+                        \ instruction at some point, which does a similar thing
+                        \ but in fewer bytes (and without the risk of POSWRCH
+                        \ corrupting the value of A)
+
+ LDA #10                \ Call POSWRCH to send a line feed to the printer
  JSR POSWRCH
 
 .sent
 
- LDA #3
- JSR NVOSWRCH
- PLA
+ LDA #3                 \ Send ASCII 3 to the printer using the non-vectored
+ JSR NVOSWRCH           \ OSWRCH, which means "stop sending characters to the
+                        \ printer"
+
+ PLA                    \ Retrieve A from the stack
 
 .nottosend
 
- JMP PUTBACK
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: POSWRCH
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print a character on the printer only
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The character to send to the printer
+\
 \ ******************************************************************************
 
 .POSWRCH
 
- PHA
- LDA #1
- JSR NVOSWRCH
- PLA
- JMP NVOSWRCH
+ PHA                    \ Store A on the stack so we can retrieve it after the
+                        \ following call to NVOSWRCH
+
+ LDA #1                 \ Send ASCII 1 to the printer using the non-vectored
+ JSR NVOSWRCH           \ OSWRCH, which means "send the next character to the
+                        \ printer only"
+
+ PLA                    \ Retrieve A from the stack
+
+ JMP NVOSWRCH           \ Send the character in A to the printer using the
+                        \ non-vectored OSWRCH, which prints the character on the
+                        \ printer, and return from the subroutine using a tail
+                        \ call
 
 \ ******************************************************************************
+\
 \       Name: tosend
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print a printable character and return to the printer routine
+\
 \ ******************************************************************************
 
 .tosend
 
- JSR POSWRCH
- JMP sent
+ JSR POSWRCH            \ Call POSWRCH to print the character in A on the
+                        \ printer only
+
+ JMP sent               \ Jump to sent to turn the printer off and restore the
+                        \ USOSWRCH handler, returning from the subroutine using
+                        \ a tail call
 
 \ ******************************************************************************
+\
 \       Name: prilf
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Implement the #prilf command (print a blank line on the printer)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #prilf command. It prints a
+\ blank line on the printer by printing two line feeds.
+\
 \ ******************************************************************************
 
 .prilf
 
- LDA #2
- JSR NVOSWRCH
- LDA #10
- JSR POSWRCH
- JSR POSWRCH
- LDA #3
- JSR NVOSWRCH
- JMP PUTBACK
+ LDA #2                 \ Send ASCII 2 to the printer using the non-vectored
+ JSR NVOSWRCH           \ OSWRCH, which means "start sending characters to the
+                        \ printer"
+
+ LDA #10                \ Send ASCII 10 to the printer twice using the POSWRCH
+ JSR POSWRCH            \ routine, which prints a blank line below the current
+ JSR POSWRCH            \ line as ASCII 10 is the line feed character
+
+ LDA #3                 \ Send ASCII 3 to the printer using the non-vectored
+ JSR NVOSWRCH           \ OSWRCH, which means "stop sending characters to the
+                        \ printer"
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \       Name: DOBULB
@@ -787,7 +1067,9 @@ TAX
  STA (SC),Y
  DEY
  BPL BULL
- JMP PUTBACK
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \       Name: ECBLB
@@ -808,7 +1090,9 @@ TAX
  STA (SC),Y
  DEY
  BPL BULL2
- JMP PUTBACK
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -1130,7 +1414,8 @@ TAX
 
 .DRLR1
 
- JMP PUTBACK
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 .doalaser
 
@@ -2619,31 +2904,74 @@ TAX
  EQUB &F
 
 \ ******************************************************************************
+\
 \       Name: newosrdch
+\       Type: Subroutine
+\   Category: Tube
+\    Summary: The custom OSRDCH routine for reading characters
+\
+\ ------------------------------------------------------------------------------
+\
+\ RDCHV is set to point to this routine in the STARTUP routine that runs when
+\ the I/O processor code first loads. It uses the standard OSRDCH routine to
+\ read characters from the input stream, and bolts on logic to check for valid
+\ and invalid characters.
+\
+\ Returns:
+\
+\   A                   The character that is read:
+\
+\                         * Valid input: The character's ASCII value
+\
+\                         * Invalid input: 7
+\
+\   C flag              The C flag is cleared
+\
 \ ******************************************************************************
 
 .newosrdch
 
- JSR &FFFF
- CMP #128
- BCC P%+6
+ JSR &FFFF              \ This address is overwritten by the STARTUP routine to
+                        \ contain the original value of RDCHV, so this call acts
+                        \ just like a standard JSR OSRDCH call, and reads a
+                        \ character from the current input stream and stores it
+                        \ in A
+
+ CMP #128               \ If A < 128 then skip the following three instructions,
+ BCC P%+6               \ otherwise the character is invalid, so fall through
+                        \ into badkey to deal with it
 
 .badkey
 
- LDA #7
- CLC
- RTS
- CMP #32
- BCS coolkey
- CMP #13
- BEQ coolkey
- CMP #21
+                        \ If we get here then the character we read is invalid,
+                        \ so we return a beep character
+
+ LDA #7                 \ Set A to the beep character
+
+ CLC                    \ Clear the C flag
+
+ RTS                    \ Return from the subroutine
+
+                        \ If we get here then A < 128
+
+ CMP #' '               \ If A >= ASCII " " then this is a valid alphanumerical
+ BCS coolkey            \ key press (as A is in the range 32 to 127), so jump
+                        \ down to coolkey to return this key press
+
+ CMP #13                \ If A = 13 then this is the return character, so jump
+ BEQ coolkey            \ down to coolkey to return this key press
+
+ CMP #21                \ If A <> 21 jump up to badkey
  BNE badkey
 
 .coolkey
 
- CLC
- RTS
+                        \ If we get here then the character we read is valid, so
+                        \ return it
+
+ CLC                    \ Clear the C flag
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -2993,7 +3321,9 @@ TAX
  BCS P%+3
  RTS
  JSR DIALS
- JMP PUTBACK
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \       Name: RDPARAMS
@@ -3041,30 +3371,30 @@ MACRO DKS4
  SEI                    \ Disable interrupts so we can scan the keyboard
                         \ without being hijacked
 
- STX SHEILA+&40         \ Set 6522 System VIA output register ORB (SHEILA &40)
-                        \ to %0011 to stop auto scan of keyboard
+ STX VIA+&40            \ Set 6522 System VIA output register ORB (SHEILA &40)
+                        \ to %00000011 to stop auto scan of keyboard
 
  LDX #%01111111         \ Set 6522 System VIA data direction register DDRA
- STX SHEILA+&43         \ (SHEILA &43) to %01111111. This sets the A registers
-                        \ (IRA and ORA) so that
+ STX VIA+&43            \ (SHEILA &43) to %01111111. This sets the A registers
+                        \ (IRA and ORA) so that:
                         \
-                        \ Bits 0-6 of ORA will be sent to the keyboard
+                        \   * Bits 0-6 of ORA will be sent to the keyboard
                         \
-                        \ Bit 7 of IRA will be read from the keyboard
+                        \   * Bit 7 of IRA will be read from the keyboard
 
- STA SHEILA+&4F         \ Set 6522 System VIA output register ORA (SHEILA &4F)
+ STA VIA+&4F            \ Set 6522 System VIA output register ORA (SHEILA &4F)
                         \ to X, the key we want to scan for; bits 0-6 will be
                         \ sent to the keyboard, of which bits 0-3 determine the
                         \ keyboard column, and bits 4-6 the keyboard row
 
- LDA SHEILA+&4F         \ Read 6522 System VIA output register IRA (SHEILA &4F)
+ LDA VIA+&4F            \ Read 6522 System VIA output register IRA (SHEILA &4F)
                         \ into A; bit 7 is the only bit that will have changed.
                         \ If the key is pressed, then bit 7 will be set (so A
                         \ will contain 128 + A), otherwise it will be clear (so
                         \ A will be unchanged)
 
  LDX #%00001011         \ Set 6522 System VIA output register ORB (SHEILA &40)
- STX SHEILA+&40         \ to %1011 to restart auto scan of keyboard
+ STX VIA+&40            \ to %00001011 to restart auto scan of keyboard
 
  CLI                    \ Allow interrupts again
 
@@ -3154,77 +3484,120 @@ ENDMACRO
  RTS
 
 \ ******************************************************************************
+\
 \       Name: OSWVECS
+\       Type: Variable
+\   Category: Text
+\    Summary: The lookup table for OSWORD jump commands (240-255)
+\
+\ ------------------------------------------------------------------------------
+\
+\ On entry into these routines, OSSC(1 0) points to the parameter block passed
+\ to the OSWORD call in (Y X). OSSC must not be changed by the routines, as it
+\ is used by NWOSWD to preserve the values of X and Y through the revectored
+\ OSWORD call. OSSC(1 0) can be copied into SC(1 0) to avoid changing it.
+\
 \ ******************************************************************************
-
-\ ......... Revectoring of OSWORD ...............................
 
 .OSWVECS
 
- EQUW KEYBOARD
- EQUW PIXEL
- EQUW MSBAR
- EQUW WSCAN
- EQUW SC48
- EQUW DOT
- EQUW DODKS4
- EQUW HLOIN
- EQUW HANGER
- EQUW SOMEPROT
- EQUW SAFE
- EQUW SAFE
- EQUW SAFE
- EQUW SAFE
- EQUW SAFE
- EQUW SAFE
- EQUW SAFE
- EQUW SAFE
- EQUW SAFE
+ EQUW KEYBOARD          \            240 (&F0)     0 = Scan the keyboard
+ EQUW PIXEL             \            241 (&F1)     1 = Draw a pixel
+ EQUW MSBAR             \ #DOmsbar = 242 (&F2)     2 = Update missile indicators
+ EQUW WSCAN             \ #wscn    = 243 (&F3)     3 = Remove ship from scanner
+ EQUW SC48              \ #onescan = 244 (&F4)     4 = Update the 3D scanner
+ EQUW DOT               \ #DOdot   = 245 (&F5)     5 = Draw a dot
+ EQUW DODKS4            \ #DODKS4  = 246 (&F6)     6 = Scan for a specific key
+ EQUW HLOIN             \            247 (&F7)     7 = Draw a horizontal line
+ EQUW HANGER            \            248 (&F8)     8 = Display the hanger
+ EQUW SOMEPROT          \            249 (&F9)     9 = Copy protection
+ EQUW SAFE              \            250 (&FA)    10 = Do nothing
+ EQUW SAFE              \            251 (&FB)    10 = Do nothing
+ EQUW SAFE              \            252 (&FC)    10 = Do nothing
+ EQUW SAFE              \            253 (&FD)    10 = Do nothing
+ EQUW SAFE              \            254 (&FE)    10 = Do nothing
+ EQUW SAFE              \            255 (&FF)    10 = Do nothing
 
-\ Above vector lookup table is JSRed below, after registers are preserved.
-\ OSSC points to the parameter block, and should not be corrupted.
-\ Copy into SC if it may be corrupted.  End with an RTS
+ EQUW SAFE              \ These addresses are never used and have no effect, as
+ EQUW SAFE              \ they are out of range for one-byte OSWORD numbers
+ EQUW SAFE
 
 \ ******************************************************************************
+\
 \       Name: NWOSWD
+\       Type: Subroutine
+\   Category: Tube
+\    Summary: The custom OSWORD routine
+\
+\ ------------------------------------------------------------------------------
+\
+\ WORDV is set to point to this routine in the STARTUP routine that runs when
+\ the I/O processor code first loads.
+\
+\ Arguments:
+\
+\   A                   The OSWORD call to perform:
+\                       
+\                         * 240-255: Run the jump command in A (see OSWVECS)
+\
+\                         * All others: Call the standard OSWORD routine
+\
+\  (Y X)                The address of the associated OSWORD parameter block
+\
 \ ******************************************************************************
 
 .NWOSWD
 
- BIT svn
- BMI notours
- CMP #240
- BCC notours
- STX OSSC
- STY OSSC+1
- PHA
- SBC #240
- ASL A
- TAX
- LDA OSWVECS,X
- STA JSRV+1
- LDA OSWVECS+1,X
- STA JSRV+2
- LDX OSSC
+ BIT svn                \ If bit 7 of svn is set, jump to notours to process
+ BMI notours            \ this call with the standard OSWORD handler
+
+ CMP #240               \ If A < 240, this is not a special jump command call,
+ BCC notours            \ so jump to notours to pass it to the standard OSWORD
+                        \ handler
+
+ STX OSSC               \ Store X in OSCC so we can retrieve it later
+
+ STY OSSC+1             \ Store Y in OSCC+1 so we can retrieve it later
+
+ PHA                    \ Store A on the stack so we can retrieve it later
+
+ SBC #240               \ Set X = (A - 240) * 2
+ ASL A                  \
+ TAX                    \ so X can be used as an index into a jump table, where
+                        \ the table entries correspond to original values of A
+                        \ of 240 for entry 0, 241 for entry 1, 242 for entry 2,
+                        \ and so on
+
+ LDA OSWVECS,X          \ Fetch the OSWVECS jump table address pointed to by X,
+ STA JSRV+1             \ and store it in JSRV(2 1). This modifies the address
+ LDA OSWVECS+1,X        \ of the JSR instruction at JSRV below, so it will call
+ STA JSRV+2             \ the subroutine from the jump table
+
+ LDX OSSC               \ Restore the value of X we stored in OSSC, so now both
+                        \ X and Y have the values from the original OSWORD call
 
 .JSRV
 
- JSR &FFFC \Poked over
- PLA
- LDX OSSC
- LDY OSSC+1
+ JSR &FFFC              \ This address is overwritten by the code above to point
+                        \ to the relevant jump command from the OSWVECS jump
+                        \ table, so this instruction runs the jump command
+
+ PLA                    \ Retrieve A from the stack
+
+ LDX OSSC               \ Retrieve X from OSSC
+
+ LDY OSSC+1             \ Retrieve Y from OSSC+1
 
 .SAFE
 
- RTS
-
-\ ******************************************************************************
-\       Name: notours
-\ ******************************************************************************
+ RTS                    \ Return from the subroutine
 
 .notours
 
- JMP &FFFC \~~
+ JMP &FFFC              \ This address is overwritten by the STARTUP routine to
+                        \ contain the original value of WORDV, so this call acts
+                        \ just like a standard JMP OSWORD call and is used to
+                        \ process OSWORD calls that aren't our custom calls
 
 \ ******************************************************************************
 \
@@ -3354,35 +3727,84 @@ ENDMACRO
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: DODKS4
+\       Type: Subroutine
+\   Category: Keyboard
+\    Summary: Implement the #DODKS4 command (scan the keyboard to see if a
+\             specific key is being pressed)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #DODKS4 command with parameters
+\ in the block at OSSC(1 0). It scans the keyboard to see if a specified key is
+\ being pressed.
+\
+\ Arguments:
+\
+\   OSSC(1 0)           A parameter block as follows:
+\
+\                         * Byte #2 = The internal number of the key to check
+\
+\                       See p.142 of the Advanced User Guide for a list of
+\                       internal key numbers
+\
+\ Returns:
+\
+\   OSSC(1 0)           A parameter block as follows:
+\
+\                         * Byte #0 = If the key is being pressed, it contains
+\                           the original argument from byte #2, but with bit 7
+\                           set (i.e. byte #2 + 128). If the key is not being
+\                           pressed, it contains the value in byte #0 unchanged
+\                       
 \ ******************************************************************************
 
 .DODKS4
 
- LDY #2
- LDA (OSSC),Y
- DKS4
- STA (OSSC),Y
- RTS
+ LDY #2                 \ Fetch byte #2 from the block pointed to by OSSC, which
+ LDA (OSSC),Y           \ contains the key to check, and store it in A
+
+ DKS4                   \ Include macro DKS4 to check whether the key in A is
+                        \ being pressed, and if it is, set bit 7 of A
+
+ STA (OSSC),Y           \ Store the updated A in byte #0 of the block pointed to
+                        \ by OSSC
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: cls
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Clear the top part of the screen and draw a white border
+\
 \ ******************************************************************************
-
-\ ............. Character Print .....................
 
 .cls
 
- JSR TTX66
- JMP RR4
+ JSR TTX66              \ Call TTX66 to clear the top part of the screen and
+                        \ draw a white border
+
+ JMP RR4                \ Jump to RR4 to restore X and Y from the stack and A
+                        \ from K3, and return from the subroutine using a tail
+                        \ call
 
 \ ******************************************************************************
+\
 \       Name: TT67
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print a newline
+\
 \ ******************************************************************************
 
 .TT67
 
- LDA #12
+ LDA #12                \ Set A to a carriage return character
+
+                        \ Fall through into TT26 to print the newline
 
 \ ******************************************************************************
 \
@@ -3425,7 +3847,7 @@ ENDMACRO
 \
 \   Y                   Y is preserved
 \
-\   C flag              C flag is cleared
+\   C flag              The C flag is cleared
 \
 \ Other entry points:
 \
@@ -3918,22 +4340,56 @@ ENDMACRO
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: SETXC
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Implement the #SETXC <column> command (move text cursor to a
+\             specific column)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #SETXC <column> command. It
+\ updates the text cursor x-coordinate (i.e. the text column) in XC.
+\
+\ Arguments:
+\
+\   A                   The text column
+\                       
 \ ******************************************************************************
 
 .SETXC
 
- STA XC
- JMP PUTBACK
+ STA XC                 \ Store the new text column in XC
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: SETYC
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Implement the #SETYC <row> command (move text cursor to a specific
+\             row)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #SETYC <row> command. It updates
+\ the text cursor y-coordinate (i.e. the text row) in YC.
+\
+\ Arguments:
+\
+\   A                   The text row
+\                       
 \ ******************************************************************************
 
 .SETYC
 
- STA YC
- JMP PUTBACK
+ STA YC                 \ Store the new text row in YC
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \       Name: SOMEPROT
@@ -3989,7 +4445,9 @@ ENDMACRO
  DEX
  BNE CLYL
 \INX\STXSC
- JMP PUTBACK
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -4012,7 +4470,7 @@ ENDMACRO
 .DIALS
 
  LDA #1
- STA VIA+&E
+ STA VIA+&4E
  LDA #&A0
  STA SC
  LDA #&71
@@ -4558,7 +5016,7 @@ ENDMACRO
 \
 \ Returns:
 \
-\   C flag              C flag is set
+\   C flag              The C flag is set
 \
 \ ******************************************************************************
 
@@ -4661,10 +5119,14 @@ ENDMACRO
 
 .TVT1
 
- EQUD &16254334
- EQUD &52617086
- EQUD &96A5B4C3
- EQUD &D2E1F007 \Dials
+ EQUB &34, &43
+ EQUB &25, &16
+ EQUB &86, &70
+ EQUB &61, &52
+ EQUB &C3, &B4
+ EQUB &A5, &96
+ EQUB &07, &F0
+ EQUB &E1, &D2
 
 \ ******************************************************************************
 \       Name: do65C02, whiz
@@ -4723,8 +5185,9 @@ protlen = end65C02-do65C02
 
  LDY #15
 
- LDA #%00000010         \ Read the 6522 System VIA status byte bit 1, which is
- BIT SHEILA+&4D         \ set if vertical sync has occurred on the video system
+ LDA #%00000010         \ Read the 6522 System VIA status byte bit 1 (SHEILA
+ BIT VIA+&4D            \ &4D), which is set if vertical sync has occurred on
+                        \ the video system
 
  BNE LINSCN             \ If we are on the vertical sync pulse, jump to LINSCN
                         \ to set up the timers to enable us to switch the
@@ -4741,7 +5204,7 @@ protlen = end65C02-do65C02
 
  LDA #&14
 
- STA SHEILA+&20         \ Set Video ULA control register (SHEILA+&20) to
+ STA VIA+&20            \ Set the Video ULA control register (SHEILA &20) to
                         \ %00000100, which is the same as switching to mode 5,
                         \ (i.e. the bottom part of the screen) but with no
                         \ cursor
@@ -4778,29 +5241,50 @@ protlen = end65C02-do65C02
  STA DL                 \ routines like WSCAN can set DL to 0 and then wait for
                         \ it to change to non-zero to catch the vertical sync
 
- STA SHEILA+&44         \ Set 6522 System VIA T1C-L timer 1 low-order counter
+ STA VIA+&44            \ Set 6522 System VIA T1C-L timer 1 low-order counter
                         \ (SHEILA &44) to 30
 
  LDA #VSCAN             \ Set 6522 System VIA T1C-L timer 1 high-order counter
- STA SHEILA+&45         \ (SHEILA &45) to VSCAN (57) to start the T1 counter
+ STA VIA+&45            \ (SHEILA &45) to VSCAN (57) to start the T1 counter
                         \ counting down from 14622 at a rate of 1 MHz
 
- LDA HFX
- BNE jvec
- LDA #&18
- STA &FE20
+ LDA HFX                \ If the hyperspace effect flag in HFX is non-zero, then
+ BNE jvec               \ jump up to jvec to pass control to the next interrupt
+                        \ handler, instead of switching the palette to mode 1.
+                        \ This will have the effect of blurring and colouring
+                        \ the top screen in a mode 2 palette, making the
+                        \ hyperspace rings turn multicoloured when we do a
+                        \ hyperspace jump. This effect is triggered by the
+                        \ parasite issuing a #DOHFX 1 command in routine LL164
+                        \ and is disabled again by a #DOHFX 0 command
+
+ LDA #%00011000         \ Set the Video ULA control register (SHEILA &20) to
+ STA VIA+&20            \ %00011000, which is the same as switching to mode 1
+                        \ (i.e. the top part of the screen) but with no cursor
 
 .VNT3
 
- LDA TVT3,Y
- STA &FE21
- DEY
- BNE VNT3
+                        \ The following instruction gets modified in-place by
+                        \ the #SETVDU19 <offset> command, which changes the
+                        \ value of TVT3+1 (i.e. the low byte of the address in
+                        \ the LDA instruction). This changes the palette block
+                        \ that gets copied to SHEILA &21, so a #SETVDU19 32
+                        \ command applies the third palette from TVT3 in this
+                        \ loop, for example
+
+ LDA TVT3,Y             \ Copy the Y-th palette byte from TVT3 to SHEILA &21
+ STA VIA+&21            \ to map logical to actual colours for the bottom part
+                        \ of the screen (i.e. the dashboard)
+
+ DEY                    \ Decrement the palette byte counter
+
+ BNE VNT3               \ Loop back to VNT3 until we have copied all the
+                        \ palette bytes
 
  PLA                    \ Otherwise restore Y from the stack
  TAY
 
- LDA SHEILA+&41         \ Read 6522 System VIA input register IRA (SHEILA &41)
+ LDA VIA+&41            \ Read 6522 System VIA input register IRA (SHEILA &41)
 
  LDA &FC                \ Set A to the interrupt accumulator save register,
                         \ which restores A to the value it had on entering the
@@ -4811,13 +5295,41 @@ protlen = end65C02-do65C02
                         \ the interrupt terminates here
 
 \ ******************************************************************************
+\
 \       Name: SETVDU19
+\       Type: Subroutine
+\   Category: Screen mode
+\    Summary: Implement the #SETVDU19 <offset> command (change mode 1 palette)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #SETVDU19 <offset> command. It
+\ updates the VNT+3 location in the IRQ1 handler to change the palette that's
+\ applied to the top part of the screen (the four-colour mode 1 part). The
+\ parameter is the offset within the TVT3 palette block of the desired palette.
+\
+\ Arguments:
+\
+\   A                   The offset within the TVT3 table of palettes:
+\                     
+\                         * 0 = Yellow, red, cyan palette (space view)
+\
+\                         * 16 = Yellow, red, white palette (charts)
+\
+\                         * 32 = Yellow, white, cyan palette (title screen)
+\
+\                         * 48 = Yellow, magenta, white palette (trading)
+\
 \ ******************************************************************************
 
 .SETVDU19
 
- STA VNT3+1
- JMP PUTBACK
+ STA VNT3+1             \ Store the new colour in VNT3+1, in the IRQ1 routine,
+                        \ which modifies which TVT3 palette block gets applied
+                        \ to the mode 1 part of the screen
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \
