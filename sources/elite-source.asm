@@ -2194,7 +2194,7 @@ ORG &0800
 
 .KY1
 
- SKIP 1                 \ "?" has been pressed
+ SKIP 1                 \ "?" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2202,7 +2202,7 @@ ORG &0800
 
 .KY2
 
- SKIP 1                 \ Space has been pressed
+ SKIP 1                 \ Space is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2210,7 +2210,7 @@ ORG &0800
 
 .KY3
 
- SKIP 1                 \ "<" has been pressed
+ SKIP 1                 \ "<" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2218,7 +2218,7 @@ ORG &0800
 
 .KY4
 
- SKIP 1                 \ ">" has been pressed
+ SKIP 1                 \ ">" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2226,7 +2226,7 @@ ORG &0800
 
 .KY5
 
- SKIP 1                 \ "X" has been pressed
+ SKIP 1                 \ "X" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2234,7 +2234,7 @@ ORG &0800
 
 .KY6
 
- SKIP 1                 \ "S" has been pressed
+ SKIP 1                 \ "S" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2242,7 +2242,7 @@ ORG &0800
 
 .KY7
 
- SKIP 1                 \ "A" has been pressed
+ SKIP 1                 \ "A" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2253,7 +2253,7 @@ ORG &0800
 
 .KY12
 
- SKIP 1                 \ Tab key has been pressed
+ SKIP 1                 \ Tab key is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2261,7 +2261,7 @@ ORG &0800
 
 .KY13
 
- SKIP 1                 \ Escape key has been pressed
+ SKIP 1                 \ Escape key is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2269,7 +2269,7 @@ ORG &0800
 
 .KY14
 
- SKIP 1                 \ "T" has been pressed
+ SKIP 1                 \ "T" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2277,7 +2277,7 @@ ORG &0800
 
 .KY15
 
- SKIP 1                 \ "U" has been pressed
+ SKIP 1                 \ "U" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2285,7 +2285,7 @@ ORG &0800
 
 .KY16
 
- SKIP 1                 \ "M" has been pressed
+ SKIP 1                 \ "M" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2293,7 +2293,7 @@ ORG &0800
 
 .KY17
 
- SKIP 1                 \ "E" has been pressed
+ SKIP 1                 \ "E" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2301,7 +2301,7 @@ ORG &0800
 
 .KY18
 
- SKIP 1                 \ "J" has been pressed
+ SKIP 1                 \ "J" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2309,7 +2309,7 @@ ORG &0800
 
 .KY19
 
- SKIP 1                 \ "C" has been pressed
+ SKIP 1                 \ "C" is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2317,7 +2317,11 @@ ORG &0800
 
 .KY20
 
- SKIP 1
+ SKIP 1                 \ "P" is being pressed
+                        \
+                        \   * 0 = no
+                        \
+                        \   * Non-zero = yes
 
 .FRIN
 
@@ -6685,14 +6689,19 @@ ELSE
  SKIP &100
 ENDIF
 \ ******************************************************************************
+\
 \       Name: FLKB
+\       Type: Subroutine
+\   Category: Keyboard
+\    Summary: Flush the keyboard buffer
+\
 \ ******************************************************************************
 
 .FLKB
 
- LDA #15
- TAX
- JMP OSBYTE
+ LDA #15                \ Call OSBYTE with A = 15 and Y <> 0 to flush the input
+ TAX                    \ buffers (i.e. flush the operating system's keyboard
+ JMP OSBYTE             \ buffer)
 
 \ ******************************************************************************
 \
@@ -24778,9 +24787,11 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ (or the equivalent on joystick) and update the key
                         \ logger, setting KL to the key pressed
 
- LDX #0
- JSR DKS4
- STA newlocn
+ LDX #0                 \ Call DKS4 to check whether the Shift key is being
+ JSR DKS4               \ pressed
+
+ STA newlocn            \ Store the result (which will have bit 7 set if Shift
+                        \ is being pressed) in newlocn
 
  LDA JSTK               \ If the joystick was not used, jump down to TJ1,
  BEQ TJ1                \ otherwise we move the cursor with the joystick
@@ -24798,9 +24809,13 @@ LOAD_E% = LOAD% + P% - CODE%
 
  TYA                    \ Copy Y to A
 
- BIT newlocn
- BPL P%+3
- ASL A
+ BIT newlocn            \ If bit 7 of newlocn is clear - in other words, if
+ BPL P%+3               \ Shift is not being pressed - then skip the following
+                        \ instruction
+
+ ASL A                  \ Shift is being held down, so double the value of A
+                        \ (i.e. Shift moves the cursor at double the speed
+                        \ when using the joystick)
 
  TAX                    \ Copy A to X
 
@@ -24834,9 +24849,13 @@ LOAD_E% = LOAD% + P% - CODE%
 \ADC #0                 \ source, but they would make the joystick move the
                         \ cursor faster by increasing the range of Y by -1 to +1
 
- BIT newlocn
- BPL P%+3
- ASL A
+ BIT newlocn            \ If bit 7 of newlocn is clear - in other words, if
+ BPL P%+3               \ Shift is not being pressed - then skip the following
+                        \ instruction
+
+ ASL A                  \ Shift is being held down, so double the value of A
+                        \ (i.e. Shift moves the cursor at double the speed
+                        \ when using the joystick
 
  TAY                    \ Copy the value of A into Y
 
@@ -24846,7 +24865,8 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .newlocn
 
- BRK
+ EQUB 0                 \ The current key press is stored here in the above code
+                        \ when we check whether Shift is being held down
 
 .TJ1
 
@@ -24871,19 +24891,31 @@ LOAD_E% = LOAD% + P% - CODE%
  BNE P%+3
  DEY
 
- TXA
- BIT newlocn
- BPL P%+4
- ASL A
- ASL A
- TAX
- TYA
- BIT newlocn
- BPL P%+4
- ASL A
- ASL A
- TAY
- LDA KL
+ TXA                    \ Transfer the value of X into A
+
+ BIT newlocn            \ If bit 7 of newlocn is clear - in other words, if
+ BPL P%+4               \ Shift is not being pressed - then skip the following
+                        \ two instructions
+
+ ASL A                  \ Shift is being held down, so quadruple the value of A
+ ASL A                  \ (i.e. Shift moves the cursor at four times the speed
+                        \ when using the keyboard)
+
+ TAX                    \ Transfer the amended value of A back into X
+
+ TYA                    \ Transfer the value of Y into A
+
+ BIT newlocn            \ If bit 7 of newlocn is clear - in other words, if
+ BPL P%+4               \ Shift is not being pressed - then skip the following
+                        \ two instructions
+
+ ASL A                  \ Shift is being held down, so quadruple the value of A
+ ASL A                  \ (i.e. Shift moves the cursor at four times the speed
+                        \ when using the keyboard)
+
+ TAY                    \ Transfer the amended value of A back into Y
+
+ LDA KL                 \ Set A to the value of KL (the key pressed)
 
  RTS                    \ Return from the subroutine
 
@@ -28118,21 +28150,32 @@ LOAD_F% = LOAD% + P% - CODE%
  RTS
 
 \ ******************************************************************************
+\
 \       Name: ZEKTRAN
+\       Type: Subroutine
+\   Category: Keyboard
+\    Summary: Reset the key logger table that is populated by the I/O processor
+\
 \ ******************************************************************************
 
 .ZEKTRAN
 
- LDX #11
- LDA #0
+ LDX #11                \ We use the first 12 bytes of the key logger at KTRAN,
+                        \ so set a loop counter accordingly
+
+ LDA #0                 \ We want to zero the key logger, so set A % 0
 
 .ZEKLOOP
 
- STA KTRAN,X
- DEX
- BPL ZEKLOOP
- RTS
- RTS
+ STA KTRAN,X            \ Reset the X-th byte of the key logger in KTRAN to 0
+
+ DEX                    \ Decrement the loop counter
+
+ BPL ZEKLOOP            \ Loop back until we have zeroed bytes #11 through #0
+
+ RTS                    \ Return from the subroutine
+
+ RTS                    \ This instruction has no effect
 
 \ ******************************************************************************
 \
@@ -28372,18 +28415,44 @@ LOAD_F% = LOAD% + P% - CODE%
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: RDKEY
+\       Type: Subroutine
+\   Category: Keyboard
+\    Summary: Ask the I/O processor to scan the keyboard for key presses
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sends an OSWORD &F0 command to the I/O processor to ask it to
+\ scan the keyboard, starting with internal key number 16 ("Q") and working
+\ through the set of internal key numbers (see p.142 of the Advanced User Guide
+\ for a list of internal key numbers).
+\
+\ This routine is effectively the same as OSBYTE &7A, though the OSBYTE call
+\ preserves A, unlike this routine.
+\
+\ Returns:
+\
+\   X                   If a key is being pressed, X contains the internal key
+\                       number, otherwise it contains 0
+\
+\   A                   Contains the same as X
+\
 \ ******************************************************************************
 
 .RDKEY
 
- LDA #&F0
- LDY #(buf DIV256)
- LDX #(buf MOD256)
- JSR OSWORD
- LDX KTRAN
- TXA
- RTS
+ LDA #&F0               \ Send an OSWORD &F0 command to the I/O processor to
+ LDY #HI(buf)           \ scan the keyboard and joysticks, and populate the key
+ LDX #LO(buf)           \ buffer in KTRAN, which is the buffer just after the
+ JSR OSWORD             \ size configuration bytes in buf
+
+ LDX KTRAN              \ Fetch the internal key number of the key being pressed
+                        \ into X
+
+ TXA                    \ Copy X into A
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -28981,25 +29050,56 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ through to DSK4 to scan the keyboard
 
 \ ******************************************************************************
+\
 \       Name: DKS4
+\       Type: Subroutine
+\   Category: Keyboard
+\    Summary: Ask the I/O processor to scan for a particular key press
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sends a #DODKS4 command to the I/O processor to ask it to scan
+\ the keyboard, to see if the key specified in X is currently being pressed.
+\
+\ Arguments:
+\
+\   X                   The internal number of the key to check
+\
+\ Returns:
+\
+\   A                   If the key is being pressed, A contains the original
+\                       key number in X but with bit 7 set (i.e. key number +
+\                       128). If the key is not being pressed, A contains the
+\                       unchanged key number
+\
 \ ******************************************************************************
 
 .DKS4
 
- STX DKS4pars+2
- LDX #(DKS4pars MOD256)
- LDY #(DKS4pars DIV256)
- LDA #DODKS4
- JSR OSWORD
- LDA DKS4pars+2
- RTS
+ STX DKS4pars+2         \ Store the key number in byte #2 of the parameter block
+                        \ below
+
+ LDX #LO(DKS4pars)      \ Set (Y X) to point to the parameter block below
+ LDY #HI(DKS4pars)
+
+ LDA #DODKS4            \ Send a #DODKS4 command to the I/O processor to check
+ JSR OSWORD             \ whether the key in byte #2 of the parameter block is
+                        \ being pressed
+
+ LDA DKS4pars+2         \ Fetch the result from byte#2 of the parameter block,
+                        \ which will have bit 7 set if the key is being pressed
+
+ RTS                    \ Return from the subroutine
 
 .DKS4pars
 
- EQUB 3
- EQUB 3
- EQUB 0
- RTS
+ EQUB 3                 \ Transmit 3 bytes as part of this command
+
+ EQUB 3                 \ Receive 3 bytes as part of this command
+
+ EQUB 0                 \ The key number to check
+
+ RTS                    \ End of the parameter block
 
 \ ******************************************************************************
 \
@@ -29569,7 +29669,7 @@ LOAD_F% = LOAD% + P% - CODE%
  TAY                    \ Copy A to Y, so Y contains the internal key number
                         \ of the key pressed
 
- LDA TRANTABLE,Y        \ TRANTABLE oints to the MOS key translation table,
+ LDA TRANTABLE,Y        \ TRANTABLE points to the MOS key translation table,
                         \ which is used to translate internal key values to
                         \ ASCII, so this fetches the key's ASCII code into A
 
@@ -30352,44 +30452,150 @@ ENDMACRO
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
-\       Name: buf
+\
+\       Name: KTRAN
+\       Type: Variable
+\   Category: Keyboard
+\    Summary: The key logger buffer that is populated by the I/O processor
+\
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   buf                 The two OSWORD size configuration bytes for transmitting
+\                       the key logger from the I/O processor to the parasite
+\                       
 \ ******************************************************************************
 
 .buf
 
- EQUB 2
- EQUB 15
+ EQUB 2                 \ Transmit 2 bytes as part of this command
 
-\ ******************************************************************************
-\       Name: KTRAN
-\ ******************************************************************************
+ EQUB 15                \ Receive 15 bytes as part of this command
 
 .KTRAN
 
- EQUS "12345678901234567"
+ EQUS "1234567890"      \ A 17-byte buffer to hold the key logger data from the
+ EQUS "1234567"         \ KEYBOARD routine in the I/O processor (note that only
+                        \ 12 of these bytes are written to by the KEYBOARD
+                        \ routine)
 
 \ ******************************************************************************
+\
 \       Name: TRANTABLE
+\       Type: Variable
+\   Category: Keyboard
+\    Summary: Translation table from internal key number to ASCII
+\
+\ ------------------------------------------------------------------------------
+\
+\ This is a copy of the keyboard translation table from the BBC Micro's MOS 1.20
+\ ROM. The value at offset n is the lower-case ASCII value of the key with
+\ internal key number n, so for example the value at offset &10 is &71, which is
+\ 113, or ASCII "q", so internal key number &10 is the key number of the "Q"
+\ key.
+\
+\ Valid internal key numbers are Binary Coded Decimal (BCD) numbers in the range
+\ &10 top &79, so they're in the ranges &10 to &19, then &20 to &29, then &30 to
+\ &39, and so on. This means that the other locations - i.e. &1A to &1F, &2A to
+\ &2F and so on - are unused by the lookup table, but the MOS doesn't let this
+\ space go to waste; instead, those gaps contain MOS code, which is replicated
+\ below as TRANTABLE contains a copy of this entire block of the MOS, not just
+\ the table entries.
+\
+\ This table allows code running on the parasite to convert internal key numbers
+\ into ASCII codes in an efficient way. Without this table we would have to do a
+\ lookup from the table in the I/O processor's MOS ROM, which we would have to
+\ access from across the Tube, and this would be a lot slower than doing a
+\ simple table lookup in the parasite's user RAM.
+\
 \ ******************************************************************************
 
 .TRANTABLE
 
- EQUB &03, &8C, &40, &FE, &A0, &7F, &8C, &43
- EQUB &FE, &8E, &4F, &FE, &AE, &4F, &FE, &60
- EQUB &71, &33, &34, &35, &84, &38, &87, &2D
- EQUB &5E, &8C, &84, &EC, &86, &ED, &60, &00
- EQUB &80, &77, &65, &74, &37, &69, &39, &30
- EQUB &5F, &8E, &6C, &FE, &FD, &6C, &FA, &00
- EQUB &31, &32, &64, &72, &36, &75, &6F, &70
- EQUB &5B, &8F, &2C, &B7, &D9, &6C, &28, &02
- EQUB &01, &61, &78, &66, &79, &6A, &6B, &40
- EQUB &3A, &0D, &00, &FF, &01, &02, &09, &0A
- EQUB &02, &73, &63, &67, &68, &6E, &6C, &3B
- EQUB &5D, &7F, &AC, &44, &02, &A2, &00, &60
- EQUB &00, &7A, &20, &76, &62, &6D, &2C, &2E
- EQUB &2F, &8B, &AE, &41, &02, &4C, &AD, &E1
- EQUB &1B, &81, &82, &83, &85, &86, &88, &89
- EQUB &5C, &8D, &6C, &20, &02, &D0, &EB, &A2
+ EQUB &03, &8C, &40     \ MOS code
+ EQUB &FE, &A0, &7F
+ EQUB &8C, &43, &FE
+ EQUB &8E, &4F, &FE
+ EQUB &AE, &4F, &FE
+ EQUB &60
+
+                        \ Internal key numbers &10 to &19:
+                        \
+ EQUB &71, &33          \ Q             3
+ EQUB &34, &35          \ 4             5
+ EQUB &84, &38          \ f4            8
+ EQUB &87, &2D          \ f7            -
+ EQUB &5E, &8C          \ ^             Left arrow
+
+ EQUB &84, &EC, &86     \ MOS code
+ EQUB &ED, &60, &00
+
+                        \ Internal key numbers &20 to &29:
+                        \
+ EQUB &80, &77          \ f0            W
+ EQUB &65, &74          \ E             T
+ EQUB &37, &69          \ 7             I
+ EQUB &39, &30          \ 9             0
+ EQUB &5F, &8E          \ _             Down arrow
+
+ EQUB &6C, &FE, &FD     \ MOS code
+ EQUB &6C, &FA, &00
+
+                        \ Internal key numbers &30 to &39:
+                        \
+ EQUB &31, &32          \ 1             2
+ EQUB &64, &72          \ D             R
+ EQUB &36, &75          \ 6             U
+ EQUB &6F, &70          \ O             P
+ EQUB &5B, &8F          \ [             Up arrow
+
+ EQUB &2C, &B7, &D9     \ MOS code
+ EQUB &6C, &28, &02
+
+                        \ Internal key numbers &40 to &49:
+                        \
+ EQUB &01, &61          \ Caps Lock     A
+ EQUB &78, &66          \ X             F
+ EQUB &79, &6A          \ Y             J
+ EQUB &6B, &40          \ K             @
+ EQUB &3A, &0D          \ :             Return
+
+ EQUB &00, &FF, &01
+ EQUB &02, &09, &0A
+
+                        \ Internal key numbers &50 to &59:
+                        \
+ EQUB &02, &73          \ Shift Lock    S
+ EQUB &63, &67          \ C             G
+ EQUB &68, &6E          \ H             N
+ EQUB &6C, &3B          \ L             ;
+ EQUB &5D, &7F          \ ]             Delete
+
+ EQUB &AC, &44, &02     \ MOS code
+ EQUB &A2, &00, &60
+
+                        \ Internal key numbers &60 to &69:
+                        \
+ EQUB &00, &7A          \ Tab           Z
+ EQUB &20, &76          \ Space         V
+ EQUB &62, &6D          \ B             M
+ EQUB &2C, &2E          \ ,             .
+ EQUB &2F, &8B          \ /             Copy
+
+ EQUB &AE, &41, &02     \ MOS code
+ EQUB &4C, &AD, &E1
+
+                        \ Internal key numbers &70 to &79:
+                        \
+ EQUB &1B, &81          \ Escape        f1
+ EQUB &82, &83          \ f2            f3
+ EQUB &85, &86          \ f5            f6
+ EQUB &88, &89          \ f8            f9
+ EQUB &5C, &8D          \ \             Right arrow
+
+ EQUB &6C, &20, &02     \ MOS code
+ EQUB &D0, &EB, &A2
  EQUB &08
 
 \ ******************************************************************************

@@ -3345,8 +3345,7 @@ NEXT
 \
 \ ------------------------------------------------------------------------------
 \
-\ Scan the keyboard to see if the key specified in A is currently being
-\ pressed.
+\ Scan the keyboard to see if the key specified in A is currently being pressed.
 \
 \ Arguments:
 \
@@ -3389,9 +3388,8 @@ MACRO DKS4
 
  LDA VIA+&4F            \ Read 6522 System VIA output register IRA (SHEILA &4F)
                         \ into A; bit 7 is the only bit that will have changed.
-                        \ If the key is pressed, then bit 7 will be set (so A
-                        \ will contain 128 + A), otherwise it will be clear (so
-                        \ A will be unchanged)
+                        \ If the key is pressed, then bit 7 will be set,
+                        \ otherwise it will be clear
 
  LDX #%00001011         \ Set 6522 System VIA output register ORB (SHEILA &40)
  STX VIA+&40            \ to %00001011 to restart auto scan of keyboard
@@ -3401,87 +3399,285 @@ MACRO DKS4
 ENDMACRO
 
 \ ******************************************************************************
+\
 \       Name: KYTB
+\       Type: Variable
+\   Category: Keyboard
+\    Summary: Lookup table for in-flight keyboard controls
+\  Deep dive: The key logger
+\
+\ ------------------------------------------------------------------------------
+\
+\ Keyboard table for in-flight controls. This table contains the internal key
+\ codes for the flight keys (see p.142 of the Advanced User Guide for a list of
+\ internal key numbers).
+\
+\ The pitch, roll, speed and laser keys (i.e. the seven primary flight
+\ control keys) have bit 7 set, so they have 128 added to their internal
+\ values. This doesn't appear to be used anywhere.
+\
+\ Note that KYTB actually points to the byte before the start of the table, so
+\ the offset of the first key value is 1 (i.e. KYTB+1), not 0.
+\
 \ ******************************************************************************
 
 .KYTB
 
- EQUB 0
- EQUB &E8
- EQUB &E2
- EQUB &E6
- EQUB &E7
- EQUB &C2
- EQUB &D1
- EQUB &C1
- EQUD &35237060
- EQUW &2265
- EQUB &45
- EQUB &52 \? <>XSA.FBRLtabescTUMEJC
- NOP
+ EQUB 0                 \ Pad the table out so that the first key is at KYTB+1
+
+                        \ These are the primary flight controls (pitch, roll,
+                        \ speed and lasers):
+
+ EQUB &68 + 128         \ ?         KYTB+1      Slow down
+ EQUB &62 + 128         \ Space     KYTB+2      Speed up
+ EQUB &66 + 128         \ <         KYTB+3      Roll left
+ EQUB &67 + 128         \ >         KYTB+4      Roll right
+ EQUB &42 + 128         \ X         KYTB+5      Pitch up
+ EQUB &51 + 128         \ S         KYTB+6      Pitch down
+ EQUB &41 + 128         \ A         KYTB+7      Fire lasers
+
+                        \ These are the secondary flight controls:
+
+ EQUB &60               \ Tab       KYTB+8      Energy bomb
+ EQUB &70               \ Escape    KYTB+9      Launch escape pod
+ EQUB &23               \ T         KYTB+10     Arm missile
+ EQUB &35               \ U         KYTB+11     Unarm missile
+ EQUB &65               \ M         KYTB+12     Fire missile
+ EQUB &22               \ E         KYTB+13     E.C.M.
+ EQUB &45               \ J         KYTB+14     In-system jump
+ EQUB &52               \ C         KYTB+15     Docking computer
+
+ NOP                    \ In the parasite's version of this table, this byte
+                        \ maps to "P", the key to cancel the docking computer,
+                        \ but because the I/O processor only uses this table for
+                        \ the primary flight keys, this byte isn't used
 
 \ ******************************************************************************
+\
 \       Name: KEYBOARD
+\       Type: Subroutine
+\   Category: Keyboard
+\    Summary: Scan the keyboard and joystick key presses and log the results
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine scans the keyboard and joystick and stores the results in the
+\ key logger table pointed to by OSSC. 
+\
+\ First, it scans the keyboard for the primary flight keys. If any of the
+\ primary flight keys are pressed, the corresponding byte in the key logger is
+\ set to &FF, otherwise it is set to 0. If multiple flight keys are being
+\ pressed, they are all logged.
+\
+\ Next, it scans the keyboard for any other key presses, starting with internal
+\ key number 16 ("Q") and working through the set of internal key numbers (see
+\ p.142 of the Advanced User Guide for a list of internal key numbers). If a key
+\ press is detected, the internal key number is stored in byte #2 of the key
+\ logger table and scanning stops.
+\
+\ Finally, the joystick is read for X, Y and fire button values. The rotation
+\ value is also read from the Bitstik.
+\
+\ Arguments:
+\
+\   OSSC                The address of the table in which to log the key presses
+\
+\ Returns:
+\
+\   OSSC                The table is updated as follows:
+\
+\                         * Byte #2: If a non-primary flight control key is
+\                           being pressed, its internal key number is put here
+\
+\                         * Byte #3: "?" is being pressed
+\
+\                             * 0 = no
+\
+\                             * &FF = yes
+\
+\                         * Byte #4: Space is being pressed
+\
+\                             * 0 = no
+\
+\                             * &FF = yes
+\
+\                         * Byte #5: "<" is being pressed
+\
+\                             * 0 = no
+\
+\                             * &FF = yes
+\
+\                         * Byte #6: ">" is being pressed
+\
+\                             * 0 = no
+\
+\                             * &FF = yes
+\
+\                         * Byte #7: "X" is being pressed
+\
+\                             * 0 = no
+\
+\                             * &FF = yes
+\
+\                         * Byte #8: "S" is being pressed
+\
+\                             * 0 = no
+\
+\                             * &FF = yes
+\
+\                         * Byte #9: "A" is being pressed
+\
+\                             * 0 = no
+\
+\                             * &FF = yes
+\
+\                         * Byte #10: Joystick X value (high byte)
+\
+\                         * Byte #11: Joystick Y value (high byte)
+\
+\                         * Byte #12: Bitstik rotation value (high byte)
+\
+\                         * Byte #14: Joystick 1 fire button is being pressed
+\
+\                             * Bit 4 set = no
+\
+\                             * Bit 4 clear = yes
+\
 \ ******************************************************************************
 
 .KEYBOARD
 
- LDY #9
+ LDY #9                 \ We're going to loop through the seven primary flight
+                        \ controls in KYTB and update the block pointed to by
+                        \ OSSC with their details. We want to store the seven
+                        \ results in bytes #2 to #9 in the block, so we set a
+                        \ loop counter in Y to count down from 9 to 3, so we can
+                        \ use this as an index into both the OSSC block and the
+                        \ KYTB table
 
 .DKL2
 
- LDA KYTB-2,Y
- DKS4
- ASL A
- LDA #0
- ADC #FF
- EOR #FF
- STA (OSSC),Y
- DEY
- CPY #2
- BNE DKL2 \-ve INKEY
- LDA #16
- SED
+ LDA KYTB-2,Y           \ Set A to the relevant internal key number from the
+                        \ KYTB table (we add Y to KYTB-2 rather than KYTB as Y
+                        \ is looping from 9 down to 3, so this grabs the key
+                        \ numbers from 7 to 1, i.e. from "A" to "?"
+
+ DKS4                   \ Include the DKS4 subroutine, which sets bit 7 of A if
+                        \ the key in A is being pressed, or clears it if it
+                        \ isn't being pressed
+
+ ASL A                  \ Shift bit 7 of A into the C flag
+
+ LDA #0                 \ Set A = 0 + &FF + C
+ ADC #&FF               \
+                        \ If the C flag is set (i.e. the key is being pressed)
+                        \ then this sets A = 0, otherwise it sets A = &FF
+
+ EOR #%11111111         \ Flip all the bits in A, so now A = &FF if the key is
+                        \ being pressed, or A = 0 if it isn't
+
+ STA (OSSC),Y           \ Store A in the Y-th byte of the block pointed to by
+                        \ OSSC
+
+ DEY                    \ Decrement the loop counter
+
+ CPY #2                 \ Loop back until we have processed all seven primary
+ BNE DKL2               \ flight keys, leaving the loop with Y = 2
+
+                        \ We're now going to scan the keyboard to see if any
+                        \ other keys are being pressed
+
+ LDA #16                \ We start scanning from internal key number 16 ("Q"),
+                        \ so we set A as a loop counter
+
+ SED                    \ Set the D flag to enter decimal mode. Because
+                        \ internal key numbers are all valid BCD (Binary Coded
+                        \ Decimal) numbers, setting this flag ensures we only
+                        \ loop through valid key numbers. To put this another
+                        \ way, when written in hexadecimal, internal key numbers
+                        \ only use the digits 0-9 and none of the letters A-F,
+                        \ and setting the D flag makes the following loop
+                        \ iterate through the following values of A:
+                        \
+                        \ &10, &11, &12, &13, &14, &15, &16, &17, &18, &19,
+                        \ &20, &21, &22, &23, &24, &25, &26, &27, &28, &29,
+                        \ &30, &31...
+                        \
+                        \ and so on up to &79, and then &80, at which point the
+                        \ loop terminates. This lets us efficiently work our
+                        \ way through all the internal key numbers without
+                        \ wasting time on numbers that aren't valid in BCD
 
 .DKL3
 
- DKS4
- TAX
- BMI DK1
- CLC
- ADC #1
- BPL DKL3
+ DKS4                   \ Include the DKS4 subroutine, which sets bit 7 of A if
+                        \ the key in A is being pressed, or clears it if it
+                        \ isn't being pressed
+
+ TAX                    \ Copy the key press result into X
+
+ BMI DK1                \ If bit 7 is set, i.e. the key is being pressed, skip
+                        \ to DK1
+
+ CLC                    \ Otherwise this key is not being pressed, so increment
+ ADC #1                 \ the loop counter in A. We couldn't use an INX or INY
+                        \ instruction here because the only instructions that
+                        \ support decimal mode are ADC and SBC. INX and INY
+                        \ always increment in binary mode, whatever the setting
+                        \ of the D flag, so instead we have to use an ADC
+
+ BPL DKL3               \ Loop back to test the next key, ending the loop when
+                        \ A is negative (i.e. A = &80 = 128 = %10000000)
 
 .DK1
 
- CLD
- EOR #128
- STA (OSSC),Y
- LDX #1
- LDA #&80
- JSR OSBYTE
- TYA
- LDY #10
- STA (OSSC),Y
- LDX #2
- LDA #&80
- JSR OSBYTE
- TYA
- LDY #11
- STA (OSSC),Y
- LDX #3
- LDA #&80
- JSR OSBYTE
- TYA
- LDY #12
- STA (OSSC),Y
- LDY #14
- LDA &FE40
- STA (OSSC),Y
+ CLD                    \ Clear the D flag to return to binary mode
+
+ EOR #%10000000         \ EOR A with #%10000000 to flip bit 7, so A now contains
+                        \ 0 if no key has been pressed, or the internal key
+                        \ number if a key has been pressed
+
+ STA (OSSC),Y           \ We exited the first loop above with Y = 2, so this
+                        \ stores the "other key" result in byte #2 of the block
+                        \ pointed to by OSSC
+
+                        \ We now check the joystick or Bitstik
+
+ LDX #1                 \ Call OSBYTE 128 to fetch the 16-bit value from ADC
+ LDA #128               \ channel 1 (the joystick X value), returning the value
+ JSR OSBYTE             \ in (Y X)
+
+ TYA                    \ Copy Y to A, so the result is now in (A X)
+
+ LDY #10                \ Store the high byte of the joystick X value in byte
+ STA (OSSC),Y           \ #10 of the block pointed to by OSSC
+
+ LDX #2                 \ Call OSBYTE 128 to fetch the 16-bit value from ADC
+ LDA #128               \ channel 2 (the joystick Y value), returning the value
+ JSR OSBYTE             \ in (Y X)
+
+ TYA                    \ Copy Y to A, so the result is now in (A X)
+
+ LDY #11                \ Store the high byte of the joystick X value in byte
+ STA (OSSC),Y           \ #11 of the block pointed to by OSSC
+
+ LDX #3                 \ Call OSBYTE 128 to fetch the 16-bit value from ADC
+ LDA #128               \ channel 3 (the Bitstik rotation value), returning the
+ JSR OSBYTE             \ value in (Y X)
+
+ TYA                    \ Copy Y to A, so the result is now in (A X)
+
+ LDY #12                \ Store the high byte of the Bitstik rotation value in
+ STA (OSSC),Y           \ byte #12 of the block pointed to by OSSC
+
+ LDY #14                \ Read 6522 System VIA input register IRB (SHEILA &40),
+ LDA &FE40              \ which has bit 4 clear if joystick 1's fire button is
+ STA (OSSC),Y           \ pressed (otherwise it's set), and store the value in
+                        \ byte #14 of the block pointed to by OSSC
 
 .DK2
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -3512,11 +3708,11 @@ ENDMACRO
  EQUW HANGER            \            248 (&F8)     8 = Display the hanger
  EQUW SOMEPROT          \            249 (&F9)     9 = Copy protection
  EQUW SAFE              \            250 (&FA)    10 = Do nothing
- EQUW SAFE              \            251 (&FB)    10 = Do nothing
- EQUW SAFE              \            252 (&FC)    10 = Do nothing
- EQUW SAFE              \            253 (&FD)    10 = Do nothing
- EQUW SAFE              \            254 (&FE)    10 = Do nothing
- EQUW SAFE              \            255 (&FF)    10 = Do nothing
+ EQUW SAFE              \            251 (&FB)    11 = Do nothing
+ EQUW SAFE              \            252 (&FC)    12 = Do nothing
+ EQUW SAFE              \            253 (&FD)    13 = Do nothing
+ EQUW SAFE              \            254 (&FE)    14 = Do nothing
+ EQUW SAFE              \            255 (&FF)    15 = Do nothing
 
  EQUW SAFE              \ These addresses are never used and have no effect, as
  EQUW SAFE              \ they are out of range for one-byte OSWORD numbers
@@ -3753,10 +3949,10 @@ ENDMACRO
 \
 \   OSSC(1 0)           A parameter block as follows:
 \
-\                         * Byte #0 = If the key is being pressed, it contains
-\                           the original argument from byte #2, but with bit 7
-\                           set (i.e. byte #2 + 128). If the key is not being
-\                           pressed, it contains the value in byte #0 unchanged
+\                         * Byte #2 = If the key is being pressed, it contains
+\                           the original key number from byte #2, but with bit 7
+\                           set (i.e. key number + 128). If the key is not being
+\                           pressed, it contains the unchanged key number
 \                       
 \ ******************************************************************************
 
@@ -3768,7 +3964,7 @@ ENDMACRO
  DKS4                   \ Include macro DKS4 to check whether the key in A is
                         \ being pressed, and if it is, set bit 7 of A
 
- STA (OSSC),Y           \ Store the updated A in byte #0 of the block pointed to
+ STA (OSSC),Y           \ Store the updated A in byte #2 of the block pointed to
                         \ by OSSC
 
  RTS                    \ Return from the subroutine
