@@ -37,7 +37,6 @@ YY = &94
 T = &95
 Z1 = ZP
 Z2 = P
-FF = &FF
 
 VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also

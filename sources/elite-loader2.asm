@@ -31,7 +31,6 @@ YY = &94
 T = &95
 Z1 = ZP
 Z2 = P
-FF = &FF
 
 CODE% = &2000
 LOAD% = &2000

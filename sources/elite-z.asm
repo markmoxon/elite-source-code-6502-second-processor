@@ -37,7 +37,6 @@ Y2 = XX15+3
 SC = XX15+6
 SCH = SC+1
 OSTP = SC
-FF = &FF
 OSWRCH = &FFEE
 OSBYTE = &FFF4
 OSWORD = &FFF1
@@ -121,7 +120,12 @@ ORG &0080
 
 .OSSC
 
- SKIP 2
+ SKIP 2                 \ When the parasite sends an OSWORD command to the I/O
+                        \ processor (i.e. an OSWORD with A = 240 to 255), then
+                        \ the relevant handler routine in the I/O processor is
+                        \ called with OSSC(1 0) pointing to the OSWORD parameter
+                        \ block (i.e. OSSC(1 0) = (Y X) from the original call
+                        \ in the I/O processor)
 
 \ ******************************************************************************
 \       Name: FONT%
@@ -590,7 +594,7 @@ NEXT
  LDA #NWOSWD DIV256
  STA WORDV+1
  CLI
- LDA #FF
+ LDA #&FF
  STA COL
  LDA Tina
  CMP #'T'
@@ -1387,7 +1391,7 @@ NEXT
  LDY #0
  DEC LINMAX
  LDA TABLE+3
- CMP #FF
+ CMP #&FF
  BEQ doalaser
 
 .LL27
@@ -1488,7 +1492,7 @@ NEXT
  LDA X2
  SBC X1
  BCS LI1
- EOR #FF
+ EOR #&FF
  ADC #1
  SEC
 
@@ -1499,7 +1503,7 @@ NEXT
  SBC Y1
  BEQ HLOIN2
  BCS LI2
- EOR #FF
+ EOR #&FF
  ADC #1
 
 .LI2
@@ -1563,7 +1567,7 @@ NEXT
 
 .LIlog5
 
- LDA #FF
+ LDA #&FF
  BNE LIlog6
 
 .LIlog7
@@ -1938,7 +1942,7 @@ NEXT
 
 .LIlog3
 
- LDA #FF
+ LDA #&FF
  BNE LIlog2
 
 .LIloG
@@ -3461,8 +3465,10 @@ ENDMACRO
 \
 \ ------------------------------------------------------------------------------
 \
-\ This routine scans the keyboard and joystick and stores the results in the
-\ key logger table pointed to by OSSC. 
+\ This routine is run when the parasite sends an OSWORD &F0 command. It scans
+\ the keyboard and joystick and stores the results in the key logger buffer
+\ pointed to by OSSC, which is then sent across the Tube to the parasite's own
+\ key logger buffer at KTRAN.
 \
 \ First, it scans the keyboard for the primary flight keys. If any of the
 \ primary flight keys are pressed, the corresponding byte in the key logger is
@@ -3489,47 +3495,19 @@ ENDMACRO
 \                         * Byte #2: If a non-primary flight control key is
 \                           being pressed, its internal key number is put here
 \
-\                         * Byte #3: "?" is being pressed
+\                         * Byte #3: "?" is being pressed (0 = no, &FF = yes)
 \
-\                             * 0 = no
+\                         * Byte #4: Space is being pressed (0 = no, &FF = yes)
 \
-\                             * &FF = yes
+\                         * Byte #5: "<" is being pressed (0 = no, &FF = yes)
 \
-\                         * Byte #4: Space is being pressed
+\                         * Byte #6: ">" is being pressed (0 = no, &FF = yes)
 \
-\                             * 0 = no
+\                         * Byte #7: "X" is being pressed (0 = no, &FF = yes)
 \
-\                             * &FF = yes
+\                         * Byte #8: "S" is being pressed (0 = no, &FF = yes)
 \
-\                         * Byte #5: "<" is being pressed
-\
-\                             * 0 = no
-\
-\                             * &FF = yes
-\
-\                         * Byte #6: ">" is being pressed
-\
-\                             * 0 = no
-\
-\                             * &FF = yes
-\
-\                         * Byte #7: "X" is being pressed
-\
-\                             * 0 = no
-\
-\                             * &FF = yes
-\
-\                         * Byte #8: "S" is being pressed
-\
-\                             * 0 = no
-\
-\                             * &FF = yes
-\
-\                         * Byte #9: "A" is being pressed
-\
-\                             * 0 = no
-\
-\                             * &FF = yes
+\                         * Byte #9: "A" is being pressed (0 = no, &FF = yes)
 \
 \                         * Byte #10: Joystick X value (high byte)
 \
@@ -3538,10 +3516,7 @@ ENDMACRO
 \                         * Byte #12: Bitstik rotation value (high byte)
 \
 \                         * Byte #14: Joystick 1 fire button is being pressed
-\
-\                             * Bit 4 set = no
-\
-\                             * Bit 4 clear = yes
+\                           (Bit 4 set = no, Bit 4 clear = yes)
 \
 \ ******************************************************************************
 
@@ -3562,9 +3537,8 @@ ENDMACRO
                         \ is looping from 9 down to 3, so this grabs the key
                         \ numbers from 7 to 1, i.e. from "A" to "?"
 
- DKS4                   \ Include the DKS4 subroutine, which sets bit 7 of A if
-                        \ the key in A is being pressed, or clears it if it
-                        \ isn't being pressed
+ DKS4                   \ Include macro DKS4 to check whether the key in A is
+                        \ being pressed, and if it is, set bit 7 of A
 
  ASL A                  \ Shift bit 7 of A into the C flag
 
@@ -3610,9 +3584,8 @@ ENDMACRO
 
 .DKL3
 
- DKS4                   \ Include the DKS4 subroutine, which sets bit 7 of A if
-                        \ the key in A is being pressed, or clears it if it
-                        \ isn't being pressed
+ DKS4                   \ Include macro DKS4 to check whether the key in A is
+                        \ being pressed, and if it is, set bit 7 of A
 
  TAX                    \ Copy the key press result into X
 
@@ -3658,7 +3631,7 @@ ENDMACRO
 
  TYA                    \ Copy Y to A, so the result is now in (A X)
 
- LDY #11                \ Store the high byte of the joystick X value in byte
+ LDY #11                \ Store the high byte of the joystick Y value in byte
  STA (OSSC),Y           \ #11 of the block pointed to by OSSC
 
  LDX #3                 \ Call OSBYTE 128 to fetch the 16-bit value from ADC
@@ -3933,8 +3906,8 @@ ENDMACRO
 \ ------------------------------------------------------------------------------
 \
 \ This routine is run when the parasite sends a #DODKS4 command with parameters
-\ in the block at OSSC(1 0). It scans the keyboard to see if a specified key is
-\ being pressed.
+\ in the block at OSSC(1 0). It scans the keyboard to see if the specified key
+\ is being pressed.
 \
 \ Arguments:
 \

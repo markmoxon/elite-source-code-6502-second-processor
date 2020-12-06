@@ -89,7 +89,6 @@ MAG2 = &33
 CYAN2 = &3C
 WHITE2 = &3F
 DUST = WHITE
-FF = &FF
 
 OSWRCH = &FFEE
 OSBYTE = &FFF4
@@ -191,7 +190,23 @@ ORG &0000
 
 .NEEDKEY
 
- SKIP 1
+ SKIP 1                 \ Flag to ask the I/O processor to update the key logger
+                        \ buffer at KTRAN
+                        \
+                        \   * 0 = do not update KTRAN
+                        \
+                        \   * Non-zero = Ask the I/O processor to update KTRAN
+                        \     in the next call to LL9 or DOKEY
+                        \
+                        \ A non-zero value has the following effect:
+                        \
+                        \   * When DOKEY is called to scan for primary flight
+                        \     keys, the key logger buffer is updated before the
+                        \     key logger is updated
+                        \
+                        \   * When drawing ships in LL9, the keyboard is scanned
+                        \     for key presses, which is used in the title screen
+                        \     and mission briefings
 
 .XX0
 
@@ -2363,7 +2378,11 @@ ORG &0800
 
 .auto
 
- SKIP 1
+ SKIP 1                 \ Docking computer activation status
+                        \
+                        \   * 0 = Docking computer is off
+                        \
+                        \   * Non-zero = Docking computer is running
 
 .ECMP
 
@@ -3632,7 +3651,7 @@ ENDIF
  STZ QQ22+1 \<<
  STZ GNTMP
 \++
- LDA #FF
+ LDA #&FF
  STA FSH
  STA ASH
  STA ENERGY
@@ -3882,7 +3901,10 @@ ENDIF
 
  LDA BSTK
  BEQ BS2
- LDA KTRAN+10  \ADCno.3
+
+ LDA KTRAN+10           \ Fetch the Bitstik rotation value (high byte) from the
+                        \ key logger buffer
+
  LSR A
  LSR A
  CMP #40
@@ -11604,11 +11626,11 @@ LOAD_C% = LOAD% +P% - CODE%
  STA K3+1,X
  BCS TS72
  LDA K3,X
- EOR #FF
+ EOR #&FF
  ADC #1
  STA K3,X
  LDA K3+1,X
- EOR #FF
+ EOR #&FF
  ADC #0
  STA K3+1,X
  LDA K3+2,X
@@ -14966,14 +14988,22 @@ LOAD_C% = LOAD% +P% - CODE%
 
  LDA #112
  STA INWK+3
+ 
  LDA #0
  STA INWK
+ 
  STA INWK+6
+ 
  LDA #2
  STA INWK+7
+ 
  JSR LL9
+ 
  JSR MVEIT
- JMP RDKEY
+
+ JMP RDKEY              \ Scan the keyboard for a key press and return the
+                        \ internal key number in X (or 0 for no key press),
+                        \ returning from the subroutine using a tail call
 
 \ ******************************************************************************
 \       Name: PAUSE2
@@ -14981,11 +15011,20 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .PAUSE2
 
- JSR RDKEY
- BNE PAUSE2
- JSR RDKEY
- BEQ PAUSE2
- RTS
+ JSR RDKEY              \ Scan the keyboard for a key press and return the
+                        \ internal key number in X (or 0 for no key press)
+
+ BNE PAUSE2             \ If a key was already being held down when we entered
+                        \ this routine, keep looping back up to PAUSE2, until
+                        \ the key is released
+
+ JSR RDKEY              \ Any pre-existing key press is now gone, so we can
+                        \ start scanning the keyboard again, returning the
+                        \ internal key number in X (or 0 for no key press)
+
+ BEQ PAUSE2             \ Keep looping up to PAUSE2 until a key is pressed
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -15358,7 +15397,9 @@ LOAD_D% = LOAD% + P% - CODE%
  STA printflag
  PLA
  JSR TT66
- JSR FLKB
+
+ JSR FLKB               \ Call FLKB to flush the keyboard buffer
+
  LDA #48
  JSR DOVDU19
  LDA #CYAN\WH
@@ -15906,7 +15947,7 @@ LOAD_D% = LOAD% + P% - CODE%
 \STYINWK
 \LDY#(PTEXT DIV256)-1
 \STYINWK+1
-\LDY#FF
+\LDY#&FF
 \.PDT1 INY
 \BNEP%+4
 \INCINWK+1
@@ -22520,7 +22561,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
  LDA #DOBULB
  JSR OSWRCH
- LDA #FF
+ LDA #&FF
  JMP OSWRCH
 
 \ ******************************************************************************
@@ -26878,7 +26919,7 @@ LOAD_F% = LOAD% + P% - CODE%
 .BRBR
 
  DEC brkd
- LDX #FF
+ LDX #&FF
  TXS
  JSR backtonormal
  TAY
@@ -27079,7 +27120,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .DEATH2
 
- LDX #FF
+ LDX #&FF
  TXS
 
  JSR RES2               \ Reset a number of flight variables and workspaces
@@ -27092,7 +27133,9 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .BR1
 
- JSR ZEKTRAN
+ JSR ZEKTRAN            \ Reset the key logger buffer that gets returned from
+                        \ the I/O processor
+
  LDA #3
  JSR DOXC
  LDX #3
@@ -27229,9 +27272,12 @@ LOAD_F% = LOAD% + P% - CODE%
  JSR RESET              \ Reset our ship so we can use it for the rotating
                         \ title ship
 
- JSR ZEKTRAN
- LDA #32
- JSR DOVDU19
+ JSR ZEKTRAN            \ Reset the key logger buffer that gets returned from
+                        \ the I/O processor
+
+ LDA #32                \ Send a #SETVDU19 32 command to the I/O processor to
+ JSR DOVDU19            \ set the mode 1 palette to yellow (colour 1), white
+                        \ (colour 2) and cyan (colour 3)
 
  LDA #1                 \ Clear the top part of the screen, draw a white border,
  JSR TT66               \ and set the current view type in QQ11 to 1
@@ -27337,7 +27383,9 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA MCNT
  AND #3
  BNE nodesire
- STX NEEDKEY
+
+ STX NEEDKEY            \ Set NEEDKEY = 128, so calls to LL9 to draw the ship
+                        \ also scan for key presses
 
 .nodesire
 
@@ -27346,7 +27394,10 @@ LOAD_F% = LOAD% + P% - CODE%
 
  JSR LL9                \ Call LL9 to display the ship
 
- LDA KTRAN+12
+ LDA KTRAN+12           \ Fetch the key press state for the joystick 1 fire
+                        \ button from the key logger buffer, which contains
+                        \ the value of the 6522 System VIA input register IRB
+                        \ (SHEILA &40)
 
  AND #%00010000         \ Bit 4 of IRB (PB4) is clear if joystick 1's fire
                         \ button is pressed, otherwise it is set, so AND'ing
@@ -27356,12 +27407,17 @@ LOAD_F% = LOAD% + P% - CODE%
 
  BEQ TL2                \ If the joystick fire button is pressed, jump to BL2
 
- LDA KTRAN
- BNE TL3
+ LDA KTRAN              \ Fetch the internal key number of the current key
+                        \ press from the key logger buffer
+
+ BNE TL3                \ If a key is being pressed, jump to TL3
+
  DEC MCNT
  BNE TLL2
+
  DEC CNT2
  BNE TLL2
+
  JMP DEMON
 
 .TL2
@@ -27965,7 +28021,7 @@ LOAD_F% = LOAD% + P% - CODE%
  PLA
  BCS QUR
  PHA
- LDA #FF
+ LDA #&FF
  JSR DODOSVN
  PLA
 
@@ -28107,7 +28163,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .SCLI2
 
- LDA #FF
+ LDA #&FF
  JSR DODOSVN
  JSR SCLI
  LDA #0
@@ -28154,20 +28210,20 @@ LOAD_F% = LOAD% + P% - CODE%
 \       Name: ZEKTRAN
 \       Type: Subroutine
 \   Category: Keyboard
-\    Summary: Reset the key logger table that is populated by the I/O processor
+\    Summary: Reset the key logger buffer at KTRAN
 \
 \ ******************************************************************************
 
 .ZEKTRAN
 
- LDX #11                \ We use the first 12 bytes of the key logger at KTRAN,
-                        \ so set a loop counter accordingly
+ LDX #11                \ We use the first 12 bytes of the key logger buffer at
+                        \ KTRAN, so set a loop counter accordingly
 
- LDA #0                 \ We want to zero the key logger, so set A % 0
+ LDA #0                 \ We want to zero the key logger buffer, so set A % 0
 
 .ZEKLOOP
 
- STA KTRAN,X            \ Reset the X-th byte of the key logger in KTRAN to 0
+ STA KTRAN,X            \ Reset the X-th byte of the key logger buffer to 0
 
  DEX                    \ Decrement the loop counter
 
@@ -28426,7 +28482,8 @@ LOAD_F% = LOAD% + P% - CODE%
 \ This routine sends an OSWORD &F0 command to the I/O processor to ask it to
 \ scan the keyboard, starting with internal key number 16 ("Q") and working
 \ through the set of internal key numbers (see p.142 of the Advanced User Guide
-\ for a list of internal key numbers).
+\ for a list of internal key numbers). The results are copied from the I/O
+\ processor into the key logger buffer at KTRAN.
 \
 \ This routine is effectively the same as OSBYTE &7A, though the OSBYTE call
 \ preserves A, unlike this routine.
@@ -28444,11 +28501,12 @@ LOAD_F% = LOAD% + P% - CODE%
 
  LDA #&F0               \ Send an OSWORD &F0 command to the I/O processor to
  LDY #HI(buf)           \ scan the keyboard and joysticks, and populate the key
- LDX #LO(buf)           \ buffer in KTRAN, which is the buffer just after the
- JSR OSWORD             \ size configuration bytes in buf
+ LDX #LO(buf)           \ logger buffer in KTRAN, which is the part of the buf
+ JSR OSWORD             \ buffer just after the two size configuration bytes
 
- LDX KTRAN              \ Fetch the internal key number of the key being pressed
-                        \ into X
+ LDX KTRAN              \ Set X to the first byte of the updated KTRAN, which
+                        \ contains the internal key number of the key being
+                        \ pressed, or 0 if there is no keypress
 
  TXA                    \ Copy X into A
 
@@ -29132,7 +29190,9 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .DKS2
 
- LDA KTRAN+7,X
+ LDA KTRAN+7,X          \ Fetch either the joystick X value or joystick Y value 
+                        \ from the key logger buffer, depending on the value of
+                        \ X (i.e. fetch either KTRAN+8 or KTRAN+0)
 
  EOR JSTE               \ The high byte A is now EOR'd with the value in
                         \ location JSTE, which contains &FF if both joystick
@@ -29236,16 +29296,22 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .DKJ1
 
- LDA auto
- BNE auton
- LDA KTRAN+1
- STA KL+1
- LDA KTRAN+2
- STA KL+2
+ LDA auto               \ If auto is non-zero, then the docking computer is
+ BNE auton              \ currently activated, so jump to auton in DOKEY so the
+                        \ docking computer can "press" the flight keys for us
+
+ LDA KTRAN+1            \ Copy the key press state for the "?" key from the
+ STA KL+1               \ key logger buffer to the key logger
+
+ LDA KTRAN+2            \ Copy the key press state for the Space key from the
+ STA KL+2               \ key logger buffer to the key logger
 
 .BS1
 
- LDA KTRAN+12\&FE40
+ LDA KTRAN+12           \ Fetch the key press state for the joystick 1 fire
+                        \ button from the key logger buffer, which contains
+                        \ the value of the 6522 System VIA input register IRB
+                        \ (SHEILA &40)
 
  TAX                    \ This instruction doesn't seem to have any effect, as
                         \ X is overwritten in a few instructions. When the
@@ -29339,11 +29405,15 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .DOKEY
 
- LDA NEEDKEY
+ LDA NEEDKEY            \ If NEEDKEY is zero, skip the next insruction
  BEQ P%+5
- JSR RDKEY
- LDA #FF
- STA NEEDKEY
+
+ JSR RDKEY              \ NEEDKEY is non-zero, so call RDKEY to ask the I/O
+                        \ processor to scan the keyboard for key presses and
+                        \ update the key logger buffer at KTRAN
+
+ LDA #&FF               \ Set NEEDKEY to &FF, so the next call to DOKEY updates
+ STA NEEDKEY            \ the key logger buffer
 
  JSR U%                 \ Call U% to clear the key logger
 
@@ -29352,17 +29422,26 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ to read the joystick flight controls, before jumping
                         \ to DK4 below
 
- STA BSTK
- LDX #7
+ STA BSTK               \ Set BTSK = 0
+
+ LDX #7                 \ We're now going to copy key press data for the primary
+                        \ flight keys from the key logger buffer at KTRAN to the
+                        \ key logger at KL, so set a loop counter in X so we can
+                        \ count down from KTRAN + 7 to KTRAN + 1
 
 .DKL2
 
- LDA KTRAN,X
+ LDA KTRAN,X            \ Copy the X-th byte of KTRAN to the X-th byte of KL
  STA KL,X
- DEX
- BNE DKL2
- LDA auto
- BEQ DK15
+
+ DEX                    \ Decrement the loop counter
+
+ BNE DKL2               \ Loop back until we have copied all seven primary
+                        \ flight control key presses to KL
+
+ LDA auto               \ If auto is 0, then the docking computer is not
+ BEQ DK15               \ currently activated, so jump to DK15 to skip the
+                        \ docking computer manoeuvring code below
 
 .auton
 
@@ -29380,7 +29459,7 @@ LOAD_F% = LOAD% + P% - CODE%
  BCC P%+4
  LDA #22
  STA DELTA
- LDA #FF
+ LDA #&FF
  LDX #0
  LDY INWK+28
  BEQ DK11
@@ -29482,7 +29561,8 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .DK4
 
- LDX KTRAN
+ LDX KTRAN              \ Fetch the internal key number of the current key
+                        \ press from the key logger buffer
 
  STX KL                 \ Store X in KL, byte #0 of the key logger
 
@@ -29500,8 +29580,8 @@ LOAD_F% = LOAD% + P% - CODE%
  JSR WSCAN              \ Call WSCAN to wait for the vertical sync, so the whole
                         \ screen gets drawn
 
- JSR RDKEY              \ Scan the keyboard from Q upwards and fetch any key
-                        \ press into X
+ JSR RDKEY              \ Scan the keyboard for a key press and return the
+                        \ internal key number in X (or 0 for no key press)
 
  CPX #&51               \ If S is not being pressed, skip to DK6
  BNE DK6
@@ -29546,7 +29626,7 @@ LOAD_F% = LOAD% + P% - CODE%
  CPX #&64
  BNE nobit
  LDA BSTK
- EOR #FF
+ EOR #&FF
  STA BSTK
  STA JSTK
  STA JSTE
@@ -29566,7 +29646,7 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA QQ11
  BNE out
  LDY #16
- LDA #FF
+ LDA #&FF
 
 .DKL1
 
@@ -29653,7 +29733,8 @@ LOAD_F% = LOAD% + P% - CODE%
  LDY #2
  JSR DELAY
 
- JSR RDKEY              \ Scan the keyboard, starting from Q
+ JSR RDKEY              \ Scan the keyboard for a key press and return the
+                        \ internal key number in X (or 0 for no key press)
 
  BNE t                  \ If a key was already being held down when we entered
                         \ this routine, keep looping back up to t, until the
@@ -29662,7 +29743,8 @@ LOAD_F% = LOAD% + P% - CODE%
 .t2
 
  JSR RDKEY              \ Any pre-existing key press is now gone, so we can
-                        \ start scanning the keyboard again, starting from Q
+                        \ start scanning the keyboard again, returning the
+                        \ internal key number in X (or 0 for no key press)
 
  BEQ t2                 \ Keep looping up to t2 until a key is pressed
 
@@ -30456,15 +30538,50 @@ ENDMACRO
 \       Name: KTRAN
 \       Type: Variable
 \   Category: Keyboard
-\    Summary: The key logger buffer that is populated by the I/O processor
+\    Summary: The key logger buffer that gets updated by the OSWORD &F0 command
 \
 \ ------------------------------------------------------------------------------
+\
+\ KTRAN is a buffer that is filled with key logger information by the KEYBOARD
+\ routine in the I/O processor, which is run when the parasite sends an OSWORD
+\ &F0 command to the I/O processor. The buffer contains details of keys being
+\ pressed, with KTRAN being filled with bytes #2 to #14 from the KEYBOARD
+\ routine (because KEYBOARD is called with OSSC pointing to buf, and buf is
+\ equal to KTRAN - 2).
+\
+\ The key logger buffer is filled as follows:
+\
+\   KTRAN + 0           Internal key number of any non-primary flight control
+\                       key that is being pressed
+\
+\   KTRAN + 1           "?" is being pressed (0 = no, &FF = yes)
+\
+\   KTRAN + 2           Space is being pressed (0 = no, &FF = yes)
+\
+\   KTRAN + 3           "<" is being pressed (0 = no, &FF = yes)
+\
+\   KTRAN + 4           ">" is being pressed (0 = no, &FF = yes)
+\
+\   KTRAN + 5           "X" is being pressed (0 = no, &FF = yes)
+\
+\   KTRAN + 6           "S" is being pressed (0 = no, &FF = yes)
+\
+\   KTRAN + 7           "A" is being pressed (0 = no, &FF = yes)
+\
+\   KTRAN + 8           Joystick X value (high byte)
+\
+\   KTRAN + 9           Joystick Y value (high byte)
+\
+\   KTRAN + 10          Bitstik rotation value (high byte)
+\
+\   KTRAN + 12          Joystick 1 fire button is being pressed (Bit 4 set = no,
+\                       Bit 4 clear = yes)
 \
 \ Other entry points:
 \
 \   buf                 The two OSWORD size configuration bytes for transmitting
 \                       the key logger from the I/O processor to the parasite
-\                       
+\
 \ ******************************************************************************
 
 .buf
@@ -30477,7 +30594,7 @@ ENDMACRO
 
  EQUS "1234567890"      \ A 17-byte buffer to hold the key logger data from the
  EQUS "1234567"         \ KEYBOARD routine in the I/O processor (note that only
-                        \ 12 of these bytes are written to by the KEYBOARD
+                        \ 12 of these bytes are actually updated by the KEYBOARD
                         \ routine)
 
 \ ******************************************************************************
@@ -30561,7 +30678,7 @@ ENDMACRO
  EQUB &6B, &40          \ K             @
  EQUB &3A, &0D          \ :             Return
 
- EQUB &00, &FF, &01
+ EQUB &00, &FF, &01     \ MOS code
  EQUB &02, &09, &0A
 
                         \ Internal key numbers &50 to &59:
@@ -31256,6 +31373,12 @@ ENDIF
 \                       contains the ship line heap address pointer
 \
 \   XX0                 The address of the blueprint for this ship
+\
+\ Returns:
+\
+\   X                   If NEEDKEY is non-zero, scan the keyboard for a key
+\                       press and return the internal key number in X (or 0 for
+\                       no key press)
 \
 \ Other entry points:
 \
@@ -33149,7 +33272,7 @@ ENDIF
  LDA U
  ADC #3
  TAY
- LDA #FF
+ LDA #&FF
  STA (XX19),Y
  INY \Red laser
 
@@ -33398,14 +33521,21 @@ ENDIF
 \ This part draws the lines in the ship line heap, which is used both to draw
 \ the ship, and to remove it from the screen.
 \
+\ If NEEDKEY is non-zero, then this routine also scans the keyboard for a key
+\ press and returns the internal key number in X (or 0 for no key press).
+\
 \ ******************************************************************************
 
 .LL155
 
- LDA NEEDKEY
- BEQ notneed
- STZ NEEDKEY \++
- JSR RDKEY
+ LDA NEEDKEY            \ If NEEDKEY is zero, jump to notneed to skip the next
+ BEQ notneed            \ two instructions, so we only read the keyboard if
+                        \ NEEDKEY is non-zero
+
+ STZ NEEDKEY            \ Set NEEDKEY = 0
+
+ JSR RDKEY              \ Scan the keyboard for a key press and return the
+                        \ internal key number in X (or 0 for no key press)
 
 .notneed
 
@@ -36269,7 +36399,7 @@ ENDIF
 
 .CLYNS
 
- LDA #FF
+ LDA #&FF
  STA DTW2
  LDA #128
  STA QQ17
@@ -36927,7 +37057,7 @@ LOAD_I% = LOAD% + P% - CODE%
  LDA X1TB,Y
  EOR #128
  BPL GR2
- EOR #FF
+ EOR #&FF
  INA \++
 
 .GR2
@@ -36972,7 +37102,7 @@ LOAD_I% = LOAD% + P% - CODE%
  LDA X2TB,Y
  EOR #128
  BPL GR3
- EOR #FF
+ EOR #&FF
  INA \++
 
 .GR3
