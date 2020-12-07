@@ -72,7 +72,13 @@ GREEN2 = &C
 STRIPE = &23
 
 \ ******************************************************************************
+\
 \       Name: ZP
+\       Type: Workspace
+\    Address: &0080 to &0089
+\   Category: Workspaces
+\    Summary: Important variables used by the I/O processor
+\
 \ ******************************************************************************
 
 ORG &0080
@@ -310,7 +316,7 @@ NEXT
 
 .K3
 
- BRK
+ EQUB 0                 \ Temporary storage, used in a number of places
 
 .U
 
@@ -400,7 +406,7 @@ NEXT
 
 .ALP2
 
- BRK
+ EQUB 0                 \ Bit 7 of ALP2 = sign of the roll angle in ALPHA
 
 .BETA
 
@@ -1282,7 +1288,7 @@ NEXT
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
-\       Name: SC48 - is like the last half of common/subroutine_scan.asm
+\       Name: SC48 - is like the last half of common/subroutine/scan.asm
 \ ******************************************************************************
 
 \  ...................... Scanners  ..............................
@@ -3442,8 +3448,8 @@ ENDMACRO
 
                         \ These are the secondary flight controls:
 
- EQUB &60               \ Tab       KYTB+8      Energy bomb
- EQUB &70               \ Escape    KYTB+9      Launch escape pod
+ EQUB &60               \ TAB       KYTB+8      Energy bomb
+ EQUB &70               \ ESCAPE    KYTB+9      Launch escape pod
  EQUB &23               \ T         KYTB+10     Arm missile
  EQUB &35               \ U         KYTB+11     Unarm missile
  EQUB &65               \ M         KYTB+12     Fire missile
@@ -3673,7 +3679,7 @@ ENDMACRO
  EQUW KEYBOARD          \            240 (&F0)     0 = Scan the keyboard
  EQUW PIXEL             \            241 (&F1)     1 = Draw a pixel
  EQUW MSBAR             \ #DOmsbar = 242 (&F2)     2 = Update missile indicators
- EQUW WSCAN             \ #wscn    = 243 (&F3)     3 = Remove ship from scanner
+ EQUW WSCAN             \ #wscn    = 243 (&F3)     3 = Wait for vertical sync
  EQUW SC48              \ #onescan = 244 (&F4)     4 = Update the 3D scanner
  EQUW DOT               \ #DOdot   = 245 (&F5)     5 = Draw a dot
  EQUW DODKS4            \ #DODKS4  = 246 (&F6)     6 = Scan for a specific key
@@ -5283,7 +5289,18 @@ ENDMACRO
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: TVT1
+\       Type: Variable
+\   Category: Screen mode
+\    Summary: Palette data for the mode 2 part of the screen (the dashboard)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This palette is applied in the IRQ1 routine. If we have an eacape pod fitted,
+\ then the first byte is changed to &30, which maps logical colour 3 to actual
+\ colour 0 (black) instead of colour 4 (blue).
+\
 \ ******************************************************************************
 
 .TVT1
@@ -5352,7 +5369,8 @@ protlen = end65C02-do65C02
  TYA                    \ Store Y on the stack
  PHA
 
- LDY #15
+ LDY #15                \ Set Y as a counter for 16 bytes, to use when setting
+                        \ the dashboard palette below
 
  LDA #%00000010         \ Read the 6522 System VIA status byte bit 1 (SHEILA
  BIT VIA+&4D            \ &4D), which is set if vertical sync has occurred on
@@ -5371,24 +5389,38 @@ protlen = end65C02-do65C02
                         \ the boundary, so we jump to jvec to pass control to
                         \ the next interrupt handler
 
- LDA #&14
-
- STA VIA+&20            \ Set the Video ULA control register (SHEILA &20) to
-                        \ %00000100, which is the same as switching to mode 5,
+ LDA #%00010100         \ Set the Video ULA control register (SHEILA &20) to
+ STA VIA+&20            \ %00010100, which is the same as switching to mode 2,
                         \ (i.e. the bottom part of the screen) but with no
                         \ cursor
 
- LDA ESCP
- AND #4
- EOR #&34
- STA &FE21\ESCP
+ LDA ESCP               \ Set A = ESCP, which is &FF if we have an escape pod
+                        \ fitted, or 0 if we don't
+
+ AND #4                 \ Set A = 4 if we have an escape pod fitted, or 0 if we
+                        \ don't
+ 
+ EOR #&34               \ Set A = &30 if we have an escape pod fitted, or &34 if
+                        \ we don't
+
+ STA &FE21              \ Store A in SHEILA &21 to map logical colour 3 to
+                        \ actual colour 0 (black) if we have an escape pod
+                        \ fitted, or actual colour 4 (blue) if we don't
+
+                        \ The following loop copies bytes #15 to #1 from TVT1 to
+                        \ SHEILA &21, but not byte #0, as we just did that
+                        \ colour mapping
 
 .VNT2
 
- LDA TVT1,Y
- STA &FE21
- DEY
- BNE VNT2
+ LDA TVT1,Y             \ Copy the Y-th palette byte from TVT1 to SHEILA &21
+ STA &FE21              \ to map logical to actual colours for the bottom part
+                        \ of the screen (i.e. the dashboard)
+
+ DEY                    \ Decrement the palette byte counter
+
+ BNE VNT2               \ Loop back to VNT2 until we have copied all the palette
+                        \ bytes bar the first one
 
 .jvec
 

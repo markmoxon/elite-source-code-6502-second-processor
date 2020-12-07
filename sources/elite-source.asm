@@ -70,7 +70,7 @@ NI% = 37
 POW = 15
 B = &30
 Armlas = INT(128.5+1.5*POW)
-Mlas = 50
+Mlas = 50               \ Mining laser
 NRU% = 0
 VE = &57
 LL = 30
@@ -2268,7 +2268,7 @@ ORG &0800
 
 .KY12
 
- SKIP 1                 \ Tab key is being pressed
+ SKIP 1                 \ TAB is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2276,7 +2276,7 @@ ORG &0800
 
 .KY13
 
- SKIP 1                 \ Escape key is being pressed
+ SKIP 1                 \ ESCAPE is being pressed
                         \
                         \   * 0 = no
                         \
@@ -2584,7 +2584,11 @@ ORG &0800
 
 .NAME
 
- SKIP 8
+ SKIP 8                 \ The current commander name
+                        \
+                        \ The commander name can be up to 7 characters (the DFS
+                        \ limit for file names), and is terminated by a carriage
+                        \ return
 
 .TP
 
@@ -3181,6 +3185,7 @@ ORG &8200
 \       Type: Workspace
 \    Address: &8600 to &91FF
 \   Category: Workspaces
+\    Summary: Variables used for displaying the scrolling text in the demo
 \
 \ ******************************************************************************
 
@@ -3289,7 +3294,7 @@ LOAD_A% = LOAD%
                         \
                         \   * &FF = damping is disabled
                         \
-                        \ Toggled by pressing Caps Lock when paused, see the
+                        \ Toggled by pressing CAPS LOCK when paused, see the
                         \ DKS3 routine for details
 
 .DJD
@@ -3368,7 +3373,14 @@ LOAD_A% = LOAD%
 
 .BSTK
 
- BRK
+ EQUB 0                 \ Bitstik configuration setting
+                        \
+                        \   * 0 = keyboard or joystick (default)
+                        \
+                        \   * &FF = Bitstik
+                        \
+                        \ Toggled by pressing "B" when paused, see the DKS3
+                        \ routine for details
 
 .CATF
 
@@ -3403,11 +3415,13 @@ LOAD_A% = LOAD%
 
 .NA%
 
- EQUS "JAMESON"         \ Default commander name
- EQUB 13                \ Terminated by a carriage return; commander name can
-                        \ be up to 7 characters (the DFS limit for file names)
+ EQUS "JAMESON"         \ The current commander name, which defaults to JAMESON
+ EQUB 13                \
+                        \ The commander name can be up to 7 characters (the DFS
+                        \ limit for file names), and is terminated by a carriage
+                        \ return
 
-                        \ NA%+8 - the start of the commander data block
+                        \ NA%+8 is the start of the commander data block
                         \
                         \ This block contains the last saved commander data
                         \ block. As the game is played it uses an identical
@@ -3824,9 +3838,10 @@ ENDIF
  LSR A                  \ Divide the (positive) roll rate in A by 4
  LSR A
 
- CMP #8
+ CMP #8                 \ If A >= 8, skip the following instruction
  BCS P%+3
- LSR A
+
+ LSR A                  \ A < 8, so halve A again
 
  STA ALP1               \ Store A in ALP1, so we now have:
                         \
@@ -3899,19 +3914,27 @@ ENDIF
  ORA BET2               \ Store A in BETA, but with the sign set to BET2 (so
  STA BETA               \ BETA has the same sign as the actual pitch rate)
 
- LDA BSTK
- BEQ BS2
+ LDA BSTK               \ If BSTK = 0 then the Bitstik is not configured, so
+ BEQ BS2                \ jump to BS2 to skip the following
 
  LDA KTRAN+10           \ Fetch the Bitstik rotation value (high byte) from the
                         \ key logger buffer
 
+ LSR A                  \ Divide A by 4
  LSR A
- LSR A
- CMP #40
+
+ CMP #40                \ If A < 40, skip the following instruction
  BCC P%+4
- LDA #40
- STA DELTA
- BNE MA4
+
+ LDA #40                \ Set A = 40, which ensures a maximum speed of 40
+
+ STA DELTA              \ Update our speed in DELTA
+
+ BNE MA4                \ If the speed we just set is non-zero, then jump to MA4
+                        \ to skip the following, as we don't need to check the
+                        \ keyboard for speed keys, otherwise do check the
+                        \ keyboard (so Bitstik users can still use the keyboard
+                        \ for speed adjustments if they twist the stick to zero)
 
 .BS2
 
@@ -3935,10 +3958,10 @@ ENDIF
 \
 \ The key presses that are processed are as follows:
 \
-\   * Space and "?" to speed up and slow down
+\   * SPACE and "?" to speed up and slow down
 \   * "U", "T" and "M" to disarm, arm and fire missiles
-\   * Tab to fire an energy bomb
-\   * Escape to launch an escape pod
+\   * TAB to fire an energy bomb
+\   * ESCAPE to launch an escape pod
 \   * "J" to initiate an in-system jump
 \   * "E" to deploy E.C.M. anti-missile countermeasures
 \   * "C" to use the docking computer
@@ -4021,7 +4044,7 @@ ENDIF
 
  LDA MSTG               \ If MSTG = &FF then there is no target lock, so jump to
  BMI MA64               \ MA64 to skip the following (also skipping the checks
-                        \ for Tab, Escape, "J" and "E")
+                        \ for TAB, ESCAPE, "J" and "E")
 
  JSR FRMIS              \ The "fire missile" key is being pressed and we have
                         \ a missile lock, so call the FRMIS routine to fire
@@ -4029,7 +4052,7 @@ ENDIF
 
 .MA24
 
- LDA KY12               \ If Tab is being pressed, keep going, otherwise jump
+ LDA KY12               \ If TAB is being pressed, keep going, otherwise jump
  BEQ MA76               \ jump down to MA76 to skip the following
 
  ASL BOMB               \ The "energy bomb" key is being pressed, so double
@@ -4264,7 +4287,7 @@ ENDIF
 \
 \ ******************************************************************************
 
- LDA BOMB               \ If we set off our energy bomb by pressing Tab (see
+ LDA BOMB               \ If we set off our energy bomb by pressing TAB (see
  BPL MA21               \ MA24 above), then BOMB is now negative, so this skips
                         \ to MA21 if our energy bomb is not going off
 
@@ -4453,7 +4476,10 @@ ENDIF
                         \ computers, while escape pods contain slaves, and
                         \ Thargons become alien items when scooped
 
- JSR tnpr1
+ JSR tnpr1              \ Call tnpr1 to with the scooped cargo type stored in A
+                        \ to work out whether we have room in the hold for one
+                        \ tonne of this cargo (A is set to 1 by this call, and
+                        \ the C flag contains the result)
 
  LDY #78                \ This instruction has no effect, so presumably it used
                         \ to do something, but didn't get removed
@@ -4602,6 +4628,7 @@ ENDIF
 
  LDA #1                 \ Set the speed in DELTA to 1 (i.e. a sudden stop)
  STA DELTA
+
  LDA #5                 \ Set the amount of damage in A to 5 (a small dent) and
  BNE MA63               \ jump down to MA63 to process the damage (this BNE is
                         \ effectively a JMP as A will never be zero)
@@ -4869,7 +4896,7 @@ ENDIF
 
 .MA18
 
- LDA BOMB               \ If we set off our energy bomb by pressing Tab (see
+ LDA BOMB               \ If we set off our energy bomb by pressing TAB (see
  BPL MA77               \ MA24 above), then BOMB is now negative, so this skips
                         \ to MA77 if our energy bomb is not going off
 
@@ -5334,13 +5361,14 @@ ENDIF
                         \ debris shown when the ship is destroyed, and AND
                         \ with the random number we just fetched
 
- AND #15
+ AND #15                \ Reduce the random number in A to the range 0-15
 
 .SPIN2
 
  STA CNT                \ Store the result in CNT, so CNT contains a random
                         \ number between 0 and the maximum number of bits of
                         \ debris that this ship will release when destroyed
+                        \ (to a maximum of 15 bits of debris)
 
 .spl
 
@@ -5355,12 +5383,12 @@ ENDIF
 
  DEC CNT                \ Decrease the loop counter
 
- BNE spl+2              \ Jump back up to um (this BPL is effectively a JMP as
-                        \ CNT will never be negative)
+ BNE spl+2              \ Jump back up to the LDA &0 instruction above (this BPL
+                        \ is effectively a JMP as CNT will never be negative)
 
 .oh
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -10000,11 +10028,11 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 \       Name: BELL
 \       Type: Subroutine
 \   Category: Sound
-\    Summary: Make a beep sound
+\    Summary: Make a standard system beep
 \
 \ ------------------------------------------------------------------------------
 \
-\ This is the standard system beep as made by the VDU 7 command in BBC BASIC.
+\ This is the standard system beep as made by the VDU 7 statement in BBC BASIC.
 \
 \ ******************************************************************************
 
@@ -10149,7 +10177,7 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 \ ------------------------------------------------------------------------------
 \
 \ This routine displays our doomed Cobra Mk III disappearing off into the ether
-\ before arranging our replacement ship. Called when we press Escape during
+\ before arranging our replacement ship. Called when we press ESCAPE during
 \ flight and have an escape pod fitted.
 \
 \ ******************************************************************************
@@ -15054,13 +15082,50 @@ CODE_D% = P%
 LOAD_D% = LOAD% + P% - CODE%
 
 \ ******************************************************************************
+\
 \       Name: tnpr1
+\       Type: Subroutine
+\   Category: Market
+\    Summary: Work out if we have space for one tonne of cargo
+\
+\ ------------------------------------------------------------------------------
+\
+\ Given a market item, work out whether there is room in the cargo hold for one
+\ tonne of this item.
+\
+\ For standard tonne canisters, the limit is given by the type of cargo hold we
+\ have, with a standard cargo hold having a capacity of 20t and an extended
+\ cargo bay being 35t.
+\
+\ For items measured in kg (gold, platinum), g (gem-stones) and alien items,
+\ the individual limit on each of these is 200 units.
+\
+\ Arguments:
+\
+\   A                   The type of market item (see QQ23 for a list of market
+\                       item numbers)
+\
+\ Returns:
+\
+\   A                   A = 1
+\
+\   C flag              Returns the result:
+\
+\                         * Set if there is no room for this item
+\
+\                         * Clear if there is room for this item
+\
 \ ******************************************************************************
 
 .tnpr1
 
- STA QQ29
- LDA #1
+ STA QQ29               \ Store the type of market item in QQ29
+
+ LDA #1                 \ Set the number of units of this market item to 1
+
+                        \ Fall through into tnpr to work out whether there is
+                        \ room in the cargo hold for A tonnes of the item of
+                        \ type QQ29
 
 \ ******************************************************************************
 \
@@ -19499,8 +19564,9 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ prompt, and ask for a view number, which is returned
                         \ in X (which now contains 0-3)
 
- LDA #POW
- JSR refund
+ LDA #POW               \ Call refund with A set to the power of the new pulse
+ JSR refund             \ laser to install the new laser and process a refund if
+                        \ we already have a laser fitted to this view
 
  LDA #4                 \ Set A to 4 as we just overwrote the original value,
                         \ and we still need it set correctly so we can continue
@@ -19516,8 +19582,9 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ prompt, and ask for a view number, which is returned
                         \ in X (which now contains 0-3)
 
- LDA #POW+128
- JSR refund
+ LDA #POW+128           \ Call refund with A set to the power of the new beam
+ JSR refund             \ laser to install the new laser and process a refund if
+                        \ we already have a laser fitted to this view
 
 .et5
 
@@ -19652,8 +19719,10 @@ LOAD_D% = LOAD% + P% - CODE%
  CMP #12
  BNE et10
  JSR qv
- LDA #Armlas
- JSR refund
+
+ LDA #Armlas            \ Call refund with A set to the power of the new
+ JSR refund             \ military laser to install the new laser and process a
+                        \ refund if we already have a laser fitted to this view
 
 .et10
 
@@ -19661,8 +19730,10 @@ LOAD_D% = LOAD% + P% - CODE%
  CMP #13
  BNE et11
  JSR qv
- LDA #Mlas
- JSR refund
+
+ LDA #Mlas              \ Call refund with A set to the power of the new mining
+ JSR refund             \ laser to install the new laser and process a refund if
+                        \ we already have a laser fitted to this view
 
 .et11
 
@@ -19912,41 +19983,86 @@ LOAD_D% = LOAD% + P% - CODE%
  JMP CLYNS
 
 \ ******************************************************************************
+\
 \       Name: refund
+\       Type: Subroutine
+\   Category: Equipment
+\    Summary: Install a new laser, processing a refund if applicable
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The power of the new laser to be fitted
+\
+\   X                   The view number for fitting the new laser
+\
+\ Returns:
+\
+\   A                   A is preserved
+\
+\   X                   X is preserved
+\
 \ ******************************************************************************
 
-\ref2 LDY#187\JMPpres\Belgium
+\.ref2                  \ These instructions are commented out in the original
+\LDY #18                \ source, but they would jump to pres in the EQSHP
+\JMP pres               \ routine with Y = 18, which would show the error:
+                        \ "{cr}all caps}EQUIPMENT: {sentence case} PRESENT"
 
 .refund
 
- STA T1
- LDA LASER,X
- BEQ ref3\CMPT1\BEQref2
- LDY #4
- CMP #POW
- BEQ ref1
- LDY #5
- CMP #POW+128
- BEQ ref1
- LDY #12\11
- CMP #Armlas
- BEQ ref1
-\Mlas
- LDY #13\12
+ STA T1                 \ Store A in T1 so we can retrieve it later
+
+ LDA LASER,X            \ If there is no laser in view X (i.e. the laser power
+ BEQ ref3               \ is zero), jump to ref3 to skip the refund code
+
+ \CMP T1                \ These instructions are commented out in the original
+ \BEQ ref2              \ source, but they would jump to ref2 above if we were
+                        \ trying to replace a laser with one of the same type
+
+ LDY #4                 \ If the current laser has power #POW (pulse laser),
+ CMP #POW               \ jump to ref1 with Y = 4 (the item number of a pulse
+ BEQ ref1               \ laser in the table at PRXS)
+
+ LDY #5                 \ If the current laser has power #POW+128 (beam laser),
+ CMP #POW+128           \ jump to ref1 with Y = 5 (the item number of a beam
+ BEQ ref1               \ laser in the table at PRXS)
+
+ LDY #12                \ If the current laser has power #Armlas (military
+ CMP #Armlas            \ laser), jump to ref1 with Y = 12 (the item number of a
+ BEQ ref1               \ military laser in the table at PRXS)
+
+ LDY #13                \ Otherwise this is a mining laser, so fall through into
+                        \ ref1 with Y = 13 (the item number of a mining laser in
+                        \ the table at PRXS)
 
 .ref1
 
- STX ZZ
- TYA
- JSR prx
- JSR MCASH
- LDX ZZ
+                        \ We now want to refund the laser of type Y that we are
+                        \ exchanging for the new laser
+
+ STX ZZ                 \ Store the view number in ZZnso we can retrieve it
+                        \ later
+
+ TYA                    \ Copy the laser type to be refunded from Y to A
+
+ JSR prx                \ Call prx to set (Y X) to the price of equipment item
+                        \ number A
+
+ JSR MCASH              \ Call MCASH to add (Y X) to the cash pot
+
+ LDX ZZ                 \ Retrieve the view number from ZZ
 
 .ref3
 
- LDA T1
- STA LASER,X
- RTS
+                        \ Finally, we install the new laser
+
+ LDA T1                 \ Retrieve the new laser's power from T1 into A
+
+ STA LASER,X            \ Set the laser view to the new laser's power
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -19976,9 +20092,8 @@ LOAD_D% = LOAD% + P% - CODE%
  EQUW 15000             \ 9  Energy Unit               1500.0 Cr
  EQUW 10000             \ 10 Docking Computer          1000.0 Cr
  EQUW 50000             \ 11 Galactic Hyperspace       5000.0 Cr
-
- EQUW 60000
- EQUW 8000
+ EQUW 60000             \ 12 Extra Military Lasers     6000.0 Cr
+ EQUW 8000              \ 13 Extra Mining Lasers        800.0 Cr
 
 \ ******************************************************************************
 \
@@ -24004,7 +24119,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
 \ ******************************************************************************
 \
-\       Name: CIRCLE3
+\       Name: CIRCLE2
 \       Type: Subroutine
 \   Category: Drawing circles
 \    Summary: Draw a circle (for the planet or chart)
@@ -24032,6 +24147,10 @@ LOAD_E% = LOAD% + P% - CODE%
 \ ******************************************************************************
 
 .CIRCLE3
+
+                        \ This gets called from CIRCLE2 below to calculate the
+                        \ line segments, which CIRCLE2 then sends to the I/O
+                        \ processor for drawing
 
  LDX #&FF               \ Set FLAG = &FF to reset the ball line heap in the call
  STX FLAG               \ to the BLINE routine below
@@ -24139,17 +24258,25 @@ LOAD_E% = LOAD% + P% - CODE%
 
  RTS                    \ Return from the subroutine
 
-\ ******************************************************************************
-\       Name: CIRCLE2
-\ ******************************************************************************
-
 .CIRCLE2
 
- STZ LSP
- JSR CIRCLE3
+                        \ This is the entry point for this subroutine
+
+ STZ LSP                \ Reset the ball line heap by setting the ball line heap
+                        \ pointer to 0
+
+ JSR CIRCLE3            \ Call CIRCLE3 to draw the circle
+
+                        \ Fall through into LS2FL to send the ball line heap to
+                        \ the I/O processor for drawing
 
 \ ******************************************************************************
+\
 \       Name: LS2FL
+\       Type: Subroutine
+\   Category: Drawing circles
+\    Summary: Send the ball line heap to the I/O processor for drawing
+\
 \ ******************************************************************************
 
 .LS2FL
@@ -24828,10 +24955,10 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ (or the equivalent on joystick) and update the key
                         \ logger, setting KL to the key pressed
 
- LDX #0                 \ Call DKS4 to check whether the Shift key is being
+ LDX #0                 \ Call DKS4 to check whether the SHIFT key is being
  JSR DKS4               \ pressed
 
- STA newlocn            \ Store the result (which will have bit 7 set if Shift
+ STA newlocn            \ Store the result (which will have bit 7 set if SHIFT
                         \ is being pressed) in newlocn
 
  LDA JSTK               \ If the joystick was not used, jump down to TJ1,
@@ -24851,11 +24978,11 @@ LOAD_E% = LOAD% + P% - CODE%
  TYA                    \ Copy Y to A
 
  BIT newlocn            \ If bit 7 of newlocn is clear - in other words, if
- BPL P%+3               \ Shift is not being pressed - then skip the following
+ BPL P%+3               \ SHIFT is not being pressed - then skip the following
                         \ instruction
 
- ASL A                  \ Shift is being held down, so double the value of A
-                        \ (i.e. Shift moves the cursor at double the speed
+ ASL A                  \ SHIFT is being held down, so double the value of A
+                        \ (i.e. SHIFT moves the cursor at double the speed
                         \ when using the joystick)
 
  TAX                    \ Copy A to X
@@ -24891,11 +25018,11 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ cursor faster by increasing the range of Y by -1 to +1
 
  BIT newlocn            \ If bit 7 of newlocn is clear - in other words, if
- BPL P%+3               \ Shift is not being pressed - then skip the following
+ BPL P%+3               \ SHIFT is not being pressed - then skip the following
                         \ instruction
 
- ASL A                  \ Shift is being held down, so double the value of A
-                        \ (i.e. Shift moves the cursor at double the speed
+ ASL A                  \ SHIFT is being held down, so double the value of A
+                        \ (i.e. SHIFT moves the cursor at double the speed
                         \ when using the joystick
 
  TAY                    \ Copy the value of A into Y
@@ -24907,7 +25034,7 @@ LOAD_E% = LOAD% + P% - CODE%
 .newlocn
 
  EQUB 0                 \ The current key press is stored here in the above code
-                        \ when we check whether Shift is being held down
+                        \ when we check whether SHIFT is being held down
 
 .TJ1
 
@@ -24935,11 +25062,11 @@ LOAD_E% = LOAD% + P% - CODE%
  TXA                    \ Transfer the value of X into A
 
  BIT newlocn            \ If bit 7 of newlocn is clear - in other words, if
- BPL P%+4               \ Shift is not being pressed - then skip the following
+ BPL P%+4               \ SHIFT is not being pressed - then skip the following
                         \ two instructions
 
- ASL A                  \ Shift is being held down, so quadruple the value of A
- ASL A                  \ (i.e. Shift moves the cursor at four times the speed
+ ASL A                  \ SHIFT is being held down, so quadruple the value of A
+ ASL A                  \ (i.e. SHIFT moves the cursor at four times the speed
                         \ when using the keyboard)
 
  TAX                    \ Transfer the amended value of A back into X
@@ -24947,11 +25074,11 @@ LOAD_E% = LOAD% + P% - CODE%
  TYA                    \ Transfer the value of Y into A
 
  BIT newlocn            \ If bit 7 of newlocn is clear - in other words, if
- BPL P%+4               \ Shift is not being pressed - then skip the following
+ BPL P%+4               \ SHIFT is not being pressed - then skip the following
                         \ two instructions
 
- ASL A                  \ Shift is being held down, so quadruple the value of A
- ASL A                  \ (i.e. Shift moves the cursor at four times the speed
+ ASL A                  \ SHIFT is being held down, so quadruple the value of A
+ ASL A                  \ (i.e. SHIFT moves the cursor at four times the speed
                         \ when using the keyboard)
 
  TAY                    \ Transfer the amended value of A back into Y
@@ -27092,7 +27219,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \ ------------------------------------------------------------------------------
 \
 \ This is the main entry point for a the main game coce. It is also called
-\ following death, and when the game is quit by pressing Escape when paused.
+\ following death, and when the game is quit by pressing ESCAPE when paused.
 \
 \ ******************************************************************************
 
@@ -27128,7 +27255,12 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ to restart from the title screen
 
 \ ******************************************************************************
+\
 \       Name: BR1
+\       Type: Subroutine
+\   Category: Start and end
+\    Summary: Restart the game
+\
 \ ******************************************************************************
 
 .BR1
@@ -27136,51 +27268,102 @@ LOAD_F% = LOAD% + P% - CODE%
  JSR ZEKTRAN            \ Reset the key logger buffer that gets returned from
                         \ the I/O processor
 
- LDA #3
+ LDA #3                 \ Move the text cursor to column 3
  JSR DOXC
- LDX #3
- JSR FX200
- LDX #CYL
- LDA #6
- JSR TITLE
- CMP #&60
- BNE P%+5
+                        
+ LDX #3                 \ Disable the ESCAPE key and clear memory if the BREAK
+ JSR FX200              \ key is pressed (*FX 200, 3)
+
+ LDX #CYL               \ Call the TITLE subroutine to show the rotating ship
+ LDA #6                 \ and load prompt. The arguments sent to TITLE are:
+ JSR TITLE              \
+                        \   X = type of ship to show, #CYL is a Cobra Mk III
+                        \
+                        \   A = text token to show below the rotating ship, 6
+                        \       is "LOAD NEW {single cap}COMMANDER {all caps}
+                        \       (Y/N)?{sentence case}{cr}{cr}"
+                        \
+                        \ The TITLE subroutine returns with the internal number
+                        \ of the key pressed in A (see p.142 of the Advanced
+                        \ User Guide for a list of internal key number)
+
+ CMP #&60               \ Did we press TAB? If not, skip the following
+ BNE P%+5               \ instruction
 
 .BRGO
 
- JMP DEMON
- CMP #&44
- BNE QU5
- JSR DFAULT
- JSR SVE
+ JMP DEMON              \ We pressed TAB, so jump to DEMON to show the demo
+
+ CMP #&44               \ Did we press "Y"? If not, jump to QU5, otherwise
+ BNE QU5                \ continue on to load a new commander
+
+ JSR DFAULT             \ Call DFAULT to reset the current commander data block
+                        \ to the last saved commander
+
+ JSR SVE                \ Call SVE to load a new commander into the last saved
+                        \ commander data block
 
 .QU5
 
- JSR DFAULT
- JSR msblob
- LDA #7
- LDX #ASP
- JSR TITLE
- JSR ping
-\JSRhyp1 was here...
- JSR TT111
- JSR jmp
- LDX #5
+ JSR DFAULT             \ Call DFAULT to reset the current commander data block
+                        \ to the last saved commander
+
+ JSR msblob             \ Reset the dashboard's missile indicators to all be
+                        \ green/cyan
+
+ LDA #7                 \ Call the TITLE subroutine to show the rotating ship
+ LDX #ASP               \ and load prompt. The arguments sent to TITLE are:
+ JSR TITLE              \
+                        \   X = type of ship to show, #ASP is an Asp Mk II
+                        \
+                        \   A = text token to show below the rotating ship, 6
+                        \       is "LOAD NEW {single cap}COMMANDER {all caps}
+                        \       (Y/N)?{sentence case}{cr}{cr}"
+
+ JSR ping               \ Set the target system coordinates (QQ9, QQ10) to the
+                        \ current system coordinates (QQ0, QQ1) we just loaded
+
+                        \ The rest of this routine is almost identical to the
+                        \ hyp routine in the cassette version
+
+ JSR TT111              \ Select the system closest to galactic coordinates
+                        \ (QQ9, QQ10)
+
+ JSR jmp                \ Set the current system to the selected system
+
+ LDX #5                 \ We now want to copy the seeds for the selected system
+                        \ in QQ15 into QQ2, where we store the seeds for the
+                        \ current system, so set up a counter in X for copying
+                        \ 6 bytes (for three 16-bit seeds)
+                        
+                        \ The label below is called likeTT112 because this code
+                        \ is almost identical to the TT112 loop in the hyp
+                        \ routine in the cassette version
 
 .likeTT112
 
- LDA QQ15,X
+ LDA QQ15,X             \ Copy the X-th byte in QQ15 to the X-th byte in QQ2,
  STA QQ2,X
- DEX
- BPL likeTT112
- INX
- STX EV
- LDA QQ3
- STA QQ28
- LDA QQ5
- STA tek
- LDA QQ4
- STA gov
+
+ DEX                    \ Decrement the counter
+
+ BPL likeTT112          \ Loop back to likeTT112 if we still have more bytes to
+                        \ copy
+
+ INX                    \ Set X = 0 (as we ended the above loop with X = &FF)
+
+ STX EV                 \ Set EV, the extra vessels spawning counter, to 0, as
+                        \ we are entering a new system with no extra vessels
+                        \ spawned
+
+ LDA QQ3                \ Set the current system's economy in QQ28 to the
+ STA QQ28               \ selected system's economy from QQ3
+
+ LDA QQ5                \ Set the current system's tech level in tek to the
+ STA tek                \ selected system's economy from QQ5
+
+ LDA QQ4                \ Set the current system's government in gov to the
+ STA gov                \ selected system's government from QQ4
 
 \ ******************************************************************************
 \
@@ -27209,36 +27392,86 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ Mode screen)
 
 \ ******************************************************************************
+\
 \       Name: DFAULT
+\       Type: Subroutine
+\   Category: Start and end
+\    Summary: Reset the current commander data block to the last saved commander
+\
 \ ******************************************************************************
 
 .DFAULT
 
- LDX #NT%+8
+ LDX #NT%+8             \ The size of the last saved commander data block is NT%
+                        \ bytes, and it is preceded by the 8 bytes of the
+                        \ commander name (seven characters plus a carriage
+                        \ return). The commander data block at NAME is followed
+                        \ by the commander data block, so we need to copy the
+                        \ name and data from the "last saved" buffer at NA% to
+                        \ the current commander workspace at NAME. So we set up
+                        \ a counter in X for the NT% + 8 bytes that we want to
+                        \ copy
 
 .QUL1
 
- LDA NA%-1,X
- STA NAME-1,X
- DEX
- BNE QUL1
- STX QQ11
- JSR CHECK
- CMP CHK
- BNE P%-6
-\JSRBELL
- EOR #&A9
+ LDA NA%-1,X            \ Copy the X-th byte of NA%-1 to the X-th byte of
+ STA NAME-1,X           \ NAME-1 (the -1 is because X is counting down from
+                        \ NT% + 8 to 1)
+
+ DEX                    \ Decrement the loop counter
+
+ BNE QUL1               \ Loop back for the next byte of the commander data
+                        \ block
+
+ STX QQ11               \ X is 0 by the end of the above loop, so this sets QQ11
+                        \ to 0, which means we will be showing a view without a
+                        \ boxed title at the top (i.e. we're going to use the
+                        \ screen layout of a space view in the following)
+
+ JSR CHECK              \ Call the CHECK subroutine to calculate the checksum
+                        \ for the current commander block at NA%+8 and put it
+                        \ in A
+
+ CMP CHK                \ Test the calculated checksum against CHK
+
+IF _REMOVE_CHECKSUMS
+
+ NOP                    \ If we have disabled the commander check, then ignore
+ NOP                    \ the checksum and fall through into the next part
+
+ELSE
+
+ BNE P%-6               \ If commander check is enabled and the calculated
+                        \ checksum does not match CHK, then loop back to repeat
+                        \ the check - in other words, we enter an infinite loop
+                        \ here, as the checksum routine will keep returning the
+                        \ same incorrect value
+
+ENDIF
+
+\JSR BELL               \ This instruction is commented out in the original
+                        \ source. It would make a standard system beep
+
+ EOR #&A9               \ X = checksum EOR &A9
  TAX
- LDA COK
- CPX CHK2
+
+ LDA COK                \ Set A to the competition flags in COK
+
+ CPX CHK2               \ If X = CHK2, then skip the next instruction
  BEQ tZ
- ORA #128
+
+ ORA #%10000000         \ Set bit 7 of A to indicate this commander file has
+                        \ been tampered with
 
 .tZ
 
- ORA #4
- STA COK
- RTS
+ ORA #4                 \ Set bit 2 of A to denote this is the 6502 second
+                        \ processor version (which is the same bit as for the
+                        \ disc version)
+
+ STA COK                \ Store the updated competition flags in COK
+ 
+ RTS                    \ Retirn from the subroutine
 
 \ ******************************************************************************
 \
@@ -27576,12 +27809,12 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \ ------------------------------------------------------------------------------
 \
-\ If Escape is pressed or a blank name is entered, then an empty string is
+\ If ESCAPE is pressed or a blank name is entered, then an empty string is
 \ returned.
 \
 \ Returns:
 \
-\   Y                   The size of the entered text, or 0 if Escape was pressed
+\   Y                   The size of the entered text, or 0 if ESCAPE was pressed
 \
 \   INWK+5              The entered text, terminated by a carriage return
 \
@@ -27605,11 +27838,11 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA #0                 \ the current input stream (i.e. the keyboard)
  JSR OSWORD
 
- BCC P%+4               \ The C flag will be set if we pressed Escape when
+ BCC P%+4               \ The C flag will be set if we pressed ESCAPE when
                         \ entering the name, otherwise it will be clear, so
-                        \ skip the next instruction is Escape is not pressed
+                        \ skip the next instruction is ESCAPE is not pressed
 
- LDY #0                 \ Escape was pressed, so set Y = 0 (as the OSWORD call
+ LDY #0                 \ ESCAPE was pressed, so set Y = 0 (as the OSWORD call
                         \ returns the length of the entered string in Y)
 
  LDA #VIAE              \ Send a #VIAE %00000001 command to the I/O processor to
@@ -28128,18 +28361,18 @@ LOAD_F% = LOAD% + P% - CODE%
 \       Name: FX200
 \       Type: Subroutine
 \   Category: Utility routines
-\    Summary: Set the behaviour of the Escape and Break keys
+\    Summary: Set the behaviour of the ESCAPE and BREAK keys
 \
 \ ------------------------------------------------------------------------------
 \
-\ Performs a *FX 200,X command, which controls the behaviour of the Escape and
-\ Break keys.
+\ This is the equivalent of a *FX 200 command, which controls the behaviour of
+\ the ESCAPE and BREAK keys.
 \
 \ ******************************************************************************
 
 .FX200
 
- LDY #0                 \ Call OSBYTE &C8 (200) with Y = 0, so new value is
+ LDY #0                 \ Call OSBYTE &C8 (200) with Y = 0, so the new value is
  LDA #200               \ set to X, and return from the subroutine using a tail
  JMP OSBYTE             \ call
 
@@ -28898,7 +29131,7 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ not affect A, while AND'ing with 7 will clear bit
                         \ 3, reducing the maximum value in A to 7
 
- ORA #%11110001         \ The SOUND command's amplitude ranges from 0 (for no
+ ORA #%11110001         \ The SOUND statement's amplitude ranges from 0 (for no
                         \ sound) to -15 (full volume), so we can set bits 0 and
                         \ 4-7 in A, and keep bits 1-3 from the above to get
                         \ a value between -15 (%11110001) and -1 (%11111111),
@@ -28983,7 +29216,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \ This block will be passed to OSWORD 7 to make the sound, which expects the
 \ four sound attributes as 16-bit big-endian values - in other words, with the
 \ low byte first. So the above block would pass the values &0013, &00F4, &000C
-\ and &0008 to the SOUND command when used with OSWORD 7, or:
+\ and &0008 to the SOUND statement when used with OSWORD 7, or:
 \
 \   SOUND &13, &F4, &0C, &08
 \
@@ -29062,7 +29295,7 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ speed and lasers):
 
  EQUB &68 + 128         \ ?         KYTB+1      Slow down
- EQUB &62 + 128         \ Space     KYTB+2      Speed up
+ EQUB &62 + 128         \ SPACE     KYTB+2      Speed up
  EQUB &66 + 128         \ <         KYTB+3      Roll left
  EQUB &67 + 128         \ >         KYTB+4      Roll right
  EQUB &42 + 128         \ X         KYTB+5      Pitch up
@@ -29071,8 +29304,8 @@ LOAD_F% = LOAD% + P% - CODE%
 
                         \ These are the secondary flight controls:
 
- EQUB &60               \ Tab       KYTB+8      Energy bomb
- EQUB &70               \ Escape    KYTB+9      Launch escape pod
+ EQUB &60               \ TAB       KYTB+8      Energy bomb
+ EQUB &70               \ ESCAPE    KYTB+9      Launch escape pod
  EQUB &23               \ T         KYTB+10     Arm missile
  EQUB &35               \ U         KYTB+11     Unarm missile
  EQUB &65               \ M         KYTB+12     Fire missile
@@ -29217,7 +29450,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \ Specifically, this routine toggles the configuration settings for the
 \ following keys:
 \
-\   * Caps Lock toggles keyboard flight damping (&40)
+\   * CAPS LOCK toggles keyboard flight damping (&40)
 \   * A toggles keyboard auto-recentre (&41)
 \   * X toggles author names on start-up screen (&42)
 \   * F toggles flashing console bars (&43)
@@ -29249,7 +29482,7 @@ LOAD_F% = LOAD% + P% - CODE%
  BNE Dk3
 
                         \ We have a match between X and Y, so now to toggle
-                        \ the relevant configuration byte. Caps Lock has a key
+                        \ the relevant configuration byte. CAPS LOCK has a key
                         \ value of &40 and has its configuration byte at
                         \ location DAMP, A has a value of &41 and has its byte
                         \ at location DJD, which is DAMP+1, and so on. So we
@@ -29303,7 +29536,7 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA KTRAN+1            \ Copy the key press state for the "?" key from the
  STA KL+1               \ key logger buffer to the key logger
 
- LDA KTRAN+2            \ Copy the key press state for the Space key from the
+ LDA KTRAN+2            \ Copy the key press state for the SPACE key from the
  STA KL+2               \ key logger buffer to the key logger
 
 .BS1
@@ -29422,7 +29655,7 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ to read the joystick flight controls, before jumping
                         \ to DK4 below
 
- STA BSTK               \ Set BTSK = 0
+ STA BSTK               \ Set BSTK = 0 to disable the Bitstik
 
  LDX #7                 \ We're now going to copy key press data for the primary
                         \ flight keys from the key logger buffer at KTRAN to the
@@ -29593,9 +29826,9 @@ LOAD_F% = LOAD% + P% - CODE%
 
  LDY #&40               \ We now want to loop through the keys that toggle
                         \ various settings. These have internal key numbers
-                        \ between &40 (Caps Lock) and &46 (K), so we set up the
-                        \ first key number in Y to act as a loop counter. See
-                        \ subroutine DKS3 for more details on this
+                        \ between &40 (CAPS LOCK) and &46 ("K"), so we set up
+                        \ the first key number in Y to act as a loop counter.
+                        \ See subroutine DKS3 for more details on this
 
 .DKL4
 
@@ -29609,32 +29842,38 @@ LOAD_F% = LOAD% + P% - CODE%
 
  BNE DKL4               \ If not, loop back to check for the next toggle key
 
- CPX #&10               \ If Q is not being pressed, skip to DK7
+ CPX #&10               \ If "Q" is not being pressed, skip to DK7
  BNE DK7
 
- STX DNOIZ              \ S is being pressed, so set DNOIZ to X, which is
+ STX DNOIZ              \ "Q" is being pressed, so set DNOIZ to X, which is
                         \ non-zero (&10), so this will turn the sound off
 
 .DK7
 
- CPX #&70               \ If Escape is not being pressed, skip over the next
+ CPX #&70               \ If ESCAPE is not being pressed, skip over the next
  BNE P%+5               \ instruction
 
- JMP DEATH2             \ Escape is being pressed, so jump to DEATH2 to end
+ JMP DEATH2             \ ESCAPE is being pressed, so jump to DEATH2 to end
                         \ the game
 
- CPX #&64
+ CPX #&64               \ If "B" is not being pressed, skip to DK7
  BNE nobit
- LDA BSTK
+
+ LDA BSTK               \ Toggle the value of BSTK between 0 and &FF
  EOR #&FF
  STA BSTK
- STA JSTK
- STA JSTE
+
+ STA JSTK               \ Configure JSTK to the same value, so when the Bitstik
+                        \ is enabled, so is the joystick
+
+ STA JSTE               \ Configure JSTE to the same value, so when the Bitstik
+                        \ is enabled, the joystick is configured with reversed
+                        \ channels
 
 .nobit
 
- CPX #&32
- BEQ savscr
+ CPX #&32               \ If "D" is being pressed, jump to savscr to save a
+ BEQ savscr             \ screenshot
 
  CPX #&59               \ If DELETE is not being pressed, we are still paused,
  BNE FREEZE             \ so loop back up to keep listening for configuration
@@ -29643,10 +29882,19 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .DK2
 
- LDA QQ11
- BNE out
- LDY #16
- LDA #&FF
+ LDA QQ11               \ If the current view is non-zero (i.e. not a space
+ BNE out                \ view), return from the subroutine (as out contains
+                        \ an RTS)
+
+ LDY #16                \ This is a space view, so now we want to check for all
+                        \ the secondary flight keys. The internal key numbers
+                        \ are in the keyboard table KYTB from KYTB+8 to
+                        \ KYTB+16, and their key logger locations are from KL+8
+                        \ to KL+16. So set a decreasing counter in Y for the
+                        \ index, starting at 16, so we can loop through them
+
+ LDA #&FF               \ Set A to &FF so we can store this in the keyboard
+                        \ logger for keys that are being pressed
 
 .DKL1
 
@@ -30672,40 +30920,40 @@ ENDMACRO
 
                         \ Internal key numbers &40 to &49:
                         \
- EQUB &01, &61          \ Caps Lock     A
+ EQUB &01, &61          \ CAPS LOCK     A
  EQUB &78, &66          \ X             F
  EQUB &79, &6A          \ Y             J
  EQUB &6B, &40          \ K             @
- EQUB &3A, &0D          \ :             Return
+ EQUB &3A, &0D          \ :             RETURN
 
  EQUB &00, &FF, &01     \ MOS code
  EQUB &02, &09, &0A
 
                         \ Internal key numbers &50 to &59:
                         \
- EQUB &02, &73          \ Shift Lock    S
+ EQUB &02, &73          \ SHIFT LOCK    S
  EQUB &63, &67          \ C             G
  EQUB &68, &6E          \ H             N
  EQUB &6C, &3B          \ L             ;
- EQUB &5D, &7F          \ ]             Delete
+ EQUB &5D, &7F          \ ]             DELETE
 
  EQUB &AC, &44, &02     \ MOS code
  EQUB &A2, &00, &60
 
                         \ Internal key numbers &60 to &69:
                         \
- EQUB &00, &7A          \ Tab           Z
- EQUB &20, &76          \ Space         V
+ EQUB &00, &7A          \ TAB           Z
+ EQUB &20, &76          \ SPACE         V
  EQUB &62, &6D          \ B             M
  EQUB &2C, &2E          \ ,             .
- EQUB &2F, &8B          \ /             Copy
+ EQUB &2F, &8B          \ /             COPY
 
  EQUB &AE, &41, &02     \ MOS code
  EQUB &4C, &AD, &E1
 
                         \ Internal key numbers &70 to &79:
                         \
- EQUB &1B, &81          \ Escape        f1
+ EQUB &1B, &81          \ ESCAPE        f1
  EQUB &82, &83          \ f2            f3
  EQUB &85, &86          \ f5            f6
  EQUB &88, &89          \ f8            f9
@@ -36664,27 +36912,45 @@ ENDIF
  JMP OSWORD
 
 \ ******************************************************************************
+\
 \       Name: WSCAN
+\       Type: Subroutine
+\   Category: Screen mode
+\    Summary: Ask the I/O processor to wait for the vertical sync
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sends a #wscn command to the I/O processor to ask it to wait for
+\ the vertical sync.
+\
 \ ******************************************************************************
 
 .WSCpars
 
- EQUB 2
- EQUB 2
- EQUW 0
+ EQUB 2                 \ Transmit 2 bytes as part of this command
+
+ EQUB 2                 \ Receive 2 bytes as part of this command
+
+ EQUW 0                 \ This is unused as no paramaters are transmitted along
+                        \ with this command
 
 .WSCAN
 
- PHX
- PHY
-\++
+ PHX                    \ Store X and Y on the stack so we can restore them
+ PHY                    \ later
+
  LDA #wscn
- LDX #(WSCpars MOD256)
- LDY #(WSCpars DIV256)
- JSR OSWORD
- PLY
+
+ LDX #LO(WSCpars)       \ Set (Y X) to point to the parameter block above
+ LDY #HI(WSCpars)
+
+ JSR OSWORD             \ Send a #wscn command to the I/O processor to wait for
+                        \ the vertical sync
+
+ PLY                    \ Restore X and Y from the stack
  PLX
- RTS
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
