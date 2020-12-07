@@ -56,37 +56,35 @@ ORG CODE%
 \
 \ ------------------------------------------------------------------------------
 \
-\ This block contains the bytes that get passed to the VDU command (via OSWRCH)
-\ in part 2 to set up the screen mode. This defines the whole screen using a
-\ square, monochrome mode 4 configuration; the mode 5 part is implemented in the
-\ IRQ1 routine.
+\ This block contains the bytes that get written by OSWRCH in part 2 to set up
+\ the screen mode (this is equivalent to using the VDU statement in BASIC).
 \
-\ Elite's monochrome screen mode is based on mode 4 but with the following
+\ It defines the whole screen using a square, monochrome mode 1 configuration;
+\ the mode 2 part for the dashboard is implemented in the IRQ1 routine.
+\
+\ The top part of Elite's screen mode is based on mode 1 but with the following
 \ differences:
 \
-\   * 32 columns, 31 rows (256 x 248 pixels) rather than 40, 32
+\   * 64 columns, 31 rows (256 x 248 pixels) rather than 80, 32
 \
-\   * The horizontal sync position is at character 45 rather than 49, which
+\   * The horizontal sync position is at character 90 rather than 98, which
 \     pushes the screen to the right (which centres it as it's not as wide as
 \     the normal screen modes)
 \
-\   * Screen memory goes from &6000 to &7EFF, which leaves another whole page
-\     for code (i.e. 256 bytes) after the end of the screen. This is where the
-\     Python ship blueprint slots in
+\   * Screen memory goes from &4000 to &7EFF
 \
 \   * The text window is 1 row high and 13 columns wide, and is at (2, 16)
 \
 \   * There's a large, fast-blinking cursor
 \
-\ This almost-square mode 4 variant makes life a lot easier when drawing to the
+\ This almost-square mode 1 variant makes life a lot easier when drawing to the
 \ screen, as there are 256 pixels on each row (or, to put it in screen memory
-\ terms, there's one page of memory per row of pixels). For more details of the
-\ screen mode, see the PIXEL subroutine in elite-source.asm.
+\ terms, there are two pages of memory per row of pixels).
 \
 \ There is also an interrupt-driven routine that switches the bytes-per-pixel
-\ setting from that of mode 4 to that of mode 5, when the raster reaches the
-\ split between the space view and the dashboard. This is described in the IRQ1
-\ routine below, which does the switching.
+\ setting from that of mode 1 to that of mode 2, when the raster reaches the
+\ split between the space view and the dashboard. See the deep dive on "The
+\ split-screen mode" for details.
 \
 \ ******************************************************************************
 
@@ -150,9 +148,9 @@ ORG CODE%
  EQUB 0, 0, 0           \ This is the "vertical sync position" register, which
                         \ defines the row number where the vertical sync pulse
                         \ is fired. This is aleady set to 34 for mode 1 and 2,
-                        \ so I'm not sure what this command does, especially as
-                        \ the register number has bit 7 set (it's &87 rather
-                        \ than 7). More investigation needed!
+                        \ so I'm not sure what this VDU sequence does,
+                        \ especially as the register number has bit 7 set (it's
+                        \ &87 rather than 7). More investigation needed!
 
 \ ******************************************************************************
 \
