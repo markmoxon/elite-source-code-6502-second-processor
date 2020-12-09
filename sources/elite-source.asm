@@ -28,7 +28,7 @@ L% = C%
 Z = 0
 NTY = 34
 D% = &D000
-E% = D%+2*NTY
+\E% = D%+2*NTY
 LS% = D%-1
 BRKV = &202
 VEC = &7FFE
@@ -636,7 +636,8 @@ NEWB = INWK+36
 
 .PBUP
 
- SKIP 1
+ SKIP 1                 \ The size of the pixel buffer at PBUF (including the
+                        \ two OSWORD size bytes)
 
 .HBUP
 
@@ -6422,8 +6423,9 @@ ENDIF
                         \ (colour 3)
 
  LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
- JMP DOCOL              \ switch to colour 2, which is now white, and return
-                        \ from the subroutine using a tail call
+ JMP DOCOL              \ switch to colour 2, which is white in the title
+                        \ screen, and return from the subroutine using a tail
+                        \ call
 
 \ ******************************************************************************
 \
@@ -6553,45 +6555,51 @@ ENDIF
  EQUS "ON"              \ Token 159
 
 \ ******************************************************************************
+\
 \       Name: shpcol
+\       Type: Variable
+\   Category: Drawing ships
+\    Summary: Ship colours
+\
 \ ******************************************************************************
 
 .shpcol
 
  EQUB 0
- EQUB YELLOW
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN \barrel
- EQUB RED
- EQUB RED
- EQUB RED
- EQUB CYAN
- EQUB CYAN \transp
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN
- EQUB RED
- EQUB CYAN \Viper
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN \Wor
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN
- EQUB CYAN
- EQUB &C9 \Moray
- EQUB WHITE
- EQUB WHITE
- EQUB CYAN \Con
- EQUB CYAN
- EQUB CYAN
+
+ EQUB YELLOW            \ Missile
+ EQUB CYAN              \ Coriolis space station
+ EQUB CYAN              \ Escape pod
+ EQUB CYAN              \ Alloy plate
+ EQUB CYAN              \ Cargo canister
+ EQUB RED               \ Boulder
+ EQUB RED               \ Asteroid
+ EQUB RED               \ Splinter
+ EQUB CYAN              \ Shuttle
+ EQUB CYAN              \ Transporter
+ EQUB CYAN              \ Cobra Mk III
+ EQUB CYAN              \ Python
+ EQUB CYAN              \ Boa
+ EQUB CYAN              \ Anaconda
+ EQUB RED               \ Rock hermit (asteroid)
+ EQUB CYAN              \ Viper
+ EQUB CYAN              \ Sidewinder
+ EQUB CYAN              \ Mamba
+ EQUB CYAN              \ Krait
+ EQUB CYAN              \ Adder
+ EQUB CYAN              \ Gecko
+ EQUB CYAN              \ Cobra Mk I
+ EQUB CYAN              \ Worm
+ EQUB CYAN              \ Cobra Mk III (pirate)
+ EQUB CYAN              \ Asp Mk II
+ EQUB CYAN              \ Python (pirate)
+ EQUB CYAN              \ Fer-de-lance
+ EQUB %11001001         \ Moray (colour 3, 2, 0, 1 = cyan/red/black/yellow)
+ EQUB WHITE             \ Thargoid
+ EQUB WHITE             \ Thargon
+ EQUB CYAN              \ Constrictor
+ EQUB CYAN              \ The Elite logo
+ EQUB CYAN              \ Cougar
 
 \ ******************************************************************************
 \       Name: scacol
@@ -6969,20 +6977,23 @@ ENDIF
 
 .NLIN2
 
- STA Y1
- STA Y2
- LDA #YELLOW
- JSR DOCOL
+ STA Y1                 \ Set Y1 = A
+
+ STA Y2                 \ Set Y2 = A
+
+ LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
+ JSR DOCOL              \ switch to colour 1, which is yellow
 
  LDX #2                 \ Set X1 = 2, so (X1, Y1) = (2, A)
  STX X1
 
- LDX #254               \ Set X2 = 254
+ LDX #254               \ Set X2 = 254, so (X2, Y2) = (254, A)
  STX X2
 
- JSR LL30
- LDA #CYAN
- JMP DOCOL
+ JSR LL30               \ Call LL30 to draw a line from (2, A) to (254, A)
+
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JMP DOCOL              \ switch to colour 3, which is cyan or white
 
 \ ******************************************************************************
 \
@@ -7284,17 +7295,22 @@ ENDIF
 
 .PBFL
 
- LDA PBUP
- STA pixbl
- CMP #2
- BEQ PBZE2
- LDA #2
+ LDA PBUP               \ Set the first byte in pixbl (the number of bytes to
+ STA pixbl              \ transmit with the OSWORD 241 command) to PBUP
+
+ CMP #2                 \ If PBUP = 2 then jump to PBZE2 as there is no pixel
+ BEQ PBZE2              \ data to transmit to the I/O processor
+
+ LDA #2                 \ Set PBUP = 2 to reset the pixel buffer
  STA PBUP
- LDA #DUST
- JSR DOCOL
- LDA #241
- LDX #(pixbl MOD256)
- LDY #(pixbl DIV256)
+
+ LDA #DUST              \ Send a #SETCOL DUST command to the I/O processor to
+ JSR DOCOL              \ switch to stripe 3-2-3-2, which is cyan/red in the
+                        \ space view
+
+ LDA #241               \ Send an OSWORD 241 command to the I/O processor to
+ LDX #LO(pixbl)         \ draw the pixel described in the pixbl block
+ LDY #HI(pixbl)
  JSR OSWORD
 
 .PBZE2
@@ -7331,26 +7347,35 @@ ENDIF
  RTS
 
 \ ******************************************************************************
-\       Name: pixbl
+\
+\       Name: PBUF
+\       Type: Variable
+\   Category: Drawing pixels
+\    Summary: The pixel buffer to send with the OSWORD 241 command
+\
+\ Other entry points:
+\
+\   pixbl               Points to the first byte of the PBUF block, which is
+\                       where the OSWORD transmission size goes
+\
 \ ******************************************************************************
 
 .pixbl
 
- SKIP 0                 \ pixbl points to the first byte of PBUF
-
-\ ******************************************************************************
-\       Name: PBUF
-\ ******************************************************************************
-
 .PBUF
 
- EQUB 0
- EQUB 0
+ EQUB 0                 \ The number of bytes to transmit with this command
+
+ EQUB 0                 \ The number of bytes to receive with this command
 
 IF _MATCH_EXTRACTED_BINARIES
+
  INCBIN "extracted/workspaces/ELTB-PBUF.bin"
+
 ELSE
- SKIP &100
+
+ SKIP &100              \ The pixel buffer to send with this command
+
 ENDIF
 
 \ ******************************************************************************
@@ -15651,8 +15676,8 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ white (colour 3)
 
  LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
- JMP DOCOL              \ switch to colour 3, which is now white, and return
-                        \ from the subroutine using a tail call
+ JMP DOCOL              \ switch to colour 3, which is white in the trade view,
+                        \ and return from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -16347,10 +16372,13 @@ LOAD_D% = LOAD% + P% - CODE%
  JSR TT66               \ and set the current view type in QQ11 to 32 (Long-
                         \ range Chart)
 
- LDA #CYAN
- JSR DOCOL
- LDA #16
- JSR DOVDU19
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is white in the chart view
+
+ LDA #16                \ Send a #SETVDU19 16 command to the I/O processor to
+ JSR DOVDU19            \ switch to the mode 1 palette for the trade view, which
+                        \ is yellow (colour 1), magenta (colour 2) and white
+                        \ (colour 3)
 
  LDA #7                 \ Move the text cursor to column 7
  JSR DOXC
@@ -16420,7 +16448,8 @@ LOAD_D% = LOAD% + P% - CODE%
  BNE TT83               \ If X > 0 then we haven't done all 256 systems yet, so
                         \ loop back up to TT83
 
- JSR PBFL
+ JSR PBFL               \ Call PBFL to send the contents of the pixel buffer to
+                        \ the I/O processor for plotting on-screen
 
  LDA QQ9                \ Set QQ19 to the selected system's x-coordinate
  STA QQ19
@@ -21887,7 +21916,8 @@ LOAD_E% = LOAD% + P% - CODE%
  BNE SAL4               \ Loop back to SAL4 until we have randomised all the
                         \ stardust particles
 
- JSR PBFL
+ JSR PBFL               \ Call PBFL to send the contents of the pixel buffer to
+                        \ the I/O processor for plotting on-screen
 
                         \ Fall through into WPSHPS to clear the scanner and
                         \ reset the LSO block
@@ -22651,11 +22681,21 @@ LOAD_E% = LOAD% + P% - CODE%
  ASL A                  \ Set Y = ship type * 2
  TAY
 
- LDA XX21-1,Y
- BEQ NW3
- STA XX0+1
- LDA XX21-2,Y
- STA XX0
+ LDA XX21-1,Y           \ The ship blueprints at XX21 start with a lookup
+                        \ table that points to the individual ship blueprints,
+                        \ so this fetches the high byte of this particular ship
+                        \ type's blueprint
+
+ BEQ NW3                \ If the high byte is 0 then this is not a valid ship
+                        \ type, so jump to NW3 to clear the C flag and return
+                        \ from the subroutine
+
+ STA XX0+1              \ This is a valid ship type, so store the high byte in
+                        \ XX0+1
+
+ LDA XX21-2,Y           \ Fetch the low byte of this particular ship type's
+ STA XX0                \ blueprint and store it in XX0, so XX0(1 0) now
+                        \ contains the address of this ship's blueprint
 
  CPY #2*SST             \ If the ship type is a space station (SST), then jump
  BEQ NW6                \ to NW6, skipping the heap space steps below, as the
@@ -22741,8 +22781,8 @@ LOAD_E% = LOAD% + P% - CODE%
 
  BCC NW3+1              \ If we have an underflow from the subtraction, then
                         \ INF > INWK+33 and we definitely don't have enough
-                        \ room for this ship, so jump to NW3+1, which clears
-                        \ the C flag and returns from the subroutine
+                        \ room for this ship, so jump to NW3+1, which returns
+                        \ from the subroutine (with the C flag already cleared)
 
  BNE NW4                \ If the subtraction of the high bytes in A is not
                         \ zero, and we don't have underflow, then we definitely
@@ -22754,8 +22794,8 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ result (which is in Y) with NI%. This is the same as
                         \ doing INWK+33 - INF > NI% (see above). If this isn't
                         \ true, the C flag will be clear and we don't have
-                        \ enough space, so we jump to NW3+1, which clears the
-                        \ C flag and returns from the subroutine
+                        \ enough space, so we jump to NW3+1, which returns
+                        \ from the subroutine (with the C flag already cleared)
 
 .NW4
 
@@ -22784,17 +22824,21 @@ LOAD_E% = LOAD% + P% - CODE%
 
  TAX                    \ Copy the ship type into X
 
- BMI NW8
- CPX #HER
- BEQ gangbang
- CPX #JL
- BCC NW7
- CPX #JH
- BCS NW7
+ BMI NW8                \ If the ship type is negative (planet or sun), then
+                        \ jump to NW8 to skip the following instructions
+
+ CPX #HER               \ If the ship type is a rock hermit, jump to gangbang
+ BEQ gangbang           \ to increase the junk count
+
+ CPX #JL                \ If JL <= X < JH, i.e. the type of ship we killed in X 
+ BCC NW7                \ is junk (escape pod, alloy plate, cargo canister,
+ CPX #JH                \ asteroid, splinter, shuttle or transporter), then keep
+ BCS NW7                \ going, otherwise jump to NW7
 
 .gangbang
 
- INC JUNK
+ INC JUNK               \ We're adding junk, or a rock hermit, so increase the
+                        \ junk counter
 
 .NW7
 
@@ -22802,11 +22846,14 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .NW8
 
- LDY T
- LDA E%-1,Y
- AND #&6F
- ORA NEWB
- STA NEWB
+ LDY T                  \ Restore the ship type we stored above
+
+ LDA E%-1,Y             \ Fetch the E% byte for this ship
+
+ AND #%01101111         \ Zero bits 4 and 7
+
+ ORA NEWB               \ Apply the result to the ship's NEWB, which sets bits
+ STA NEWB               \ 0-3 and 5-6 in NEWB if they are set in the E% byte
 
  LDY #(NI%-1)           \ The final step is to copy the new ship's data block
                         \ from INWK to INF, so set up a counter for NI% bytes
@@ -25735,7 +25782,7 @@ LOAD_F% = LOAD% + P% - CODE%
 .lll
 
  CPX #HER               \ Did we just kill a rock hermit? If we did, jump to
- BEQ blacksuspenders    \ blacksuspenders
+ BEQ blacksuspenders    \ blacksuspenders to increase the junk count
 
  CPX #JL                \ If JL <= X < JH, i.e. the type of ship we killed in X 
  BCC KS7                \ is junk (escape pod, alloy plate, cargo canister,
@@ -28304,7 +28351,7 @@ ENDIF
 \       Name: MT26
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Fetch a line of text from keyboard
+\    Summary: Fetch a line of text from the keyboard
 \
 \ ------------------------------------------------------------------------------
 \
@@ -28883,9 +28930,9 @@ ENDIF
 
 .FX200
 
- LDY #0                 \ Call OSBYTE &C8 (200) with Y = 0, so the new value is
- LDA #200               \ set to X, and return from the subroutine using a tail
- JMP OSBYTE             \ call
+ LDY #0                 \ Call OSBYTE 200 with Y = 0, so the new value is set to
+ LDA #200               \ X, and return from the subroutine using a tail call
+ JMP OSBYTE
 
 \ ******************************************************************************
 \       Name: backtonormal
@@ -29223,13 +29270,13 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ This routine sends an OSWORD &F0 command to the I/O processor to ask it to
+\ This routine sends an OSWORD 240 command to the I/O processor to ask it to
 \ scan the keyboard, starting with internal key number 16 ("Q") and working
 \ through the set of internal key numbers (see p.142 of the Advanced User Guide
 \ for a list of internal key numbers). The results are copied from the I/O
 \ processor into the key logger buffer at KTRAN.
 \
-\ This routine is effectively the same as OSBYTE &7A, though the OSBYTE call
+\ This routine is effectively the same as OSBYTE 122, though the OSBYTE call
 \ preserves A, unlike this routine.
 \
 \ Returns:
@@ -29243,10 +29290,10 @@ ENDIF
 
 .RDKEY
 
- LDA #&F0               \ Send an OSWORD &F0 command to the I/O processor to
+ LDA #240               \ Send an OSWORD 240 command to the I/O processor to
  LDY #HI(buf)           \ scan the keyboard and joysticks, and populate the key
  LDX #LO(buf)           \ logger buffer in KTRAN, which is the part of the buf
- JSR OSWORD             \ buffer just after the two size configuration bytes
+ JSR OSWORD             \ buffer just after the two OSWORD size bytes
 
  LDX KTRAN              \ Set X to the first byte of the updated KTRAN, which
                         \ contains the internal key number of the key being
@@ -29909,9 +29956,9 @@ ENDIF
 
 .DKS4pars
 
- EQUB 3                 \ Transmit 3 bytes as part of this command
+ EQUB 3                 \ The number of bytes to transmit with this command
 
- EQUB 3                 \ Receive 3 bytes as part of this command
+ EQUB 3                 \ The number of bytes to receive with this command
 
  EQUB 0                 \ The key number to check
 
@@ -30587,21 +30634,30 @@ ENDIF
 
 .MESS
 
- PHA
- LDA #YELLOW
- JSR DOCOL
- PLA
+ PHA                    \ Store A on the stack so we can restore it after the
+                        \ the call to DOCOL
+
+ LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
+ JSR DOCOL              \ switch to colour 1, which is yellow
+
+ PLA                    \ Restore A from the stack
 
  LDX #0                 \ Set QQ17 = 0 to switch to ALL CAPS
  STX QQ17
 
- PHA
- LDA messXC
- JSR DOXC
- LDA #22
+ PHA                    \ Store A on the stack so we can restore it after the
+                        \ the calls to DOXC and DOYC
+
+ LDA messXC             \ Move the text cursor to column messXC, in case we
+ JSR DOXC               \ jump to me1 below to erase the current in-flight
+                        \ message (whose column we stored in messXC when we
+                        \ called MESS to put it there in the first place)
+
+ LDA #22                \ Move the text cursor to row 22, and set Y = 22
  TAY
  JSR DOYC
- PLA
+
+ PLA                    \ Restore A from the stack
 
  CPX DLY                \ If the message delay in DLY is not zero, jump up to
  BNE me1                \ me1 to erase the current message first (whose token
@@ -30609,27 +30665,59 @@ ENDIF
 
  STY DLY                \ Set the message delay in DLY to 22
 
- STA MCH                \ Set MCH to the token we are about to display and fall
-                        \ through to mes9 to print the token
+ STA MCH                \ Set MCH to the token we are about to display
 
- LDA #%11000000
- STA DTW4
- LDA de
+                        \ Before we fall through into mes9 to print the token,
+                        \ we need to work out the starting column for the
+                        \ message we want to print, so it's centred on-screen,
+                        \ so the following doesn't print anything, it just uses
+                        \ the justified text mechanism to work out the number of
+                        \ characters in the message we are going to print
+
+ LDA #%11000000         \ Set the DTW4 flag to %11000000 (justify text, buffer
+ STA DTW4               \ entire token including carriage returns)
+
+ LDA de                 \ Set the C flag to bit 1 of the destruction flag in de
  LSR A
- LDA #0
- BCC P%+4
- LDA #10
- STA DTW5
- LDA MCH
- JSR TT27
- LDA #32
- SEC
- SBC DTW5
- LSR A
- STA messXC
- JSR DOXC
- JSR MT15
- LDA MCH
+
+ LDA #0                 \ Set A = 0
+
+ BCC P%+4               \ If the destruction flag in de is not set, skip the
+                        \ following instruction
+
+ LDA #10                \ Set A = 10
+
+ STA DTW5               \ Store A in DTW5, so DTW5 (which holds the size of the
+                        \ justified text buffer at BUF) is set to 0 if the
+                        \ destruction flag is not set, or 10 if it is (10 being
+                        \ the number of characters in the " DESTROYED" token)
+
+ LDA MCH                \ Call TT27 to print the token in MCH into the buffer
+ JSR TT27               \ (this doesn't print it on-screen, it just puts it into
+                        \ the buffer and moves the DTW5 pointer along, so DTW5
+                        \ now contains the size of the message we want to print,
+                        \ includint the " DESTROYED" part if that's going to be
+                        \ included)
+
+ LDA #32                \ Set A = (32 - DTW5) / 2
+ SEC                    \
+ SBC DTW5               \ so A now contains the column number we need to print
+ LSR A                  \ our message at for it to be centred on-screen (as
+                        \ there are 32 columns)
+
+ STA messXC             \ Store A in messXC, so when we erase the message via
+                        \ the branch to me1 above, messXC will tell us where to
+                        \ print it
+
+ JSR DOXC               \ Move the text cursor to column messXC
+
+ JSR MT15               \ Call MT15 to wwitch to left-aligned text when printing
+                        \ extended tokens disabling the justify text setting we
+                        \ set above
+
+ LDA MCH                \ Set MCH to the token we are about to display
+
+                        \ Fall through into mes9 to print the token in A
 
 \ ******************************************************************************
 \
@@ -30649,7 +30737,7 @@ ENDIF
 
  JSR TT27               \ Call TT27 to print the text token in A
 
- LSR de                 \ If bit 1 of location de is clear, return from the
+ LSR de                 \ If bit 1 of variable de is clear, return from the
  BCC out                \ subroutine (as out contains an RTS)
 
  LDA #253               \ Print recursive token 93 (" DESTROYED") and return
@@ -31318,7 +31406,7 @@ ENDMACRO
 \       Name: KTRAN
 \       Type: Variable
 \   Category: Keyboard
-\    Summary: The key logger buffer that gets updated by the OSWORD &F0 command
+\    Summary: The key logger buffer that gets updated by the OSWORD 240 command
 \
 \ ------------------------------------------------------------------------------
 \
@@ -31359,8 +31447,8 @@ ENDMACRO
 \
 \ Other entry points:
 \
-\   buf                 The two OSWORD size configuration bytes for transmitting
-\                       the key logger from the I/O processor to the parasite
+\   buf                 The two OSWORD size bytes for transmitting the key 
+\                       logger from the I/O processor to the parasite
 \
 \ ******************************************************************************
 
@@ -37742,7 +37830,10 @@ LOAD_I% = LOAD% + P% - CODE%
  INC INWK
  JSR LL9
  JSR STORE
- JSR PBFL
+
+ JSR PBFL               \ Call PBFL to send the contents of the pixel buffer to
+                        \ the I/O processor for plotting on-screen
+
  LDA INWK+31
  AND #&A0
  CMP #&A0
@@ -42767,7 +42858,7 @@ ENDMACRO
  EQUW SHIP_MISSILE      \ MSL  =  1 = Missile
  EQUW SHIP_CORIOLIS     \ SST  =  2 = Coriolis space station
  EQUW SHIP_ESCAPE_POD   \ ESC  =  3 = Escape pod
- EQUW SHIP_PLATE        \ PLT  =  4 = Plate (alloys)
+ EQUW SHIP_PLATE        \ PLT  =  4 = Alloy plate
  EQUW SHIP_CANISTER     \ OIL  =  5 = Cargo canister
  EQUW SHIP_BOULDER      \         6 = Boulder
  EQUW SHIP_ASTEROID     \ AST  =  7 = Asteroid
@@ -42798,6 +42889,17 @@ ENDMACRO
  EQUW SHIP_LOGO         \ LGO  = 32 = The Elite logo
  EQUW SHIP_COUGAR       \ COU  = 33 = Cougar
  EQUW SHIP_DODO         \ DOD  = 34 = Dodecahedron ("Dodo") space station
+
+\ ******************************************************************************
+\
+\       Name: XX21
+\       Type: Variable
+\   Category: Drawing ships
+\    Summary: Ship blueprints NEWB table
+\
+\ ******************************************************************************
+
+.E%
 
  EQUB &00, &00, &01, &00, &00, &00, &00, &00
  EQUB &21, &61, &A0, &A0, &A0, &A1, &A1, &C2
