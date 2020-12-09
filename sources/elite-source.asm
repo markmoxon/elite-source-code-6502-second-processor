@@ -63,8 +63,13 @@ DOD = 34
 NOST = 18
 NOSH = 20
 
-JL = ESC
-JH = SHU+2
+JL = ESC                \ Junk low = Escape pod
+
+JH = SHU+2              \ Junk high = Cobra Mk III
+
+                        \ So junk is escape pod, alloy plate, cargo canister,
+                        \ asteroid, splinter, shuttle, transporter
+
 PACK = SH3
 NI% = 37
 POW = 15
@@ -75,20 +80,35 @@ NRU% = 0
 VE = &57
 LL = 30
 
-CYAN = &FF
-RED = &F0
-YELLOW = &F
-GREEN = &AF
-WHITE = &FA
+YELLOW = %00001111      \ Four mode 1 pixels of colour 1 (yellow)
+
+RED    = %11110000      \ Four mode 1 pixels of colour 2 (red, magenta or white)
+
+CYAN   = %11111111      \ Four mode 1 pixels of colour 3 (cyan or white)
+
+GREEN  = %10101111      \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
+
+WHITE  = %11111010      \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+
 MAGENTA = RED
-RED2 = &3
-GREEN2 = &C
-YELLOW2 = &F
-BLUE2 = &30
-MAG2 = &33
-CYAN2 = &3C
-WHITE2 = &3F
+
 DUST = WHITE
+
+RED2    = %00000011     \ Two mode 2 pixels of colour 1    (red)
+
+GREEN2  = %00001100     \ Two mode 2 pixels of colour 2    (green)
+
+YELLOW2 = %00001111     \ Two mode 2 pixels of colour 3    (yellow)
+
+BLUE2   = %00110000     \ Two mode 2 pixels of colour 4    (blue)
+
+MAG2    = %00110011     \ Two mode 2 pixels of colour 5    (magenta)
+
+CYAN2   = %00111100     \ Two mode 2 pixels of colour 6    (cyan)
+
+WHITE2  = %00111111     \ Two mode 2 pixels of colour 7    (white)
+
+STRIPE  = %00100011     \ Two mode 2 pixels of colour 5, 1 (magenta/red)
 
 OSWRCH = &FFEE
 OSBYTE = &FFF4
@@ -554,7 +574,7 @@ NEWB = INWK+36
                         \         Data on System screen (red key f6)
                         \         Get commander name ("@", save/load commander)
                         \         In-system jump just arrived ("J")
-                        \         Mis-jump just arrived (witchspace)
+                        \   3   = Mis-jump just arrived (witchspace)
                         \   4   = Sell Cargo screen (red key f2)
                         \   6   = Death screen
                         \   8   = Status Mode screen (red key f8)
@@ -712,7 +732,14 @@ NEWB = INWK+36
 
 .safehouse
 
- SKIP 6
+ SKIP 6                 \ Backup storage for the seeds for the selected system
+                        \
+                        \ The seeds for the current system get stored here as
+                        \ soon as a hyperspace is initiated, so we can fetch
+                        \ them in the hyp1 routine. This fixes a bug in an
+                        \ earlier version where you could hyperspace while
+                        \ docking and magically appear in your destination
+                        \station
 
 .messXC
 
@@ -2374,7 +2401,21 @@ ORG &0800
 
 .JUNK
 
- SKIP 1
+ SKIP 1                 \ The amount of junk in the local bubble
+                        \
+                        \ "Junk" is defined as being one of these:
+                        \
+                        \   * Escape pod
+                        \   * Alloy plate
+                        \   * cargo canister
+                        \   * Asteroid
+                        \   * Splinter
+                        \   * Shuttle
+                        \   * Transporter
+                        \   * Rock hermit
+                        \
+                        \ Apart from the rock hermit, junk is the range of ship
+                        \ types from #JL to #JH - 1
 
 .auto
 
@@ -2486,17 +2527,17 @@ ORG &0800
                         \
                         \   * Non-zero = hyperspace colour effect enabled
                         \
-                        \ When HFS is set to 1, the mode 4 screen that makes
+                        \ When HFS is set to 1, the mode 1 screen that makes
                         \ up the top part of the display is temporarily switched
-                        \ to mode 5 (the same screen mode as the dashboard),
+                        \ to mode 2 (the same screen mode as the dashboard),
                         \ which has the effect of blurring and colouring the
                         \ hyperspace rings in the top part of the screen. The
                         \ code to do this is in the LINSCN routine, which is
                         \ called as part of the screen mode routine at IRQ1.
                         \ It's in LINSCN that HFX is checked, and if it is
                         \ non-zero, the top part of the screen is not switched
-                        \ to mode 4, thus leaving the top part of the screen in
-                        \ the more colourful mode 5
+                        \ to mode 1, thus leaving the top part of the screen in
+                        \ the more colourful mode 2
 
 .EV
 
@@ -2592,8 +2633,15 @@ ORG &0800
 
 .TP
 
- SKIP 1                 \ The current mission status, which is always 0 for the
-                        \ cassette version of Elite as there are no missions
+ SKIP 1                 \ The current mission status:
+                        \
+                        \   * 0 = no missions started
+                        \
+                        \   * Bit 0 set = mission 1 in progress
+                        \   * Bit 1 set = mission 1 completed
+                        \
+                        \   * Bit 2 set = mission 2 in progress
+                        \   * Bit 3 set = mission 2 completed
 
 .QQ0
 
@@ -3672,9 +3720,11 @@ ENDIF
  JSR HALL
  LDY #44
  JSR DELAY
- LDA TP
- AND #3
- BNE EN1
+
+ LDA TP                 \ Fetch bits 0 and 1 of TP, and is they are non-zero
+ AND #%00000011         \ (i.e. mission 1 is either in progress or has been
+ BNE EN1                \ completed), skip to EN1
+
  LDA TALLY+1
  BEQ EN4
  LDA GCNT
@@ -4030,7 +4080,7 @@ ENDIF
                         \ value &FF, as we just loaded it from MSTG and checked
                         \ that it was negative)
 
- LDY #YELLOW2           \ Change the leftmost missile indicator to yellow/white
+ LDY #YELLOW2           \ Change the leftmost missile indicator to yellow
  JSR MSBAR              \ on the missile bar (this call changes the leftmost
                         \ indicator because we set X to the number of missiles
                         \ in NOMSL above, and the indicators are numbered from
@@ -4066,19 +4116,25 @@ ENDIF
 
 .MA76
 
- LDA KY20
- BEQ MA78
- LDA #0
- STA auto
+ LDA KY20               \ If "P" is being pressed, keep going, otherwise skip 
+ BEQ MA78               \ the next two instructions
+
+ LDA #0                 \ The "cancel docking computer" key is bring pressed,
+ STA auto               \ so turn it off by setting auto to 0
 
 .MA78
 
- LDA KY13
- AND ESCP
- BEQ noescp
- LDA MJ
- BNE noescp
- JMP ESCAPE
+ LDA KY13               \ If ESCAPE is being pressed and we have an escape pod
+ AND ESCP               \ fitted, keep going, otherwise jump to noescp to skip
+ BEQ noescp             \ the following instructions
+
+ LDA MJ                 \ If we are in witchspace, we can't launch our escape
+ BNE noescp             \ pod, so jump down to noescp
+
+ JMP ESCAPE             \ The "launch escape pod" button is being pressed and
+                        \ we have an escape pod fitted, so jump to ESCAPE to
+                        \ launch it, and exit the main flight loop using a tail
+                        \ call
 
 .noescp
 
@@ -4108,10 +4164,12 @@ ENDIF
 
 .MA64
 
- LDA KY19
- AND DKCMP
- BEQ MA68
- STA auto
+ LDA KY19               \ If "C" is being pressed, and we have a docking
+ AND DKCMP              \ computer fitted, keep going, otherwise jump down to
+ BEQ MA68               \ MA68 to skip the following
+
+ STA auto               \ Set auto to the non-zero value of A, so the docking
+                        \ computer is activated
 
 .MA68
 
@@ -4294,16 +4352,19 @@ ENDIF
  CPY #2*SST             \ If the ship in Y is the space station, jump to BA21
  BEQ MA21               \ as energy bombs are useless against space stations
 
- CPY #2*CON
- BCS MA21
+ CPY #2*CON             \ If the ship in Y is the Constrictor, jump to BA21
+ BCS MA21               \ as energy bombs are useless against the Constrictor
+                        \ (the Constrictor is the target of mission 1, and it
+                        \ would be too easy if it could just be blown out of
+                        \ the sky with a single key press)
 
  LDA INWK+31            \ If the ship we are checking has bit 5 set in its ship
  AND #%00100000         \ byte #31, then it is already exploding, so jump to
  BNE MA21               \ BA21 as ships can't explode more than once
 
- ASL INWK+31
- SEC
- ROR INWK+31
+ ASL INWK+31            \ The energy bomb is killing this ship, so set bit 7 of
+ SEC                    \ the ship byte #31 to indicate that it has now been
+ ROR INWK+31            \ killed
 
  JSR EXNO2              \ Call EXNO2 to process the fact that we have killed a
                         \ ship (so increase the kill tally, make an explosion
@@ -4447,17 +4508,30 @@ ENDIF
 \
 \ ******************************************************************************
 
- CPX #OIL
- BEQ oily
- LDY #0
+ CPX #OIL               \ If this is a cargo canister, jump to oily to randomly
+ BEQ oily               \ decide the canister's contents
+
+ LDY #0                 \ Fetch byte #0 of the ship's blueprint
  LDA (XX0),Y
+
+ LSR A                  \ Shift it right four times, so A now contains the high
+ LSR A                  \ nibble (i.e. bits 4-7)
  LSR A
  LSR A
- LSR A
- LSR A
- BEQ MA58
- ADC #1
- BNE slvy2
+
+ BEQ MA58               \ If A = 0, jump to MA58 to skip all the docking and
+                        \ scooping checks
+
+                        \ Only the Thargon, alloy plate, splinter and escape pod
+                        \ have non-zero upper nibbles in their blueprint byte #0
+                        \ so if we get here, our ship is one of those, and the
+                        \ upper nibble gives the market item number of the item
+                        \ when scooped, less 1
+
+ ADC #1                 \ Add 1 to the upper nibble to get the market item
+                        \ number
+
+ BNE slvy2              \ Skip to slvy2 so we scoop the ship as a market item
 
 .oily
 
@@ -4500,7 +4574,7 @@ ENDIF
  ADC #208               \ which will be in the range 48 ("FOOD") to 64 ("ALIEN
  JSR MESS               \ ITEMS"), so this prints the scooped item's name
 
- ASL NEWB
+ ASL NEWB               \ Set bit 7 of the ship's NEWB
  SEC
  ROR NEWB
 
@@ -4539,16 +4613,22 @@ ENDIF
 
 .ISDK
 
- LDA K%+NI%+36
- AND #4
- BNE MA62
+ LDA K%+NI%+36          \ 1. Fetch the NEWB (byte #36) of the second ship in the
+ AND #%00000100         \ ship data workspace at K%, which is reserved for the
+ BNE MA62               \ sun or the space station (in this case it's the
+                        \ latter), and if bit 2 is set, meaning the station is
+                        \ hostile, jump down to MA62 to fail docking (so trying
+                        \ to dock at a station that we have annoyed does not end
+                        \ well)
 
  LDA INWK+14            \ 2. If nosev_z_hi < 214, jump down to MA62 to fail
  CMP #214               \ docking, as the angle of approach is greater than 26
  BCC MA62               \ degrees
 
- JSR SPS1
- LDA XX15+2
+ JSR SPS1               \ Call SPS1 to calculate the vector to the planet and
+                        \ store it in XX15
+
+ LDA XX15+2             \ Set A to the z-axis of the vector
 
  CMP #89                \ 4. If z-axis < 89, jump to MA62 to fail docking, as
  BCC MA62               \ we are not in the 22.0 degree safe cone of approach
@@ -4563,7 +4643,7 @@ ENDIF
                         \ If we arrive here, either the docking computer has
                         \ been activated, or we just docked successfully
 
- JMP DOENTRY
+ JMP DOENTRY            \ Go to the docking bay (i.e. show the ship hanger)
 
 .MA62
 
@@ -4683,9 +4763,11 @@ ENDIF
 
 .MA26
 
- LDA NEWB
- BPL P%+5
- JSR SCAN
+ LDA NEWB               \ If bit 7 of the ship's NEWB byte is clear, skip the
+ BPL P%+5               \ following instruction
+
+ JSR SCAN               \ Draw the ship on the scanner, which has the effect of
+                        \ removing it
 
  LDA QQ11               \ If this is not a space view, jump to MA15 to skip
  BNE MA15               \ missile and laser locking
@@ -4726,16 +4808,27 @@ ENDIF
  JSR EXNO               \ the crosshairs, so call EXNO to make the sound of
                         \ us making a laser strike on another ship
 
- LDA TYPE
- CMP #SST
- BEQ MA14+2
- CMP #CON
- BCC BURN
- LDA LAS
- CMP #(Armlas AND127)
- BNE MA14+2
- LSR LAS
- LSR LAS
+ LDA TYPE               \ Did we just hit the space station? If so, jump to
+ CMP #SST               \ MA14+2 to make the station hostile, skipping the
+ BEQ MA14+2             \ following as we can't destroy a space station
+
+ CMP #CON               \ If the ship we hit is less than #CON - i.e. it's not
+ BCC BURN               \ a Constrictor, Cougar, Dodo station or the Elite logo,
+                        \ jump to BURN to skip the following
+
+ LDA LAS                \ Set A to the power of the laser we just used to hit
+                        \ the ship (i.e. the laser in the current view)
+
+ CMP #(Armlas AND 127)  \ If the laser is not a military laser, jump to MA14+2
+ BNE MA14+2             \ to skip the following, as only military lasers have
+                        \ any effect on the Constrictor or Cougar (or the Elite
+                        \ logo, should you ever bump into one of those out there
+                        \ in the black...)
+
+ LSR LAS                \ Divide the laser power of the current view by 4, so
+ LSR LAS                \ the damage inflicted on the super-ship is a quarter of
+                        \ the damage our military lasers would inflict on a
+                        \ normal ship
 
 .BURN
 
@@ -4744,25 +4837,33 @@ ENDIF
  SBC LAS                \ than zero, the other ship has survived the hit, so
  BCS MA14               \ jump down to MA14
 
- ASL INWK+31
- SEC
+ ASL INWK+31            \ Set bit 7 of the ship byte #31 to indicate that it has
+ SEC                    \ now been killed
  ROR INWK+31
- LDA TYPE
- CMP #AST
+
+ LDA TYPE               \ Did we just kill an asteroid? If not, jump to nosp,
+ CMP #AST               \ otherwise keep going
  BNE nosp
- LDA LAS
- CMP #Mlas
+
+ LDA LAS                \ Did we kill the asteroid using mining lasers? If not,
+ CMP #Mlas              \ jump to nosp, otherwise keep going
  BNE nosp
- JSR DORND
- LDX #SPL
- AND #3
- JSR SPIN2
+
+ JSR DORND              \ Set A and X to random numbers
+
+ LDX #SPL               \ Set X to the ship type for a splinter
+
+ AND #3                 \ Reduce the random number in A to the range 0-3
+
+ JSR SPIN2              \ Call SPIN2 to spawn A items of type X (i.e. spawn
+                        \ 0-3 spliters)
 
 .nosp
 
- LDY #PLT
+ LDY #PLT               \ Randomly spawn some alloy plates
  JSR SPIN
- LDY #OIL
+
+ LDY #OIL               \ Randomly spawn some cargo canisters
  JSR SPIN
 
  JSR EXNO2              \ Call EXNO2 to process the fact that we have killed a
@@ -4809,19 +4910,23 @@ ENDIF
  LDA INWK+35            \ byte #35 in INF (so the ship's data in K% gets
  STA (INF),Y            \ updated)
 
- LDA NEWB
- BMI KS1S
+ LDA NEWB               \ If bit 7 of the ship's NEWB is set, jump to KS1S to
+ BMI KS1S               \ skip the following
 
  LDA INWK+31            \ If bit 7 of the ship's byte #31 is clear, then the
  BPL MAC1               \ ship hasn't been killed by energy bomb, collision or
                         \ laser fire, so jump to MAC1 to skip the following
 
- AND #&20
- BEQ MAC1
- LDA NEWB
- AND #64
- ORA FIST
- STA FIST
+ AND #%00100000         \ If bit 5 of the ship's byte #31 is clear then the
+ BEQ MAC1               \ ship is no longer exploding, so jump to MAC1 to skip
+                        \ the following
+
+ LDA NEWB               \ Extract bit 6 of NEWB, so A = 64 if bit 6 is set, 0
+ AND #%01000000         \ if it is clear
+
+ ORA FIST               \ We shot the sheriff, so update our FIST flag
+ STA FIST               \ ("fugitive/innocent status") to at least 64, which
+                        \ will instantly make us a fugitive
 
  LDA DLY                \ If we already have an in-flight message on-screen (in
  ORA MJ                 \ which case DLY > 0), or we are in witchspace (in
@@ -4912,10 +5017,14 @@ ENDIF
                         \ screen gets drawn and the following palette change
                         \ won't kick in while the screen is still refreshing
 
- LDA #DOFE21
- JSR OSWRCH
- LDA #&30
- JSR OSWRCH
+ LDA #DOFE21            \ Send a #DOFE21 %00110000 command to the I/O processor
+ JSR OSWRCH             \ to map logical colour 0 to physical colour 7 (white),
+ LDA #%00110000         \ but with only one mapping (rather than the 7
+ JSR OSWRCH             \ mappings required to do the mapping properly). This
+                        \ makes the space screen flash with coloured stripes.
+                        \ See p.382 of the Advanced User Guide for details of
+                        \ why this single palette change creates a special
+                        \ effect
 
 .MA77
 
@@ -5052,7 +5161,9 @@ ENDIF
                         \ >= 192 (i.e. they must all be < 192 for us to be near
                         \ enough to the planet to bump into a space station)
 
- JSR WPLS
+ JSR WPLS               \ Call WPLS to remove the sun from the screen, as we
+                        \ can't have both the sun and the space station at the
+                        \ same time
 
  JSR NWSPS              \ Add a new space station to our local bubble of
                         \ universe
@@ -5084,8 +5195,9 @@ ENDIF
 
 .MA22
 
- LDA MJ
- BNE MA23S
+ LDA MJ                 \ If we are in witchspace, jump down to MA23S to skip
+ BNE MA23S              \ the following, as there are no planets or suns to
+                        \ bump into in witchspace
 
  LDA MCNT               \ Fetch the main loop counter and calculate MCNT mod 32,
  AND #31                \ which tells us the position of this loop in each block
@@ -5160,12 +5272,16 @@ ENDIF
 
 .MA29
 
- CMP #15
- BNE MA33
- LDA auto
- BEQ MA23
- LDA #123
- BNE MA34
+ CMP #15                \ If this is the 15th iteration in this block of 32,
+ BNE MA33               \ do the following, otherwise jump to MA33 to skip the
+                        \ docking computer manoeuvring
+
+ LDA auto               \ If auto is zero, then the docking computer is not
+ BEQ MA23               \ activated, so jump to MA33 to skip the
+                        \ docking computer manoeuvring
+
+ LDA #123               \ Set A = 123 and jump down to MA34 to print token 123
+ BNE MA34               \ ("DOCKING COMPUTERS ON") as an in-flight message
 
 .MA33
 
@@ -5242,11 +5358,11 @@ ENDIF
 
  STA QQ14               \ Store the updated fuel level in QQ14
 
- LDA #160
+ LDA #160               \ Set A to token 160 ("FUEL SCOOPS ON")
 
 .MA34
 
- JSR MESS
+ JSR MESS               \ Print the token in A as an in-flight message
 
 \ ******************************************************************************
 \
@@ -5327,10 +5443,16 @@ ENDIF
 
 .MA66
 
- LDA QQ11
- BNE oh
- JSR STARS
- JMP PBFL
+ LDA QQ11               \ If this is not a space view (i.e. QQ11 is non-zero)
+ BNE oh                 \ then jump to oh to return from the main flight loop
+                        \ (as oh is an RTS)
+
+ JSR STARS              \ This is a space view, so call the STARS routine to
+                        \ process the stardust
+
+ JMP PBFL               \ And call PBFL to ask the I/O processor to draw the
+                        \ dust particles, returning from the main flight loop
+                        \ using a tail call
 
 \ ******************************************************************************
 \
@@ -5345,6 +5467,11 @@ ENDIF
 \
 \   Y                   The type of cargo to consider spawning (typically #PLT
 \                       or #OIL)
+\
+\ Other entry points:
+\
+\   SPIN2               Remove any randomness: spawn cargo of a specific type
+\                       (given in X), and always spawn the number given in A
 \
 \ ******************************************************************************
 
@@ -6290,11 +6417,13 @@ ENDIF
 .WHITETEXT
 
  LDA #32                \ Send a #SETVDU19 32 command to the I/O processor to
- JSR DOVDU19            \ set the mode 1 palette to yellow (colour 1), white
-                        \ (colour 2) and cyan (colour 3)
+ JSR DOVDU19            \ switch to the mode 1 palette for the title screen,
+                        \ which is yellow (colour 1), white (colour 2) and cyan
+                        \ (colour 3)
 
- LDA #RED               \ Send a #SETCOL &F0 command to the I/O processor to
- JMP DOCOL              \ switch to colour 2, which is now white
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JMP DOCOL              \ switch to colour 2, which is now white, and return
+                        \ from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -7234,7 +7363,9 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ Draw a single segment of a circle, adding the point to the ball line heap.
+\ Draw a single segment of a circle by adding the point to the ball line heap,
+\ so it can be sent to the I/O processor for drawing once the whole circle has
+\ been added to the heap.
 \
 \ Arguments:
 \
@@ -7288,7 +7419,11 @@ ENDIF
                         \ we call BLINE it can draw the first line, from this
                         \ point to the next
 
- BEQ BL5
+ BEQ BL5                \ This is the first call to BLINE, so we don't need to
+                        \ to copy the previous point to XX15 as there isn't one,
+                        \ so we jump to BL5 to tidy up and return from the
+                        \ subroutine (this BEQ is effectively a JMP, as we just
+                        \ incremented FLAG to 0)
 
 .BL1
 
@@ -7325,9 +7460,6 @@ ENDIF
                         \ storing this line
 
  LDY LSP                \ Set Y = LSP
-
-                        \ Byte LSP-1 of LSY2 is &FF, which indicates that we
-                        \ need to store (X1, Y1) in the heap
 
  LDA X1                 \ Store X1 in the LSP-th byte of LSX2
  STA LSX2,Y
@@ -8439,7 +8571,7 @@ ENDIF
                         \ and draw a horizontal line at pixel row 19 to box
                         \ in the title
 
- LDA #15                \ Set A to token 129 ("sentence case}DOCKED")
+ LDA #15                \ Set A to token 129 ("{sentence case}DOCKED")
 
  LDY QQ12               \ Fetch the docked status from QQ12, and if we are
  BNE wearedocked        \ docked, jump to wearedocked
@@ -8683,8 +8815,8 @@ ENDIF
 
  JSR plf                \ Print the text token in A followed by a newline
 
- LDA #6
- JMP DOXC
+ LDA #6                 \ Move the text cursor to column 6 and return from the
+ JMP DOXC               \ subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -10193,9 +10325,11 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  JSR FRS1               \ Call FRS1 to launch the Cobra Mk III straight ahead,
                         \ like a missile launch, but with our ship instead
 
- BCS ES1
- LDX #CYL2
- JSR FRS1
+ BCS ES1                \ If the Cobra was successfully added to the local
+                        \ bubble, jump to ES1 to skip the following instructions
+
+ LDX #CYL2              \ The Cobra wasn't added to the local bubble for some
+ JSR FRS1               \ reason, so try launching a pirate Cobra Mk III instead
 
 .ES1
 
@@ -10220,9 +10354,11 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  BNE ESL1               \ Loop back to keep moving the Cobra until the AI flag
                         \ is 0, which gives it time to drift away from our pod
 
- JSR SCAN               \ Call SCAN to remove all ships from the scanner
+ JSR SCAN               \ Call SCAN to remove the Cobra from the scanner (by
+                        \ redrawing it)
 
- LDA #0
+ LDA #0                 \ Set A = 0 so we can use it to zero the contents of
+                        \ the cargo hold
 
  LDX #16                \ We lose all our cargo when using our escape pod, so
                         \ up a counter in X so we can zero the 17 cargo slots
@@ -10230,9 +10366,8 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 
 .ESL2
 
- STA QQ20,X             \ Set the X-th byte of QQ20 to zero (as we know A = 0
-                        \ from the BEQ above), so we no longer have any of item
-                        \ type X in the cargo hold
+ STA QQ20,X             \ Set the X-th byte of QQ20 to zero, so we no longer
+                        \ have any of item type X in the cargo hold
 
  DEX                    \ Decrement the counter
 
@@ -10249,7 +10384,9 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  STA QQ14               \ fuel, so set the current fuel level in QQ14 to 70, or
                         \ 7.0 light years
 
- JMP GOIN
+ JMP GOIN               \ Go to the docking bay (i.e. show the ship hanger
+                        \ screen) and return from the subroutine with a tail
+                        \ call
 
 \ ******************************************************************************
 \       Name: HME2
@@ -11775,8 +11912,10 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .TN10
 
- CLC
- RTS
+ CLC                    \ Clear the C flag to indicate the ship is not in our
+                        \ crosshairs
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -12276,16 +12415,22 @@ LOAD_C% = LOAD% +P% - CODE%
  LDA #56                \ Call the NOISE routine with A = 56 to make the sound
  JSR NOISE              \ of the hyperspace drive being engaged
 
- LDA #DOhfx
+ LDA #DOhfx             \ Send a #DOhfx 1 command to the I/O processor to tell
+ JSR OSWRCH             \ it to show hyperspace colours in the top part of the
+ LDA #1                 \ screen
  JSR OSWRCH
- LDA #1
- JSR OSWRCH
- LDA #4
- JSR HFS2
- LDA #DOhfx
- JSR OSWRCH
- LDA #0
- JMP OSWRCH
+
+ LDA #4                 \ Set the step size for the hyperspace rings to 4, so
+                        \ there are more sections in the rings and they are
+                        \ quite round (compared to the step size of 8 used in
+                        \ the much more polygonal launch rings)
+
+ JSR HFS2               \ Call HFS2 to draw the hyperspace tunnel rings
+
+ LDA #DOhfx             \ Send a #DOhfx 0 command to the I/O processor to tell
+ JSR OSWRCH             \ it to show normal colours in the top part of the
+ LDA #0                 \ screen, returning from the subroutine using a tail
+ JMP OSWRCH             \ call
 
 \ ******************************************************************************
 \
@@ -14347,8 +14492,9 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .cntr
 
- LDA auto
- BNE cnt2
+ LDA auto               \ If the docking computer is currently activated, jump
+ BNE cnt2               \ to cnt2 to skip the following as we always want to
+                        \ enable damping for the docking computer
 
  LDA DAMP               \ If DAMP is non-zero, then keyboard damping is not
  BNE RE1                \ enabled, so jump to RE1 to return from the subroutine
@@ -14698,8 +14844,8 @@ LOAD_C% = LOAD% +P% - CODE%
  BNE LASLI-1            \ then jump to MA9 to return from the main flight loop
                         \ (as LASLI-1 is an RTS)
 
-  LDA #RED
-  JSR DOCOL
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
 
  LDA #32                \ Call las with A = 32 and Y = 224 to draw one set of
  LDY #224               \ laser lines
@@ -14772,10 +14918,13 @@ LOAD_C% = LOAD% +P% - CODE%
  BNE PD2
  LDA RUGAL-1,Y
  BMI PD3
- LDA TP
- LSR A
+
+ LDA TP                 \ Fetch bit 0 of TP into the C flag, and skip to PD1 if
+ LSR A                  \ it is clear (i.e. if mission 1 is not in progress)
  BCC PD1
- JSR MT14
+
+ JSR MT14               \ Mission 1 is in progress, so call MT14
+
  LDA #1
  EQUB &2C
 
@@ -14817,9 +14966,10 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .BRIEF2
 
- LDA TP
- ORA #4
+ LDA TP                 \ Set bit 2 of TP to indicate mission 2 is in progress
+ ORA #%00000100
  STA TP
+
  LDA #11
 
 \ ******************************************************************************
@@ -14837,10 +14987,11 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .BRIEF3
 
- LDA TP
- AND #&F0
- ORA #10
+ LDA TP                 \ Set bits 1 and 3 of TP to indicate that both missions
+ AND #%11110000         \ are now complete, and clear bits 0 and 2 to indicate
+ ORA #%00001010         \ that neither of them are in progress
  STA TP
+
  LDA #222
  BNE BRP
 
@@ -14850,9 +15001,10 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .DEBRIEF2
 
- LDA TP
- ORA #4
+ LDA TP                 \ Set bit 2 of TP to indicate mission 2 is in progress
+ ORA #%00000100
  STA TP
+
  LDA #2
  STA ENGY
  INC TALLY+1
@@ -14865,12 +15017,15 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .DEBRIEF
 
- LSR TP
- ASL TP
- INC TALLY+1
- LDX #(50000 MOD256)
- LDY #(50000 DIV256)
+ LSR TP                 \ Clear bit 0 of TP to indicate that mission 1 is no
+ ASL TP                 \ longer in progress, as we have completed it
+
+ INC TALLY+1            \ Award a single kill for the Constrictor
+
+ LDX #LO(50000)
+ LDY #HI(50000)
  JSR MCASH
+
  LDA #15
 
 .BRPS
@@ -14883,9 +15038,10 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .BRIEF
 
- LSR TP
+ LSR TP                 \ Set bit 0 of TP to indicate mission 1 is in progress
  SEC
  ROL TP
+
  JSR BRIS
  JSR ZINF
  LDA #CON
@@ -15452,23 +15608,51 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ zero)
 
 \ ******************************************************************************
+\
 \       Name: TRADEMODE
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Clear the screen and set up a printable trading screen
+\
+\ ------------------------------------------------------------------------------
+\
+\ Clear the top part of the screen, draw a white border, set the print flag if
+\ CTRL is being pressed, set the palette for trading screens, and set the
+\ current view type in QQ11 to A.
+\
+\ Arguments:
+\
+\   A                   The type of the new current view (see QQ11 for a list of
+\                       view types)
+\
 \ ******************************************************************************
 
 .TRADEMODE
 
- PHA
- JSR CTRL
- STA printflag
- PLA
- JSR TT66
+ PHA                    \ Store the view type on the stack so we can restore it
+                        \ after the call to CTRL
+
+ JSR CTRL               \ Scan the keyboard to see if CTRL is currently pressed
+
+ STA printflag          \ Store the result in printflag, which will have bit 7
+                        \ set (and will therefore enable printing) if CTRL is
+                        \ being pressed
+
+ PLA                    \ Restore the view type from the stack
+
+ JSR TT66               \ Clear the top part of the screen, draw a white border,
+                        \ and set the current view type in QQ11 to A
 
  JSR FLKB               \ Call FLKB to flush the keyboard buffer
 
- LDA #48
- JSR DOVDU19
- LDA #CYAN\WH
- JMP DOCOL
+ LDA #48                \ Send a #SETVDU19 48 command to the I/O processor to
+ JSR DOVDU19            \ switch to the mode 1 palette for trading screens,
+                        \ which is yellow (colour 1), magenta (colour 2) and
+                        \ white (colour 3)
+
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JMP DOCOL              \ switch to colour 3, which is now white, and return
+                        \ from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -16263,6 +16447,10 @@ LOAD_D% = LOAD% + P% - CODE%
 \ For all views except the Short-range Chart, the centre is drawn 24 pixels to
 \ the right of the y-coordinate given.
 \
+\ The crosshairs are drawn in colour 3, which is white in the chart view and
+\ cyan elsewhere. We can draw them in the current colour by calling the TT15b
+\ entry point.
+\
 \ Arguments:
 \
 \   QQ19                The pixel x-coordinate of the centre of the crosshairs
@@ -16271,12 +16459,16 @@ LOAD_D% = LOAD% + P% - CODE%
 \
 \   QQ19+2              The size of the crosshairs
 \
+\ Other entry points:
+\
+\   TT15b               Draw the crosshairs in the current colour
 \ ******************************************************************************
 
 .TT15
 
- LDA #CYAN
- JSR DOCOL
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is white in the chart view
+                        \ and cyan elsewhere
 
 .TT15b
 
@@ -16284,9 +16476,12 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ screen indent for the crosshairs (i.e. the minimum
                         \ distance from the top-left corner of the screen)
 
- LDX QQ11
- BPL TT178
- LDA #0
+ LDX QQ11               \ If the current view is not the Short-range Chart,
+ BPL TT178              \ which is the only view with bit 7 set, then jump to
+                        \ TT178 to skip the following instruction
+
+ LDA #0                 \ This is the Short-range Chart, so set A to 0, so the
+                        \ crosshairs can go right up against the screen edges
 
 .TT178
 
@@ -16326,8 +16521,13 @@ LOAD_D% = LOAD% + P% - CODE%
  CLC                    \ to get the x-coordinate of the right edge of the
  ADC QQ19+2             \ crosshairs
 
- BCC TT85
- LDA #255
+ BCC TT85               \ If the above addition didn't overflow, then A is
+                        \ correct, so jump to TT85 to skip the next instruction
+
+ LDA #255               \ The addition overflowed, so set A to 255 so the
+                        \ crosshairs don't spill out of the right of the screen
+                        \ (as 255 is the x-coordinate of the rightmost pixel
+                        \ on-screen)
 
 .TT85
 
@@ -16339,9 +16539,9 @@ LOAD_D% = LOAD% + P% - CODE%
  ADC QQ19+5             \ crosshairs
  STA XX15+1
 
- STA XX15+3
+ STA XX15+3             \ Set XX15+3 (Y2) = crosshairs y-coordinate + indent
 
- JSR LL30               \ Draw a horizontal line from (X1, Y1) to (X2, Y1),
+ JSR LL30               \ Draw a line from (X1, Y1) to (X2, Y2), where Y1 = Y2,
                         \ which will draw from the left edge of the crosshairs
                         \ to the right edge, through the centre of the
                         \ crosshairs
@@ -16741,8 +16941,8 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .gnum
 
- LDA #MAGENTA
- JSR DOCOL
+ LDA #MAGENTA           \ Send a #SETCOL MAGENTA command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is magenta in the trade view
 
  LDX #0                 \ We will build the number entered in R, so initialise
  STX R                  \ it with 0
@@ -17918,12 +18118,15 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ and move the text cursor to column 1 on row 21, i.e.
                         \ the start of the top row of the three bottom rows
 
- LDA #15
+ LDA #15                \ Move the text cursor to column 15
  JSR DOXC
- LDA #RED
- JSR DOCOL
- LDA #205
- JMP DETOK
+
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is magenta in the trade view
+                        \ or red in the chart view
+
+ LDA #205               \ Print recursive token 205 ("DOCKED") and return from
+ JMP DETOK              \ the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -17950,6 +18153,10 @@ LOAD_D% = LOAD% + P% - CODE%
 \ and if all the pre-jump checks are passed, we print the destination on-screen
 \ and start the countdown.
 \
+\ Other entry points:
+\
+\   TTX111              Used to rejoin this routine from the call to TTX110
+\
 \ ******************************************************************************
 
 .hyp
@@ -17961,37 +18168,58 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA QQ22+1             \ Fetch QQ22+1, which contains the number that's shown
                         \ on-screen during hyperspace countdown
 
- BEQ P%+3
- RTS
- LDA #CYAN
- JSR DOCOL
+ BEQ P%+3               \ If it is zero, skip the next instruction
+
+ RTS                    \ The count is non-zero, so return from the subroutine
+
+ LDA #CYAN              \ The count is zero, send a #SETCOL CYAN command to the
+ JSR DOCOL              \ I/O processor to switch to colour 3, which is cyan in
+                        \ the space view
 
  JSR CTRL               \ Scan the keyboard to see if CTRL is currently pressed
 
  BMI Ghy                \ If it is, then the galactic hyperdrive has been
                         \ activated, so jump to Ghy to process it
 
- LDA QQ11
- BEQ TTX110
- AND #192
- BNE P%+3
- RTS \< = Ian = >
- JSR hm
+ LDA QQ11               \ If the current view is 0 (i.e. the space view) then
+ BEQ TTX110             \ jump to TTX110, which calls TT111 to set the current
+                        \ system to the nearest system to (QQ9, QQ10), and jumps
+                        \ back into this routine at TTX111 below
+
+ AND #%11000000         \ If either bits 6 or 7 of the view number are set - so
+ BNE P%+3               \ this is either the Short-range or Long-range Chart -
+                        \ then skip the following instruction
+
+ RTS                    \ This is not a chart view, so return from the
+                        \ subroutine
+
+ JSR hm                 \ This is a chart view, so call hm to redraw the chart
+                        \ crosshairs
 
 .TTX111
 
- LDA QQ8
- ORA QQ8+1
- BNE P%+3
- RTS
- LDX #5
+                        \ If we get here then the current view is either the
+                        \ space view or a chart
+
+ LDA QQ8                \ If either byte of the distance to the selected system
+ ORA QQ8+1              \ in QQ8 are zero, skip the next instruction to make a
+ BNE P%+3               \ copy of the destination seeds in safehouse
+
+ RTS                    \ The selected system is the same as the current system,
+                        \ so return from the subroutine
+
+ LDX #5                 \ We now want to copy those seeds into safehouse, so we
+                        \ so set a counter in Xto copy 6 bytes
 
 .sob
 
- LDA QQ15,X
- STA safehouse,X
- DEX
- BPL sob
+ LDA QQ15,X             \ Copy the X-th byte of QQ15 into the X-th byte of
+ STA safehouse,X        \ safehouse
+
+ DEX                    \ Decrement the loop counter
+
+ BPL sob                \ Loop back to copy the next byte until we have copied
+                        \ all six seed bytes
 
  LDA #7                 \ Move the text cursor to column 7, row 23 (in the
  JSR DOXC               \ middle of the bottom text row)
@@ -18004,24 +18232,30 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA #189               \ Print recursive token 29 ("HYPERSPACE ")
  JSR TT27
 
- LDA QQ8+1
- BNE goTT147
+ LDA QQ8+1              \ If the high byte of the distance to the selected
+ BNE goTT147            \ system in QQ8 is > 0, then it is definitely too far to
+                        \ jump (as our maximum range is 7.0 light years, or a
+                        \ value of 70 in QQ8(1 0)), so jump to goTT147 below
 
- LDA QQ14
- CMP QQ8
- BCS P%+5
+ LDA QQ14               \ Fetch our current fuel level from Q114 into A
+
+ CMP QQ8                \ If our fuel reserves are greater then or equal to the
+ BCS P%+5               \ distance to the selected system, then we have enough
+                        \ fuel for this jump, so skip the following instruction
+                        \ to start the hyperspace countdown
 
 .goTT147
 
- JMP TT147
+ JMP TT147              \ We don't have enough fuel to reach the destination, so
+                        \ jump to TT147 to print "RANGE?" and return from the
+                        \ subroutine using a tail call
 
  LDA #'-'               \ Print a hyphen
  JSR TT27
 
  JSR cpl                \ Call cpl to print the name of the selected system
 
-                        \ Fall through into wW to start the hyperspace
-                        \ countdown
+                        \ Fall through into wW to start the hyperspace countdown
 
 \ ******************************************************************************
 \
@@ -18035,6 +18269,10 @@ LOAD_D% = LOAD% + P% - CODE%
 \ Start the hyperspace countdown (for both inter-system hyperspace and the
 \ galactic hyperdrive).
 \
+\ Other entry points:
+\
+\   wW2                 Start the hyperspace countdown, starting the countdown
+\                       from the value in A
 \ ******************************************************************************
 
 .wW
@@ -18067,13 +18305,24 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ RTS?
 
 \ ******************************************************************************
+\
 \       Name: TTX110
+\       Type: Subroutine
+\   Category: Flight
+\    Summary: Set the current system to the nearest system and return to hyp
+\
 \ ******************************************************************************
 
 .TTX110
 
- JSR TT111
- JMP TTX111
+                        \ This routine is only called from the hyp routine, and
+                        \ it jumps back into hyp at label TTX111
+
+ JSR TT111              \ Call TT111 to set the current system to the nearest
+                        \ system to (QQ9, QQ10), and put the seeds of the
+                        \ nearest system into QQ15 to QQ15+5
+
+ JMP TTX111             \ Return to TTX111 in the hyp routine
 
 \ ******************************************************************************
 \
@@ -18126,8 +18375,8 @@ LOAD_D% = LOAD% + P% - CODE%
  STX FIST               \ Changing galaxy also clears our criminal record, so
                         \ set our legal status in FIST to 0 ("clean")
 
- LDA #2
- JSR wW2
+ LDA #2                 \ Call wW2 with A = 2 to start the hyperspace countdown,
+ JSR wW2                \ but starting the countdown from 2 
 
  LDX #5                 \ To move galaxy, we rotate the galaxy's seeds left, so
                         \ set a counter in X for the 6 seed bytes
@@ -18165,17 +18414,25 @@ LOAD_D% = LOAD% + P% - CODE%
 
  JSR TT110              \ Call TT110 to show the front space view
 
- JSR TT111
- LDX #5
+ JSR TT111              \ Call TT111 to set the current system to the nearest
+                        \ system to (QQ9, QQ10), and put the seeds of the
+                        \ nearest system into QQ15 to QQ15+5
+
+ LDX #5                 \ We now want to copy those seeds into safehouse, so we
+                        \ so set a counter in Xto copy 6 bytes
 
 .dumdeedum
 
- LDA QQ15,X
- STA safehouse,X
- DEX
- BPL dumdeedum
- LDX #0
- STX QQ8
+ LDA QQ15,X             \ Copy the X-th byte of QQ15 into the X-th byte of
+ STA safehouse,X        \ safehouse
+
+ DEX                    \ Decrement the loop counter
+
+ BPL dumdeedum          \ Loop back to copy the next byte until we have copied
+                        \ all six seed bytes
+
+ LDX #0                 \ Set the distance to the selected system in QQ8(1 0)
+ STX QQ8                \ to 0
  STX QQ8+1
 
  LDA #116               \ Print recursive token 116 (GALACTIC HYPERSPACE ")
@@ -18236,14 +18493,17 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .ee3
 
- LDA #RED
- JSR DOCOL
- LDA #1
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
+
+ LDA #1                 \ Move the text cursor to column 1 on row 1
  JSR DOXC
  JSR DOYC
- LDY #0
 
-                        \ Fall through into pr6 to print X to 5 digits
+ LDY #0                 \ Set Y = 0 for the high byte in pr6
+
+                        \ Fall through into pr6 to print X to 5 digits, as the
+                        \ high byte in Y is 0
 
 \ ******************************************************************************
 \
@@ -18783,8 +19043,8 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT112
 
- LDA safehouse,X
- STA QQ2,X
+ LDA safehouse,X        \ Copy the X-th byte in safehouse to the X-th byte in
+ STA QQ2,X              \ QQ2
 
  DEX                    \ Decrement the counter
 
@@ -18953,6 +19213,8 @@ LOAD_D% = LOAD% + P% - CODE%
 \
 \   ptg                 Called when the user manually forces a mis-jump
 \
+\   RTS111              Contains an RTS
+\
 \ ******************************************************************************
 
 .ptg
@@ -18963,8 +19225,8 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .MJP
 
- LDA #3
- JSR TT66
+ LDA #3                 \ Clear the top part of the screen, draw a white border,
+ JSR TT66               \ and set the current view type in QQ11 to 3
 
  JSR LL164              \ Call LL164 to show the hyperspace tunnel and make the
                         \ hyperspace sound for a second time (as we already
@@ -19368,8 +19630,9 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .EQSHP
 
- LDA #32
- JSR TRADEMODE
+ LDA #32                \ Call TRADEMODE to clear the top part of the screen and
+ JSR TRADEMODE          \ set up a printable trading screen with a view type in
+                        \ QQ11 of 32 (Equip Ship screen)
 
  LDA #12                \ Move the text cursor to column 12
  JSR DOXC
@@ -19480,11 +19743,15 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ clear), which will be the actual item number we want
                         \ to buy
 
- PHA
- LDA #2
+ PHA                    \ Store A on the stack so we can restore it after the
+                        \ following call to DOXC
+
+ LDA #2                 \ Move the text cursor to column 2 
  JSR DOXC
- JSR INCYC
- PLA
+
+ JSR INCYC              \ Move the text cursor down one line
+
+ PLA                    \ Restore A from the stack
 
  PHA                    \ While preserving the value in A, call eq to subtract
  JSR eq                 \ the price of the item we want to buy (which is in A)
@@ -19507,7 +19774,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
  INX                    \ Increment X to the new number of missiles
 
- LDY #124
+ LDY #124               \ Set Y to recursive token 124 ("ALL")
 
  CPX #5                 \ If buying this missile would give us 5 missiles, this
  BCS pres               \ is more than the maximum of 4 missiles that we can
@@ -19520,7 +19787,10 @@ LOAD_D% = LOAD% + P% - CODE%
  JSR msblob             \ And call msblob to update the dashboard's missile
                         \ indicators with our new purchase
 
- LDA #1
+ LDA #1                 \ Set A to 5 as the call to msblob will have overwritten
+                        \ the original value, and we still need it set
+                        \ correctly so we can continue through the conditional
+                        \ statements for all the other equipment
 
 .et1
 
@@ -19715,10 +19985,14 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .et9
 
- INY
- CMP #12
- BNE et10
- JSR qv
+ INY                    \ Increment Y to recursive token 117 ("MILITARY  LASER")
+
+ CMP #12                \ If A is not 12 (i.e. the item we've just bought is not
+ BNE et10               \ a military laser), skip to et10
+
+ JSR qv                 \ Print a menu listing the four views, with a "View ?"
+                        \ prompt, and ask for a view number, which is returned
+                        \ in X (which now contains 0-3)
 
  LDA #Armlas            \ Call refund with A set to the power of the new
  JSR refund             \ military laser to install the new laser and process a
@@ -19726,10 +20000,14 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .et10
 
- INY
- CMP #13
- BNE et11
- JSR qv
+ INY                    \ Increment Y to recursive token 118 ("MINING  LASER")
+
+ CMP #13                \ If A is not 13 (i.e. the item we've just bought is not
+ BNE et11               \ a mining laser), skip to et11
+
+ JSR qv                 \ Print a menu listing the four views, with a "View ?"
+                        \ prompt, and ask for a view number, which is returned
+                        \ in X (which now contains 0-3)
 
  LDA #Mlas              \ Call refund with A set to the power of the new mining
  JSR refund             \ laser to install the new laser and process a refund if
@@ -19919,7 +20197,7 @@ LOAD_D% = LOAD% + P% - CODE%
  ADC #80                \ "RIGHT"
  JSR TT27
 
- JSR INCYC              \ Move the text cursor down a row)
+ JSR INCYC              \ Move the text cursor down a row
 
  LDY YC                 \ Update Y with the incremented counter in YC
 
@@ -19980,7 +20258,11 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ which will draw the crosshairs at our current home
                         \ system
 
- JMP CLYNS
+ JMP CLYNS              \ Clear the bottom three text rows of the upper screen,
+                        \ and move the text cursor to column 1 on row 21, i.e.
+                        \ the start of the top row of the three bottom rows
+
+                        \ Return from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -24265,7 +24547,7 @@ LOAD_E% = LOAD% + P% - CODE%
  STZ LSP                \ Reset the ball line heap by setting the ball line heap
                         \ pointer to 0
 
- JSR CIRCLE3            \ Call CIRCLE3 to draw the circle
+ JSR CIRCLE3            \ Call CIRCLE3 to populate the ball line heap
 
                         \ Fall through into LS2FL to send the ball line heap to
                         \ the I/O processor for drawing
@@ -24281,48 +24563,79 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .LS2FL
 
- LDY LSP
+ LDY LSP                \ Set Y to the ball line heap pointer, which contains
+                        \ the number of the first free byte after the end of the
+                        \ LSX2 and LSY2 heaps - in other words, the number of
+                        \ points in the ball line heap
+
+                        \ We now loop through the ball line heap using Y as a
+                        \ pointer
 
 .WP3
 
- STY T
- BEQ WP1
- LDA #&81
- JSR OSWRCH
- TYA
- BMI WP2
- SEC
+ STY T                  \ Set T = the number of points in the heap
+
+ BEQ WP1                \ If there are no points in the heap, jump down to WP1
+                        \ to return from the subroutine
+
+ LDA #&81               \ Send an OSWRCH &81 command to the I/O processor to
+ JSR OSWRCH             \ tell it to start drawing a new line. This means the
+                        \ next byte we send to OSWRCH 
+
+ TYA                    \ Transfer the Y counter into A
+
+ BMI WP2                \ If the counter in A > 127, then jump to WP2, as we
+                        \ need to send the points in two batches
+
+ SEC                    \ Set A = (A * 2) + 1
  ROL A
- JSR OSWRCH
- LDY #0
+
+ JSR OSWRCH             \ Send A 
+
+                        \ We now want to send the points themselves to the I/O
+                        \ processor
+
+ LDY #0                 \ Set Y = 0 to act as a loop through the first T points
 
 .WPL1
 
- LDA LSX2,Y
+ LDA LSX2,Y             \ Send the x-coordinate of the start of the line segment
  JSR OSWRCH
- LDA LSY2,Y
+
+ LDA LSY2,Y             \ Send the y-coordinate of the start of the line segment
  JSR OSWRCH
+
  INY
- LDA LSX2,Y
+
+ LDA LSX2,Y             \ Send the x-coordinate of the end of the line segment
  JSR OSWRCH
- LDA LSY2,Y
+
+ LDA LSY2,Y             \ Send the y-coordinate of the end of the line segment
  JSR OSWRCH
+
  INY
+
  CPY T
  BCC WPL1
 
 .WP1
 
- RTS
+ RTS                    \ Return from the subroutine
 
 .WP2
 
- ASL A
+                        \ If we get here then there are more than 127 points in
+                        \ the line heap to send to the I/O processor
+
+ ASL A                  \ Set A = A * 2 + 4
  ADC #4
- JSR OSWRCH
- LDY #126
- JSR WPL1
- LDY #126
+
+ JSR OSWRCH             \ Send A
+
+ LDY #126               \ Call WPL1 above to send the first 127 points to the
+ JSR WPL1               \ I/O processor
+
+ LDY #126               \ Jump to WP3 above to send the rest of the points
  JMP WP3
 
 \ ******************************************************************************
@@ -25397,7 +25710,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
  LDY #GREEN2            \ Otherwise we need to remove our missile lock, so call
  JSR ABORT              \ ABORT to disarm the missile and update the missile
-                        \ indicators on the dashboard to green/cyan (Y = &EE)
+                        \ indicators on the dashboard to green (Y = #GREEN2)
 
  LDA #200               \ Print recursive token 40 ("TARGET LOST") as an
  JSR MESS               \ in-flight message
@@ -25412,24 +25725,27 @@ LOAD_F% = LOAD% + P% - CODE%
  CPX #SST               \ If this is the space station, then jump to KS4 to
  BEQ KS4                \ replace the space station with the sun
 
- CPX #CON
- BNE lll
- LDA TP
- ORA #2
- STA TP
+ CPX #CON               \ Did we just kill the Constrictor from mission 1? If
+ BNE lll                \ not, jump to lll
+
+ LDA TP                 \ We just killed the Constrictor from mission 1, so set
+ ORA #%00000010         \ bit 1 of TP to indicate that we have successfully
+ STA TP                 \ completed mission 1
 
 .lll
 
- CPX #HER
- BEQ blacksuspenders
- CPX #JL
- BCC KS7
- CPX #JH
- BCS KS7
+ CPX #HER               \ Did we just kill a rock hermit? If we did, jump to
+ BEQ blacksuspenders    \ blacksuspenders
+
+ CPX #JL                \ If JL <= X < JH, i.e. the type of ship we killed in X 
+ BCC KS7                \ is junk (escape pod, alloy plate, cargo canister,
+ CPX #JH                \ asteroid, splinter, shuttle or transporter), then keep
+ BCS KS7                \ going, otherwise jump to KS7
 
 .blacksuspenders
 
- DEC JUNK
+ DEC JUNK               \ We just killed junk, or a rock hermit, so decrease the
+                        \ junk counter
 
 .KS7
 
@@ -25509,8 +25825,11 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA FRIN,X             \ Copy the contents of the source slot into the
  STA FRIN-1,X           \ destination slot
 
- BNE P%+5
- JMP KS2
+ BNE P%+5               \ If the slot we just shuffled down is not empty, then
+                        \ skip the following instruction
+
+ JMP KS2                \ The source slot is empty and we are done shuffling,
+                        \ so jump to KS2 to move on to processing missiles
 
  ASL A                  \ Otherwise we have a source ship to shuffle down into
  TAY                    \ the destination, so set Y = A * 2 so it can act as an
@@ -25566,16 +25885,21 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ so let's start copying data from the source to the
                         \ destination
 
- LDY #36
- LDA (SC),Y
- STA (INF),Y
- DEY
+ LDY #36                \ We are going to be using Y as a counter for the 37
+                        \ bytes of ship data we want to copy from the source
+                        \ to the destination, so we set it to 36 to start things
+                        \ off, and will decrement Y for each byte we copy
+
+ LDA (SC),Y             \ Fetch byte #36 of the source's ship data block at SC,
+ STA (INF),Y            \ and store it in byte #36 of the destination's block
+ DEY                    \ at INF, so that's the ship's NEWB copied from the
+                        \ source to the destination. One down, quite a few to
+                        \ go...
 
  LDA (SC),Y             \ Fetch byte #35 of the source's ship data block at SC,
  STA (INF),Y            \ and store it in byte #35 of the destination's block
                         \ at INF, so that's the ship's energy copied from the
-                        \ source to the destination. One down, quite a few to
-                        \ go...
+                        \ source to the destination
 
  DEY                    \ Fetch byte #34 of the source ship, which is the
  LDA (SC),Y             \ high byte of the source ship's line heap, and store
@@ -25705,25 +26029,51 @@ LOAD_F% = LOAD% + P% - CODE%
  EQUB &13,&00,&00,&00   \ 72 - E.C.M. off
 
 \ ******************************************************************************
+\
 \       Name: THERE
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: Check whether we are in the Constrictor's system in mission 1
+\
+\ ------------------------------------------------------------------------------
+\
+\ The stolen Constrictor is the target of mission 1. We finally track it down to
+\ the Orarra system in the second galaxy, which is at galactic coordinates
+\ (144, 33). This routine checks whether we are in this system and sets the C
+\ flag accordingly.
+\
+\ Returns:
+\
+\   C flag              Set if we are in the Constrictor system, otherwise clear
+\
 \ ******************************************************************************
 
 .THERE
 
- LDX GCNT
+ LDX GCNT               \ Set X = GCNT - 1
  DEX
+
+ BNE THEX               \ If X is non-zero (i.e. GCNT is not 1, so we are not in
+                        \ the second galaxy), then jump to THEX
+
+ LDA QQ0                \ Set A = the current system's galactic x-coordinate
+
+ CMP #144               \ If A <> 144 then jump to THEX
  BNE THEX
- LDA QQ0
- CMP #144
- BNE THEX
- LDA QQ1
- CMP #33
- BEQ THEX+1
+
+ LDA QQ1                \ Set A = the current system's galactic y-coordinate
+
+ CMP #33                \ If A = 33 then set the C flag
+
+ BEQ THEX+1             \ If A = 33 then jump to THEX+1, so we return from the
+                        \ subroutine with the C flag set (otherwise we clear the
+                        \ C flag with the next instruction)
 
 .THEX
 
- CLC
- RTS
+ CLC                    \ Clear the C flag
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -25824,8 +26174,9 @@ LOAD_F% = LOAD% + P% - CODE%
 
  ASL A                  \ This sets A to 0
 
- STA BETA
- STA BET1
+ STA BETA               \ Reset BETA (pitch angle alpha) to 0
+
+ STA BET1               \ Reset BET1 (magnitude of the pitch angle) to 0
 
  STA ALP2+1             \ Reset ALP2+1 (flipped roll sign) and BET2+1 (flipped
  STA BET2+1             \ pitch sign) to positive, i.e. pitch and roll negative
@@ -25935,7 +26286,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \ ------------------------------------------------------------------------------
 \
 \ Display the dashboard's missile indicators, with all the missiles reset to
-\ green/cyan (i.e. not armed or locked).
+\ green (i.e. not armed or locked).
 \
 \ ******************************************************************************
 
@@ -25949,7 +26300,7 @@ LOAD_F% = LOAD% + P% - CODE%
  CPX NOMSL              \ If the counter is equal to the number of missiles,
  BEQ SAL8               \ jump down to SQL8 to draw remaining the missiles, as
                         \ the rest of them are present and should be drawn in
-                        \ green/cyan
+                        \ green
 
  LDY #0                 \ Draw the missile indicator at position X in black
  JSR MSBAR
@@ -25962,7 +26313,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .SAL8
 
- LDY #GREEN2            \ Draw the missile indicator at position X in green/cyan
+ LDY #GREEN2            \ Draw the missile indicator at position X in green
  JSR MSBAR
 
  DEX                    \ Decrement the counter to point to the next missile
@@ -26001,7 +26352,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \ ------------------------------------------------------------------------------
 \
-\ Specifically:
+\ Specifically, this routine does the following:
 \
 \   * Reset the INWK ship workspace
 \
@@ -26012,8 +26363,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \   * Set the ship to hostile, with AI enabled
 \
-\ Also sets X and T1 to a random value, and A to a random value between 192 and
-\ 255,and the C flag randomly.
+\ This routine also sets A, X, T1 and the C flag to random values.
 \
 \ ******************************************************************************
 
@@ -26047,6 +26397,9 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ and has AI (bit 7)
 
  STA INWK+32            \ Store A in the AI flag of this ship
+
+                        \ Fall through into DORND2 to set A, X and the C flag
+                        \ randomly
 
 \ ******************************************************************************
 \
@@ -26103,18 +26456,17 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \ This section covers the following:
 \
-\   * Spawn a trader, i.e. a Cobra Mk III that isn't attacking anyone, with one
-\     missile and a 50% chance of having an E.C.M., a speed between 16 and 31,
-\     and a clockwise roll
+\   * Spawn a trader, i.e. a Cobra Mk III, Python, Boa or Anaconda, with one
+\     missile, a 50% chance of having an E.C.M., a 50% chance of being hostile,
+\     a speed between 16 and 31, and a gentle clockwise roll
 \
-\ We call this from within the main loop, with A set to a random number and the
-\ C flag set.
+\ We call this from within the main loop.
 \
 \ ******************************************************************************
 
 .MTT4
 
- JSR DORND
+ JSR DORND              \ Set A and X to random numbers
 
  LSR A                  \ Clear bit 7 of our random number in A
 
@@ -26132,21 +26484,36 @@ LOAD_F% = LOAD% + P% - CODE%
  ORA #16                \ minimum of 16 and a maximum of 31
  STA INWK+27
 
- JSR DORND
- BMI nodo
- LDA INWK+32
- ORA #&C0
+ JSR DORND              \ Set A and X to random numbers, plus the C flag
+
+ BMI nodo               \ If A is negative (50% chance), jump to nodo to skip
+                        \ the following
+
+ LDA INWK+32            \ Set bits 6 and 7 of the ship's AI flag, to make it
+ ORA #%11000000         \ hostile and with AI enabled
  STA INWK+32
- LDX #16
+
+ LDX #%00010000         \ Set bit 4 of the ship's NEWB flag
  STX NEWB
 
 .nodo
 
- AND #2
- ADC #CYL
- CMP #HER
- BEQ TT100
- JSR NWSHP\trader
+ AND #2                 \ If we jumped here with a random value of A from the
+                        \ BMI above, then this reduces A to a random value of
+                        \ either 0 or 2; if we didn't take the BMI and made the
+                        \ ship hostile, then A will be 0
+
+ ADC #CYL               \ Set A = A + C + #CYL
+                        \
+                        \ where A is 0 or 2 and C is 0 or 1, so this gives us a
+                        \ ship type from the following: Cobra Mk III, Python,
+                        \ Boa or Anaconda
+
+ CMP #HER               \ If A is now the ship type of a rock hermit, jump to
+ BEQ TT100              \ TT100 to skip the following instruction
+
+ JSR NWSHP              \ Add a new ship of type A to the local bubble and fall
+                        \ through into the main game loop again
 
 \ ******************************************************************************
 \
@@ -26228,9 +26595,9 @@ LOAD_F% = LOAD% + P% - CODE%
  BCS MTT1               \ the spawning of an asteroid or cargo canister and
                         \ potentially spawn something else
 
- LDA JUNK
- CMP #3
- BCS MTT1
+ LDA JUNK               \ If we already have 3 or more bits of junk in the local
+ CMP #3                 \ bubble, jump down to MTT1 to skip the following and
+ BCS MTT1               \ potentially spawn something else
 
  JSR ZINF               \ Call ZINF to reset the INWK ship workspace
 
@@ -26293,17 +26660,28 @@ LOAD_F% = LOAD% + P% - CODE%
 
  JSR DORND              \ Set A and X to random numbers
 
- CMP #252
- BCC thongs
- LDA #HER
- STA INWK+32
- BNE whips
+ CMP #252               \ If random A < 252 (98.8% of the time), jump to thongs
+ BCC thongs             \ to skip the following
+
+ LDA #HER               \ Set A to #HER so we spawn a rock hermit 1.2% of the
+                        \ time
+ 
+ STA INWK+32            \ Set byte #32 to %00001111 to give the rock hermit an
+                        \ E.C.M.
+
+ BNE whips              \ Jump to whips (this BNE is effectively a JMP as A will
+                        \ never be zero)
 
 .thongs
 
- CMP #10
- AND #1
- ADC #OIL
+ CMP #10                \ If random A >= 10 (96% of the time), set the C flag
+
+ AND #1                 \ Reduce A to a random number that's 0 or 1
+ 
+ ADC #OIL               \ Set A = #OIL + A + C, so there's a tiny chance of us
+                        \ spawning a cargo canister (#OIL) and an even chance of
+                        \ us spawning either a boulder (#OIL + 1) or an asteroid
+                        \ (#OIL + 2)
 
 .whips
 
@@ -26324,16 +26702,17 @@ LOAD_F% = LOAD% + P% - CODE%
 \     more often if have been naughty, and very often if we have been properly
 \     bad
 \
+\   * Very rarely, consider spawning a Thargoid, or vanishingly rarely, a Cougar
 \ ******************************************************************************
 
 .MTT1
 
- LDA SSPR
- BEQ P%+5
+ LDA SSPR               \ If we are outside the space station's safe zone, skip
+ BEQ P%+5               \ the following instruction
 
 .MLOOPS
 
- JMP MLOOP
+ JMP MLOOP              \ Jump to MLOOP to skip the following
 
  JSR BAD                \ Call BAD to work out how much illegal contraband we
                         \ are carrying in our hold (A is up to 40 for a
@@ -26354,11 +26733,11 @@ LOAD_F% = LOAD% + P% - CODE%
  STA T                  \ Store our badness level in T
 
  JSR Ze                 \ Call Ze to initialise INWK to a potentially hostile
-                        \ ship, and set X to a random value and A to a random
-                        \ value between 192 and 255
+                        \ ship, and set A and X to random values
 
- CMP #136
- BEQ fothg
+ CMP #136               \ If the random number in A = 136 (0.4% chance), jump
+ BEQ fothg              \ to fothg in part 4 to spawn either a Thargoid or, very
+                        \ rarely, a Cougar
 
  CMP T                  \ If the random value in A >= our badness level, which
  BCS P%+7               \ will be the case unless we have been really, really
@@ -26385,9 +26764,13 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \ This section covers the following:
 \
-\   * Potentially spawn (35% chance) either a lone bounty hunter (a Mamba,
-\     Python or Cobra Mk III), a Thargoid, or a group of up to 4 pirates
-\     (Sidewinders and/or Mambas)
+\   * Potentially spawn (35% chance) either a lone bounty hunter (a Cobra Mk
+\     III, Asp Mk II, Python or Fer-de-lance), a Thargoid, or a group of up to 4
+\     pirates (a mix of Sidewinders, Mambas, Kraits, Adders, Geckos, Cobras Mk I
+\     and III, and Worms)
+\
+\   * Also potentially spawn a Constrictor if this is the mission 1 endgame, or
+\     Thargoids if mission 2 is in progress
 \
 \ ******************************************************************************
 
@@ -26398,17 +26781,22 @@ LOAD_F% = LOAD% + P% - CODE%
  INC EV                 \ EV is negative, so bump it up again, setting it back
                         \ to 0
 
- LDA TP
- AND #&C
- CMP #8
- BNE nopl
- JSR DORND
- CMP #200
- BCC nopl
+ LDA TP                 \ Fetch bits 2 and 3 of TP, which contain the status of
+ AND #%00001100         \ mission 2
+
+ CMP #%00001000         \ If bit 3 is set and bit 2 is clear, keep going to
+ BNE nopl               \ spawn a Thargoid as we are in mission 2, otherwise
+                        \ jump to nopl to skip spawning a Thargoid
+
+ JSR DORND              \ Set A and X to random numbers
+
+ CMP #200               \ If the random number in A < 200 (78% chance), jump to
+ BCC nopl               \ nopl to skip spawning a Thargoid
 
 .fothg2
 
- JSR GTHG
+ JSR GTHG               \ Call GTHG to spawn a Thargoid ship and a Thargon
+                        \ companion
 
 .nopl
 
@@ -26442,8 +26830,7 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ group of pirates
 
  JSR Ze                 \ Call Ze to initialise INWK to a potentially hostile
-                        \ ship, and set X to a random value and A to a random
-                        \ value between 192 and 255
+                        \ ship, and set A and X to random values
 
  CMP #100               \ If the random number in A >= 100 (61% chance), jump
  BCS mt1                \ to mt1 to spawn pirates, otherwise keep going to
@@ -26452,46 +26839,80 @@ LOAD_F% = LOAD% + P% - CODE%
  INC EV                 \ Increase the extra vessels spawning counter, to
                         \ prevent the next attempt to spawn extra vessels
 
- AND #3                 \ Set A = Y = random number in the range 3-6, which
- ADC #CYL2              \ we will use to determine the type of ship
- TAY
+ AND #3                 \ Set A = random number in the range 0-3, which we
+                        \ will now use to determine the type of ship
 
- JSR THERE
- BCC NOCON
- LDA #&F9
- STA INWK+32
- LDA TP
- AND #3
- LSR A
- BCC NOCON
- ORA MANY+CON
- BEQ YESCON
+ ADC #CYL2              \ Add A to #CYL2 (we know the C flag is clear as we
+                        \ passed through the BCS above), so A is now one of the
+                        \ lone bounty hunter ships, i.e. Cobra Mk III (pirate),
+                        \ Asp Mk II, Python (pirate) or Fer-de-lance
+
+ TAY                    \ Copy the new ship type to Y
+
+ JSR THERE              \ Call THERE to see if we are in the Constrictor's
+                        \ system in mission 1
+
+ BCC NOCON              \ If the C flag is clear then we are not in the
+                        \ Constrictor's system, so skip to NOCON
+
+ LDA #%11111001         \ Set the AI flag of this ship so that it has E.C.M.,
+ STA INWK+32            \ has a very high aggression level of 28 out of 31, is
+                        \ hostile, and has AI enabled - nasty stuff!
+
+ LDA TP                 \ Fetch bits 0 and 1 of TP, which contain the status of
+ AND #%00000011         \ mission 1
+
+ LSR A                  \ Shift bit 0 into the C flag
+
+ BCC NOCON              \ If bit 0 is clear, skip to NOCON as mission 1 is not
+                        \ in progress
+
+ ORA MANY+CON           \ Bit 0 of A now contains bit 1 of TP, so this will be
+                        \ set if we have already completed mission 1, so this OR
+                        \ will be non-zero if we have either completed mission
+                        \ 1, or there is already a Constrictor in our local
+                        \ bubble of universe (in which case MANY+CON will be
+                        \ non-zero)
+
+ BEQ YESCON             \ If A = 0 then mission 1 is in progress, we haven't
+                        \ completed it yet, and there is no Constrictor in the
+                        \ vicinity, so jump to YESCON to spawn the Constrictor
 
 .NOCON
 
- LDA #4
- STA NEWB
- JSR DORND
- CMP #200
+ LDA #%00000100         \ Set bit 2 of NEWB and clear all other bits, so the
+ STA NEWB               \ ship we are about to spawn is hostile
+
+                        \ We now build the AI flag for this ship in A
+
+ JSR DORND              \ Set A and X to random numbers
+
+ CMP #200               \ First, set the C flag if X >= 200 (22% chance)
 
  ROL A                  \ Set bit 0 of A to the C flag (i.e. there's a 22%
                         \ chance of this ship having E.C.M.)
 
- ORA #%11000000         \ Set bits 6 and 7 of A, so the ship is hostile (bit 6
+ ORA #%11000000         \ Set bits 6 and 7 of A, so the ship is hostile (bit 6)
                         \ and has AI (bit 7)
 
  STA INWK+32            \ Store A in the AI flag of this ship
 
  TYA
- EQUB &2C
+
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &A9 &1F, or BIT &1FA9, which does nothing apart
+                        \ from affect the flags
 
 .YESCON
 
- LDA #CON
+ LDA #CON               \ If we jump straight here, we are in the mission 1
+                        \ endgame and it's time to spawn the Constrictor, so
+                        \ set A to the Constrictor's type
 
 .focoug
 
- JSR NWSHP
+ JSR NWSHP              \ Spawn the new ship, whether it's a pirate, Thargoid,
+                        \ Cougar or Constrictor
 
 .mj1
 
@@ -26499,15 +26920,32 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .fothg
 
- LDA K%+6
- AND #&3E
- BNE fothg2
- LDA #18
+ LDA K%+6               \ Fetch the z_lo coordinate of the first ship in the K%
+ AND #%00111110         \ block (i.e. the planet) and extract bits 1-5
+
+ BNE fothg2             \ If any of bits 1-5 are set (96.8% chance), jump up to
+                        \ fothg2 to spawn a Thargoid
+
+                        \ If we get here then we're going to spawn a Cougar, a
+                        \ very rare event indeed. How rare? Well, all the
+                        \ following have to happen in sequence:
+                        \
+                        \  * Main loop iteration = 0 (1 in 256 iterations)
+                        \  * Skip asteroid spawning (87% chance)
+                        \  * Skip cop spawning (0.4% chance)
+                        \  * Skip Thargoid spawning (3.2% chance)
+                        \
+                        \ so the chances of spawning a Cougar on any single main
+                        \ loop iteration are slim, to say the least
+
+ LDA #18                \ Give the ship we're about to spawn a speed of 27
  STA INWK+27
- LDA #&79
- STA INWK+32
- LDA #COU
- BNE focoug
+
+ LDA #%01111001         \ Give it an E.C.M., and make it hostile and pretty
+ STA INWK+32            \ aggressive (though don't give it AI)
+
+ LDA #COU               \ Set the ship type to a Cougar and jump up to focoug
+ BNE focoug             \ to spawn it
 
 .mt1
 
@@ -26524,11 +26962,21 @@ LOAD_F% = LOAD% + P% - CODE%
 
  JSR DORND              \ Set A and X to random numbers
 
- STA T
- JSR DORND
- AND T
- AND #7
- ADC #PACK
+ STA T                  \ Set T to a random number
+
+ JSR DORND              \ Set A and X to random numbers
+
+ AND T                  \ Set A to the AND of two random numbers, so each bit
+                        \ has 25% chance of being set which makes the chances
+                        \ of a smaller number higher
+
+ AND #7                 \ Reduce A to a random number in the range 0-7, though
+                        \ with a bigger chance of a smaller number in this range
+
+ ADC #PACK              \ #PACK is set to #SH3, the ship type for a Sidewinder,
+                        \ so this sets our new ship type to one of the pack
+                        \ hunters, namely a Sidewinder, Mamba, Krait, Adder,
+                        \ Gecko, Cobra Mk I, Worm or Cobra Mk III (pirate)
 
  JSR NWSHP              \ Add a new ship of type A to the local bubble
 
@@ -26576,28 +27024,41 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .EE20
 
- LDX LASCT
- BEQ NOLASCT
- DEX
- BEQ P%+3
- DEX
- STX LASCT
+ LDX LASCT              \ Set X to the value of LASCT, the laser pulse count
+ 
+ BEQ NOLASCT            \ If X = 0 then jump to NOLASCT to skip reducing LASCT,
+                        \ as it can't be reduced any further
+
+ DEX                    \ Decrement the value of LASCT in X
+
+ BEQ P%+3               \ If X = 0, skip the next instruction
+
+ DEX                    \ Decrement the value of LASCT in X again
+ 
+ STX LASCT              \ Store the decremented value of X in LASCT, so LASCT
+                        \ gets reduced by 2, but not into negative territory
 
 .NOLASCT
 
  JSR DIALS              \ Call DIALS to update the dashboard
 
  BIT printflag          \ If bit 7 of printflag is clear (printer output is not
- BPL dontdolinefeedontheprinternow \ enabled), jump to
-                        \ dontdolinefeedontheprinternow to skip the following
+                        \ enabled), jump to dontdolinefeedontheprinternow to
+                        \ skip the following (and en route, why not take a
+                        \ short moment to admire this, the longest label name in
+                        \ the original Elite source code - presumably they got
+                        \ longer when development moved to a 6502 second
+                        \ processor system, with all that extra memory...)
 
- LDA #prilf
- JSR OSWRCH
+ BPL dontdolinefeedontheprinternow
+
+ LDA #prilf             \ Send two #prilf commands to the I/O processor to spit
+ JSR OSWRCH             \ out two blank lines on the printer
  JSR OSWRCH
 
 .dontdolinefeedontheprinternow
 
- STZ printflag
+ STZ printflag          \ Set the printflag to 0 to disable printing
 
  LDA QQ11               \ If this is a space view, skip the following five
  BEQ P%+13              \ instructions (i.e. jump to JSR TT17 below)
@@ -26606,8 +27067,8 @@ LOAD_F% = LOAD% + P% - CODE%
  LSR A                  \ and bit 0 of QQ11 is 1 (the current view is type 1),
  BCS P%+7               \ then skip the following two instructions
 
- LDY #2
- JSR DELAY
+ LDY #2                 \ Wait for 2/50 of a second (0.04 seconds), to slow the
+ JSR DELAY              \ main loop down a bit
 
  JSR TT17               \ Scan the keyboard for the cursor keys or joystick,
                         \ returning the cursor's delta values in X and Y and
@@ -27097,22 +27558,22 @@ LOAD_F% = LOAD% + P% - CODE%
  JSR nWq                \ Create a cloud of stardust containing the correct
                         \ number of dust particles (i.e. NOSTM of them)
 
- LDA #12
+ LDA #12                \ Move the text cursor to column 12 on row 12
  JSR DOYC
  JSR DOXC
- LDA #YELLOW
- JSR DOCOL
+
+ LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
+ JSR DOCOL              \ change the current colour to yellow
 
  LDA #146               \ Print recursive token 146 ("{all caps}GAME OVER")
  JSR ex
 
 .D1
 
- JSR Ze                 \ Initialise INWK workspace, set X and T1 to a random
-                        \ value, and A to a random value between 192 and 255 and
-                        \ the C flag randomly
+ JSR Ze                 \ Call Ze to initialise INWK to a potentially hostile
+                        \ ship, and set A and X to random values
 
- LSR A                  \ Set A = A / 4, so A is now between 48 and 63, and
+ LSR A                  \ Set A = A / 4, so A is now between 0 and 63, and
  LSR A                  \ store in byte #0 (x_lo)
  STA INWK
 
@@ -27139,29 +27600,62 @@ LOAD_F% = LOAD% + P% - CODE%
  STA INWK+29            \ store in byte #29 (roll counter) to give our ship a
                         \ gentle roll with damping
 
- STY LASCT
- LSR LASCT
+ STY LASCT              \ Set the laser count to 127 to act as a counter in the
+ LSR LASCT              \ D2 loop below, so this setting determines how long the
+                        \ death animation lasts (it's 127 iterations of the main
+                        \ flight loop)
 
- ROR A                  \ C is random from above call to Ze, so this sets A to a
- AND #%10000111         \ number between -7 and +7, which we store in byte #30
- STA INWK+30            \ (pitch counter) to give our ship a very gentle pitch
-                        \ with damping
+ ROR A                  \ The C flag is randomly set from the above call to Ze,
+ AND #%10000111         \ so this sets A to a number between -7 and +7, which
+ STA INWK+30            \ we store in byte #30 (the pitch counter) to give our
+                        \ ship a very gentle pitch with damping
 
- LDX #OIL
- LDA XX21-1+2*PLT
- BEQ D3
- BCC D3
- DEX
+ LDX #OIL               \ Set X to #OIL, the ship type for a cargo canister
+
+ LDA XX21-1+2*PLT       \ Fetch the byte from location XX21 - 1 + 2 * PLT, which
+                        \ equates to XX21 + 7 (the high byte of the address of
+                        \ SHIP_PLATE), which seems a bit odd. It might make more
+                        \ sense to do LDA (XX21-2+2*PLT) as this would fetch the
+                        \ first byte of the alloy plate's blueprint (which
+                        \ determines what happens when alloys are destroyed),
+                        \ but there aren't any brackets, so instead this always
+                        \ returns &D0, which is never zero, so the following
+                        \ BEQ is never true. (If the brackets were there, then
+                        \ we could stop plates from spawning on death by setting
+                        \ byte #0 of the blueprint to 0... but then scooping
+                        \ plates wouldn't give us alloys, so who knows what this
+                        \ is all about?)
+
+ BEQ D3                 \ If A = 0, jump to D3 to skip the following instruction
+
+ BCC D3                 \ If the C flag is clear, which will be random following
+                        \ the above call to Ze, jump to D3 to skip the following
+                        \ instruction
+
+ DEX                    \ Decrement X, which sets it to #PLT, the ship type for
+                        \ an alloy plate
 
 .D3
 
- JSR fq1
- JSR DORND
- AND #128
- LDY #31
- STA (INF),Y
- LDA FRIN+4
- BEQ D1
+ JSR fq1                \ Call fq1 with X set to #OIL or #PLT, which adds a new
+                        \ cargo canister or alloy plate to our local bubble of
+                        \ universe and points it away from us with double DELTA
+                        \ speed (i.e. 6, as DELTA was set to 3 by the call to
+                        \ RES2 above). INF is set to point to the new arrival's
+                        \ ship data block in K%
+
+ JSR DORND              \ Set A and X to random numbers and extract bit 7 from A
+ AND #%10000000
+
+ LDY #31                \ Store this in byte #31 of the ship's data block, so it
+ STA (INF),Y            \ has a 50% chance of marking our new arrival as being
+                        \ killed (so it will explode)
+
+ LDA FRIN+4             \ The call we made to RES2 before we entered the loop at
+ BEQ D1                 \ D1 will have reset all the ship slots at FRIN, so this
+                        \ checks to see if the fifth slot is empty, and if it
+                        \ is we loop back to D1 to add another canister, until
+                        \ we have added five of them
 
  JSR U%                 \ Clear the key logger, which also sets A = 0
 
@@ -27174,11 +27668,16 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ which will display our exploding canister scene and
                         \ move everything about
 
- DEC LASCT
- BNE D2
- LDX #31
- JSR DET1
- JMP DEATH2
+ DEC LASCT              \ Decrement the counter in LASCT, which we set above
+
+ BNE D2                 \ Loop back to call the main flight loop again, until we
+                        \ have called it 127 times
+
+ LDX #31                \ Set the screen to show all 31 text rows, which shows
+ JSR DET1               \ the dashboard, and fall through into DEATH2 to reset
+                        \ and restart the game
+
+ JMP DEATH2             \ Jump to DEATH2 to reset and restart the game
 
 \ ******************************************************************************
 \       Name: 
@@ -27247,7 +27746,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .DEATH2
 
- LDX #&FF
+ LDX #&FF               \ Reset the 6502 stack pointer, which clears the stack
  TXS
 
  JSR RES2               \ Reset a number of flight variables and workspaces
@@ -27903,14 +28402,22 @@ ENDIF
  RTS
 
 \ ******************************************************************************
+\
 \       Name: ZEBC
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Zero-fill pages &B and &C
+\
 \ ******************************************************************************
 
 .ZEBC
 
- LDX #&C
+ LDX #&C                \ Call ZES1 with X = &C to zero-fill page &C
  JSR ZES1
- DEX
+
+ DEX                    \ Decrement X to &B
+
+                        \ Fall through into ZES1 to zero-fill page &B
 
 \ ******************************************************************************
 \
@@ -28248,15 +28755,19 @@ ENDIF
 
 .QUS1
 
- PHA
+ PHA                    \ Store A on the stack so we can restore it after the
+                        \ call to GTDRV
+
  JSR GTDRV
+
  STA INWK+1
  PLA
  BCS QUR
  PHA
  LDA #&FF
  JSR DODOSVN
- PLA
+
+ PLA                    \ Restore A from the stack
 
  LDX #INWK              \ Store a pointer to INWK at the start of the block at
  STX &0C00              \ &0C00, storing #INWK in the low byte because INWK is
@@ -28308,14 +28819,14 @@ ENDIF
 
 .LOD
 
-\LDX#(MINI MOD256)
-\LDY#(MINI DIV256)
-\JSRSCLI
-\JMPLOL1-2
-\LDX#2
-\JSRFX200
+\LDX #LO(MINI)
+\LDY #HI(MINI)
+\JSR SCLI
+\JMP LOL1-2
+\LDX #2
+\JSR FX200
 
- JSR ZEBC
+ JSR ZEBC               \ Call ZEBC to zero-fill pages &B and &C
 
  LDY #&B                \ Set up an OSFILE block at &0C00, containing:
  STY &0C03              \
@@ -29111,11 +29622,24 @@ ENDIF
  JSR NOS1               \ kill (part 1 of the explosion), and call NOS1 to set
                         \ up the sound block in XX16
 
- LDA INWK+8
- ASL A
- BEQ P%+5
- LDA #0
- EQUB &2C
+ LDA INWK+8             \ Fetch z_sign, the distance of the ship being hit in
+ ASL A                  \ terms of the z-axis (in and out of the screen), and
+                        \ shift it left by 1 to get rid of the sign bit
+
+ BEQ P%+5               \ If the result is 0, skip the next two instructions
+                        \ so that we load A with z_hi below
+
+ LDA #0                 \ Set A = 0
+
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &A5 &4C, or BIT &4CA5, which does nothing apart
+                        \ from affect the flags
+
+                        \ So, by this point, if any of bits 0-6 of z_sign are
+                        \ non-zero, which means the ship is a long way away,
+                        \ then A will be set to 0 rather than z_hi, and the
+                        \ SOUND amplitude below will be -15 (%11110001), or
+                        \ full volume... which seems a little odd
 
  LDA INWK+7             \ Fetch z_hi, the distance of the ship being hit in
  LSR A                  \ terms of the z-axis (in and out of the screen), and
@@ -29136,8 +29660,9 @@ ENDIF
                         \ 4-7 in A, and keep bits 1-3 from the above to get
                         \ a value between -15 (%11110001) and -1 (%11111111),
                         \ with lower values of z_hi and argument X leading
-                        \ to a more negative number (so the closer the ship or
-                        \ the smaller the value of X, the louder the sound)
+                        \ to a more negative, or quieter number (so the closer
+                        \ the ship, i.e. the smaller the value of X, the louder
+                        \ the sound)
 
  STA XX16+2             \ The amplitude byte of the sound block in XX16 is in
                         \ byte #3 (where it's the low byte of the amplitude), so
@@ -30199,7 +30724,10 @@ ENDIF
                         \     = 113 - 19 + X
                         \     = 113 to 115
 
- JMP MESS
+ JMP MESS               \ Print recursive token A ("ENERGY BOMB", "ENERGY UNIT"
+                        \ or "DOCKING COMPUTERS") as an in-flight message,
+                        \ followed by " DESTROYED", and return from the
+                        \ subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -30214,7 +30742,9 @@ ENDIF
 
  LDA #108               \ Set A to recursive token 108 ("E.C.M.SYSTEM")
 
- JMP MESS
+ JMP MESS               \ Print recursive token A as an in-flight message,
+                        \ followed by " DESTROYED", and return from the
+                        \ subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -30229,7 +30759,9 @@ ENDIF
 
  LDA #111               \ Set A to recursive token 111 ("FUEL SCOOPS")
 
- JMP MESS
+ JMP MESS               \ Print recursive token A as an in-flight message,
+                        \ followed by " DESTROYED", and return from the
+                        \ subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -31647,18 +32179,23 @@ ENDIF
 
 .LL9
 
- LDX TYPE
- BMI LL25
- LDA shpcol,X
- JSR DOCOL
+ LDX TYPE               \ If the ship type is negative then this indicates a
+ BMI LL25               \ planet or sun, so jump to PLANET via LL25 above
+
+ LDA shpcol,X           \ Set A to the ship colour for this type, from the X-th
+                        \ entry in the shpcol table
+
+ JSR DOCOL              \ Send a #SETCOL command to the I/O processor to switch
+                        \ to this colour
 
  LDA #31                \ Set XX4 = 31 to store the ship's distance for later
  STA XX4                \ comparison with the visibility distance. We will
                         \ update this value below with the actual ship's
                         \ distance if it turns out to be visible on-screen
 
- LDA NEWB
- BMI EE51
+ LDA NEWB               \ If bit 7 of the ship's NEWB is set, then the ship
+ BMI EE51               \ is already on-screen, so jump down to EE51 to redraw
+                        \ its wireframe, which removes it from the screen
 
  LDA #%00100000         \ If bit 5 of the ship's byte #31 is set, then the ship
  BIT XX1+31             \ is currently exploding, so jump down to EE28
@@ -33424,14 +33961,19 @@ ENDIF
 
 .LL74
 
- TSB XX1+31
+ TSB XX1+31             \ Apply bit 3 of A to the ship's byte #31, so if there
+                        \ was no ship already on screen, the bit is clear,
+                        \ otherwise it is set (the TSB instruction applies the
+                        \ accumulator to the memory location using an OR)
 
  LDY #9                 \ Fetch byte #9 of the ship's blueprint, which is the
  LDA (XX0),Y            \ number of edges, and store it in XX20
  STA XX20
 
- STZ U
- STZ XX17
+ STZ U                  \ Set U = 0 (though we increment it to 1 below)
+
+ STZ XX17               \ Set XX17 = 0, which we are going to use as a counter
+                        \ for stepping through the ship's edges
 
  INC U                  \ We are going to start calculating the lines we need to
                         \ draw for this ship, and will store them in the ship
@@ -33445,8 +33987,10 @@ ENDIF
                         \ The ship is firing its laser at us, so we need to draw
                         \ the laser lines
 
- LDA #64
- TRB XX1+31
+ LDA #%01000000         \ Clear bit 6 of the ship's byte #31 so the ship doesn't
+ TRB XX1+31             \ keep firing endlessly (the TRB instruction applies the
+                        \ inverse of the accumulator, %10111111, to the memory
+                        \ location using an AND)
 
  LDY #6                 \ Fetch byte #6 of the ship's blueprint, which is the
  LDA (XX0),Y            \ number * 4 of the vertex where the ship has its lasers
@@ -33517,12 +34061,18 @@ ENDIF
                         \ screen, so jump to LL170 so we don't store this line
                         \ in the ship line heap
 
- LDA U
- ADC #3
- TAY
- LDA #&FF
- STA (XX19),Y
- INY \Red laser
+ LDA U                  \ Fetch the ship line heap pointer, which points to the
+                        \ next free byte on the heap, into A
+
+ ADC #3                 \ Set Y = A + 3, so Y now points to the fourth byte in
+ TAY                    \ this coordinate
+
+ LDA #255               \ Set the fourth byte to 255 to act as a flag to the I/O
+ STA (XX19),Y           \ processor to draw the following line in red, as it is
+                        \ a laser (this flag is read and acted on in the ADDBYT
+                        \ routine in the I/O processor
+
+ INY                    \ Increment Y to point to the next coordinate block
 
  LDA XX15               \ Add X1 to the end of the heap
  STA (XX19),Y
@@ -33787,25 +34337,38 @@ ENDIF
 
 .notneed
 
- LDA (XX19)
- CMP #5
- BCC nolines
- LDA #&81
- JSR OSWRCH
-\ CLEAR LINEstr
- LDY #0
- LDA (XX19),Y
- STA XX20
+ LDA (XX19)             \ Fetch the first byte from the ship line heap into A,
+                        \ which contains the number of bytes in the heap
+
+ CMP #5                 \ If the heap size is less than 5, there is nothing to
+ BCC nolines            \ draw, so return from the subroutine (as nolines
+                        \ contains an RTS)
+
+ LDA #&81               \ Send an OSWRCH &81 command to the I/O processor to
+ JSR OSWRCH             \ tell it to start receiving a new line to draw (so
+                        \ when we send it OSWRCH commands from now on, the I/O
+                        \ processor will add these bytes to this line until
+                        \ they are all sent, at which point it will draw the
+                        \ line)
+
+ LDY #0                 \ Fetch the first byte from the ship line heap into A,
+ LDA (XX19),Y           \ which contains the number of bytes in the heap
+
+ STA XX20               \ Store the heap size in XX20
 
 .LL27
 
- LDA (XX19),Y
- JSR OSWRCH
+ LDA (XX19),Y           \ Fetch the Y-th line coordinate from the heap and send
+ JSR OSWRCH             \ it to the I/O processor to add to the line buffer
 
  INY                    \ Increment the heap pointer
 
  CPY XX20               \ If the heap counter is less than the size of the heap,
  BCC LL27               \ loop back to LL27 to draw the next line from the heap
+
+                        \ By the time we get here, we have sent all the line
+                        \ coordinates to the I/O processor, so it will have
+                        \ drawn the line after we sent the last one
 
 .nolines
 
@@ -34462,10 +35025,12 @@ ENDIF
  LDA XX12               \ Set Y2 (aka XX15+3) = y2_lo
  STA XX15+3
 
- LDA SWAP
- BEQ noswap
- LDA X1
- LDY X2
+ LDA SWAP               \ If SWAP = 0, then we didn't have to swap the line
+ BEQ noswap             \ coordinates around during the clipping process, so
+                        \ jump to noswap to skip the following swap
+
+ LDA X1                 \ Otherwise the coordinates were swapped above,
+ LDY X2                 \ so we swap (X1, Y1) and (X2, Y2) back again
  STA X2
  STY X1
  LDA Y1
@@ -36038,7 +36603,8 @@ LOAD_H% = LOAD% + P% - CODE%
                         \ starting with the low bytes (which we don't keep)
                         \
                         \ The CLC has no effect because MULT3 clears the C
-                        \ flag, so this instruction could be removed
+                        \ flag, so this instruction could be removed (as it is
+                        \ in the cassette version, for example)
 
  LDA K+1                \ We then do the middle bytes, which go into y_lo
  ADC K2+1
@@ -36225,7 +36791,9 @@ ENDIF
                         \   2 = left
                         \   3 = right
 
- BEQ PU2-1
+ BEQ PU2-1              \ If the current view is the front view, return from the
+                        \ subroutine (PU2-1 contains an RTS), as the geometry in
+                        \ INWK is already correct
 
 .PU1
 
@@ -36387,7 +36955,10 @@ ENDIF
 
  LDA #0                 \ Set A = 0, the type number of a space view
 
- JSR DOVDU19
+ JSR DOVDU19            \ Send a #SETVDU19 0 command to the I/O processor to
+                        \ switch to the mode 1 palette for the space view,
+                        \ which is yellow (colour 1), red (colour 2) and cyan
+                        \ (colour 3)
 
  LDY QQ11               \ If the current view is not a space view, jump up to LQ
  BNE LQ                 \ to set up a new space view
@@ -36415,8 +36986,8 @@ ENDIF
  BEQ LO2                \ jump to LO2 to return from the subroutine (as LO2
                         \ contains an RTS)
 
- LDA #YELLOW
- JSR DOCOL
+ LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
+ JSR DOCOL              \ switch to colour 1, which is yellow in the space view
 
  LDA #128               \ Set QQ19 to the x-coordinate of the centre of the
  STA QQ19               \ screen
@@ -36428,12 +36999,17 @@ ENDIF
  LDA #20                \ Set QQ19+2 to size 20 for the crosshairs size
  STA QQ19+2
 
- JSR TT15b
+ JSR TT15b              \ Call TT15b to draw crosshairs of size 20 just to the
+                        \ left of the middle of the screen, in the current
+                        \ colour (yellow)
 
  LDA #10                \ Set QQ19+2 to size 10 for the crosshairs size
  STA QQ19+2
 
- JMP TT15b
+ JMP TT15b              \ Call TT15b to draw crosshairs of size 10 at the same
+                        \ location, which will remove the centre part from the
+                        \ laser crosshairs, leaving a gap in the middle, and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -36444,17 +37020,13 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ Clear the top part of the screen (mode 4), draw a white border, and set the
-\ current view type in QQ11 to A.
+\ Clear the top part of the screen, draw a white border, and set the current
+\ view type in QQ11 to A.
 \
 \ Arguments:
 \
 \   A                   The type of the new current view (see QQ11 for a list of
 \                       view types)
-\
-\ Other entry points:
-\
-\   TT66-2              Call TT66 with A = 1
 \
 \ ******************************************************************************
 
@@ -36620,12 +37192,6 @@ ENDIF
 \ Arguments:
 \
 \   Y                   The number of vertical sync events to wait for
-\
-\ Other entry points:
-\
-\   DEL8                Wait for 8/50 of a second (0.16 seconds)
-\
-\   DELAY-5             Wait for 2/50 of a second (0.04 seconds).
 \
 \ ******************************************************************************
 
@@ -36858,7 +37424,11 @@ ENDIF
                         \ the end of the stick, plus the length of the stick, to
                         \ give us the screen y-coordinate of the dot
 
- BPL FIXIT
+ BPL FIXIT              \ If the result has bit 0 clear, then the result has
+                        \ overflowed and is bigger than 256, so jump to FIXIT to
+                        \ set A to the maximum allowed value of 246 (this
+                        \ instruction isn't required as we test both the maximum
+                        \ and minimum below, but it might save a few cycles)
 
  CMP #194               \ If A >= 194, skip the following instruction, as 194 is
  BCS P%+4               \ the minimum allowed value of A
@@ -42428,7 +42998,8 @@ ENDMACRO
 
 .SHIP_ESCAPE_POD
 
- EQUB 32                \ Max. canisters on demise = 32
+ EQUB 0 + (2 << 4)      \ Max. canisters on demise = 0
+                        \ Market item when scooped = 2 + 1 = 3 (Slaves)
  EQUW 16 * 16           \ Targetable area          = 16 * 16
  EQUB &2C               \ Edges data offset (low)  = &002C
  EQUB &44               \ Faces data offset (low)  = &0044
@@ -42478,7 +43049,8 @@ ENDMACRO
 
 .SHIP_PLATE
 
- EQUB &80               \ Max. canisters on demise = 0
+ EQUB 0 + (8 << 4)      \ Max. canisters on demise = 0
+                        \ Market item when scooped = 8 + 1 = 9 (Alloys)
  EQUW 10 * 10           \ Targetable area          = 10 * 10
  EQUB &2C               \ Edges data offset (low)  = &002C
  EQUB &3C               \ Faces data offset (low)  = &003C
@@ -42746,7 +43318,8 @@ ENDMACRO
 
 .SHIP_SPLINTER
 
- EQUB &B0               \ Max. canisters on demise = 0
+ EQUB 0 + (11 << 4)     \ Max. canisters on demise = 0
+                        \ Market item when scooped = 11 + 1 = 12 (Minerals)
  EQUW 16 * 16           \ Targetable area          = 16 * 16
  EQUB &78               \ Edges data offset (low)  = &FD78 = -648 (Escape pod)
  EQUB &44               \ Faces data offset (low)  = &0044
@@ -44699,7 +45272,8 @@ ENDMACRO
 
 .SHIP_THARGON
 
- EQUB &F0               \ Max. canisters on demise = 0
+ EQUB 0 + (15 << 4)     \ Max. canisters on demise = 0
+                        \ Market item when scooped = 15 + 1 = 16 (Alien items)
  EQUW 40 * 40           \ Targetable area          = 40 * 40
  EQUB &E6               \ Edges data offset (low)  = &E7E6 = -6170 (canister)
  EQUB &50               \ Faces data offset (low)  = &0050

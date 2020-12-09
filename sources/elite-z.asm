@@ -22,7 +22,6 @@ CPU 1
 
 CODE% = &2400
 LOAD% = &2400
-TABLE = &2300
 
 C% = &2400
 L% = C%
@@ -59,17 +58,35 @@ Y = 96
 \protlen = 0
 PARMAX = 15
 
-\REMparameters expected by RDPARAMS
-RED = &F0
-WHITE = &FA
-WHITE2 = &3F
-RED2 = &3
-YELLOW2 = &F
-MAGNETA2 = &33
-CYAN2 = &3C
-BLUE2 = &30
-GREEN2 = &C
-STRIPE = &23
+YELLOW = %00001111      \ Four mode 1 pixels of colour 1 (yellow)
+
+RED    = %11110000      \ Four mode 1 pixels of colour 2 (red, magenta or white)
+
+CYAN   = %11111111      \ Four mode 1 pixels of colour 3 (cyan or white)
+
+GREEN  = %10101111      \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
+
+WHITE  = %11111010      \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+
+MAGENTA = RED
+
+DUST = WHITE
+
+RED2    = %00000011     \ Two mode 2 pixels of colour 1    (red)
+
+GREEN2  = %00001100     \ Two mode 2 pixels of colour 2    (green)
+
+YELLOW2 = %00001111     \ Two mode 2 pixels of colour 3    (yellow)
+
+BLUE2   = %00110000     \ Two mode 2 pixels of colour 4    (blue)
+
+MAG2    = %00110011     \ Two mode 2 pixels of colour 5    (magenta)
+
+CYAN2   = %00111100     \ Two mode 2 pixels of colour 6    (cyan)
+
+WHITE2  = %00111111     \ Two mode 2 pixels of colour 7    (white)
+
+STRIPE  = %00100011     \ Two mode 2 pixels of colour 5, 1 (magenta/red)
 
 \ ******************************************************************************
 \
@@ -132,6 +149,31 @@ ORG &0080
                         \ called with OSSC(1 0) pointing to the OSWORD parameter
                         \ block (i.e. OSSC(1 0) = (Y X) from the original call
                         \ in the I/O processor)
+
+\ ******************************************************************************
+\
+\       Name: TABLE
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: The line buffer for line data transmited from the parasite
+\
+\ ------------------------------------------------------------------------------
+\
+\ Lines are drawn by sending the line coordinates one byte at a time from the
+\ parasite, using the OSWRCH &81 and &82 commands. As they are sent, they are
+\ stored in the TABLE buffer, until all the points have been received, at which
+\ point the line is drawn.
+\
+\ LINTAB points to the offset of the first free byte within TABLE, so the table
+\ can be reset by setting LINTAB to 0.
+\
+\ ******************************************************************************
+
+ORG &2300
+
+.TABLE
+
+ SKIP &100
 
 \ ******************************************************************************
 \       Name: FONT%
@@ -237,6 +279,18 @@ NEXT
 \ four colours on-screen and in Elite colour 0 is always set to black, so each
 \ of the palettes in this table defines the three other colours (1 to 3).
 \
+\ There is some consistency between the palettes:
+\
+\   * Colour 0 is always black
+\   * Colour 1 (#YELLOW) is always yellow
+\   * Colour 2 (#RED) is normally red-like (i.e. red or magenta)
+\              ... except in the title screen palette, when it is white
+\   * Colour 3 (#CYAN) is always cyan-like (i.e. white or cyan)
+\
+\ The configuration variables of #YELLOW, #RED and #CYAN are a bit misleading,
+\ but if you think of them in terms of hue rather than specific colours, they
+\ work reasonably well (outside of the title screen palette, anyway).
+\
 \ The palettes are set in the IRQ1 handler that implements the split screen
 \ mode, and can be changed by the parasite sending a #SETVDU19 <offset> command
 \ to point to the offset of the new palette in this table.
@@ -260,39 +314,43 @@ NEXT
 
  EQUB &00, &34          \ 1 = yellow, 2 = red, 3 = cyan (space view)
  EQUB &24, &17          \
- EQUB &74, &64          \ Set with a #SETVDU19 0 command
- EQUB &57, &47
- EQUB &B1, &A1
- EQUB &96, &86
- EQUB &F1, &E1
- EQUB &D6, &C6
+ EQUB &74, &64          \ Set with a #SETVDU19 0 command, after which:
+ EQUB &57, &47          \
+ EQUB &B1, &A1          \   #YELLOW = yellow
+ EQUB &96, &86          \   #RED    = red
+ EQUB &F1, &E1          \   #CYAN   = cyan
+ EQUB &D6, &C6          \   #GREEN  = cyan/yellow stripe
+                        \   #WHITE  = cyan/red stripe
 
- EQUB &00, &34          \ 1 = yellow, 2 = red, 3 = white (charts)
+ EQUB &00, &34          \ 1 = yellow, 2 = red, 3 = white (chart view)
  EQUB &24, &17          \
- EQUB &74, &64          \ Set with a #SETVDU19 16 command
- EQUB &57, &47
- EQUB &B0, &A0
- EQUB &96, &86
- EQUB &F0, &E0
- EQUB &D6, &C6
+ EQUB &74, &64          \ Set with a #SETVDU19 16 command, after which:
+ EQUB &57, &47          \
+ EQUB &B0, &A0          \   #YELLOW = yellow
+ EQUB &96, &86          \   #RED    = red
+ EQUB &F0, &E0          \   #CYAN   = white
+ EQUB &D6, &C6          \   #GREEN  = white/yellow stripe
+                        \   #WHITE  = white/red stripe
 
  EQUB &00, &34          \ 1 = yellow, 2 = white, 3 = cyan (title screen)
  EQUB &24, &17          \
- EQUB &74, &64          \ Set with a #SETVDU19 32 command
- EQUB &57, &47
- EQUB &B1, &A1
- EQUB &90, &80
- EQUB &F1, &E1
- EQUB &D0, &C0
+ EQUB &74, &64          \ Set with a #SETVDU19 32 command, after which:
+ EQUB &57, &47          \
+ EQUB &B1, &A1          \   #YELLOW = yellow
+ EQUB &90, &80          \   #RED    = white
+ EQUB &F1, &E1          \   #CYAN   = cyan
+ EQUB &D0, &C0          \   #GREEN  = cyan/yellow stripe
+                        \   #WHITE  = cyan/white stripe
 
- EQUB &00, &34          \ 1 = yellow, 2 = magenta, 3 = white (trading)
+ EQUB &00, &34          \ 1 = yellow, 2 = magenta, 3 = white (trade view)
  EQUB &24, &17          \
- EQUB &74, &64          \ Set with a #SETVDU19 48 command
- EQUB &57, &47
- EQUB &B0, &A0
- EQUB &92, &82
- EQUB &F0, &E0
- EQUB &D2, &C2
+ EQUB &74, &64          \ Set with a #SETVDU19 48 command, after which:
+ EQUB &57, &47          \
+ EQUB &B0, &A0          \   #YELLOW = yellow
+ EQUB &92, &82          \   #RED    = magenta
+ EQUB &F0, &E0          \   #CYAN   = white
+ EQUB &D2, &C2          \   #GREEN  = white/yellow stripe
+                        \   #WHITE  = white/magenta stripe
 
 \ ******************************************************************************
 \
@@ -324,11 +382,16 @@ NEXT
 
 .LINTAB
 
- BRK
+ EQUB 0                 \ The offset of the first free byte in the TABLE buffer,
+                        \ which stores bytes in the current line as they are
+                        \ transmitted from the parasite using the OSWRCH &81 and
+                        \ &82 commands
 
 .LINMAX
 
- BRK
+ EQUB 0                 \ The number of points in the line currently being
+                        \ transmitted from the parasite using the OSWRCH &81
+                        \ and &82 commands
 
 .YSAV
 
@@ -369,17 +432,17 @@ NEXT
                         \
                         \   * Non-zero = hyperspace colour effect enabled
                         \
-                        \ When HFS is set to 1, the mode 4 screen that makes
+                        \ When HFS is set to 1, the mode 1 screen that makes
                         \ up the top part of the display is temporarily switched
-                        \ to mode 5 (the same screen mode as the dashboard),
+                        \ to mode 2 (the same screen mode as the dashboard),
                         \ which has the effect of blurring and colouring the
                         \ hyperspace rings in the top part of the screen. The
                         \ code to do this is in the LINSCN routine, which is
                         \ called as part of the screen mode routine at IRQ1.
                         \ It's in LINSCN that HFX is checked, and if it is
                         \ non-zero, the top part of the screen is not switched
-                        \ to mode 4, thus leaving the top part of the screen in
-                        \ the more colourful mode 5
+                        \ to mode 1, thus leaving the top part of the screen in
+                        \ the more colourful mode 2
 
 .CATF
 
@@ -538,7 +601,7 @@ NEXT
 
  EQUW USOSWRCH          \              128 (&80)     0 = Put back to USOSWRCH
  EQUW BEGINLIN          \              129 (&81)     1 = Begin drawing a line
- EQUW ADDBYT            \              130 (&82)     2 = Add a byte to a line
+ EQUW ADDBYT            \              130 (&82)     2 = Add line byte/draw line
  EQUW DOFE21            \ #DOFE21    = 131 (&83)     3 = Show energy bomb effect
  EQUW DOHFX             \ #DOhfx     = 132 (&84)     4 = Show hyperspace colours
  EQUW SETXC             \ #SETXC     = 133 (&85)     5 = Set text cursor column
@@ -546,7 +609,7 @@ NEXT
  EQUW CLYNS             \ #clyns     = 135 (&87)     7 = Clear bottom of screen
  EQUW RDPARAMS          \ #RDPARAMS  = 136 (&88)     8 = Reset dashboard params
  EQUW ADPARAMS          \              137 (&89)     9 = Add dashboard parameter
- EQUW DODIALS           \ #DODIALS   = 138 (&8A)    10 = Hide dials on death
+ EQUW DODIALS           \ #DODIALS   = 138 (&8A)    10 = Show or hide dashboard
  EQUW DOVIAE            \ #VIAE      = 139 (&8B)    11 = Set 6522 System VIA IER
  EQUW DOBULB            \ #DOBULB    = 140 (&8C)    12 = Toggle dashboard bulb
  EQUW DOCATF            \ #DOCATF    = 141 (&8D)    13 = Set disc catalogue flag
@@ -723,7 +786,7 @@ NEXT
 \       Name: DODIALS
 \       Type: Subroutine
 \   Category: Screen mode
-\    Summary: Hide the dashboard (for when we die)
+\    Summary: Implement the #DODIALS <rows> command (show or hide the dashboard)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -736,7 +799,7 @@ NEXT
 \
 \ Arguments:
 \
-\   X                   The number of text rows to display on the screen (24
+\   A                   The number of text rows to display on the screen (24
 \                       will hide the dashboard, 31 will make it reappear)
 \
 \ Returns
@@ -747,7 +810,7 @@ NEXT
 
 .DODIALS
 
- TAX
+ TAX                    \ Copy the number of rows to display into X
 
  LDA #6                 \ Set A to 6 so we can update 6845 register R6 below
 
@@ -763,12 +826,28 @@ NEXT
                         \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: DOFE21
+\       Type: Subroutine
+\   Category: Drawing circles
+\    Summary: Implement the #DOFE21 <flag> command (show the energy bomb effect)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #DOFE21 <flag> command. It takes
+\ the argument and stores it in SHEILA &21 to change the palette.
+\
+\ See p.379 of the Advanced User Guide for an explanation of palette bytes.
+\
+\ Arguments:
+\
+\   A                   The new value of SHEILA &21
+\                       
 \ ******************************************************************************
 
 .DOFE21
 
- STA &FE21
+ STA &FE21              \ Store the new value in SHEILA &21
 
  JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
                         \ return from the subroutine using a tail call
@@ -788,7 +867,11 @@ NEXT
 \
 \ Arguments:
 \
-\   A                   The new value of the hyperspace effect flag
+\   A                   The new value of the hyperspace effect flag:
+\
+\                         * 0 = no colour effect
+\
+\                         * Non-zero = enable hyperspace colour effect
 \                       
 \ ******************************************************************************
 
@@ -1364,63 +1447,132 @@ NEXT
  RTS
 
 \ ******************************************************************************
-\       Name: BEGINLIN   see LL155 in tape
+\
+\       Name: BEGINLIN
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Implement the OSWRCH &81 command (start receiving a new line to
+\             draw)
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The number of points in the new line
+\
 \ ******************************************************************************
-
-\.............Empty Linestore after copying over Tube .........
 
 .BEGINLIN
 
-\was LL155 -CLEAR LINEstr
- STA LINMAX
- LDA #0
- STA LINTAB
- LDA #&82
- JMP USOSWRCH
+ STA LINMAX             \ Set LINMAX to the number of points in the new line
+
+ LDA #0                 \ Set LINTAB = 0 to point to the position of the next
+ STA LINTAB             \ free byte in the TABLE buffer (i.e. the first byte, as
+                        \ we have just reset the buffer)
+
+ LDA #&82               \ Call USOSWRCH to run an #ADDBYT command, so subsequent
+ JMP USOSWRCH           \ OSWRCH calls by the I/O processor get added to TABLE,
+                        \ and return from the subroutine using a tail call
+
+\ ******************************************************************************
+\
+\       Name: ADDBYT
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Implement the OSWRCH &82 command (add a byte to a line
+\             and draw it when all bytes are received)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine received bytes from the parasite, each of which is a coordinate
+\ in the line that is currently being drawn (following a call from the parasite
+\ to OSWRCH &81, which starts the I/O processor listening for line bytes). They
+\ are stored in the buffer at TABLE, where LINTAB points to the first free byte
+\ in the table, and LINMAX contains double the number of points we are expecting
+\ plus 1.
+\
+\ If the byte received is the last one in the line, then the line segments are
+\ drawn by sending them to the LOIN routine.
+\
+\ If a laser line is sent by the parasite, it will be the first line segment
+\ sent, and will be preceded by a dummy pair of coordinates where the Y2 value
+\ is 255, which is not in the space view (as the maximum y-coordinate in the
+\ space view is 191). Laser lines are drawn in red.
+\
+\ Arguments:
+\
+\   A                   The byte to be added to the line that's currently being
+\                       transmitted to the I/O processor
+\
+\ ******************************************************************************
 
 .RTS1
 
- RTS
-
-\ ******************************************************************************
-\       Name: ADDBYT
-\ ******************************************************************************
+ RTS                    \ Return from the subroutine (this is called below)
 
 .ADDBYT
 
- INC LINTAB
- LDX LINTAB
- STA TABLE-1,X
- INX
- CPX LINMAX
- BCC RTS1
- LDY #0
- DEC LINMAX
- LDA TABLE+3
- CMP #&FF
- BEQ doalaser
+ INC LINTAB             \ LINTAB points to the last free byte in TABLE, which is
+                        \ where we're about to store the new byte in A, so
+                        \ increment LINTAB to point to the byte after this one
+
+ LDX LINTAB             \ Store the new byte in A at position LINTAB-1 in TABLE
+ STA TABLE-1,X          \ (which was the last free byte before we incremented
+                        \ LINTAB above)
+
+ INX                    \ Increment X, so it now points to the byte after the
+                        \ last free byte in TABLE (i.e. LINTAB + 1)
+
+ CPX LINMAX             \ If X < LINMAX, jump up to RTS1 to return from the
+ BCC RTS1               \ subroutine, as the line isn't complete yet (because
+                        \ LINMAX contains the 2 * number of points + 1)
+
+                        \ If we get here then X = LINMAX and we have received
+                        \ all the line's points from the parasite, so now we
+                        \ draw it
+
+ LDY #0                 \ We are going to loop through all the points in the
+                        \ line, so set a counter in Y, starting from 0
+
+ DEC LINMAX             \ Decrement LINMAX so it now contains 2 * number of
+                        \ points
+
+ LDA TABLE+3            \ If TABLE+3 = 255, jump to doalaser to draw this line,
+ CMP #255               \ as this denotes that the following segment is a laser
+ BEQ doalaser           \ line, which should be drawn in red
 
 .LL27
 
- LDA TABLE,Y
+ LDA TABLE,Y            \ Set X1 to the Y-th byte from TABLE
  STA X1
- LDA TABLE+1,Y
+
+ LDA TABLE+1,Y          \ Set Y1 to the Y+1-th byte from TABLE
  STA Y1
- LDA TABLE+2,Y
+
+ LDA TABLE+2,Y          \ Set X2 to the Y+2-th byte from TABLE
  STA X2
- LDA TABLE+3,Y
+
+ LDA TABLE+3,Y          \ Set Y2 to the Y+3-th byte from TABLE
  STA Y2
- STY T1
- JSR LOIN
- LDA T1
- CLC
+
+ STY T1                 \ Store the loop counter in T1 so we can retrieve it
+                        \ after the call to LOIN
+
+ JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
+
+ LDA T1                 \ Retrieve the loop counter from T1
+
+ CLC                    \ Set A = A + 4
  ADC #4
 
 .Ivedonealaser
 
- TAY
- CMP LINMAX
- BCC LL27
+ TAY                    \ Transfer the updated loop counter from A into Y
+
+ CMP LINMAX             \ Loop back to LL27 to draw the next line segment, until
+ BCC LL27               \ we the loop counter has reached LINMAX (which contains
+                        \ 2 * number of points, so this is when we have run out
+                        \ of points)
 
 .DRLR1
 
@@ -1429,23 +1581,38 @@ NEXT
 
 .doalaser
 
- LDA COL
- PHA
- LDA #RED
+ LDA COL                \ Store the current line colour on the stack, so we can
+ PHA                    \ restore it below
+
+ LDA #RED               \ Set the laser colour to red
  STA COL
- LDA TABLE+4
+
+                        \ The coordinates at bytes Y to Y+3 were used up with
+                        \ the indicator bytes to say this is a laser line, so
+                        \ we need to fetch the following bytes to get the line's
+                        \ coordinates to draw
+
+ LDA TABLE+4            \ Set X1 to the Y+4-th byte from TABLE
  STA X1
- LDA TABLE+5
+
+ LDA TABLE+5            \ Set Y1 to the Y+5-th byte from TABLE
  STA Y1
- LDA TABLE+6
+
+ LDA TABLE+6            \ Set X2 to the Y+6-th byte from TABLE
  STA X2
- LDA TABLE+7
+
+ LDA TABLE+7            \ Set Y2 to the Y+7-th byte from TABLE
  STA Y2
- JSR LOIN
- PLA
+
+ JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
+
+ PLA                    \ Restore the original line colour from the stack
  STA COL
- LDA #8
- BNE Ivedonealaser
+
+ LDA #8                 \ Jump up to Ivedonealaser with A set to 8, which will
+ BNE Ivedonealaser      \ point to the rest of the lines as the laser line is
+                        \ always the first to be transmitted from the parasite
+                        \ (this BNE is effectively a JMP as A is never zero)
 
 \ ******************************************************************************
 \       Name: TWOS
@@ -3316,7 +3483,7 @@ NEXT
  BNE DVL4               \ Loop back for the next bit until we have done all 8
                         \ bits of P
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \       Name: ADPARAMS
@@ -4644,13 +4811,18 @@ ENDMACRO
 
 .DIALS
 
- LDA #1
- STA VIA+&4E
- LDA #&A0
- STA SC
- LDA #&71
- STA SC+1
- JSR PZW2
+ LDA #%00000001         \ Set 6522 System VIA interrupt enable register IER
+ STA VIA+&4E            \ (SHEILA &4E) bit 1 (i.e. disable the CA2 interrupt,
+                        \ which comes from the keyboard)
+
+ LDA #&A0               \ Set SC(1 0) = &71A0, which is the screen address for
+ STA SC                 \ the character block containing the left end of the
+ LDA #&71               \ top indicator in the right part of the dashboard, the
+ STA SC+1               \ one showing our speed
+
+ JSR PZW2               \ Call PZW2 to set A to the colour for dangerous values
+                        \ and X to the colour for safe values, suitable for
+                        \ non-striped indicators
 
  STX K+1                \ Set K+1 (the colour we should show for low values) to
                         \ X (the colour to use for safe values)
@@ -4876,20 +5048,25 @@ ENDMACRO
  JSR DILX               \ and increment SC to point to the next indicator (the
                         \ fuel level)
 
- LDA #YELLOW2
- STA K
- STA K+1
+ LDA #YELLOW2           \ Set K (the colour we should show for high values) to
+ STA K                  \ yellow
+
+ STA K+1                \ Set K+1 (the colour we should show for low values) to
+                        \ yellow, so the fuel indicator always shows in this
+                        \ colour
 
  LDA QQ14               \ Draw the fuel level indicator using a range of 0-63,
  JSR DILX+2             \ and increment SC to point to the next indicator (the
                         \ cabin temperature)
 
- JSR PZW2
+ JSR PZW2               \ Call PZW2 to set A to the colour for dangerous values
+                        \ and X to the colour for safe values, suitable for
+                        \ non-striped indicators
 
  STX K+1                \ Set K+1 (the colour we should show for low values) to
                         \ X (the colour to use for safe values)
 
- STA K                  \ Set K+1 (the colour we should show for high values) to
+ STA K                  \ Set K (the colour we should show for high values) to
                         \ A (the colour to use for dangerous values)
 
                         \ The above sets the following indicators to show red
@@ -4914,24 +5091,38 @@ ENDMACRO
                         \ 15 and 16, so this effectively switches off the colour
                         \ change for the altitude indicator
 
- LDA #YELLOW2
- STA K
+ LDA #YELLOW2           \ Set K (the colour we should show for high values) to
+ STA K                  \ yellow
 
  STA K+1                \ Set K+1 (the colour we should show for low values) to
-                        \ 240, or &F0 (dashboard colour 2, yellow/white), so the
-                        \ altitude indicator always shows in this colour
+                        \ yellow, so the altitude indicator always shows in this
+                        \ colour
 
  LDA ALTIT              \ Draw the altitude indicator using a range of 0-255,
  JMP DILX               \ returning from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: PZW2
+\       Type: Subroutine
+\   Category: Dashboard
+\    Summary: Fetch the current dashboard colours for non-striped indicators, to
+\             support flashing
+\
 \ ******************************************************************************
 
 .PZW2
 
- LDX #WHITE2
- EQUB &2C
+ LDX #WHITE2            \ Set X to white, so we can return that as the safe
+                        \ colour in PZW below
+
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &A9 &23, or BIT &23A9, which does nothing apart
+                        \ from affect the flags
+
+                        \ Fall through into PZW to fetch the current dashboard
+                        \ colours, returning white for safe colours rather than
+                        \ stripes
 
 \ ******************************************************************************
 \
@@ -5213,8 +5404,8 @@ ENDMACRO
 
 .DLL10
 
- SEC
- LDA Q
+ SEC                    \ Set A = Q - 2, so that A contains the offset of the
+ LDA Q                  \ vertical bar from the start of this character block
  SBC #2
 
  BCS DLL11              \ If Q >= 4 then the character block we are drawing does
@@ -5403,9 +5594,10 @@ protlen = end65C02-do65C02
  EOR #&34               \ Set A = &30 if we have an escape pod fitted, or &34 if
                         \ we don't
 
- STA &FE21              \ Store A in SHEILA &21 to map logical colour 3 to
-                        \ actual colour 0 (black) if we have an escape pod
-                        \ fitted, or actual colour 4 (blue) if we don't
+ STA &FE21              \ Store A in SHEILA &21 to map colour 3 (#YELLOW2) to
+                        \ white if we have an escape pod fitted, or yellow if we
+                        \ don't, so the outline colour of the dashboard changes
+                        \ from yellow to white if we have an escape pod fitted
 
                         \ The following loop copies bytes #15 to #1 from TVT1 to
                         \ SHEILA &21, but not byte #0, as we just did that
