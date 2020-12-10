@@ -192,8 +192,9 @@ ORG &0000
                         \ Elite draws on-screen by poking bytes directly into
                         \ screen memory, and SC(1 0) is typically set to the
                         \ address of the character block containing the pixel
-                        \ we want to draw (see the deep dive on "Drawing
-                        \ monochrome pixels in mode 4" for more details)
+                        \ we want to draw (see the deep dives on "Drawing
+                        \ monochrome pixels in mode 4" and "Drawing colour
+                        \ pixels in mode 5" for more details)
 
 .SCH
 
@@ -286,7 +287,7 @@ ORG &0000
                         \
                         \ A value of 0 denotes the leftmost column and 32 the
                         \ rightmost column, but because the top part of the
-                        \ screen (the mode 4 part) has a white border that
+                        \ screen (the space view) has a white border that
                         \ clashes with columns 0 and 32, text is only shown
                         \ in columns 1-31
 
@@ -296,10 +297,10 @@ ORG &0000
                         \ row), which can be from 0 to 23
                         \
                         \ The screen actually has 31 character rows if you
-                        \ include the mode 5 dashboard, but the text printing
-                        \ routines only work on the mode 4 part (the space
-                        \ view), so the text cursor only goes up to a maximum of
-                        \ 23, the row just before the screen split
+                        \ include the dashboard, but the text printing routines
+                        \ only work on the top part (the space view), so the
+                        \ text cursor only goes up to a maximum of 23, the row
+                        \ just before the screen splits
                         \
                         \ A value of 0 denotes the top row, but because the
                         \ top part of the screen has a white border that clashes
@@ -664,7 +665,7 @@ NEWB = INWK+36
 .COL
 
  SKIP 1                 \ Temporary storage, used to store colour information
-                        \ when drawing pixels in the mode 5 dashboard screen
+                        \ when drawing pixels in the dashboard
 
 .FLAG
 
@@ -3312,7 +3313,7 @@ LOAD_A% = LOAD%
 
 .MOS
 
- BRK
+ EQUB 0
 
 .COMC
 
@@ -3322,7 +3323,7 @@ LOAD_A% = LOAD%
                         \     so the dot is yellow/white
                         \
                         \   * &FF = the object in the compass is behind us, so
-                        \     the dot is green/cyan
+                        \     the dot is green
 
 .DNOIZ
 
@@ -3433,7 +3434,7 @@ LOAD_A% = LOAD%
 
 .CATF
 
- BRK
+ EQUB 0
 
 .ZIP
 
@@ -3651,11 +3652,13 @@ ENDIF
  PHA
  LDX #0
  RTS
+
  BRK
  EQUS "ELITE - By Ian Bell & David Braben"
  EQUB 10
  EQUB 13
  BRK
+
  LDA SC
  ADC 2
  CMP F%-1
@@ -4052,7 +4055,7 @@ ENDIF
 
  LDY #GREEN2            \ The "disarm missiles" key is being pressed, so call
  JSR ABORT              \ ABORT to disarm the missile and update the missile
-                        \ indicators on the dashboard to green/cyan (Y = &EE)
+                        \ indicators on the dashboard to green (Y = &EE)
 
  LDA #40                \ Call the NOISE routine with A = 40 to make a low,
  JSR NOISE              \ long beep to indicate the missile is now disarmed
@@ -5908,7 +5911,7 @@ ENDIF
 .DT9
 
  JMP DASC               \ Jump to DASC to print the ASCII character in A,
-                        \ returning from the routine with a tail call
+                        \ returning from the routine using a tail call
 
 .DT3
 
@@ -9729,7 +9732,7 @@ ENDIF
 
 .DTW4
 
- BRK
+ EQUB 0
 
 \ ******************************************************************************
 \
@@ -12516,9 +12519,9 @@ LOAD_C% = LOAD% +P% - CODE%
 \ This has the effect of making the tunnel appear to be racing towards us as we
 \ hurtle out into hyperspace or through the space station's docking tunnel.
 \
-\ The hyperspace effect is done in a full mode 5 screen, which makes the rings
+\ The hyperspace effect is done in a full mode 2 screen, which makes the rings
 \ all coloured and zig-zaggy, while the launch screen is in the normal
-\ monochrome mode 4 screen.
+\ four-colour mode 1 screen.
 \
 \ Arguments:
 \
@@ -12978,7 +12981,7 @@ LOAD_C% = LOAD% +P% - CODE%
  AND #%01111111
 
  BEQ MU5                \ If |Q| = 0, jump to MU5 to set K(3 2 1 0) to 0,
-                        \ returning from the subroutine with a tail call
+                        \ returning from the subroutine using a tail call
 
  SEC                    \ Set T = |Q| - 1
  SBC #1
@@ -19828,8 +19831,8 @@ LOAD_D% = LOAD% + P% - CODE%
 
  STX NOMSL              \ Otherwise update the number of missiles in NOMSL
 
- JSR msblob             \ And call msblob to update the dashboard's missile
-                        \ indicators with our new purchase
+ JSR msblob             \ Reset the dashboard's missile indicators so none of
+                        \ them are targeted
 
  LDA #1                 \ Set A to 5 as the call to msblob will have overwritten
                         \ the original value, and we still need it set
@@ -21782,8 +21785,8 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .SOS1
 
- JSR msblob             \ Update the dashboard's missile indicators to all be
-                        \ green/cyan
+ JSR msblob             \ Reset the dashboard's missile indicators so none of
+                        \ them are targeted
 
  LDA #127               \ Set the pitch and roll counters to 127 (no damping
  STA INWK+29            \ so the planet's rotation doesn't slow down)
@@ -22040,10 +22043,10 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .FLFLLS
 
- LDY #2*Y-1             \ #Y is the y-coordinate of the centre of the mode 4
-                        \ space view, so this sets Y as a counter for the number
-                        \ of lines in the space view (i.e. 191), which is also
-                        \ the number of lines in the LSO block
+ LDY #2*Y-1             \ #Y is the y-coordinate of the centre of the space
+                        \ view, so this sets Y as a counter for the number of
+                        \ lines in the space view (i.e. 191), which is also the
+                        \ number of lines in the LSO block
 
  LDA #0                 \ Set A to 0 so we can zero-fill the LSO block
 
@@ -22163,7 +22166,7 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ planet and store it in XX15
 
  BRA SP2                \ Jump to SP2 to draw XX15 on the compass, returning
-                        \ from the subroutine with a tail call
+                        \ from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -22334,7 +22337,9 @@ LOAD_E% = LOAD% + P% - CODE%
  LDX XX15+2             \ If the z-coordinate of the XX15 vector is positive,
  BPL P%+4               \ skip the following instruction
 
- LDA #GREEN2
+ LDA #GREEN2            \ The z-coordinate of XX15 is negative, so the planet or
+                        \ station is behind us and the compass dot should be in
+                        \ green, so set A accordingly
 
  STA COMC               \ Store the compass colour in COMC
 
@@ -22364,15 +22369,15 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .DOTX1
 
- BRK
+ EQUB 0
 
 .DOTY1
 
- BRK
+ EQUB 0
 
 .DOTCOL
 
- BRK
+ EQUB 0
  RTS
 
 \ ******************************************************************************
@@ -22972,7 +22977,7 @@ LOAD_E% = LOAD% + P% - CODE%
 \
 \                         * &E0 = yellow/white (armed)
 \
-\                         * &EE = green/cyan (disarmed)
+\                         * &EE = green (disarmed)
 \
 \ ******************************************************************************
 
@@ -23151,7 +23156,7 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ first doing the low bytes
 
  TXA                    \ And then the high bytes. #X is the x-coordinate of
- ADC #0                 \ the centre of the mode 4 screen, so this converts the
+ ADC #0                 \ the centre of the space view, so this converts the
  STA K3+1               \ space x-coordinate into a screen x-coordinate
 
  LDA INWK+3             \ Set P(1 0) = (y_hi y_lo)
@@ -23179,7 +23184,7 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ first doing the low bytes
 
  TXA                    \ And then the high bytes. #Y is the y-coordinate of
- ADC #0                 \ the centre of the mode 4 screen, so this converts the
+ ADC #0                 \ the centre of the space view, so this converts the
  STA K4+1               \ space x-coordinate into a screen y-coordinate
 
  CLC                    \ Clear the C flag to indicate success
@@ -24001,9 +24006,9 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ new sun, given that P(2 1) contains the 16-bit maximum
                         \ y-coordinate of the new sun on-screen
 
- LDA #2*Y-1             \ #Y is the y-coordinate of the centre of the mode 4
-                        \ space view, so this sets Y to the y-coordinate of the
-                        \ bottom of the space view, i.e. 191
+ LDA #2*Y-1             \ #Y is the y-coordinate of the centre of the space
+                        \ view, so this sets Y to the y-coordinate of the bottom
+                        \ of the space view, i.e. 191
 
  LDX P+2                \ If P+2 is non-zero, the maximum y-coordinate is off
  BNE PLF2               \ the bottom of the screen, so skip to PLF2 with A = 191
@@ -24760,10 +24765,10 @@ LOAD_E% = LOAD% + P% - CODE%
  LDA SUNX+1             \ screen
  STA YY+1
 
- LDY #2*Y-1             \ #Y is the y-coordinate of the centre of the mode 4
-                        \ space view, so this sets Y as a counter for the number
-                        \ of lines in the space view (i.e. 191), which is also
-                        \ the number of lines in the LSO block
+ LDY #2*Y-1             \ #Y is the y-coordinate of the centre of the space
+                        \ view, so this sets Y as a counter for the number of
+                        \ lines in the space view (i.e. 191), which is also the
+                        \ number of lines in the LSO block
 
 .WPL2
 
@@ -27937,8 +27942,8 @@ LOAD_F% = LOAD% + P% - CODE%
  JSR DFAULT             \ Call DFAULT to reset the current commander data block
                         \ to the last saved commander
 
- JSR msblob             \ Reset the dashboard's missile indicators to all be
-                        \ green/cyan
+ JSR msblob             \ Reset the dashboard's missile indicators so none of
+                        \ them are targeted
 
  LDA #7                 \ Call the TITLE subroutine to show the rotating ship
  LDX #ASP               \ and load prompt. The arguments sent to TITLE are:
@@ -28698,7 +28703,7 @@ ENDIF
 
 .stack
 
- BRK
+ EQUB 0
 
 \ ******************************************************************************
 \       Name: MEBRK
@@ -29570,7 +29575,7 @@ ENDIF
 
  LDX VIEW               \ Set X to the current view (front, rear, left or right)
  JMP LOOK1              \ and jump to LOOK1 to initialise that view, returning
-                        \ from the subroutine with a tail call
+                        \ from the subroutine using a tail call
 
 .WA1
 
@@ -31824,7 +31829,7 @@ ENDIF
  LDA #9
 
  JMP LL81+2             \ Call LL81+2 to draw the ship's dot, returning from the
-                        \ subroutine with a tail call
+                        \ subroutine using a tail call
 
  PLA                    \ Pull the return address from the stack, so the RTS
  PLA                    \ below actually returns from the subroutine that called
@@ -36257,7 +36262,7 @@ LOAD_H% = LOAD% + P% - CODE%
  STA INWK+31
 
  JMP SCAN               \ Display the ship on the scanner, returning from the
-                        \ subroutine with a tail call
+                        \ subroutine using a tail call
 
 .MVD1
 
@@ -37220,7 +37225,7 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ Clear the top part of the screen (the mode 4 part) and draw a white border
+\ Clear the top part of the screen (the spaced view) and draw a white border
 \ along the top and sides.
 \
 \ Other entry points:
@@ -37325,8 +37330,8 @@ ENDIF
                         \   (254, 0) to (254, 191)
                         \
                         \ So that's a 2-pixel wide vertical border along the
-                        \ left edge of the upper, mode 4 part of the screen, and
-                        \ a 2-pixel wide vertical border along the right edge
+                        \ left edge of the upper part of the screen, and a
+                        \ 2-pixel wide vertical border along the right edge
 
 .BOS2
 
@@ -37742,7 +37747,7 @@ LOAD_I% = LOAD% + P% - CODE%
 
 .HIMCNT
 
- BRK
+ EQUB 0
 
 \ ******************************************************************************
 \       Name: ZINF2

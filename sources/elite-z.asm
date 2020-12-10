@@ -139,7 +139,7 @@ ORG &0080
 .COL
 
  SKIP 1                 \ Temporary storage, used to store colour information
-                        \ when drawing pixels in the mode 5 dashboard screen
+                        \ when drawing pixels in the dashboard
 
 .OSSC
 
@@ -406,7 +406,7 @@ NEXT
 
 .PARANO
 
- BRK
+ EQUB 0
 
 .DL
 
@@ -446,7 +446,7 @@ NEXT
 
 .CATF
 
- BRK
+ EQUB 0
 
 .K
 
@@ -779,7 +779,7 @@ NEXT
  LDX SC                 \ Retrieve X from SC
 
  JMP TT26               \ Jump to TT26 to print the character in A, returning
-                        \ from the subroutine with a tail call
+                        \ from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -975,7 +975,7 @@ NEXT
 
 .DOBRK
 
- BRK
+ EQUB 0
  EQUS "TTEST"
  EQUW 13
 
@@ -3967,7 +3967,7 @@ ENDMACRO
 \
 \                         * &E0 = yellow/white (armed)
 \
-\                         * &EE = green/cyan (disarmed)
+\                         * &EE = green (disarmed)
 \
 \ Returns:
 \
@@ -5580,10 +5580,9 @@ protlen = end65C02-do65C02
                         \ set if timer 1 has timed out. We set the timer in
                         \ LINSCN above, so this means we only run the next bit
                         \ if the screen redraw has reached the boundary between
-                        \ the mode 4 and mode 5 screens (i.e. the top of the
-                        \ dashboard). Otherwise bit 6 is clear and we aren't at
-                        \ the boundary, so we jump to jvec to pass control to
-                        \ the next interrupt handler
+                        \ the space view and the dashboard. Otherwise bit 6 is
+                        \ clear and we aren't at the boundary, so we jump to
+                        \ jvec to pass control to the next interrupt handler
 
  LDA #%00010100         \ Set the Video ULA control register (SHEILA &20) to
  STA VIA+&20            \ %00010100, which is the same as switching to mode 2,

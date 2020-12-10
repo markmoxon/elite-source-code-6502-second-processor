@@ -52,7 +52,7 @@ ORG CODE%
 \       Name: B%
 \       Type: Variable
 \   Category: Screen mode
-\    Summary: VDU commands for setting the square mode 4 screen
+\    Summary: VDU commands for setting the square mode 1 screen
 \
 \ ------------------------------------------------------------------------------
 \
@@ -242,7 +242,12 @@ ENDMACRO
 
  JMP happy
 
-\JSRZZZAP\BRK\BRK\EQUS" This program only runs on a BBC Micro with 6502 Second Processor\EQUW&0C0A\BRK
+\JSR ZZZAP
+\BRK
+\BRK
+\EQUS " This program only runs on a BBC Micro with 6502 Second Processor
+\EQUW &0C0A
+\BRK
 
 .blap2
 
@@ -252,11 +257,12 @@ ENDMACRO
  TXA 
  BNE happy
  JSR ZZZAP
- BRK 
- BRK 
+
+ BRK
+ BRK
  EQUS "This program needs a 6502 Second Processor"
- EQUW &D0A
- BRK 
+ EQUW &0D0A
+ BRK
 
 .ZZZAP
 
