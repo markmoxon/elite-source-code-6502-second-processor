@@ -6602,45 +6602,52 @@ ENDIF
  EQUB CYAN              \ Cougar
 
 \ ******************************************************************************
+\
 \       Name: scacol
+\       Type: Variable
+\   Category: Drawing ships
+\    Summary: Ship colours on the scanner
+\
 \ ******************************************************************************
 
 .scacol
 
  EQUB 0
- EQUB YELLOW2
- EQUB GREEN2
- EQUB BLUE2
- EQUB BLUE2
- EQUB BLUE2 \barrel
- EQUB RED2
- EQUB RED2
- EQUB RED2
- EQUB CYAN2
- EQUB CYAN2 \transp
- EQUB CYAN2
- EQUB MAG2
- EQUB MAG2
- EQUB MAG2
- EQUB RED2
- EQUB CYAN2 \Viper
- EQUB CYAN2
- EQUB CYAN2
- EQUB CYAN2
- EQUB CYAN2
- EQUB CYAN2
- EQUB CYAN2
- EQUB BLUE2 \Wor
- EQUB CYAN2
- EQUB CYAN2
- EQUB MAG2
- EQUB CYAN2
- EQUB CYAN2 \Moray
- EQUB WHITE2
- EQUB CYAN2
- EQUB CYAN2 \Con
- EQUB 0
- EQUB CYAN2
+
+ EQUB YELLOW2           \ Missile
+ EQUB GREEN2            \ Coriolis space station
+ EQUB BLUE2             \ Escape pod
+ EQUB BLUE2             \ Alloy plate
+ EQUB BLUE2             \ Cargo canister
+ EQUB RED2              \ Boulder
+ EQUB RED2              \ Asteroid
+ EQUB RED2              \ Splinter
+ EQUB CYAN2             \ Shuttle
+ EQUB CYAN2             \ Transporter
+ EQUB CYAN2             \ Cobra Mk III
+ EQUB MAG2              \ Python
+ EQUB MAG2              \ Boa
+ EQUB MAG2              \ Anaconda
+ EQUB RED2              \ Rock hermit (asteroid)
+ EQUB CYAN2             \ Viper
+ EQUB CYAN2             \ Sidewinder
+ EQUB CYAN2             \ Mamba
+ EQUB CYAN2             \ Krait
+ EQUB CYAN2             \ Adder
+ EQUB CYAN2             \ Gecko
+ EQUB CYAN2             \ Cobra Mk I
+ EQUB BLUE2             \ Worm
+ EQUB CYAN2             \ Cobra Mk III (pirate)
+ EQUB CYAN2             \ Asp Mk II
+ EQUB MAG2              \ Python (pirate)
+ EQUB CYAN2             \ Fer-de-lance
+ EQUB CYAN2             \ Moray
+ EQUB WHITE2            \ Thargoid
+ EQUB CYAN2             \ Thargon
+ EQUB CYAN2             \ Constrictor
+ EQUB 0                 \ The Elite logo
+ EQUB CYAN2             \ Cougar
+
  EQUD 0
 
 \ ******************************************************************************
@@ -7065,6 +7072,10 @@ ENDIF
  LDY T1
  RTS
 
+\ ******************************************************************************
+\       Name: HBFL
+\ ******************************************************************************
+
 .HBFL
 
  LDA HBUP
@@ -7292,6 +7303,10 @@ ENDIF
 .PX4
 
  RTS
+
+\ ******************************************************************************
+\       Name: PBFL
+\ ******************************************************************************
 
 .PBFL
 
@@ -20201,13 +20216,16 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .qv
 
- LDA tek
- CMP #8
+ LDA tek                \ If the current system's tech level is less than 8,
+ CMP #8                 \ skip the next two instructions
  BCC P%+7
- LDA #32
- JSR TT66
- LDA #16
- TAY
+
+ LDA #32                \ Clear the top part of the screen, draw a white border,
+ JSR TT66               \ and set the current view type in QQ11 to 32 (Equip
+                        \ Ship screen)
+
+ LDA #16                \ Move the text cursor to row 16, and at the same time
+ TAY                    \ set Y to a counter going from 16-20 in the loop below
  JSR DOYC
 
 .qv1
@@ -20248,10 +20266,14 @@ LOAD_D% = LOAD% + P% - CODE%
  SEC                    \ Subtract ASCII '0' from the key pressed, to leave the
  SBC #'0'               \ numeric value of the key in A (if it was a number key)
 
- CMP #4
- BCC qv3
- JSR CLYNS
- JMP qv2
+ CMP #4                 \ If the number entered in A < 4, then it is a valid
+ BCC qv3                \ view number, so jump down to qv3 as we are done
+
+ JSR CLYNS              \ Otherwise we didn't get a valid view number, so clear
+                        \ the bottom three text rows of the upper screen, and
+                        \ move the text cursor to column 1 on row 21
+
+ JMP qv2                \ Jump back to qv2 to try again
 
 .qv3
 
@@ -22543,13 +22565,13 @@ LOAD_E% = LOAD% + P% - CODE%
 
  JSR SPBLB              \ Light up the space station bulb on the dashboard
 
- LDX #&81
- STX INWK+32
+ LDX #%10000001         \ Set the AI flag in byte #32 to %10000001 (hostile,
+ STX INWK+32            \ no AI, has an E.C.M.)
 
  LDX #0                 \ Set pitch counter to 0 (no pitch, roll only)
  STX INWK+30
 
- STX NEWB
+ STX NEWB               \ Set NEWB to %00000000
 
 \STX INWK+31            \ This instruction is commented out in the original
                         \ source. It would set the exploding state and missile
@@ -22569,17 +22591,19 @@ LOAD_E% = LOAD% + P% - CODE%
 
  JSR NwS1               \ And again to flip the sign of nosev_z_hi (byte #14)
 
- LDA spasto
- STA XX21+2*SST-2
- LDA spasto+1
- STA XX21+2*SST-1
- LDA tek
- CMP #10
- BCC notadodo
- LDA XX21+2*DOD-2
- STA XX21+2*SST-2
- LDA XX21+2*DOD-1
- STA XX21+2*SST-1
+ LDA spasto             \ Copy the address of the Coriolis space station's ship
+ STA XX21+2*SST-2       \ blueprint from spasto to the #SST entry in the
+ LDA spasto+1           \ blueprint lookup table at XX21, so when we spawn a
+ STA XX21+2*SST-1       \ ship of type #SST, it will be a Coriolis station
+
+ LDA tek                \ If the system's tech level in tek is less than 10,
+ CMP #10                \ jump to notadodo, so tech levels 0 to 9 have Coriolis
+ BCC notadodo           \ stations, while 10 and above will have Dodo stations
+
+ LDA XX21+2*DOD-2       \ Copy the address of the Dodo space station's ship
+ STA XX21+2*SST-2       \ blueprint from spasto to the #SST entry in the
+ LDA XX21+2*DOD-1       \ blueprint lookup table at XX21, so when we spawn a
+ STA XX21+2*SST-1       \ ship of type #SST, it will be a Dodo station
 
 .notadodo
 
@@ -23188,9 +23212,13 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ the sun, jump to PL57 to skip the following
                         \ instructions
 
- JSR LS2FL
- STZ LSP
- RTS
+ JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
+                        \ processor for drawing on-screen
+
+ STZ LSP                \ Reset the ball line heap by setting the ball line heap
+                        \ pointer to 0
+
+ RTS                    \ Return from the subroutine
 
 .PL57
 
@@ -23215,13 +23243,16 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .PLANET
 
- LDA #GREEN
- JSR DOCOL
+ LDA #GREEN             \ Send a #SETCOL GREEN command to the I/O processor to
+ JSR DOCOL              \ switch to stripe 3-1-3-1, which is cyan/yellow in the
+                        \ space view
 
  LDA INWK+8             \ Set A = z_sign (the highest byte in the planet/sun's
                         \ coordinates)
 
-\BMI PL2
+\BMI PL2                \ This instruction is commented out in the original
+                        \ source. It would remove the planet from the screen
+                        \ when it's behind us
 
  CMP #48                \ If A >= 48 then the planet/sun is too far away to be
  BCS PL2                \ seen, so jump to PL2 to remove it from the screen,
@@ -23302,8 +23333,12 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .PL9
 
- JSR LS2FL
- STZ LSP
+ JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
+                        \ processor for drawing on-screen, which will erase the
+                        \ planet from the screen
+
+ STZ LSP                \ Reset the ball line heap by setting the ball line heap
+                        \ pointer to 0
 
  JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
 
@@ -23316,7 +23351,10 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .PL20
 
- JMP LS2FL
+ JMP LS2FL              \ The planet doesn't fit on-screen, so jump to LS2FL to
+                        \ send the ball line heap to the I/O processor for
+                        \ drawing on-screen, returning from the subroutine using
+                        \ a tail call
 
 .PL25
 
@@ -23414,8 +23452,11 @@ LOAD_E% = LOAD% + P% - CODE%
                         \
                         \   (XX16+3 K2+3) = sidev_y / z
 
- JSR PLS2
- JMP LS2FL
+ JSR PLS2               \ Call PLS2 to draw the second meridian
+
+ JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
+                        \ processor for drawing on-screen, returning from the
+                        \ subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -23539,9 +23580,14 @@ LOAD_E% = LOAD% + P% - CODE%
  LDA #64                \ Set TGT = 64, so we draw a full circle in the call to
  STA TGT                \ PLS22 below
 
- STZ CNT2
- JSR PLS22
- JMP LS2FL
+ STZ CNT2               \ Set CNT2 = 0 as we are drawing a full circle, so we
+                        \ don't need to apply an offset
+
+ JSR PLS22              \ Call PLS22 to draw the crater
+
+ JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
+                        \ processor for drawing on-screen, returning from the
+                        \ subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -24388,7 +24434,8 @@ LOAD_E% = LOAD% + P% - CODE%
  LDA K3+1
  STA SUNX+1
 
- JSR HBFL
+ JSR HBFL               \ Call HBFL to send the contents of the horizontal line
+                        \ buffer to the I/O processor for drawing on-screen
 
 .RTS2
 
@@ -24597,7 +24644,7 @@ LOAD_E% = LOAD% + P% - CODE%
  JSR CIRCLE3            \ Call CIRCLE3 to populate the ball line heap
 
                         \ Fall through into LS2FL to send the ball line heap to
-                        \ the I/O processor for drawing
+                        \ the I/O processor for drawing on-screen
 
 \ ******************************************************************************
 \
@@ -24740,7 +24787,9 @@ LOAD_E% = LOAD% + P% - CODE%
 
  STY LSX                \ Set LSX to &FF to indicate the sun line heap is empty
 
- JMP HBFL
+ JMP HBFL               \ Call HBFL to send the contents of the horizontal line
+                        \ buffer to the I/O processor for drawing on-screen,
+                        \ returning from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -26131,8 +26180,8 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \ ------------------------------------------------------------------------------
 \
-\ Reset our ship and various controls, then fall through into RES4 to restore
-\ shields and energy, and reset the stardust and the ship workspace at INWK.
+\ Reset our ship and various controls, recharge shields and energy, and then
+\ fall through into RES2 to reset the stardust and the ship workspace at INWK.
 \
 \ In this subroutine, this means zero-filling the following locations:
 \
@@ -26148,8 +26197,8 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \     * ECMA - Turn E.C.M. off
 \
-\ It also sets QQ12 to &FF, to indicate we are docked, and then falls through
-\ into RES4.
+\ It also sets QQ12 to &FF, to indicate we are docked, recharges the shields and
+\ energy banks, and then falls through into RES2.
 \
 \ ******************************************************************************
 
@@ -26170,18 +26219,26 @@ LOAD_F% = LOAD% + P% - CODE%
 
  BPL SAL3               \ Loop back for the next byte to zero
 
- TXA
- STA QQ12
- LDX #2
+ TXA                    \ X is now negative - i.e. &FF - so this sets A and QQ12
+ STA QQ12               \ to &FF to indicate we are docked
+
+ LDX #2                 \ We're now going to recharge both shields and the
+                        \ energy bank, which live in the three bytes at FSH,
+                        \ ASH (FSH+1) and ENERGY (FSH+2), so set a loop counter
+                        \ in X for 3 bytes
 
 .REL5
 
- STA FSH,X
- DEX
- BPL REL5
+ STA FSH,X              \ Set the X-th byte of FSH to &FF to charge up that
+                        \ shield/bank
 
-                        \ Fall through into RES4 to restore shields and energy,
-                        \ and reset the stardust and ship workspace at INWK
+ DEX                    \ Decrement the lopp counter 
+
+ BPL REL5               \ Loop back to REL5 until we have recharged both shields
+                        \ and the energy bank
+
+                        \ Fall through into RES2 to reset the stardust and ship
+                        \ workspace at INWK
 
 \ ******************************************************************************
 \
@@ -27727,32 +27784,54 @@ LOAD_F% = LOAD% + P% - CODE%
  JMP DEATH2             \ Jump to DEATH2 to reset and restart the game
 
 \ ******************************************************************************
-\       Name: 
+\
+\       Name: spasto
+\       Type: Subroutine
+\   Category: Universe
+\    Summary: Contains the address Coriolis space station's ship blueprint
+\
 \ ******************************************************************************
 
 .spasto
 
- EQUW &8888
+ EQUW &8888             \ This variable is set by routine BEGIN to the address
+                        \ of the Coriolis space station's ship blueprint
 
 \ ******************************************************************************
+\
 \       Name: BEGIN
+\       Type: Subroutine
+\   Category: Start and end
+\    Summary: Reset the configuration variables and start the game
+\
 \ ******************************************************************************
 
 .BEGIN
 
-\JSRBRKBK
- LDX #(CATF-COMC)
- LDA #0
+\JSR BRKBK              \ This instruction is commented out in the original
+                        \ source
+
+ LDX #(CATF-COMC)       \ We start by zeroing all the configuration variables
+                        \ between COMC and CATF, to set them to their default
+                        \ values, so set a counter in X for CATF - COMC bytes
+
+ LDA #0                 \ Set A = 0 so we can zero the variables
 
 .BEL1
 
- STA COMC,X
- DEX
- BPL BEL1
- LDA XX21+SST*2-2
- STA spasto
- LDA XX21+SST*2-1
+ STA COMC,X             \ Zero the X-th configuration variable
+
+ DEX                    \ Decrement the loop counter
+ 
+ BPL BEL1               \ Loop back to BEL1 to zero the next byte, until we have
+                        \ zeroed them all
+
+ LDA XX21+SST*2-2       \ Set spasto(1 0) to the Coriolis space station entry
+ STA spasto             \ from the ship blueprint lookup table at XX21 (so
+ LDA XX21+SST*2-1       \ spasto(1 0) points to the Coriolis blueprint)
  STA spasto+1
+
+                        \ Fall through into TT170 to start the game
 
 \ ******************************************************************************
 \
@@ -27764,8 +27843,12 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \ ------------------------------------------------------------------------------
 \
-\ This is the main entry point for a the main game coce. It is also called
-\ following death, and when the game is quit by pressing ESCAPE when paused.
+\ This is the main entry point for the main game code. It is called after the
+\ various setup, decryption and checksum routines in S%, G% and BEGIN have
+\ successfully completed.
+\
+\ It is also called following death, and when the game is quit by pressing
+\ ESCAPE when paused.
 \
 \ ******************************************************************************
 
@@ -27778,7 +27861,7 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ elite-loader.asm pushes code onto the stack, and this
                         \ effectively removes that code so we start afresh
 
- JSR RESET
+ JSR RESET              \ Call RESET to initialise most of the game variables
 
                         \ Fall through into DEATH2 to start the game
 
@@ -28822,7 +28905,10 @@ ENDIF
 
  LDX #0                 \ Set (Y X) = &0C00
  LDY #&C
- JSR OSFILE
+
+ JSR OSFILE             \ Call OSFILE to do the file operation specified in
+                        \ &0C00
+
  JSR CLDELAY
  LDA #0
  JSR DODOSVN
@@ -37318,54 +37404,55 @@ ENDIF
 .SC5
 
  RTS
+
 \ ******************************************************************************
+\
 \       Name: SCANpars
+\       Type: Variable
+\   Category: Dashboard
+\    Summary: The scanner buffer to send with the #onescan command
+\
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   SCANflg             The sign of the stick height (in bit 7)
+\
+\   SCANlen             The stick height for the ship on the scanner
+\
+\   SCANcol             The colour of the ship on the scanner
+\
+\   SCANx1              The screen x-coordinate of the dot on the scanner
+\
+\   SCANy1              The screen y-coordinate of the dot on the scanner
+\
 \ ******************************************************************************
 
 .SCANpars
 
- EQUB 7
- EQUB 0
+ EQUB 7                 \ The number of bytes to transmit with this command
 
-\ ******************************************************************************
-\       Name: SCANflg
-\ ******************************************************************************
+ EQUB 0                 \ The number of bytes to receive with this command
 
 .SCANflg
 
- BRK
-
-\ ******************************************************************************
-\       Name: SCANlen
-\ ******************************************************************************
+ EQUB 0                 \ The sign of the stick height (in bit 7)
 
 .SCANlen
 
- BRK
-
-\ ******************************************************************************
-\       Name: SCANcol
-\ ******************************************************************************
+ EQUB 0                 \ The stick height for this ship on the scanner
 
 .SCANcol
 
- BRK
-
-\ ******************************************************************************
-\       Name: SCANx1
-\ ******************************************************************************
+ EQUB 0                 \ The colour of the ship on the scanner
 
 .SCANx1
 
- BRK
-
-\ ******************************************************************************
-\       Name: SCANy1
-\ ******************************************************************************
+ EQUB 0                 \ The screen x-coordinate of the dot on the scanner
 
 .SCANy1
 
- BRK
+ EQUB 0                 \ The screen y-coordinate of the dot on the scanner
 
 \ ******************************************************************************
 \
@@ -37400,8 +37487,11 @@ ENDIF
                         \ scanner, so return from the subroutine (as SC5
                         \ contains an RTS)
 
- LDA scacol,x
- STA SCANcol
+ LDA scacol,X           \ Set A to the scanner colour for this ship type from
+                        \ the X-th entry in the scacol table 
+
+ STA SCANcol            \ Store the scanner colour in SCANcol so it can be sent
+                        \ to the I/O processor with the #onescan command
 
  LDA INWK+1             \ If any of x_hi, y_hi and z_hi have a 1 in bit 6 or 7,
  ORA INWK+4             \ then the ship is too far away to be shown on the
@@ -37414,7 +37504,8 @@ ENDIF
 
                         \ Now, we convert the x_hi coordinate of the ship into
                         \ the screen x-coordinate of the dot on the scanner,
-                        \ using the following (see above for an explanation):
+                        \ using the following (see the deep dive on "The 3D
+                        \ scanner" for an explanation):
                         \
                         \   X1 = 123 + (x_sign x_hi)
 
@@ -37434,12 +37525,15 @@ ENDIF
 
 .SC2
 
- ADC #123
- STA SCANx1
+ ADC #123               \ Set A = 123 + x_hi
+ 
+ STA SCANx1             \ Store the x-coordinate in SCANx1 so it can be sent
+                        \ to the I/O processor with the #onescan command
 
                         \ Next, we convert the z_hi coordinate of the ship into
                         \ the y-coordinate of the base of the ship's stick,
-                        \ like this (see above for an explanation):
+                        \ like this (see the deep dive on "The 3D scanner" for
+                        \ an explanation):
                         \
                         \   SC = 220 - (z_sign z_hi) / 4
                         \
@@ -37471,7 +37565,8 @@ ENDIF
  STA SC                 \ range 205 to 235, with a higher z_hi giving a lower SC
 
                         \ Now for the stick height, which we calculate using the
-                        \ following (see above for an explanation):
+                        \ following (see the deep dive on "The 3D scanner" for
+                        \ an explanation):
                         \
                         \ A = - (y_sign y_hi) / 2
 
@@ -37532,7 +37627,8 @@ ENDIF
  LDA #246               \ A >= 247, so set A to 246, the maximum allowed value
                         \ for the y-coordinate of our ship's dot
 
- STA SCANy1
+ STA SCANy1             \ Store the y-coordinate in SCANy1 so it can be sent
+                        \ to the I/O processor with the #onescan command
 
  SEC                    \ Set A = A - SC to get the stick length, by reversing
  SBC SC                 \ the ADC SC we did above. This clears the C flag if the
@@ -37559,14 +37655,17 @@ ENDIF
                         \
                         \ and we can get on with drawing the dot and stick
 
- STA SCANlen
- ROR SCANflg
+ STA SCANlen            \ Store the stick height in SCANlen so it can be sent
+                        \ to the I/O processor with the #onescan command
+
+ ROR SCANflg            \ Rotate the C flag into bit 7 of SCANflg, so bit 7 is
+                        \ the sign bit of the stick length
 
 .SC48
 
- LDX #(SCANpars MOD256)
- LDY #(SCANpars DIV256)
- LDA #onescan
+ LDX #LO(SCANpars)      \ Send a #onescan command to the I/O processor to draw
+ LDY #HI(SCANpars)      \ the ship on the scanner, returning from the subroutine
+ LDA #onescan           \ using a tail call
  JMP OSWORD
 
 \ ******************************************************************************

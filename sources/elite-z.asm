@@ -3847,7 +3847,7 @@ ENDMACRO
  EQUW PIXEL             \            241 (&F1)     1 = Draw a pixel
  EQUW MSBAR             \ #DOmsbar = 242 (&F2)     2 = Update missile indicators
  EQUW WSCAN             \ #wscn    = 243 (&F3)     3 = Wait for vertical sync
- EQUW SC48              \ #onescan = 244 (&F4)     4 = Update the 3D scanner
+ EQUW SC48              \ #onescan = 244 (&F4)     4 = Draw ship on 3D scanner
  EQUW DOT               \ #DOdot   = 245 (&F5)     5 = Draw a dot
  EQUW DODKS4            \ #DODKS4  = 246 (&F6)     6 = Scan for a specific key
  EQUW HLOIN             \            247 (&F7)     7 = Draw a horizontal line
@@ -5158,7 +5158,8 @@ ENDMACRO
 
 .PZW
 
- LDX #STRIPE
+ LDX #STRIPE            \ Set X to the dashboard stripe colour, which is stripe
+                        \ 5-1 (magenta/red)
 
  LDA MCNT               \ A will be non-zero for 8 out of every 16 main loop
  AND #%00001000         \ counts, when bit 4 is set, so this is what we use to
@@ -5166,10 +5167,14 @@ ENDMACRO
 
  AND FLH                \ A will be zeroed if flashing colours are disabled
 
- BEQ P%+5
- LDA #GREEN2
- RTS
- LDA #RED2
+ BEQ P%+5               \ If A is zero, skip the next two instructions
+
+ LDA #GREEN2            \ Otherwise flashing colours are enabled and it's the
+ RTS                    \ main loop iteration where we flash them, so set A to
+                        \ dashboard colour 2 (green) and return from the
+                        \ subroutine
+
+ LDA #RED2              \ Set A to dashboard colour 1 (red)
 
  RTS                    \ Return from the subroutine
 
