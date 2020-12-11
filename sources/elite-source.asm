@@ -571,10 +571,10 @@ NEWB = INWK+36
                         \
                         \   0   = Space view
                         \   1   = Title screen
-                        \         Buy Cargo screen (red key f1)
-                        \         Data on System screen (red key f6)
                         \         Get commander name ("@", save/load commander)
                         \         In-system jump just arrived ("J")
+                        \         Data on System screen (red key f6)
+                        \   2   = Buy Cargo screen (red key f1)
                         \   3   = Mis-jump just arrived (witchspace)
                         \   4   = Sell Cargo screen (red key f2)
                         \   6   = Death screen
@@ -584,6 +584,7 @@ NEWB = INWK+36
                         \   32  = Equip Ship screen (red key f3)
                         \   64  = Long-range Chart (red key f4)
                         \   128 = Short-range Chart (red key f5)
+                        \   255 = Launch view
                         \
                         \ This value is typically set by calling routine TT66
 
@@ -2409,7 +2410,7 @@ ORG &0800
                         \
                         \   * Escape pod
                         \   * Alloy plate
-                        \   * cargo canister
+                        \   * Cargo canister
                         \   * Asteroid
                         \   * Splinter
                         \   * Shuttle
@@ -8545,10 +8546,15 @@ ENDIF
 
 .wearedocked
 
- LDA #205
- JSR DETOK
- JSR TT67
- JMP st6+3
+                        \ We call this from STATUS below if we are docked
+
+ LDA #205               \ Print extended token 205 ("DOCKED") and return from
+ JSR DETOK              \ the subroutine using a tail call
+
+ JSR TT67               \ Print a newline
+
+ JMP st6+3              \ Jump down to st6+3, to print recursive token 125 and
+                        \ continue to the rest of the Status Mode screen
 
 .st4
 
@@ -8592,8 +8598,9 @@ ENDIF
 
 .STATUS
 
- LDA #8
- JSR TRADEMODE
+ LDA #8                 \ Clear the top part of the screen, draw a white border,
+ JSR TRADEMODE          \ and set up a printable trading screen with a view type
+                        \ in QQ11 of 8 (Status Mode screen)
 
  JSR TT111              \ Select the system closest to galactic coordinates
                         \ (QQ9, QQ10)
@@ -8622,7 +8629,9 @@ ENDIF
  LDA #230               \ Otherwise we are in space, so start off by setting A
                         \ to token 70 ("GREEN")
 
- LDY JUNK
+ LDY JUNK               \ Set Y to the number of junk items in our local bubble
+                        \ of universe (where junk is asteroids, canisters,
+                        \ escape pods and so on)
 
  LDX FRIN+2,Y           \ The ship slots at FRIN are ordered with the first two
                         \ slots reserved for the planet and sun/space station,
@@ -8720,7 +8729,9 @@ ENDIF
 
  LSR A                  \ Shift A to the right
 
- BNE P%-2
+ BNE P%-2               \ Keep looping back two instructions (i.e. to the INX
+                        \ instruction) until A = 0, which means there are no set
+                        \ bits left in A
 
 .st3
 
@@ -8810,17 +8821,26 @@ ENDIF
 
  LDA #103               \ Set A to token 103 ("PULSE LASER")
 
- LDX CNT
- LDY LASER,X
- CPY #128+POW
- BNE P%+4
- LDA #104
- CPY #Armlas
- BNE P%+4
- LDA #117
- CPY #Mlas
- BNE P%+4
- LDA #118
+ LDX CNT                \ Set Y = the laser power for view X
+ LDY LASER,X 
+
+ CPY #128+POW           \ If the laser power for view X is not #POW+128 (beam
+ BNE P%+4               \ laser), skip the next LDA instruction
+
+ LDA #104               \ This sets A = 104 if the laser in view X is a beam
+                        \ laser (token 104 is "BEAM LASER")
+
+ CPY #Armlas            \ If the laser power for view X is not #Armlas (military
+ BNE P%+4               \ laser), skip the next LDA instruction
+
+ LDA #117               \ This sets A = 117 if the laser in view X is a military
+                        \ laser (token 117 is "MILITARY  LASER")
+
+ CPY #Mlas              \ If the laser power for view X is not #Mlas (mining
+ BNE P%+4               \ laser), skip the next LDA instruction
+
+ LDA #118               \ This sets A = 118 if the laser in view X is a mining
+                        \ laser (token 118 is "MINING  LASER")
 
  JSR plf2               \ Print the text token in A (which contains our legal
                         \ status) followed by a newline and an indent of 6
@@ -9642,9 +9662,9 @@ ENDIF
 \ This variable is used to indicate whether we are currently printing a word. It
 \ has two values:
 \
-\   * %00000000 = we are currently printing a word
+\   * 0 = we are currently printing a word
 \
-\   * %11111111 = we are not currently printing a word
+\   * Non-zero = we are not currently printing a word
 \
 \ The default value is %11111111 (we are not currently printing a word).
 \
@@ -9654,7 +9674,8 @@ ENDIF
 \ The flag is set to %11111111 (we are not currently printing a word) whenever a
 \ terminator character (full stop, colon, carriage return, line feed, space) is
 \ passed to DASC for printing. It is also set to %11111111 by jump token 8,
-\ {tab 6}, which calls routine MT8 to change the value of DTW2.
+\ {tab 6}, which calls routine MT8 to change the value of DTW2, and to %10000000
+\ by TTX66 when we clear the screen.
 \
 \ ******************************************************************************
 
@@ -12512,7 +12533,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \ The animation gets drawn like this. First, we draw a circle of radius 8 at the
 \ centre, and then double the radius, draw another circle, double the radius
 \ again and draw a circle, and we keep doing this until the radius is bigger
-\ than160 (which goes beyond the edge of the screen, which is 256 pixels wide,
+\ than 160 (which goes beyond the edge of the screen, which is 256 pixels wide,
 \ equivalent to a radius of 128). We then repeat this whole process for an
 \ initial circle of radius 9, then radius 10, all the way up to radius 15.
 \
@@ -12528,6 +12549,10 @@ LOAD_C% = LOAD% +P% - CODE%
 \   A                   The step size of the straight lines making up the rings
 \                       (4 for launch, 8 for hyperspace)
 \
+\ Other entry points:
+\
+\   HFS1                Don't clear the screen, and draw 8 concentric rings
+\                       with the step size in STP
 \ ******************************************************************************
 
 .HFS2
@@ -14938,6 +14963,8 @@ LOAD_C% = LOAD% +P% - CODE%
 
 \ ******************************************************************************
 \       Name: PDESC
+\ print the system's extended description
+\ ZZ = system number
 \ ******************************************************************************
 
 .PDESC
@@ -15439,7 +15466,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
  RTS                    \ Return from the subroutine
 
- NOP
+ NOP                    \ This instruction appears to have no effect
 
 \ ******************************************************************************
 \
@@ -15798,7 +15825,8 @@ LOAD_D% = LOAD% + P% - CODE%
  BNE TT63               \ non-zero bits, and if so, jump to TT63 to print the
                         \ distance
 
- JMP INCYC
+ JMP INCYC              \ Move the text cursor down by one line and return from
+                        \ the subroutine using a tail call
 
 .TT63
 
@@ -15890,8 +15918,9 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT67
 
- INC YC
- LDA #12
+ INC YC                 \ Move the text cursor counter in YC down a line
+
+ LDA #12                \ Load a newline character into A
 
  JMP TT27               \ Print the text token in A and return from the
                         \ subroutine using a tail call
@@ -15960,15 +15989,18 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT25
 
- LDA #1
- JSR TRADEMODE
+ LDA #1                 \ Clear the top part of the screen, draw a white border,
+ JSR TRADEMODE          \ and set up a printable trading screen with a view type
+                        \ in QQ11 of 1
 
- LDA #9                 \ Set the text cursor XC to column 9
+ LDA #9                 \ Move the text cursor to column 9
  JSR DOXC
 
- LDA #163
- JSR NLIN3
- JSR TTX69
+ LDA #163               \ Print recursive token 3 ("DATA ON {selected system
+ JSR NLIN3              \ name}" and draw a horizontal line at pixel row 19
+                        \ to box in the title
+
+ JSR TTX69              \ Print a paragraph break and set Sentence Case
 
  JSR TT146              \ If the distance to this system is non-zero, print
                         \ "DISTANCE", then the distance, "LIGHT YEARS" and a
@@ -16232,31 +16264,43 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA #'m'
  JSR TT26
 
- JSR TTX69
- JMP PDESC
- LDX ZZ
-\LDY#PTEXT MOD256
-\STYINWK
-\LDY#(PTEXT DIV256)-1
-\STYINWK+1
-\LDY#&FF
-\.PDT1 INY
-\BNEP%+4
-\INCINWK+1
-\LDA(INWK),Y
-\BNEPDT1
+ JSR TTX69              \ Print a paragraph break and set Sentence Case
+
+ JMP PDESC              \ Jump to PDESC to print the system's extended
+                        \ description, returning from the subroutine using a
+                        \ tail call
+
+                        \ The following code doesn't appear to be called from
+                        \ anywhere, so it's presumably a remnant of code from
+                        \ an earlier version of the extended description code
+
+ LDX ZZ                 \ Fetch the system number from ZZ into X
+
+\LDY #LO(PTEXT)         \ These instructions are commented out in the original
+\STY INWK               \ source. The variable PTEXT doesn't exist, so it isn't
+\LDY #HI(PTEXT)-1       \ entirely obvious what this code does, though it looks
+\STY INWK+1             \ like it loops through a table of text tokens in PTEXT
+\LDY #&FF               \ until we get to the entry for the current system,
+\.PDT1                  \ which it prints out as text tokens (so perhaps PTEXT
+\INY                    \ used to be a token table for the system's extended
+\BNE P%+4               \ descriptions before PDESC took over)
+\INC INWK+1
+\LDA (INWK),Y
+\BNE PDT1
 \DEX
-\BNEPDT1
-\.PDT2 INY
-\BNEP%+4
-\INCINWK+1
-\STYINWK+2
-\LDA(INWK),Y
-\BEQTT24-1
-\JSRTT27
-\LDYINWK+2
-\JMPPDT2
- RTS
+\BNE PDT1
+\.PDT2
+\INY
+\BNE P%+4
+\INC INWK+1
+\STY INWK+2
+\LDA (INWK),Y
+\BEQ TT24-1
+\JSR TT27
+\LDY INWK+2
+\JMP PDT2
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -16679,8 +16723,8 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT14
 
- LDA #CYAN
- JSR DOCOL
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is white in the chart view
 
  LDA QQ11               \ If the current view is the Short-range Chart, which
  BMI TT126              \ is the only view with bit 7 set, then jump up to TT126
@@ -16761,9 +16805,12 @@ LOAD_D% = LOAD% + P% - CODE%
  LDX #2                 \ Set STP = 2, the step size for the circle
  STX STP
 
- LDA #RED
- JSR DOCOL
- JMP CIRCLE2
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the chart view
+
+ JMP CIRCLE2            \ Jump to CIRCLE2 to draw a circle with the centre at
+                        \ (K3(1 0), K4(1 0)) and radius K, returning from the
+                        \ subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -16784,8 +16831,9 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT219
 
- LDA #2
- JSR TRADEMODE
+ LDA #2                 \ Clear the top part of the screen, draw a white border,
+ JSR TRADEMODE          \ and set up a printable trading screen with a view type
+                        \ in QQ11 of 2 (Buy Cargo screen)
 
  JSR TT163              \ Print the column headers for the prices table
 
@@ -16795,7 +16843,7 @@ LOAD_D% = LOAD% + P% - CODE%
 \JSR FLKB               \ This instruction is commented out in the original
                         \ source. It calls a routine to flush the keyboard
                         \ buffer (FLKB) that isn't present in the cassette
-                        \ version but is in the disc version
+                        \ version but is in other versions
 
  LDA #0                 \ We're going to loop through all the available market
  STA QQ29               \ items, so we set up a counter in QQ29 to denote the
@@ -16863,7 +16911,13 @@ LOAD_D% = LOAD% + P% - CODE%
  STX T1                 \ here into gnum, and weren't deleted?
 
 {
-.TT223
+.TT223                  \ This label is a duplicate of a label in gnum (which is
+                        \ why we need to surround it with braces, as BeebAsm
+                        \ doesn't allow us to redefine labels). This could be
+                        \ a remnant if the code in gnum was originally here, but
+                        \ got moved into the gnum subroutine without removing
+                        \ the original
+
 }
 
  JSR gnum               \ Call gnum to get a number from the keyboard, which
@@ -17085,14 +17139,28 @@ LOAD_D% = LOAD% + P% - CODE%
  STA R
  BRA OUT\++
 
+\ ******************************************************************************
+\
+\       Name: NWDAV4
+\       Type: Subroutine
+\   Category: Market
+\    Summary: Print an "ITEM?" error, make a beep and rejoin the TT210 routine
+\
+\ ******************************************************************************
+
 .NWDAV4
 
- JSR TT67
- LDA #176
- JSR prq
- JSR dn2
- LDY QQ29
- JMP NWDAVxx
+ JSR TT67               \ Print a newline
+
+ LDA #176               \ Print recursive token 127 ("ITEM") followed by a
+ JSR prq                \ question mark
+
+ JSR dn2                \ Call dn2 to make a short, high beep and delay for 1
+                        \ second
+
+ LDY QQ29               \ Fetch the item number we are selling from QQ29
+
+ JMP NWDAVxx            \ Jump back into the TT210 routine that called NWDAV4
 
 \ ******************************************************************************
 \
@@ -17105,17 +17173,21 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT208
 
- LDA #4
- JSR TRADEMODE
- LDA #10
+ LDA #4                 \ Clear the top part of the screen, draw a white border,
+ JSR TRADEMODE          \ and set up a printable trading screen with a view type
+                        \ in QQ11 of 4 (Sell Cargo screen)
+
+ LDA #10                \ Move the text cursor to column 10
  JSR DOXC
 
  LDA #205               \ Print recursive token 45 ("SELL")
  JSR TT27
 
- LDA #206
- JSR NLIN3
- JSR TT67
+ LDA #206               \ Print recursive token 46 (" CARGO{sentence case}")
+ JSR NLIN3              \ draw a horizontal line at pixel row 19 to box in the
+                        \ title
+
+ JSR TT67               \ Print a newline
 
                         \ Fall through into TT210 to show the Inventory screen
                         \ with the option to sell
@@ -17181,13 +17253,13 @@ LOAD_D% = LOAD% + P% - CODE%
  ADC #208               \ prints the current item's name
  JSR TT27
 
- LDA #14                \ Set the text cursor to column 14, for the item's
+ LDA #14                \ Move the text cursor to column 14, for the item's
  JSR DOXC               \ quantity
 
  PLA                    \ Restore the amount of item in the hold into X
  TAX
 
- STA QQ25
+ STA QQ25               \ Store the amount of this item in the hold in QQ25
 
  CLC                    \ Print the 8-bit number in X to 3 digits, without a
  JSR pr2                \ decimal point
@@ -17202,14 +17274,24 @@ LOAD_D% = LOAD% + P% - CODE%
 
 \JSRTT162
 
- LDA #205               \ Set A to recursive token 45 ("SELL")
-
+ LDA #205               \ Print recursive token 45 ("SELL")
  JSR TT27
- LDA #206
+
+ LDA #206               \ Print extended token 206 ("{all caps}(Y/N)?")
  JSR DETOK
- JSR gnum
- BEQ TT212
- BCS NWDAV4
+
+ JSR gnum               \ Call gnum to get a number from the keyboard, which
+                        \ will be the number of the item we want to sell,
+                        \ returning the number entered in A and R, and setting
+                        \ the C flag if the number is bigger than the available
+                        \ amount of this item in QQ25
+
+ BEQ TT212              \ If no number was entered, jump to TT212 to move on to
+                        \ the next item
+
+ BCS NWDAV4             \ If the number entered was too big, jump to NWDAV4 to
+                        \ print an "ITEM?" error, make a beep and rejoin the
+                        \ routine at NWDAVxx above
 
  LDA QQ29               \ We are selling this item, so fetch the item number
                         \ from QQ29
@@ -17221,12 +17303,13 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ routine doesn't print the item details, as we just
                         \ disabled printing)
 
- LDY QQ29
- LDA QQ20,Y
- SEC
+ LDY QQ29               \ Subtract R (the number of items we just asked to buy)
+ LDA QQ20,Y             \ from the available amount of this item in QQ20, as we
+ SEC                    \ just bought them
  SBC R
  STA QQ20,Y
- LDA R
+
+ LDA R                  \ Set P to the amount of this item we just bought
  STA P
 
  LDA QQ24               \ Set Q to the item's price / 4
@@ -17251,8 +17334,9 @@ LOAD_D% = LOAD% + P% - CODE%
  LDY QQ29               \ Fetch the item number from QQ29 into Y, and increment
  INY                    \ Y to point to the next item
 
- CPY #17
- BCC TT211
+ CPY #17                \ Loop back to TT211 to print the next item in the hold
+ BCC TT211              \ until Y = 17 (at which point we have done the last
+                        \ item)
 
  LDA QQ11               \ If the current view type in QQ11 is not 4 (Sell Cargo
  CMP #4                 \ screen), skip the next two instructions and just
@@ -17277,11 +17361,12 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT213
 
- LDA #8
- JSR TRADEMODE
+ LDA #8                 \ Clear the top part of the screen, draw a white border,
+ JSR TRADEMODE          \ and set up a printable trading screen with a view type
+                        \ in QQ11 of 4 (Inventory screen)
 
- LDA #11
- JSR DOXC
+ LDA #11                \ Move the text cursor to column 11 to print the screen
+ JSR DOXC               \ title
 
  LDA #164               \ Print recursive token 4 ("INVENTORY{crlf}") followed
  JSR TT60               \ by a paragraph break and Sentence Case
@@ -17329,7 +17414,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
  JSR TT27               \ Print the text token in A
 
- LDA #206
+ LDA #206               \ Print extended token 206 ("{all caps}(Y/N)?")
  JSR DETOK
 
  JSR TT217              \ Scan the keyboard until a key is pressed, and return
@@ -17599,11 +17684,15 @@ LOAD_D% = LOAD% + P% - CODE%
  JSR TT66               \ and set the current view type in QQ11 to 128 (Short-
                         \ range Chart)
 
- LDA #16
- JSR DOVDU19
- LDA #CYAN
- JSR DOCOL
- LDA #7
+ LDA #16                \ Send a #SETVDU19 16 command to the I/O processor to
+ JSR DOVDU19            \ switch to the mode 1 palette for the trade view, which
+                        \ is yellow (colour 1), magenta (colour 2) and white
+                        \ (colour 3)
+
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is white in the chart view
+
+ LDA #7                 \ Move the text cursor to column 7
  JSR DOXC
 
  LDA #190               \ Print recursive token 30 ("SHORT RANGE CHART") and
@@ -17619,8 +17708,8 @@ LOAD_D% = LOAD% + P% - CODE%
  JSR TT81               \ Set the seeds in QQ15 to those of system 0 in the
                         \ current galaxy (i.e. copy the seeds from QQ21 to QQ15)
 
- LDA #CYAN
- JSR DOCOL
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is white in the chart view
 
  LDA #0                 \ Set A = 0, which we'll use below to zero out the INWK
                         \ workspace
@@ -17766,14 +17855,16 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .EE4
 
- TYA
- JSR DOYC
+ TYA                    \ Now to print the label, so move the text cursor to row
+ JSR DOYC               \ Y (which contains the row where we can print this
+                        \ system's label)
 
  CPY #3                 \ If Y < 3, then the label would clash with the chart
  BCC TT187              \ title, so jump to TT187 to skip printing the label
 
- LDA #&FF
- STA INWK,Y
+ LDA #&FF               \ Store &FF in INWK+Y, to denote that this row is now
+ STA INWK,Y             \ occupied so we don't try to print another system's
+                        \ label on this row
 
  LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
  STA QQ17
@@ -17826,8 +17917,10 @@ LOAD_D% = LOAD% + P% - CODE%
 
  INC XX20               \ Increment the counter
 
- BNE P%+5
- JMP HBFL
+ BNE P%+5               \ If X = 0 then we have done all 256 systems, so jump
+ JMP HBFL               \ to HBFL to send the contents of the horizontal line
+                        \ buffer to the I/O processor for drawing on-screen,
+                        \ returning from the subroutine using a tail call
 
  JMP TT182              \ Otherwise jump back up to TT182 to process the next
                         \ system
@@ -17893,6 +17986,8 @@ LOAD_D% = LOAD% + P% - CODE%
 \
 \   QQ15 to QQ15+5      The three 16-bit seeds of the nearest system to the
 \                       original coordinates
+\
+\   ZZ                  The system number of the nearest system
 \
 \ Other entry points:
 \
@@ -17991,8 +18086,9 @@ LOAD_D% = LOAD% + P% - CODE%
  BPL TT136              \ Loop back to TT136 if we still have more bytes to
                         \ copy
 
- LDA U
- STA ZZ
+ LDA U                  \ Store the system number U in ZZ, so when we are done
+ STA ZZ                 \ looping through all the candidates, the winner's
+                        \ number will be in ZZ
 
 .TT135
 
@@ -18172,7 +18268,7 @@ LOAD_D% = LOAD% + P% - CODE%
  JSR DOCOL              \ switch to colour 2, which is magenta in the trade view
                         \ or red in the chart view
 
- LDA #205               \ Print recursive token 205 ("DOCKED") and return from
+ LDA #205               \ Print extended token 205 ("DOCKED") and return from
  JMP DETOK              \ the subroutine using a tail call
 
 \ ******************************************************************************
@@ -18676,8 +18772,11 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT151q
 
- PLA
- RTS \no trade items in MJ
+                        \ We jump here from below if we are in witchspace
+
+ PLA                    \ Restore the item number from the stack
+
+ RTS                    \ Return from the subroutine
 
 .TT151
 
@@ -18688,10 +18787,10 @@ LOAD_D% = LOAD% + P% - CODE%
  ASL A                  \ an index into the market prices table at QQ23 for this
  STA QQ19               \ item (as there are four bytes per item in the table)
 
- LDA MJ
- BNE TT151q
+ LDA MJ                 \ If we are in witchspace, we can't trade items, so jump
+ BNE TT151q             \ up to TT151q to return from the subroutine
 
- LDA #1                 \ Set the text cursor to column 1, for the item's name
+ LDA #1                 \ Move the text cursor to column 1, for the item's name
  JSR DOXC
 
  PLA                    \ Restore the item number
@@ -18700,7 +18799,7 @@ LOAD_D% = LOAD% + P% - CODE%
  JSR TT27               \ range 48 ("FOOD") to 64 ("ALIEN ITEMS"), so this
                         \ prints the item's name
 
- LDA #14                \ Set the text cursor to column 14, for the price
+ LDA #14                \ Move the text cursor to column 14, for the price
  JSR DOXC
 
  LDX QQ19               \ Fetch byte #1 from the market prices table (units and
@@ -18788,7 +18887,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT172
 
- LDA #25
+ LDA #25                \ Move the text cursor to column 25
  JSR DOXC
 
  LDA #'-'               \ Print a "-" character by jumping to TT162+2, which
@@ -18937,22 +19036,23 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT167
 
- LDA #16
- JSR TRADEMODE
+ LDA #16                \ Clear the top part of the screen, draw a white border,
+ JSR TRADEMODE          \ and set up a printable trading screen with a view type
+                        \ in QQ11 of 32 (Market Price screen)
 
  LDA #5                 \ Move the text cursor to column 4
  JSR DOXC
 
- LDA #167               \ Print recursive token 7 token ("{current system name}
- JSR NLIN3              \ MARKET PRICES") and draw a horizontal line at pixel
-                        \ row 19 to box in the title
+ LDA #167               \ Print recursive token 7 ("{current system name} MARKET
+ JSR NLIN3              \ PRICES") and draw a horizontal line at pixel row 19
+                        \ to box in the title
 
  LDA #3                 \ Move the text cursor to row 3
  JSR DOYC
 
  JSR TT163              \ Print the column headers for the prices table
 
- LDA #6
+ LDA #6                 \ Move the text cursor to row 6
  JSR DOYC
 
  LDA #0                 \ We're going to loop through all the available market
@@ -19325,12 +19425,17 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT18
 
- LDA QQ14
- SEC
+ LDA QQ14               \ Subtract the distance to the selected system (in QQ8)
+ SEC                    \ from the amount of fuel in our tank (in QQ14) into A
  SBC QQ8
- BCS P%+4
- LDA #0
- STA QQ14
+
+ BCS P%+4               \ If the subtraction didn't overflow, skip the next
+                        \ instruction
+
+ LDA #0                 \ The subtraction overflowed, so set A = 0 so we don't
+                        \ end up with a negative amount of fuel
+
+ STA QQ14               \ Store the updated fuel amount in QQ14
 
  LDA QQ11               \ If the current view is not a space view, jump to ee5
  BNE ee5                \ to skip the following
@@ -19453,9 +19558,10 @@ LOAD_D% = LOAD% + P% - CODE%
 
  STA FIST               \ Update our legal status with the new value
 
- LDA #&FF
+ LDA #255               \ Set the view number in QQ11 to 255
  STA QQ11
- JSR HFS1
+
+ JSR HFS1               \ Call HFS1 to draw 8 concentric rings
 
 .NLUNCH
 
@@ -19677,9 +19783,9 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .EQSHP
 
- LDA #32                \ Call TRADEMODE to clear the top part of the screen and
- JSR TRADEMODE          \ set up a printable trading screen with a view type in
-                        \ QQ11 of 32 (Equip Ship screen)
+ LDA #32                \ Clear the top part of the screen, draw a white border,
+ JSR TRADEMODE          \ and set up a printable trading screen with a view type
+                        \ in QQ11 of 32 (Equip Ship screen)
 
  LDA #12                \ Move the text cursor to column 12
  JSR DOXC
@@ -20596,8 +20702,10 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .ypl
 
- BIT MJ
- BMI ypl16
+ BIT MJ                 \ Check the mis-jump flag at MJ, and if bit 7 is set
+ BMI ypl16              \ then we are in witchspace, and witchspace doesn't have
+                        \ a system name, so jump to ypl16 to return from the
+                        \ subroutine
 
  JSR TT62               \ Call TT62 below to swap the three 16-bit seeds in
                         \ QQ2 and QQ15 (before the swap, QQ2 contains the seeds
@@ -22018,8 +22126,10 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .WS2
 
- STZ LSP
- LDX #&FF
+ STZ LSP                \ Reset the ball line heap by setting the ball line heap
+                        \ pointer to 0
+
+ LDX #&FF               \ Set X = &FF (though this appears not to be used)
 
                         \ Fall through into FLFLLS to reset the LSO block
 
@@ -22332,7 +22442,8 @@ LOAD_E% = LOAD% + P% - CODE%
                         \
                         \ COMY = 204 - X - (1 - 0) = 203 - X
 
- LDA #WHITE2
+ LDA #WHITE2            \ Set A to white, the colour for when the planet or
+                        \ station in the compass is in front of us
 
  LDX XX15+2             \ If the z-coordinate of the XX15 vector is positive,
  BPL P%+4               \ skip the following instruction
@@ -27124,8 +27235,9 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .MLOOP
 
- LDX #&FF               \ Reset the 6502 stack pointer, which clears the stack
- TXS
+ LDX #&FF               \ Set the stack pointer to &01FF, which is the standard
+ TXS                    \ location for the 6502 stack, so this instruction
+                        \ effectively resets the stack
 
  LDX GNTMP              \ If the laser temperature in GNTMP is non-zero,
  BEQ EE20               \ decrement it (i.e. cool it down a bit)
@@ -27300,12 +27412,17 @@ LOAD_F% = LOAD% + P% - CODE%
  BNE P%+5               \ Buy Cargo screen, returning from the subroutine using
  JMP TT219              \ a tail call
 
- CMP #&47
+ CMP #&47               \ If "@" was not pressed, skip to nosave
  BNE nosave
- JSR SVE
- BCC P%+5
- JMP QU5
- JMP BAY
+
+ JSR SVE                \ "@" was pressed, so call SVE to show the disc menu
+
+ BCC P%+5               \ If the C flag was set by SVE, then we loaded a new
+ JMP QU5                \ commander file, so jump to QU5 to restart the game
+                        \ with the newly loaded commander
+
+ JMP BAY                \ Otherwise the C flag was clear, so jump to BAY to go
+                        \ to the docking bay (i.e. show the Status Mode screen)
 
 .nosave
 
@@ -27344,16 +27461,22 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .NWDAV5
 
- CMP #&32
- BEQ T95
- CMP #&43\Find
- BNE HME1
- LDA QQ12
- BEQ t95
- LDA QQ11
- AND #192
- BEQ t95
- JMP HME2
+ CMP #&32               \ If "D" was pressed, jump to T95 to print the distance
+ BEQ T95                \ to a system (if we are in one of the chart screens)
+
+ CMP #&43               \ If "F" was not pressed, jump down to HME1, otherwise
+ BNE HME1               \ keep going to process searching for systems
+
+ LDA QQ12               \ If QQ12 = 0 (we are not docked), we can't search for
+ BEQ t95                \ systems, so return from the subroutine (as t95
+                        \ contains an RTS)
+
+ LDA QQ11               \ If the current view is a chart (QQ11 = 64 or 128),
+ AND #%11000000         \ keep going, otherwise return from the subroutine (as
+ BEQ t95                \ t95 contains an RTS)
+
+ JMP HME2               \ Jump to HME2 to let us search for a system, returning
+                        \ from the subroutine using a tail call
 
 .HME1
 
@@ -27380,7 +27503,10 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ will move the location in (QQ9, QQ10) to the current
                         \ home system
 
- JMP TT103
+ JMP TT103              \ Draw small crosshairs at coordinates (QQ9, QQ10),
+                        \ which will draw the crosshairs at our current home
+                        \ system, and return from the subroutine using a tail
+                        \ call
 
 .ee2
 
@@ -27448,8 +27574,8 @@ LOAD_F% = LOAD% + P% - CODE%
  AND #%11000000         \ keep going, otherwise return from the subroutine (as
  BEQ t95                \ t95 contains an RTS)
 
- LDA #CYAN
- JSR DOCOL
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is white in the chart view
 
  JSR hm                 \ Call hm to move the crosshairs to the target system
                         \ in (QQ9, QQ10), returning with A = 0
@@ -27461,12 +27587,13 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case, with the
  STA QQ17               \ next letter in capitals
 
- LDA #10
+ LDA #10                \ Print a line feed to move the text cursor down a line
  JSR TT26
 
- LDA #1
+ LDA #1                 \ Move the text cursor to column 1
  JSR DOXC
- JSR INCYC
+
+ JSR INCYC              \ Move the text cursor down one line
 
  JMP TT146              \ Print the distance to the selected system and return
                         \ from the subroutine using a tail call
@@ -27615,19 +27742,37 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .BRBR
 
- DEC brkd
- LDX #&FF
- TXS
- JSR backtonormal
- TAY
- LDA #7
+ DEC brkd               \ Decrement brkd
+
+ LDX #&FF               \ Set the stack pointer to &01FF, which is the standard
+ TXS                    \ location for the 6502 stack, so this instruction
+                        \ effectively resets the stack
+
+ JSR backtonormal       \ Disable the keyboard and set the SVN flag to 0
+
+ TAY                    \ The call to backtonormal sets A to 0, so this sets Y
+                        \ to 0, which use as a loop counter below
+
+ LDA #7                 \ Set A = 7 to generate a beep before we print the error
+                        \ message
 
 .BRBRLOOP
 
- JSR OSWRCH
- INY
- LDA (&FD),Y
- BNE BRBRLOOP
+ JSR OSWRCH             \ Print the character in A (which contains a line feed
+                        \ on the first loop iteration, and then any non-zero
+                        \ characters we fetch from the error message
+
+ INY                    \ Increment the loop counter
+
+ LDA (&FD),Y            \ Fetch the Y-th byte of the block pointed to by
+                        \ (&FD &FE), so that's the Y-th character of the message
+                        \ pointed to by the MOS error message pointer
+
+ BNE BRBRLOOP           \ If the fetched character is non-zero, loop back to the
+                        \ JSR OSWRCH above to print the it, and keep looping
+                        \ until we fetch a zero (which marks the end of the
+                        \ message)
+
  JMP BR1
 
 \ ******************************************************************************
@@ -27859,12 +28004,12 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .TT170
 
- LDX #&FF               \ Set stack pointer to &01FF, as stack is in page 1
- TXS                    \ (this is the standard location for the 6502 stack,
-                        \ so this instruction effectively resets the stack).
-                        \ We need to do this because the loader code in
-                        \ elite-loader.asm pushes code onto the stack, and this
-                        \ effectively removes that code so we start afresh
+ LDX #&FF               \ Set the stack pointer to &01FF, which is the standard
+ TXS                    \ location for the 6502 stack, so this instruction
+                        \ effectively resets the stack. We need to do this
+                        \ because the loader code in elite-loader.asm pushes
+                        \ code onto the stack, and this effectively removes that
+                        \ code so we start afresh
 
  JSR RESET              \ Call RESET to initialise most of the game variables
 
@@ -27881,8 +28026,9 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .DEATH2
 
- LDX #&FF               \ Reset the 6502 stack pointer, which clears the stack
- TXS
+ LDX #&FF               \ Set the stack pointer to &01FF, which is the standard
+ TXS                    \ location for the 6502 stack, so this instruction
+                        \ effectively resets the stack
 
  JSR RES2               \ Reset a number of flight variables and workspaces
                         \ and fall through into the entry code for the game
@@ -28116,13 +28262,13 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ Display a title screen, with a rotating ship and a recursive text token at the
-\ bottom of the screen.
+\ Display the title screen, with a rotating ship and a text token at the bottom
+\ of the screen.
 \
 \ Arguments:
 \
-\   A                   The number of the recursive token to show below the
-\                       rotating ship (see variable QQ18 for details of
+\   A                   The number of the extended token to show below the
+\                       rotating ship (see variable TKN1 for details of
 \                       recursive tokens)
 \
 \   X                   The type of the ship to show (see variable XX21 for a
@@ -28149,9 +28295,11 @@ ENDIF
  LDA #1                 \ Clear the top part of the screen, draw a white border,
  JSR TT66               \ and set the current view type in QQ11 to 1
 
- LDA #RED
- JSR DOCOL
- STZ QQ11
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is white in the title screen
+
+ STZ QQ11               \ Set QQ11 to 0, so from here on we are using a space
+                        \ view
 
  LDA #96                \ Set nosev_z hi = 96 (96 is the value of unity in the
  STA INWK+14            \ rotation vector)
@@ -28175,38 +28323,59 @@ ENDIF
  LDA TYPE               \ Set up a new ship, using the ship type in TYPE
  JSR NWSHP
 
- LDA #6
+ LDA #6                 \ Move the text cursor to column 6
  JSR DOXC
 
  LDA #30                \ Print recursive token 144 ("---- E L I T E ----")
  JSR plf                \ followed by a newline
 
- LDA #10
+ LDA #10                \ Print a line feed to move the text cursor down a line
  JSR TT26
- LDA #6
+
+ LDA #6                 \ Move the text cursor to column 6 again
  JSR DOXC
 
  LDA PATG               \ If PATG = 0, skip the following two lines, which
  BEQ awe                \ print the author credits (PATG can be toggled by
                         \ pausing the game and pressing "X")
 
- LDA #13
+ LDA #13                \ Print extended token 13 ("BY D.BRABEN & I.BELL")
  JSR DETOK
 
 .awe
 
- LDA brkd
- BEQ BRBR2
- INC brkd
- LDA #7
+ LDA brkd               \ If brkd = 0, jump to BRBR2 to skip printing the MOS
+ BEQ BRBR2              \ error message
+
+ INC brkd               \ Increment brkd
+
+ LDA #7                 \ Move the text cursor to column 7
  JSR DOXC
- LDA #10
+
+ LDA #10                \ Move the text cursor to row 10
  JSR DOYC
- LDY #0
- JSR OSWRCH
- INY
- LDA (&FD),Y
- BNE P%-6
+
+                        \ The following loop prints out the null-terminated
+                        \ message pointed to by (&FD &FE), which is the MOS
+                        \ error message pointer - so this prints the error
+                        \ message on the next line
+
+ LDY #0                 \ Set Y = 0 to act as a character counter
+
+ JSR OSWRCH             \ Print the character in A (which contains a line feed
+                        \ on the first loop iteration, and then any non-zero
+                        \ characters we fetch from the error message
+
+ INY                    \ Increment the loop counter
+
+ LDA (&FD),Y            \ Fetch the Y-th byte of the block pointed to by
+                        \ (&FD &FE), so that's the Y-th character of the message
+                        \ pointed to by the MOS error message pointer
+
+ BNE P%-6               \ If the fetched character is non-zero, loop back to the
+                        \ JSR OSWRCH above to print the it, and keep looping
+                        \ until we fetch a zero (which marks the end of the
+                        \ message)
 
 .BRBR2
 
@@ -28219,17 +28388,25 @@ ENDIF
 
  STY JSTK               \ Set KSTK = 0 (i.e. keyboard, not joystick)
 
- PLA
-\JSRex
- JSR DETOK
- LDA #7
+ PLA                    \ Restore the recursive token number we stored on the
+                        \ stack at the start of this subroutine
+
+\JSR ex                 \ This instruction is commented out in the original
+                        \ source (it would print the recursive token in A)
+
+ JSR DETOK              \ Print the extended token in A
+
+ LDA #7                 \ Move the text cursor to column 7
  JSR DOXC
- LDA #12
- JSR DETOK
- LDA #12
- STA CNT2
- LDA #5
- STA MCNT
+
+ LDA #12                \ Print extended token 12 ("({single cap}C) ACORNSOFT
+ JSR DETOK              \ 1984")
+
+ LDA #12                \ Set CNT2 = 12 as the outer loop counter for the loop
+ STA CNT2               \ starting at TLL2
+
+ LDA #5                 \ Set the main loop counter in MCNT to 5, to act as the
+ STA MCNT               \ inner loop counter for the loop starting at TLL2
 
 .TLL2
 
@@ -28245,19 +28422,23 @@ ENDIF
  JSR MVEIT              \ Move the ship in space according to the orientation
                         \ vectors and the new value in z_hi
 
- LDX #128
- STX INWK+6
- LDA MCNT
- AND #3
- BNE nodesire
+ LDX #128               \ Set z_lo = 128 (so the closest the ship gets to us is
+ STX INWK+6             \ z_hi = 1, z_lo = 128, or 256 + 128 = 384
 
- STX NEEDKEY            \ Set NEEDKEY = 128, so calls to LL9 to draw the ship
-                        \ also scan for key presses
+ LDA MCNT               \ This value will be zero on one out of every four
+ AND #3                 \ iterations, so for the other three, skip to nodesire
+ BNE nodesire           \ so we only scan for key presses once every four loops
+
+ STX NEEDKEY            \ Set NEEDKEY = 128, so the call to LL9 below draw the
+                        \ ship and scans for key presses (LL9 resets NEEDKEY to
+                        \ 0 so we have to reset NEEDKEY every four iterations
+                        \ round the inner loop)
 
 .nodesire
 
- STZ INWK
- STZ INWK+3
+ STZ INWK               \ Set x_lo = 0, so the ship remains in the screen centre
+
+ STZ INWK+3             \ Set y_lo = 0, so the ship remains in the screen centre
 
  JSR LL9                \ Call LL9 to display the ship
 
@@ -28270,7 +28451,7 @@ ENDIF
                         \ button is pressed, otherwise it is set, so AND'ing
                         \ the value of IRB with %10000 extracts this bit
 
- TAX
+ TAX                    \ Copy the joystick fire button state to X
 
  BEQ TL2                \ If the joystick fire button is pressed, jump to BL2
 
@@ -28279,13 +28460,18 @@ ENDIF
 
  BNE TL3                \ If a key is being pressed, jump to TL3
 
- DEC MCNT
- BNE TLL2
+ DEC MCNT               \ Decrement the inner loop counter
 
- DEC CNT2
- BNE TLL2
+ BNE TLL2               \ Loop back to keep the ship rotating, until the inner
+                        \ loop counter is zero
 
- JMP DEMON
+ DEC CNT2               \ Decrement the outer loop counter in CNT2
+
+ BNE TLL2               \ Loop back to keep the ship rotating, until the outer
+                        \ loop counter is zero 
+
+ JMP DEMON              \ Once we have iterated through CNT2 iterations of MCNT,
+                        \ jump to DEMON to start the demo
 
 .TL2
 
@@ -28512,29 +28698,35 @@ ENDIF
 \       Name: ZERO
 \       Type: Subroutine
 \   Category: Utility routines
-\    Summary: Zero-fill pages &9, &A, &B, &C and &D
+\    Summary: Reset the local bubble of universe and ship status
 \
 \ ------------------------------------------------------------------------------
 \
 \ This resets the following workspaces to zero:
 \
-\   * WP workspace variables from FRIN to de, which include the ship slots for
+\   * UP workspace variables from FRIN to de, which include the ship slots for
 \     the local bubble of universe, and various flight and ship status variables
-\     (only a portion of the LSX/LSO sun line heap is cleared)
 \
 \ ******************************************************************************
 
 .ZERO
 
- LDX #(de-FRIN)
- LDA #0
+ LDX #(de-FRIN)         \ We're going to zero the UP workspace variables from
+                        \ FRIN to de, so set a counter in X for the correct
+                        \ number of bytes
+
+ LDA #0                 \ Set A = 0 so we can zero the variables
 
 .ZEL2
 
- STA FRIN,X
- DEX
- BPL ZEL2
- RTS
+ STA FRIN,X             \ Zero the X-th byte of FRIN to de
+
+ DEX                    \ Decrement the loop counter
+
+ BPL ZEL2               \ Loop back to zero the next variable until we have done
+                        \ them all
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -28713,17 +28905,33 @@ ENDIF
 
  LDX stack
  TXS
- JSR backtonormal
- TAY
- LDA #7
+ JSR backtonormal       \ Disable the keyboard and set the SVN flag to 0
+
+ TAY                    \ The call to backtonormal sets A to 0, so this sets Y
+                        \ to 0, which use as a loop counter below
+
+ LDA #7                 \ Set A = 7 to generate a beep before we print the error
+                        \ message
 
 .MEBRKL
 
- JSR OSWRCH
- INY
+ JSR OSWRCH             \ Print the character in A (which contains a line feed
+                        \ on the first loop iteration, and then any non-zero
+                        \ characters we fetch from the error message
+
+ INY                    \ Increment the loop counter
+
  BEQ retry
- LDA (&FD),Y
- BNE MEBRKL
+
+ LDA (&FD),Y            \ Fetch the Y-th byte of the block pointed to by
+                        \ (&FD &FE), so that's the Y-th character of the message
+                        \ pointed to by the MOS error message pointer
+
+ BNE MEBRKL             \ If the fetched character is non-zero, loop back to the
+                        \ JSR OSWRCH above to print the it, and keep looping
+                        \ until we fetch a zero (which marks the end of the
+                        \ message)
+
  BEQ retry
 
 \ ******************************************************************************
@@ -28747,7 +28955,7 @@ ENDIF
 \       Name: SVE
 \       Type: Subroutine
 \   Category: Save and load
-\    Summary: Save the commander file
+\    Summary: Show the disc menu to save or load the commander file
 \  Deep dive: The competition code
 \
 \ ******************************************************************************
@@ -28896,11 +29104,16 @@ ENDIF
  JSR GTDRV
 
  STA INWK+1
- PLA
+
+ PLA                    \ Restore A from the stack
+
  BCS QUR
- PHA
- LDA #&FF
- JSR DODOSVN
+
+ PHA                    \ Store A on the stack so we can restore it after the
+                        \ call to DODOSVN
+
+ LDA #255               \ Set the SVN flag to 255 to indicate that disc access
+ JSR DODOSVN            \ is in progress
 
  PLA                    \ Restore A from the stack
 
@@ -28914,14 +29127,16 @@ ENDIF
  JSR OSFILE             \ Call OSFILE to do the file operation specified in
                         \ &0C00
 
- JSR CLDELAY
- LDA #0
- JSR DODOSVN
- CLC
+ JSR CLDELAY            \ Pause for 1280 empty loops
+
+ LDA #0                 \ Set the SVN flag to 0 indicate that disc access has
+ JSR DODOSVN            \ finished
+
+ CLC                    \ Clear the C flag
 
 .QUR
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \       Name: GTDRV
@@ -29026,7 +29241,12 @@ ENDIF
  JMP OSBYTE
 
 \ ******************************************************************************
+\
 \       Name: backtonormal
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Disable the keyboard, set the SVN flag to 0, and return with A = 0
+\
 \ ******************************************************************************
 
 .backtonormal
@@ -29036,56 +29256,109 @@ ENDIF
  LDA #%00000001         \ (SHEILA &4E) bit 1 (i.e. disable the CA2 interrupt,
  JSR OSWRCH             \ which comes from the keyboard)
 
- LDA #0
- BEQ DODOSVN
+ LDA #0                 \ Set the SVN flag to 0 and return from the subroutine
+ BEQ DODOSVN            \ using a tail call (this BEQ is effectively a JMP as A
+                        \ is always zero)
 
 \ ******************************************************************************
+\
 \       Name: SCLI2
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Execute an OS command, setting the SVN flag while it's running
+\
+\ ------------------------------------------------------------------------------
+\
+\ SVN is set to 255 before the command is run, to indicate that disc access is
+\ in progress, and is reset to 0 once it has finished.
+\
+\ Arguments:
+\
+\   (Y X)               The address of a string containing the command to run,
+\                       terminated by a carriage return (ASCII 13)
+\
 \ ******************************************************************************
 
 .SCLI2
 
- LDA #&FF
+ LDA #255               \ Set the SVN flag to 255
  JSR DODOSVN
- JSR SCLI
- LDA #0
+
+ JSR SCLI               \ Call OSCLI to execute the OS command at (Y X)
+
+ LDA #0                 \ Set A = 0 for the new value of the SVN flag
+
+                        \ Fall through into DODOSVN to set the SVN flag to 0
 
 \ ******************************************************************************
+\
 \       Name: DODOSVN
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Set the SVN ("save in progress") flag
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The new value of SVN
+\
 \ ******************************************************************************
 
 .DODOSVN
 
- PHA
- PHY \++
- LDA #DOsvn
- JSR OSWRCH
- PLY
+ PHA                    \ Store A and Y on the stack
+ PHY
+
+ LDA #DOsvn             \ Send the first part of a #DOsvn command to the I/O
+ JSR OSWRCH             \ processor
+
+ PLY                    \ Retrieve the values of A and Y from the stack
  PLA
- JSR OSWRCH
+
+ JSR OSWRCH             \ Send the new value of SVN to the I/O processor, so
+                        \ we've now sent a #DOsvn <flag> command
+
+                        \ Fall through into CLDELAY to pause for 1280 empty
+                        \ loops
 
 \ ******************************************************************************
+\
 \       Name: CLDELAY
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Delay by iterating through 5 * 256 (1280) empty loops
+\
 \ ******************************************************************************
 
 .CLDELAY
 
- PHX
+ PHX                    \ Store A, X and Y on the stack
  PHY
  PHA
- LDY #5
- LDX #0
+
+ LDY #5                 \ We are going to loop for 5 * 256 empty loops, so set a
+                        \ counter in Y for the outer loop
+
+ LDX #0                 \ And set a counter in X for the inner loop
 
 .CLDEL1
 
- DEX
- BNE CLDEL1
- DEY
- BNE CLDEL1
- PLA
+ DEX                    \ Decrement the inner loop counter
+
+ BNE CLDEL1             \ Loop back to CLDEL1 until the inner loop counter has
+                        \ rolled around to 0 again
+
+ DEY                    \ Decrement the outer loop counter
+
+ BNE CLDEL1             \ Loop back to CLDEL1 until the outer loop counter has
+                        \ reached 0
+
+ PLA                    \ Retrieve A, X and Y from the stack
  PLY
- PLX \++
- RTS
+ PLX
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -29423,7 +29696,9 @@ ENDIF
 
 .WARP
 
- LDX JUNK
+ LDX JUNK               \ Set X to the total number of junk items in the
+                        \ vicinity (e.g. asteroids, escape pods, cargo
+                        \ canisters, shuttles, transportes and so pn)
 
  LDA FRIN+2,X           \ If the slot at FRIN+2+X is non-zero, then we have
                         \ something else in the vicinity besides asteroids,
@@ -30261,7 +30536,8 @@ ENDIF
  LDA #0                 \ Set A to 0, as this means "key not pressed" in the
                         \ key logger at KL
 
- LDY #16
+ LDY #16                \ We want to clear the 16 key logger locations from
+                        \ KY1 to KY19, so set a counter in Y
 
 .DKL3
 
@@ -30269,9 +30545,15 @@ ENDIF
 
  DEY                    \ Decrement the counter
 
- BNE DKL3               \ And loop back for the next key
+ BNE DKL3               \ And loop back for the next key, until we have just
+                        \ KL+1. We don't want to clear the first key logger
+                        \ location at KL, as the keyboard table at KYTB starts
+                        \ with offset 1, not 0, so KL is not technically part of
+                        \ the key logger (it's actually used for logging keys
+                        \ that don't appear in the keyboard table, and which
+                        \ therefore don't use the key logger)
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -30641,8 +30923,8 @@ ENDIF
 
 .t
 
- LDY #2
- JSR DELAY
+ LDY #2                 \ Delay for 2 vertical syncs (2/50 = 0.04 seconds) so we
+ JSR DELAY              \ don't take up too much CPU time while looping round
 
  JSR RDKEY              \ Scan the keyboard for a key press and return the
                         \ internal key number in X (or 0 for no key press)
@@ -37225,7 +37507,7 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ Clear the top part of the screen (the spaced view) and draw a white border
+\ Clear the top part of the screen (the space view) and draw a white border
 \ along the top and sides.
 \
 \ Other entry points:
@@ -37238,40 +37520,63 @@ ENDIF
 
 .TTX66
 
- JSR MT2
- JSR PBZE
- JSR HBZE
- STZ LBUP
- STZ LSP
+ JSR MT2                \ Switch to Sentence Case when printing extended tokens
+
+ JSR PBZE               \ Reset the pixel buffer size in PBUP
+
+ JSR HBZE               \ Reset the horizontal line buffer size in HBUP
+
+ STZ LBUP               \ Reset the line buffer size at LBUP
+
+ STZ LSP                \ Reset the ball line heap pointer at LSP
 
  LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
  STA QQ17
 
- STA DTW2
- JSR FLFLLS
- LDA #YELLOW
- JSR DOCOL
- STZ LAS2
- STZ DLY
- STZ de\+++
- LDA #11
- JSR OSWRCH
- LDX QQ22+1
- BEQ OLDBOX
- JSR ee3
+ STA DTW2               \ Set bit 7 of DTW2 to indicate we are not currently
+                        \ printing a word
+
+ JSR FLFLLS             \ Call FLFLLS to reset the LSO block
+
+ LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is yellow
+
+ STZ LAS2               \ Set LAS2 = 0 to stop any laser pulsing
+
+ STZ DLY                \ Set the delay in DLY to 0, to indicate that we are
+                        \ no longer showing an in-flight message, so any new
+                        \ in-flight messages will be shown instantly
+
+ STZ de                 \ Clear de, the flag that appends " DESTROYED" to the
+                        \ end of the next text token, so that it doesn't
+
+ LDA #11                \ Write ASCII character 11, to move the system cursor up
+ JSR OSWRCH             \ one line
+
+ LDX QQ22+1             \ Fetch into X the number that's shown on-screen during
+                        \ the hyperspace countdown
+
+ BEQ OLDBOX             \ If the counter is zero then we are not counting down
+                        \ to hyperspace, so jump to OLDBOX to skip the next
+                        \ instruction
+
+ JSR ee3                \ Print the 8-bit number in X at text location (0, 1),
+                        \ i.e. print the hyperspace countdown in the top-left
+                        \ corner
 
 .OLDBOX
 
- LDA #1
+ LDA #1                 \ Move the text cursor to column 1
  JSR DOYC
 
  LDA QQ11               \ If this is not a space view, jump to tt66 to skip
  BNE tt66               \ displaying the view name
 
- LDA #11
+ LDA #11                \ Move the text cursor to row 11
  JSR DOXC
- LDA #CYAN
- JSR DOCOL
+
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is cyan in the space view
 
  LDA VIEW               \ Load the current view into A:
                         \
@@ -37292,27 +37597,33 @@ ENDIF
 
 .tt66
 
- LDA #1
+ LDA #1                 \ Move the text cursor to column 1, row 1
  JSR DOXC
  JSR DOYC
- LDX #0
+
+ LDX #0                 \ Set QQ17 = 0 to switch to ALL CAPS
  STX QQ17
- RTS
+
+ RTS                    \ Return from the subroutine
 
 .BOX
 
- LDA #YELLOW
- JSR DOCOL
- LDX #0
+ LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is yellow
+
+ LDX #0                 \ Set QQ17 = 0 to switch to ALL CAPS
  STX QQ17
- STX X1
+
+ STX X1                 \ Set (X1, Y1) to (0, 0)
  STX Y1
- STX Y2
+
+ STX Y2                 \ Set Y2 = 0
 
  DEX                    \ Set X2 = 255
  STX X2
 
- JSR LL30
+ JSR LL30               \ Draw a line from (X1, Y1) to (X2, Y2), so that's
+                        \ (0, 0) to (255, 0), along the very top of the screen
 
  LDA #2                 \ Set X1 = X2 = 2
  STA X1
@@ -42996,7 +43307,7 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\       Name: XX21
+\       Name: E%
 \       Type: Variable
 \   Category: Drawing ships
 \    Summary: Ship blueprints NEWB table

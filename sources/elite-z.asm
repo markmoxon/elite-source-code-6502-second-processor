@@ -402,7 +402,10 @@ NEXT
 
  EQUB 0                 \ "Saving in progress" flag
                         \
-                        \ Set to 1 while we are saving a commander, 0 otherwise
+                        \   * Non-zero while the disc is being accessed (so this
+                        \     is also the case for cataloguing, loading etc.)
+                        \
+                        \   * 0 otherwise
 
 .PARANO
 
