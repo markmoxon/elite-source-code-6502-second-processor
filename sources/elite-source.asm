@@ -10801,11 +10801,24 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ can use it as an index for the two-byte address table
                         \ at UNIV
 
- TAX
- LDA UNIV,X
+ TAX                    \ Copy the address of the target ship's data block from
+ LDA UNIV,X             \ UNIV(X+1 X) to (A V)
  STA V
  LDA UNIV+1,X
- JSR VCSUB
+
+ JSR VCSUB              \ Calculate vector K3 as follows:
+                        \
+                        \ K3(2 1 0) = (x_sign x_hi x_lo) - x-coordinate of
+                        \ target ship
+                        \
+                        \ K3(5 4 3) = (y_sign y_hi z_lo) - y-coordinate of
+                        \ target ship
+                        \
+                        \ K3(8 7 6) = (z_sign z_hi z_lo) - z-coordinate of
+                        \ target ship
+
+                        \ So K3 now contains the vector from the target ship to
+                        \ the missile
 
  LDA K3+2               \ Set A = OR of all the sign and high bytes of the
  ORA K3+5               \ above, clearing bit 7 (i.e. ignore the signs)
@@ -10881,11 +10894,14 @@ LOAD_C% = LOAD% +P% - CODE%
  LDA (V),Y              \ into the C flag
  LSR A
 
- BCS P%+5
+ BCS P%+5               \ If the C flag is set then the target has E.C.M.
+                        \ fitted, so skip the next instruction
 
 .TA19S
 
- JMP TA19
+ JMP TA19               \ The target does not have E.C.M. fitted, so jump down
+                        \ to TA19 with the vector from the target to the missile
+                        \ in K3
 
  JMP ECBLB2             \ The target has E.C.M., so jump to ECBLB2 to set it
                         \ off, returning from the subroutine using a tail call
@@ -11676,23 +11692,85 @@ LOAD_C% = LOAD% +P% - CODE%
  RTS \Docked
 
 \ ******************************************************************************
+\
 \       Name: VCSU1
+\       Type: Subroutine
+\   Category: Maths (Arithmetic)
+\    Summary: Calculate vector K3(8 0) = [x y z] - coordinates of the sun or
+\             space station
+\
+\ ------------------------------------------------------------------------------
+\
+\ Calculate the following:
+\
+\   K3(2 1 0) = (x_sign x_hi x_lo) - x-coordinate of the sun or space station
+\
+\   K3(5 4 3) = (y_sign y_hi z_lo) - y-coordinate of the sun or space station
+\
+\   K3(8 7 6) = (z_sign z_hi z_lo) - z-coordinate of the sun or space station
+\
+\ where the first coordinate is from the ship data block in INWK, and the second
+\ coordinate is from the sun or space station's ship data block which they
+\ share.
+\
 \ ******************************************************************************
 
 .VCSU1
 
- LDA #((K%+NI%)MOD256)
- STA V
- LDA #((K%+NI%)DIV256)
+ LDA #LO(K%+NI%)        \ Set the low byte of V(1 0) to point to the coordinates
+ STA V                  \ of the sun or space station
+ 
+
+ LDA #HI(K%+NI%)        \ Set A to the high byte of the address of the
+                        \ coordinates of the sun or space station
+
+                        \ Fall through into VCSUB to calculate:
+                        \
+                        \   K3(2 1 0) = (x_sign x_hi x_lo) - x-coordinate of sun
+                        \               or space station
+                        \
+                        \   K3(2 1 0) = (x_sign x_hi x_lo) - x-coordinate of sun
+                        \               or space station
+                        \
+                        \   K3(8 7 6) = (z_sign z_hi z_lo) - z-coordinate of sun
+                        \               or space station
+
+\ ******************************************************************************
+\
+\       Name: VCSUB
+\       Type: Subroutine
+\   Category: Maths (Arithmetic)
+\    Summary: Calculate vector K3(8 0) = [x y z] - coordinates in (A V)
+\
+\ ------------------------------------------------------------------------------
+\
+\ Calculate the following:
+\
+\   K3(2 1 0) = (x_sign x_hi x_lo) - x-coordinate in (A V)
+\
+\   K3(5 4 3) = (y_sign y_hi z_lo) - y-coordinate in (A V)
+\
+\   K3(8 7 6) = (z_sign z_hi z_lo) - z-coordinate in (A V)
+\
+\ where the first coordinate is from the ship data block in INWK, and the second
+\ coordinate is from the ship data block pointed to by (A V).
+\
+\ ******************************************************************************
 
 .VCSUB
 
- STA V+1
- LDY #2
- JSR TAS1
- LDY #5
- JSR TAS1
- LDY #8
+ STA V+1                \ Set the low byte of V(1 0) to A, so now V(1 0) = (A V)
+
+ LDY #2                 \ K3(2 1 0) = (x_sign x_hi x_lo) - x-coordinate in data
+ JSR TAS1               \ block at V(1 0)
+
+ LDY #5                 \ K3(5 4 3) = (y_sign y_hi z_lo) - y-coordinate of data
+ JSR TAS1               \ block at V(1 0)
+
+ LDY #8                 \ Fall through into TAS1 to calculate the final result:
+                        \
+                        \ K3(8 7 6) = (z_sign z_hi z_lo) - z-coordinate of data
+                        \ block at V(1 0)
 
 \ ******************************************************************************
 \
@@ -12268,6 +12346,8 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \   INWK                The whole INWK workspace is preserved
 \
+\   X                   X is preserved
+\
 \ ******************************************************************************
 
 .SFS1
@@ -12279,8 +12359,8 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ so we can restore them later when returning from the
                         \ subroutine
 
- TXA
- PHA
+ TXA                    \ Store X, the ship type to spawn, on the stack so we
+ PHA                    \ can preserve it through the routine
 
  LDA XX0                \ Store XX0(1 0) on the stack, so we can restore it
  PHA                    \ later when returning from the subroutine
@@ -12363,11 +12443,14 @@ LOAD_C% = LOAD% +P% - CODE%
 
  TXA                    \ Copy the child's ship type from X into A
 
- CMP #SPL+1
- BCS NOIL
- CMP #PLT
- BCC NOIL
- PHA
+ CMP #SPL+1             \ If the type of the child we are spawning is less than
+ BCS NOIL               \ #PLT or greater than #SPL - i.e. not an alloy plate,
+ CMP #PLT               \ cargo canister, boulder, asteroid or splinter - then
+ BCC NOIL               \ jump to NOIL to skip us setting up some pitch and roll
+                        \ for it
+
+ PHA                    \ Store the child's ship type on the stack so we can
+                        \ retrieve it below
 
  JSR DORND              \ Set A and X to random numbers
 
@@ -12383,7 +12466,7 @@ LOAD_C% = LOAD% +P% - CODE%
  STA INWK+29            \ damping randomly enabled or disabled, depending on the
                         \ C flag from above
 
- PLA
+ PLA                    \ Retrieve the child's ship type from the stack 
 
 .NOIL
 
@@ -12417,8 +12500,8 @@ LOAD_C% = LOAD% +P% - CODE%
  PLA
  STA XX0
 
- PLA
- TAX
+ PLA                    \ Retrieve the ship type to spawn from the stack into X
+ TAX                    \ so it is preserved through calls to this routine
 
  RTS                    \ Return from the subroutine
 
@@ -32108,7 +32191,9 @@ ENDIF
  ORA XX1+31             \ have now drawn something on-screen for this ship
  STA XX1+31
 
- LDA #9
+ LDA #9                 \ Set A = 9 so when we call LL18+2 next, byte #0 of the
+                        \ heap gets set to 9, to cover the 8 bytes we just stuck
+                        \ on the heap
 
  JMP LL81+2             \ Call LL81+2 to draw the ship's dot, returning from the
                         \ subroutine using a tail call
