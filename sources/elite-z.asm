@@ -160,7 +160,7 @@ ORG &0080
 \ ------------------------------------------------------------------------------
 \
 \ Lines are drawn by sending the line coordinates one byte at a time from the
-\ parasite, using the OSWRCH &81 and &82 commands. As they are sent, they are
+\ parasite, using the OSWRCH 129 and 130 commands. As they are sent, they are
 \ stored in the TABLE buffer, until all the points have been received, at which
 \ point the line is drawn.
 \
@@ -384,14 +384,14 @@ NEXT
 
  EQUB 0                 \ The offset of the first free byte in the TABLE buffer,
                         \ which stores bytes in the current line as they are
-                        \ transmitted from the parasite using the OSWRCH &81 and
-                        \ &82 commands
+                        \ transmitted from the parasite using the OSWRCH 129 and
+                        \ 130 commands
 
 .LINMAX
 
  EQUB 0                 \ The number of points in the line currently being
-                        \ transmitted from the parasite using the OSWRCH &81
-                        \ and &82 commands
+                        \ transmitted from the parasite using the OSWRCH 129
+                        \ and 130 commands
 
 .YSAV
 
@@ -832,7 +832,7 @@ NEXT
 \
 \       Name: DOFE21
 \       Type: Subroutine
-\   Category: Drawing circles
+\   Category: Flight
 \    Summary: Implement the #DOFE21 <flag> command (show the energy bomb effect)
 \
 \ ------------------------------------------------------------------------------
@@ -913,13 +913,34 @@ NEXT
                         \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: DOCATF
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Implement the #DOCATF <flag> command (update the disc catalogue
+\             flag)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #DOCATF <flag> command. It
+\ updates the disc catalogue flag in CATF.
+\
+\ Arguments:
+\
+\   A                   The new value of the disc catalogue flag:
+\
+\                         * 0 = disc is not currently being catalogued
+\
+\                         * 1 = disc is currently being catalogued
+\                       
 \ ******************************************************************************
 
 .DOCATF
 
- STA CATF
- JMP PUTBACK
+ STA CATF               \ Store the new value in CATF
+
+ JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
+                        \ return from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -1454,7 +1475,7 @@ NEXT
 \       Name: BEGINLIN
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: Implement the OSWRCH &81 command (start receiving a new line to
+\    Summary: Implement the OSWRCH 129 command (start receiving a new line to
 \             draw)
 \
 \ ------------------------------------------------------------------------------
@@ -1473,23 +1494,24 @@ NEXT
  STA LINTAB             \ free byte in the TABLE buffer (i.e. the first byte, as
                         \ we have just reset the buffer)
 
- LDA #&82               \ Call USOSWRCH to run an #ADDBYT command, so subsequent
- JMP USOSWRCH           \ OSWRCH calls by the I/O processor get added to TABLE,
-                        \ and return from the subroutine using a tail call
+ LDA #130               \ Send a USOSWRCH 130 command to the I/O processor so
+ JMP USOSWRCH           \ subsequent OSWRCH calls can send coordinates that get
+                        \ added to TABLE, and return from the subroutine using a
+                        \ tail call
 
 \ ******************************************************************************
 \
 \       Name: ADDBYT
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: Implement the OSWRCH &82 command (add a byte to a line
+\    Summary: Implement the OSWRCH 130 command (add a byte to a line
 \             and draw it when all bytes are received)
 \
 \ ------------------------------------------------------------------------------
 \
 \ This routine received bytes from the parasite, each of which is a coordinate
 \ in the line that is currently being drawn (following a call from the parasite
-\ to OSWRCH &81, which starts the I/O processor listening for line bytes). They
+\ to OSWRCH 129, which starts the I/O processor listening for line bytes). They
 \ are stored in the buffer at TABLE, where LINTAB points to the first free byte
 \ in the table, and LINMAX contains double the number of points we are expecting
 \ plus 1.
@@ -4156,14 +4178,12 @@ ENDMACRO
 \       Name: TT26
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Print a character at the text cursor (WRCHV points here)
+\    Summary: Print a character at the text cursor by poking into screen memory
 \
 \ ------------------------------------------------------------------------------
 \
 \ Print a character at the text cursor (XC, YC), do a beep, print a newline,
 \ or delete left (backspace).
-\
-\ WRCHV is set to point here by elite-loader.asm.
 \
 \ Arguments:
 \
@@ -4192,35 +4212,33 @@ ENDMACRO
 \
 \   Y                   Y is preserved
 \
-\   C flag              The C flag is cleared
-\
-\ Other entry points:
-\
-\   RR3+1               Contains an RTS
-\
-\   RREN                Prints the character definition pointed to by P(2 1) at
-\                       the screen address pointed to by (A SC). Used by the
-\                       BULB routine
-\
-\   rT9                 Contains an RTS
-\
 \ ******************************************************************************
 
 .TT26
 
- STA K3
- TYA
- PHA
+ STA K3                 \ Store the A, X and Y registers, so we can restore
+ TYA                    \ them at the end (so they don't get changed by this
+ PHA                    \ routine)
  TXA
  PHA
  LDA K3
- TAY
- BEQ RR4S
- CMP #11
- BEQ cls
- CMP #7
- BNE P%+5
- JMP R5
+
+ TAY                    \ Set Y = the character to be printed
+
+ BEQ RR4S               \ If the character is zero, which is typically a string
+                        \ terminator character jump down to RR4 (via the JMP in
+                        \ RR4S) to restore the registers and return from the
+                        \ subroutine using a tail call
+
+ CMP #11                \ If this is control code 11 (line feed), jump to cls to
+ BEQ cls                \ clear the top part of the screen, draw a white border
+                        \ and return from the subroutine via RR4
+
+ CMP #7                 \ If this is not control code 7 (beep), skip the next
+ BNE P%+5               \ instruction
+
+ JMP R5                 \ This is control code 7 (beep), so jump to R5 to make
+                        \ a beep and return from the subroutine via RR4
 
  CMP #32                \ If this is an ASCII character (A >= 32), jump to RR1
  BCS RR1                \ below, which will print the character, restore the
@@ -4230,7 +4248,7 @@ ENDMACRO
  BEQ RRX1               \ RRX1, which will move down a line, restore the
                         \ registers and return from the subroutine
 
- LDX #1                 \ If we get here, then this is control code 11-13, of
+ LDX #1                 \ If we get here, then this is control code 12 or 13, of
  STX XC                 \ which only 13 is used. This code prints a newline,
                         \ which we can achieve by moving the text cursor
                         \ to the start of the line (carriage return) and down
@@ -4240,13 +4258,17 @@ ENDMACRO
 
 .RRX1
 
- CMP #13
- BEQ RR4S
- INC YC
+ CMP #13                \ If this is control code 13 (carriage return) then jump
+ BEQ RR4S               \ to RR4 (via the JMP in RR4S) to restore the registers
+                        \ and return from the subroutine using a tail call
+
+ INC YC                 \ Increment the text cursor y-coordinate to move it
+                        \ down one row
 
 .RR4S
 
- JMP RR4
+ JMP RR4                \ Jump to RR4 to restore the registers and return from
+                        \ the subroutine using a tail call
 
 .RR1
 
@@ -4259,90 +4281,86 @@ ENDMACRO
                         \ The first step, then, is to get hold of the bitmap
                         \ definition for the character we want to draw on the
                         \ screen (i.e. we need the pixel shape of this
-                        \ character). The OS ROM contains bitmap definitions
+                        \ character). The MOS ROM contains bitmap definitions
                         \ of the BBC's ASCII characters, starting from &C000
                         \ for space (ASCII 32) and ending with the £ symbol
                         \ (ASCII 126)
                         \
-                        \ There are 32 characters' definitions in each page of
-                        \ memory, as each definition takes up 8 bytes (8 rows
-                        \ of 8 pixels) and 32 * 8 = 256 bytes = 1 page. So:
+                        \ To save time looking this information up from the MOS
+                        \ ROM a copy of these bitmap definitions is embedded
+                        \ into this source code at page FONT%, so page 0 of the
+                        \ font is at FONT%, page 1 is at FONT%+1, and page 2 at
+                        \ FONT%+3
                         \
-                        \   ASCII 32-63  are defined in &C000-&C0FF (page &C0)
-                        \   ASCII 64-95  are defined in &C100-&C1FF (page &C1)
-                        \   ASCII 96-126 are defined in &C200-&C2F0 (page &C2)
+                        \ There are definitions for 32 chracters in each of the
+                        \ three pages of MOS memory, as each definition takes up
+                        \ 8 bytes (8 rows of 8 pixels) and 32 * 8 = 256 bytes =
+                        \ 1 page. So:
+                        \
+                        \   ASCII 32-63  are defined in &C000-&C0FF (page 0)
+                        \   ASCII 64-95  are defined in &C100-&C1FF (page 1)
+                        \   ASCII 96-126 are defined in &C200-&C2F0 (page 2)
                         \
                         \ The following code reads the relevant character
-                        \ bitmap from the above locations in ROM and pokes
+                        \ bitmap from the copied MOS bitmaps at FONT% and pokes
                         \ those values into the correct position in screen
                         \ memory, thus printing the character on-screen
                         \
                         \ It's a long way from 10 PRINT "Hello world!":GOTO 10
 
-\LDX #LO(K3)            \ These instructions are commented out in the original
-\INX                    \ source, but they call OSWORD 10, which reads the
-\STX P+1                \ character bitmap for the character number in K3 and
-\DEX                    \ stores it in the block at K3+1, while also setting
-\LDY #HI(K3)            \ P+1 to point to the character definition. This is
-\STY P+2                \ exactly what the following uncommented code does,
-\LDA #10                \ just without calling OSWORD. Presumably the code
-\JSR OSWORD             \ below is faster than using the system call, as this
-                        \ version takes up 15 bytes, while the version below
-                        \ (which ends with STA P+1 and SYX P+2) is 17 bytes.
-                        \ Every efficiency saving helps, especially as this
-                        \ routine is run each time the game prints a character
-                        \
-                        \ If you want to switch this code back on, uncomment
-                        \ the above block, and comment out the code below from
-                        \ TAY to STX P+2. You will also need to uncomment the
-                        \ LDA YC instruction a few lines down (in RR2), just to
-                        \ make sure the rest of the code doesn't shift in
-                        \ memory. To be honest I can't see a massive difference
-                        \ in speed, but there you go
-
  TAY                    \ Copy the character number from A to Y, as we are
                         \ about to pull A apart to work out where this
-                        \ character definition lives in the ROM
+                        \ character definition lives in memory
 
                         \ Now we want to set X to point to the relevant page
-                        \ number for this character - i.e. &C0, &C1 or &C2.
+                        \ number for this character - i.e. FONT% to FONT%+2
+
                         \ The following logic is easier to follow if we look
                         \ at the three character number ranges in binary:
                         \
                         \   Bit #  76543210
                         \
-                        \   32  = %00100000     Page &C0
+                        \   32  = %00100000     Page 0 of bitmap definitions
                         \   63  = %00111111
                         \
-                        \   64  = %01000000     Page &C1
+                        \   64  = %01000000     Page 1 of bitmap definitions
                         \   95  = %01011111
                         \
-                        \   96  = %01100000     Page &C2
+                        \   96  = %01100000     Page 2 of bitmap definitions
                         \   125 = %01111101
                         \
                         \ We'll refer to this below
 
- BPL P%+5
- JMP RR4
- LDX #(FONT%-1)
+\BEQ RR4                \ This instruction is commented out in the original
+                        \ source, but it would return from the subroutine if A
+                        \ is zero
+
+ BPL P%+5               \ If the character number is positive (i.e. A < 128)
+                        \ then skip the following instruction
+
+ JMP RR4                \ A >= 128, so jump to RR4 to restore the registers and
+                        \ return from the subroutine using a tail call
+
+ LDX #(FONT%-1)         \ Set X to point to the page before the first font page,
+                        \ which is FONT% - 1
 
  ASL A                  \ If bit 6 of the character is clear (A is 32-63)
  ASL A                  \ then skip the following instruction
  BCC P%+4
 
- LDX #(FONT%+1)
+ LDX #(FONT%+1)         \ A is 64-126, so set X to point to page FONT% + 1
 
  ASL A                  \ If bit 5 of the character is clear (A is 64-95)
  BCC P%+3               \ then skip the following instruction
 
  INX                    \ Increment X
                         \
-                        \ By this point, we started with X = &BF, and then
+                        \ By this point, we started with X = FONT%-1, and then
                         \ we did the following:
                         \
-                        \   If A = 32-63:   skip    then INX  so X = &C0
-                        \   If A = 64-95:   X = &C1 then skip so X = &C1
-                        \   If A = 96-126:  X = &C1 then INX  so X = &C2
+                        \   If A = 32-63:   skip        then INX  so X = FONT%
+                        \   If A = 64-95:   X = FONT%+1 then skip so X = FONT%+1
+                        \   If A = 96-126:  X = FONT%+1 then INX  so X = FONT%+2
                         \
                         \ In other words, X points to the relevant page. But
                         \ what about the value of A? That gets shifted to the
@@ -4362,35 +4380,32 @@ ENDMACRO
                         \ want, while A contains the low byte (the offset into
                         \ the page) of the address
 
- STA Q
- STX R
- LDA XC
- LDX CATF
- BEQ RR5
- CPY #32
- BNE RR5
- CMP #17
- BEQ RR4
+ STA Q                  \ R is the same location as Q+1, so this stores the
+ STX R                  \ address of this character's definition in Q(1 0)
+
+ LDA XC                 \ Fetch XC, the x-coordinate (column) of the text cursor
+                        \ into A
+
+ LDX CATF               \ If CATF = 0, jump to RR5, otherwise we are printing a
+ BEQ RR5                \ disc catalogue
+
+ CPY #' '               \ If the character we want to print in Y is a space,
+ BNE RR5                \ jump to RR5
+ 
+                        \ If we get here, then CATF is non-zero, so we are
+                        \ printing a disc catalogue and we are not printing a
+                        \ space
+
+ CMP #17                \ If A = 17, i.e. the text cursor is in column 17, jump
+ BEQ RR4                \ to RR4 to restore the registers and return from the
+                        \ subroutine
 
 .RR5
 
- ASL A                  \ Multiply A by 8, and store in SC. As each
- ASL A                  \ character is 8 bits wide, and the special screen mode
- ASL A                  \ Elite uses for the top part of the screen is 256
- STA SC                 \ bits across with one bit per pixel, this value is
-                        \ not only the screen address offset of the text cursor
-                        \ from the left side of the screen, it's also the least
-                        \ significant byte of the screen address where we want
-                        \ to print this character, as each row of on-screen
-                        \ pixels corresponds to one page. To put this more
-                        \ explicitly, the screen starts at &6000, so the
-                        \ text rows are stored in screen memory like this:
-                        \
-                        \   Row 1: &6000 - &60FF    YC = 1, XC = 0 to 31
-                        \   Row 2: &6100 - &61FF    YC = 2, XC = 0 to 31
-                        \   Row 3: &6200 - &62FF    YC = 3, XC = 0 to 31
-                        \
-                        \ and so on
+ ASL A                  \ Multiply A by 8, and store in SC, so we now have:
+ ASL A                  \
+ ASL A                  \   SC = XC * 8
+ STA SC
 
  LDA YC                 \ Fetch YC, the y-coordinate (row) of the text cursor
 
@@ -4405,13 +4420,33 @@ ENDMACRO
                         \ we're just updating the cursor so it's in the right
                         \ position following the deletion
 
- ASL A
- ASL SC
- ADC #&3F
- TAX
+ ASL A                  \ A contains YC (from above), so this sets A = YC * 2
+
+ ASL SC                 \ Double the low byte of SC(1 0), catching bit 7 in the
+                        \ C flag. As each character is 8 pixels wide, and the
+                        \ special screen mode Elite uses for the top part of the
+                        \ screen is 256 pixels across with two bits per pixel,
+                        \ this value is not only double the screen address
+                        \ offset of the text cursor from the left side of the
+                        \ screen, it's also the least significant byte of the
+                        \ screen address where we want to print this character,
+                        \ as each row of on-screen pixels corresponds to two
+                        \ pages. To put this more explicitly, the screen starts
+                        \ at &4000, so the text rows are stored in screen
+                        \ memory like this:
+                        \
+                        \   Row 1: &4000 - &41FF    YC = 1, XC = 0 to 31
+                        \   Row 2: &4200 - &43FF    YC = 2, XC = 0 to 31
+                        \   Row 3: &4400 - &45FF    YC = 3, XC = 0 to 31
+                        \
+                        \ and so on
+
+ ADC #&3F               \ Set X = A
+ TAX                    \       = A + &3F + C
+                        \       = YC * 2 + &3F + C
 
                         \ Because YC starts at 0 for the first text row, this
-                        \ means that X will be &5F for row 0, &60 for row 1 and
+                        \ means that X will be &3F for row 0, &41 for row 1 and
                         \ so on. In other words, X is now set to the page number
                         \ for the row before the one containing the text cursor,
                         \ and given that we set SC above to point to the offset
@@ -4419,12 +4454,13 @@ ENDMACRO
                         \ this means that (X SC) now points to the character
                         \ above the text cursor
 
- LDY #&F0
+ LDY #&F0               \ Set Y = &F0, so the following call to ZES2 will count
+                        \ Y upwards from &F0 to &FF
 
  JSR ZES2               \ Call ZES2, which zero-fills from address (X SC) + Y to
                         \ (X SC) + &FF. (X SC) points to the character above the
                         \ text cursor, and adding &FF to this would point to the
-                        \ cursor, so adding &F8 points to the character before
+                        \ cursor, so adding &F0 points to the character before
                         \ the cursor, which is the one we want to delete. So
                         \ this call zero-fills the character to the left of the
                         \ cursor, which erases it from the screen
@@ -4444,39 +4480,60 @@ ENDMACRO
                         \ the cursor so it's in the right position following
                         \ the print
 
-\LDA YC                 \ This instruction is commented out in the original
-                        \ source. It isn't required because we only just did a
-                        \ LDA YC before jumping to RR2, so this is presumably
-                        \ an example of the authors squeezing the code to save
-                        \ 2 bytes and 3 cycles
-                        \
-                        \ If you want to re-enable the commented block near the
-                        \ start of this routine, you should uncomment this
-                        \ instruction as well
-
  CMP #24                \ If the text cursor is on the screen (i.e. YC < 24, so
  BCC RR3                \ we are on rows 1-23), then jump to RR3 to print the
                         \ character
 
- PHA
+ PHA                    \ Store A on the stack so we can retrieve it below
 
  JSR TTX66              \ Otherwise we are off the bottom of the screen, so
                         \ clear the screen and draw a white border
 
- LDA #1
- STA XC
+ LDA #1                 \ Otherwise we are off the bottom of the screen, so move
+ STA XC                 \ the text cursor to column 1, row 1
  STA YC
- PLA
- LDA K3
+
+ PLA                    \ Retrieve A from the stack... only to overwrite it with
+                        \ the next instruction, so presumably we didn't need to
+                        \ preserve it and this and the PHA above have no effect
+
+ LDA K3                 \ Set A to the character to be printed, though again
+                        \ this has no effect, as the following call to RR4 does
+                        \ the exact same thing
 
  JMP RR4                \ And restore the registers and return from the
                         \ subroutine
 
 .RR3
 
- ASL A
- ASL SC
- ADC #&40
+                        \ A contains the value of YC - the screen row where we
+                        \ want to print this character - so now we need to
+                        \ convert this into a screen address, so we can poke
+                        \ the character data to the right place in screen
+                        \ memory
+
+ ASL A                  \ Set A = 2 * A
+                        \       = 2 * YC
+
+ ASL SC                 \ Back in RR5 we set SC = XC * 8, so this does the
+                        \ following:
+                        \
+                        \   SC = SC * 2
+                        \      = XC * 16
+                        \
+                        \ so SC contains the low byte of the screen address we
+                        \ want to poke the character into, as each text
+                        \ character is 8 pixels wide, and there are four pixels
+                        \ per byte, so the offset within the row's 512 bytes
+                        \ is XC * 8 pixels * 2 bytes for each 8 pixels = XC * 16
+
+ ADC #&40               \ Set A = &40 + A
+                        \       = &40 + (2 * YC)
+                        \
+                        \ so A contains the high byte of the screen address we
+                        \ want to poke the character into, as screen memory
+                        \ starts at &4000 (page &40) and each screen row takes
+                        \ up 2 pages (512 bytes)
 
 .RREN
 
@@ -4484,12 +4541,16 @@ ENDMACRO
                         \ location in SC+1, so SC now points to the full screen
                         \ location where this character should go
 
- LDA SC
- CLC
- ADC #8
+ LDA SC                 \ Set (T S) = SC(1 0) + 8
+ CLC                    \
+ ADC #8                 \ starting with the low bytes
  STA S
- LDA SC+1
- STA T
+
+ LDA SC+1               \ And then adding the high bytes, so (T S) points to the
+ STA T                  \ character block after the one pointed to by SC(1 0),
+                        \ and because T = S+1, we have:
+                        \
+                        \   S(1 0) = SC(1 0) + 8
 
  LDY #7                 \ We want to print the 8 bytes of character data to the
                         \ screen (one byte per row), so set up a counter in Y
@@ -4497,15 +4558,31 @@ ENDMACRO
 
 .RRL1
 
- LDA (Q),Y
- AND #&F0
- STA U
- LSR A
- LSR A
- LSR A
+                        \ We print the character's 8-pixel row in two parts,
+                        \ starting with the first four pixels (one byte of
+                        \ screen memory), and then the second four (a second
+                        \ byte of screen memory)
+
+ LDA (Q),Y              \ The character definition is at Q(1 0) - we set this up
+                        \ above - so load the Y-th byte from Q(1 0), which will
+                        \ contain the bitmap for the Y-th row of the character
+
+ AND #%11110000         \ Extract the top nibble of the character definition
+                        \ byte, so the first four pixels on this row of the
+                        \ character are in the first nibble, i.e. xxxx 0000
+                        \ where xxxx is the pattern of those four pixels in the
+                        \ character
+
+ STA U                  \ Set A = (A >> 4) OR A
+ LSR A                  \
+ LSR A                  \ which duplicates the top nibble into the bottom nibble
+ LSR A                  \ to give xxxx xxxx
  LSR A
  ORA U
- AND COL
+
+ AND COL                \ AND with the colour byte so that the pixels take on
+                        \ the colour we want to draw (i.e. A is acting as a mask
+                        \ on the colour byte)
 
  EOR (SC),Y             \ If we EOR this value with the existing screen
                         \ contents, then it's reversible (so reprinting the
@@ -4518,17 +4595,33 @@ ENDMACRO
  STA (SC),Y             \ Store the Y-th byte at the screen address for this
                         \ character location
 
- LDA (Q),Y
- AND #&F
- STA U
- ASL A
- ASL A
- ASL A
+                        \ We now repeat the process for the second batch of four
+                        \ pixels in this character row
+
+ LDA (Q),Y              \ Fetch the the bitmap for the Y-th row of the character
+                        \ again
+
+ AND #%00001111         \ This time we extract the bottom nibble of the
+                        \ character definition, to get 0000 xxxx
+ 
+ STA U                  \ Set A = (A << 4) OR A
+ ASL A                  \
+ ASL A                  \ which duplicates the bottom nibble into the top nibble
+ ASL A                  \ to give xxxx xxxx
  ASL A
  ORA U
- AND COL
- EOR (S),Y
- STA (S),Y
+
+ AND COL                \ AND with the colour byte so that the pixels take on
+                        \ the colour we want to draw (i.e. A is acting as a mask
+                        \ on the colour byte)
+
+ EOR (S),Y              \ EOR this value with the existing screen contents of
+                        \ S(1 0), which is equal to SC(1 0) + 8, the next four
+                        \ pixels along from the first four pixels we just
+                        \ plotted in SC(1 0)
+
+ STA (S),Y              \ Store the Y-th byte at the screen address for this
+                        \ character location
 
  DEY                    \ Decrement the loop counter
 
@@ -4536,9 +4629,9 @@ ENDMACRO
 
 .RR4
 
- PLA
- TAX
- PLA
+ PLA                    \ We're done printing, so restore the values of the
+ TAX                    \ A, X and Y registers that we saved above, so
+ PLA                    \ everything is back to how it was
  TAY
  LDA K3
 
@@ -4548,17 +4641,24 @@ ENDMACRO
 
 .R5
 
- LDX #(BELI MOD256)
- LDY #(BELI DIV256)
- JSR OSWORD
- JMP RR4
+ LDX #LO(BELI)          \ We call this from above with A = 7, so this calls
+ LDY #HI(BELI)          \ OSWORD 7 with (Y X) pointing to the BELI parameter
+ JSR OSWORD             \ block below, which makes a short, high beep
+
+ JMP RR4                \ Jump to RR4 to restore the registers and return from
+                        \ the subroutine using a tail call
 
 .BELI
 
- EQUW &12
- EQUW &FFF1
- EQUW 200
- EQUW 2
+ EQUW &0012             \ The SOUND block for a short, high beep:
+ EQUW &FFF1             \
+ EQUW &00C8             \   SOUND &12, -15, &C8, &02
+ EQUW &0002             \
+                        \ This makes a sound with flush control 1 on channel 2,
+                        \ and with amplitude &F1 (-15), pitch &C8 (200) and
+                        \ duration &02 (2). This is a louder, higher and longer
+                        \ beep than that generated by the NOISE routine with
+                        \ A = 32 (a short, high beep)
 
 \ ******************************************************************************
 \       Name: TTX66
@@ -5268,16 +5368,21 @@ ENDMACRO
                         \ line in this character row, so set Y to point to that
                         \ row's offset
 
- LDX #7
+ LDX #7                 \ Set up a counter in X for the width of the indicator,
+                        \ which is 8 characters (each of which is 2 pixels wide,
+                        \ to give a total width of 16 pixels)
 
 .DL1
 
  LDA Q                  \ Fetch the indicator value (0-15) from Q into A
 
- CMP #2
- BCC DL2
- SBC #2
- STA Q
+ CMP #2                 \ If Q < 2, then we need to draw the end cap of the
+ BCC DL2                \ indicator, which is less than a full character's
+                        \ width, so jump down to DL2 to do this
+
+ SBC #2                 \ Otherwise we can draw a 2-pixel wide block, so
+ STA Q                  \ subtract 2 from Q so it contains the amount of the
+                        \ indicator that's left to draw after this character
 
  LDA R                  \ Fetch the shape of the indicator row that we need to
                         \ display from R, so we can use it as a mask when
@@ -5317,8 +5422,13 @@ ENDMACRO
 
 .DL2
 
- EOR #1
- STA Q
+ EOR #1                 \ If we get here then we are drawing the indicator's
+ STA Q                  \ end cap, so Q is < 2, and this EOR flips the bits, so
+                        \ instead of containing the number of indicator columns
+                        \ we need to fill in on the left side of the cap's
+                        \ character block, Q now contains the number of blank
+                        \ columns there should be on the right side of the cap's
+                        \ character block
 
  LDA R                  \ Fetch the current mask from R, which will be &FF at
                         \ this point, so we need to turn Q of the columns on the
@@ -5327,8 +5437,11 @@ ENDMACRO
 
 .DL3
 
- ASL A
- AND #&AA
+ ASL A                  \ Shift the mask left and clear bits 0, 2, 4 and 8,
+ AND #%10101010         \ which has the effect of shifting zeroes from the left
+                        \ into each two-bit segment (i.e. xx xx xx xx becomes
+                        \ x0 x0 x0 x0, which blanks out the last column in the
+                        \ 2-pixel mode 2 character block)
 
  DEC Q                  \ Decrement the counter for the number of columns to
                         \ blank out
@@ -5355,12 +5468,10 @@ ENDMACRO
 .DL6
 
  INC SC+1               \ Increment the high byte of SC to point to the next
-                        \ character row on-screen (as each row takes up exactly
-                        \ one page of 256 bytes) - so this sets up SC to point
+ INC SC+1               \ character row on-screen (as each row takes up exactly
+                        \ two pages of 256 bytes) - so this sets up SC to point
                         \ to the next indicator, i.e. the one below the one we
                         \ just drew
-
- INC SC+1
 
 .DL9                    \ This label is not used but is in the original source
 
@@ -5408,7 +5519,7 @@ ENDMACRO
                         \ a pixel row counter to work our way through the
                         \ character blocks, so each time we draw a character
                         \ block, we will increment Y by 8 to move on to the next
-                        \ block
+                        \ block (as each character block contains 8 rows)
 
 .DLL10
 
@@ -5416,14 +5527,14 @@ ENDMACRO
  LDA Q                  \ vertical bar from the start of this character block
  SBC #2
 
- BCS DLL11              \ If Q >= 4 then the character block we are drawing does
+ BCS DLL11              \ If Q >= 2 then the character block we are drawing does
                         \ not contain the vertical indicator bar, so jump to
                         \ DLL11 to draw a blank character block
 
  LDA #&FF               \ Set A to a high number (and &FF is as high as they go)
 
- LDX Q                  \ Set X to the offset of the vertical bar, which is
-                        \ within this character block as Q < 4
+ LDX Q                  \ Set X to the offset of the vertical bar, which we know
+                        \ is within this character block
 
  STA Q                  \ Set Q to a high number (&FF, why not) so we will keep
                         \ drawing blank characters after this one until we reach
@@ -5436,7 +5547,12 @@ ENDMACRO
                         \ at X, so the pixel is at the offset that we want for
                         \ our vertical bar
 
- AND #WHITE2
+ AND #WHITE2            \ The 2-pixel mode 2 byte in #WHITE2 represents two
+                        \ pixels of colour %0111 (7), which is white in both
+                        \ dashboard palettes. We AND this with A so that we only
+                        \ keep the pixel that matches the position of the
+                        \ vertical bar (i.e. A is acting as a mask on the
+                        \ 2-pixel colour byte)
 
  BNE DLL12              \ If A is non-zero then we have something to draw, so
                         \ jump to DLL12 to skip the following and move on to the
@@ -5478,12 +5594,10 @@ ENDMACRO
                         \ next one along
 
  INC SC+1               \ Increment the high byte of SC to point to the next
-                        \ character row on-screen (as each row takes up exactly
-                        \ one page of 256 bytes) - so this sets up SC to point
+ INC SC+1               \ character row on-screen (as each row takes up exactly
+                        \ two pages of 256 bytes) - so this sets up SC to point
                         \ to the next indicator, i.e. the one below the one we
                         \ just drew
-
- INC SC+1
 
  RTS                    \ Return from the subroutine
 

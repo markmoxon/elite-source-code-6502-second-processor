@@ -221,7 +221,7 @@ ENDMACRO
 .ENTRY
 
  CLD 
- LDA #&81
+ LDA #129
  LDX #0
  LDY #&FF
  JSR OSBYTE
@@ -284,7 +284,7 @@ ENDMACRO
 
 .happy
 
-\  Only run if OSBYTE&81,0,&FF returns X and Y zero OR if (OSBYTE&81,0,&FF         returns XY = &FFFF AND OSBYTE&EA,0,&FF returns X nonzero)
+\  Only run if OSBYTE129,0,&FF returns X and Y zero OR if (OSBYTE129,0,&FF         returns XY = &FFFF AND OSBYTE&EA,0,&FF returns X nonzero)
 \.....
  LDA #16
  LDX #3

@@ -2645,6 +2645,9 @@ ORG &0800
                         \
                         \   * Bit 2 set = mission 2 in progress
                         \   * Bit 3 set = mission 2 completed
+                        \
+                        \ Bit 7 must not be set, as otherwise commander files
+                        \ saved with this value will give an error when loaded
 
 .QQ0
 
@@ -3435,7 +3438,9 @@ LOAD_A% = LOAD%
 
 .CATF
 
- EQUB 0
+ EQUB 0                 \ This bute is unused (the CATF variable in the I/O
+                        \ processor code is used to store the CATF flag, not
+                        \ this one)
 
 .ZIP
 
@@ -3486,15 +3491,10 @@ LOAD_A% = LOAD%
                         \ commander. Q% can be set to TRUE to give the default
                         \ commander lots of credits and equipment
 
- EQUB 0                 \ Mission status. The disc version of the game has two
-                        \ missions, and this byte contains the status of those
-                        \ missions (the possible values are 0, 1, 2, &A, &E). As
-                        \ the cassette version doesn't have missions, this byte
-                        \ will always be zero, which means no missions have been
-                        \ started
+ EQUB 0                 \ TP = Mission status
                         \
                         \ Note that this byte must not have bit 7 set, or
-                        \ loading this commander will cause the game to restart
+                        \ loading this commander will give an error
 
  EQUB 20                \ QQ0 = current system X-coordinate (Lave)
  EQUB 173               \ QQ1 = current system Y-coordinate (Lave)
@@ -3786,18 +3786,31 @@ ENDIF
  JMP BAY
 
 \ ******************************************************************************
+\
 \       Name: BRKBK
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Set the standard BRKV handler for the game
+\
+\ ------------------------------------------------------------------------------
+\
+\ BRKV is set to this routine by the BRKBK routine, which is called by the
+\ decryption routine at DEEOR just before the game is run for the first time,
+\ and at the end of the SVE routine after the disc access menu has been
+\ processed (so this resets BRKV to the standard BRKV handler for the game).
+\
 \ ******************************************************************************
 
 .BRKBK
 
- LDA #(BRBR MOD256)
- SEI
- STA BRKV
- LDA #(BRBR DIV256)
+ LDA #LO(BRBR)          \ Set BRKV to point to the BRBR routine, disabling
+ SEI                    \ while we make the change and re-enabling them once we
+ STA BRKV               \ are done
+ LDA #HI(BRBR)
  STA BRKV+1
  CLI
- RTS
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -4698,9 +4711,7 @@ ENDIF
  SEC                    \ that it has been killed and should be removed from
  ROR INWK+31            \ the local bubble
 
-.MA61
-
-                        \ This label is not used but is in the original source
+.MA61                   \ This label is not used but is in the original source
 
  BNE MA26               \ Jump to MA26 to skip over the collision routines and
                         \ to move on to missile targeting (this BNE is
@@ -6808,11 +6819,12 @@ NEXT
 
 \ ******************************************************************************
 \       Name: LL30
+\ by sending an OSWRCH 129 command to the I/O processor
 \ ******************************************************************************
 
 .LL30
 
- LDA #&81
+ LDA #129
  JSR OSWRCH
  LDA #5
  JSR OSWRCH
@@ -6827,6 +6839,7 @@ NEXT
 
 \ ******************************************************************************
 \       Name: LOIN
+\ by sending an OSWRCH 129 command to the I/O processor
 \ ******************************************************************************
 
 .LOIN
@@ -6855,7 +6868,7 @@ NEXT
  LDY LBUP
  BEQ LBZE2
  INY
- LDA #&81
+ LDA #129
  JSR OSWRCH
  TYA
  JSR OSWRCH
@@ -6886,6 +6899,7 @@ IF _MATCH_EXTRACTED_BINARIES
 ELSE
  SKIP &100
 ENDIF
+
 \ ******************************************************************************
 \
 \       Name: FLKB
@@ -7078,6 +7092,7 @@ ENDIF
 
 \ ******************************************************************************
 \       Name: HBFL
+\ by sending an OSWORD 247 command to the I/O processor
 \ ******************************************************************************
 
 .HBFL
@@ -7310,6 +7325,7 @@ ENDIF
 
 \ ******************************************************************************
 \       Name: PBFL
+\ by sending an OSWORD 241 command to the I/O processor
 \ ******************************************************************************
 
 .PBFL
@@ -10320,6 +10336,7 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 
 \ ******************************************************************************
 \       Name: DIALS
+\ by sending a #RDPARAMS command to the I/O processor
 \ ******************************************************************************
 
 .DIALS
@@ -10584,6 +10601,7 @@ LOAD_C% = LOAD% +P% - CODE%
 
 \ ******************************************************************************
 \       Name: HALL
+\ by sending an OSWORD 248 command to the I/O processor
 \ ******************************************************************************
 
 .HALL
@@ -15556,7 +15574,8 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: DOXC
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Move the text cursor to a specified column
+\    Summary: Move the text cursor to a specified column by sending a #SETXC
+\             command to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -15635,7 +15654,8 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: DOYC
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Move the text cursor to a specified row
+\    Summary: Move the text cursor to a specified row by sending a #SETYC
+\             command to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -15661,7 +15681,7 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: label
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Write a two-byte command to the I/O processor
+\    Summary: Send a two-byte OSWRCH command to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -15712,7 +15732,8 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: DOCOL
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Set the text colour
+\    Summary: Set the text colour by sending a #SETCOL command to the I/O
+\             processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -15738,7 +15759,8 @@ LOAD_D% = LOAD% + P% - CODE%
 \       Name: DOVDU19
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Define a logical colour
+\    Summary: Change the mode 1 palette by sending a #SETVDU19 command to the
+\             I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -17103,11 +17125,16 @@ LOAD_D% = LOAD% + P% - CODE%
 \
 \ ------------------------------------------------------------------------------
 \
-\ Get a number from the keyboard, up to the maximum number in QQ25. Pressing a
-\ key with an ASCII code less than ASCII "0" will return a 0 in A (so that
-\ includes pressing Space or Return), while pressing a key with an ASCII code
-\ greater than ASCII "9" will jump to the Inventory screen (so that includes
-\ all letters and most punctuation).
+\ Get a number from the keyboard, up to the maximum number in QQ25, for the
+\ buying and selling of cargo and equipment.
+\
+\ Pressing "Y" will return the maximum number (i.e. buy/sell all items), while
+\ pressing "N" will abort the sale and return a 0.
+\
+\ Pressing a key with an ASCII code less than ASCII "0" will return a 0 in A (so
+\ that includes pressing Space or Return), while pressing a key with an ASCII
+\ code greater than ASCII "9" will jump to the Inventory screen (so that
+\ includes all letters and most punctuation).
 \
 \ Arguments:
 \
@@ -17139,12 +17166,14 @@ LOAD_D% = LOAD% + P% - CODE%
  JSR TT217              \ Scan the keyboard until a key is pressed, and return
                         \ the key's ASCII code in A (and X)
 
- LDX R
- BNE NWDAV2
- CMP #'y'
- BEQ NWDAV1
- CMP #'n'
- BEQ NWDAV3
+ LDX R                  \ If R is non-zero then skip to NWDAV2, as we are
+ BNE NWDAV2             \ already building a number
+
+ CMP #'y'               \ If "Y" was pressed, jump to NWDAV1 to return the
+ BEQ NWDAV1             \ maximum number allowed (i.e. buy/sell the whole stock)
+
+ CMP #'n'               \ If "N" was pressed, jump to NWDAV3 to return from the
+ BEQ NWDAV3             \ subroutine with a result of 0 (i.e. abort transaction)
 
 .NWDAV2
 
@@ -17199,10 +17228,13 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .OUT
 
- PHP
- LDA #CYAN
- JSR DOCOL
- PLP
+ PHP                    \ Store the processor flags, so we can return the C flag
+                        \ without the call to DOCOL corrupting it
+
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is white in the trade view
+
+ PLP                    \ Restore the processor flags, in particular the C flag
 
  LDA R                  \ Set A to the result we have been building in R
 
@@ -17210,17 +17242,26 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .NWDAV1
 
- JSR TT26
- LDA QQ25
+                        \ If we get here then "Y" was pressed, so we return the
+                        \ maximum number allowed, which is in QQ25
+
+ JSR TT26               \ Print the character for the key that was pressed
+
+ LDA QQ25               \ Set R = QQ25, so we return the maximum value allowed
  STA R
- BRA OUT\++
+
+ BRA OUT                \ Jump to OUT to return from the subroutine
 
 .NWDAV3
 
- JSR TT26
- LDA #0
+                        \ If we get here then "N" was pressed, so we return 0
+
+ JSR TT26               \ Print the character for the key that was pressed
+
+ LDA #0                 \ Set R = 0, so we return 0
  STA R
- BRA OUT\++
+
+ BRA OUT                \ Jump to OUT to return from the subroutine
 
 \ ******************************************************************************
 \
@@ -18843,7 +18884,7 @@ LOAD_D% = LOAD% + P% - CODE%
 \   A                   The number of the market item to print, 0-16 (see QQ23
 \                       for details of item numbers)
 \
-\ Results:
+\ Returns:
 \
 \   QQ19+1              Byte #1 from the market prices table for this item
 \
@@ -22262,6 +22303,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
 \ ******************************************************************************
 \       Name: DET1
+\ by sending a #DODIALS command to the I/O processor
 \ ******************************************************************************
 
 .DET1
@@ -22541,6 +22583,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
 \ ******************************************************************************
 \       Name: DOT
+\ by sending a #DOdot command to the I/O processor
 \ ******************************************************************************
 
 .DOT
@@ -23216,7 +23259,8 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Name: ECBLB
 \       Type: Subroutine
 \   Category: Dashboard
-\    Summary: Light up the E.C.M. indicator bulb ("E") on the dashboard
+\    Summary: Light up the E.C.M. indicator bulb ("E") on the dashboard by
+\             sending a #DOBULB command to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -23236,7 +23280,8 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Name: SPBLB
 \       Type: Subroutine
 \   Category: Dashboard
-\    Summary: Light up the space station indicator ("S") on the dashboard
+\    Summary: Light up the space station indicator ("S") on the dashboard by
+\             sending a #DOBULB command to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -23254,6 +23299,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
 \ ******************************************************************************
 \       Name: MSBAR
+\ by sending a #DOmsbar command to the I/O processor
 \ ******************************************************************************
 
 .msbpars
@@ -24850,7 +24896,8 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Name: LS2FL
 \       Type: Subroutine
 \   Category: Drawing circles
-\    Summary: Send the ball line heap to the I/O processor for drawing
+\    Summary: Draw the contents of the ball line heap by sending an OSWRCH 129
+\             command to the I/O processor
 \
 \ ******************************************************************************
 
@@ -24871,7 +24918,7 @@ LOAD_E% = LOAD% + P% - CODE%
  BEQ WP1                \ If there are no points in the heap, jump down to WP1
                         \ to return from the subroutine
 
- LDA #&81               \ Send an OSWRCH &81 command to the I/O processor to
+ LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
  JSR OSWRCH             \ tell it to start drawing a new line. This means the
                         \ next byte we send to OSWRCH 
 
@@ -26527,11 +26574,12 @@ LOAD_F% = LOAD% + P% - CODE%
 \       Name: ZINF
 \       Type: Subroutine
 \   Category: Utility routines
-\    Summary: Reset the INWK workspace
+\    Summary: Reset the INWK workspace and orientation vectors
 \
 \ ------------------------------------------------------------------------------
 \
-\ Zero-fill the INWK ship workspace and reset the orientation vectors.
+\ Zero-fill the INWK ship workspace and reset the orientation vectors, with
+\ nosev pointing into the screen.
 \
 \ Returns:
 \
@@ -26562,20 +26610,21 @@ LOAD_F% = LOAD% + P% - CODE%
                         \   roofv = (0,  1,  0)
                         \   nosev = (0,  0, -1)
                         \
-                        \ &6000 represents 1 in the orientation vectors, while
-                        \ &E000 represents -1. We already set the vectors to
-                        \ zero above, so we just need to set up the diagonal
-                        \ values and we're done
+                        \ 96 * 256 (&6000) represents 1 in the orientation
+                        \ vectors, while -96 * 256 (&E000) represents -1. We
+                        \ already set the vectors to zero above, so we just
+                        \ need to set up the high bytes of the diagonal values
+                        \ and we're done
 
- LDA #&60               \ Set A to represent a 1
+ LDA #96                \ Set A to represent a 1 (in vector terms)
 
- STA INWK+18            \ Set byte #18 = roofv_y_hi = &60 = 1
+ STA INWK+18            \ Set byte #18 = roofv_y_hi = 96 = 1
 
- STA INWK+22            \ Set byte #22 = sidev_x_hi = &60 = 1
+ STA INWK+22            \ Set byte #22 = sidev_x_hi = 96 = 1
 
  ORA #128               \ Flip the sign of A to represent a -1
 
- STA INWK+14            \ Set byte #14 = nosev_z_hi = &E0 = -1
+ STA INWK+14            \ Set byte #14 = nosev_z_hi = -96 = -1
 
  RTS                    \ Return from the subroutine
 
@@ -27812,20 +27861,55 @@ LOAD_F% = LOAD% + P% - CODE%
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: brkd
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: The brkd counter for error handling
+\
+\ ------------------------------------------------------------------------------
+\
+\ This counter starts at zero, and is decremented whenever the BRKV handler at
+\ BRBR prints an error message. It is incremented every time an error message
+\ is printer out as part of the TITLE routine.
+\
 \ ******************************************************************************
 
 .brkd
 
- BRK
+ EQUB 0
 
 \ ******************************************************************************
+\
 \       Name: BRBR
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: The standard BRKV handler for the game
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is used to display error messages, before restarting the game.
+\ When called, it makes a beep and prints the system error message in the block
+\ pointed to by (&FD &FE), which is where the MOS will put any system errors. It
+\ then waits for a key press and restarts the game.
+\
+\ BRKV is set to this routine in the decryption routine at DEEOR just before the
+\ game is run for the first time, and at the end of the SVE routine after the
+\ disc access menu has been processed. In other words, this is the standard
+\ BRKV handler for the game, and it's swapped out to MRBRK for disc access
+\ operations only.
+\
+\ When it is the BRKV handler, the routine can be triggered using a BRK
+\ instruction. The main differences between this routine and the MEBRK handler
+\ that is used during disc access operations are that this routine restarts the
+\ game rather than returning to the disc access menu, and this handler
+\ decrements the brkd counter.
+\
 \ ******************************************************************************
 
 .BRBR
 
- DEC brkd               \ Decrement brkd
+ DEC brkd               \ Decrement the brkd counter
 
  LDX #&FF               \ Set the stack pointer to &01FF, which is the standard
  TXS                    \ location for the 6502 stack, so this instruction
@@ -27856,7 +27940,7 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ until we fetch a zero (which marks the end of the
                         \ message)
 
- JMP BR1
+ JMP BR1                \ Jump to BR1 to restart the game
 
 \ ******************************************************************************
 \
@@ -28427,10 +28511,10 @@ ENDIF
 
 .awe
 
- LDA brkd               \ If brkd = 0, jump to BRBR2 to skip printing the MOS
- BEQ BRBR2              \ error message
+ LDA brkd               \ If brkd = 0, jump to BRBR2 to skip the following, we
+ BEQ BRBR2              \ we do not have a system error message to display
 
- INC brkd               \ Increment brkd
+ INC brkd               \ Increment the brkd counter
 
  LDA #7                 \ Move the text cursor to column 7
  JSR DOXC
@@ -28900,13 +28984,18 @@ ENDIF
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: CTLI
+\       Type: Variable
+\   Category: Save and load
+\    Summary: The OS command string for cataloguing a disc
+\
 \ ******************************************************************************
 
 .CTLI
 
- EQUS ".0"
- EQUB 13
+ EQUS ".0"              \ The "0" part of the string is overwritten with the
+ EQUB 13                \ actual drive number by the CATS routine
 
 \ ******************************************************************************
 \       Name: DELI
@@ -28918,34 +29007,69 @@ ENDIF
  EQUB 13
 
 \ ******************************************************************************
+\
 \       Name: CATS
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Catalogue a disc by sending a #DOCATF command to the I/O processor
+\
 \ ******************************************************************************
 
 .CATS
 
- JSR GTDRV
- BCS DELT-1
- STA CTLI+1
- STA DTW7
- LDA #4
- JSR DETOK
- LDA #DOCATF
+ JSR GTDRV              \ Get an ASCII disc drive drive number from the keyboard
+                        \ in A, setting the C flag if an invalid drive number
+                        \ was entered
+
+ BCS DELT-1             \ If the C flag is set, then an invalid drive number was
+                        \ entered, so return from the subroutine (as DELT-1
+                        \ contains an RTS)
+
+ STA CTLI+1             \ Store the drive number in the second byte of the
+                        \ command string at CTLI, so it overwrites the "0" in
+                        \ ".0" with the drive number to catalogue
+
+ STA DTW7               \ Store the drive number in DTW7, so printing extended
+                        \ token 4 will show the correct drive number (as token 4
+                        \ contains the {drive number} jump code, which calls
+                        \ MT16 to print the character in DTW7)
+
+ LDA #4                 \ Print extended token 4, which clears the screen and
+ JSR DETOK              \ prints the boxed-out title "DRIVE {drive number}
+                        \ CATALOGUE"
+
+ LDA #DOCATF            \ Send a #DOCATF 1 command to the I/O processor to set
+ JSR OSWRCH             \ the CATF flag to 1, so that the TT26 routine on the
+ LDA #1                 \ I/O processor prints out the disc catalogue correctly
  JSR OSWRCH
- LDA #1
+
+ STA XC                 \ Move the text cursor to column 1
+
+ LDX #LO(CTLI)          \ Set (Y X) to point to the OS command at CTLI, which
+ LDY #HI(CTLI)          \ contains a dot and the drive number, which is the
+                        \ DFS command for cataloguing that drive (*. being short
+                        \ for *CAT)
+
+ JSR SCLI2              \ Call SCLI2 to execute the OS command at (Y X), which
+                        \ catalogues the disc, setting the SVN flag while it's
+                        \ running to indicate disc access is in progress
+
+ LDA #DOCATF            \ Send a #DOCATF 0 command to the I/O processor to set
+ JSR OSWRCH             \ the CATF flag to 0, so that TT26 returns to normal
+ LDA #0                 \ printing
  JSR OSWRCH
- STA XC
- LDX #(CTLI MOD256)
- LDY #(CTLI DIV256)
- JSR SCLI2
- LDA #DOCATF
- JSR OSWRCH
- LDA #0
- JSR OSWRCH
- CLC
- RTS
+
+ CLC                    \ Clear the C flag
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \       Name: DELT
+\
+\ Other entry points:
+\
+\   DELT-1              \ Contains an RTS
+\
 \ ******************************************************************************
 
 .DELT
@@ -28973,7 +29097,13 @@ ENDIF
  JMP SVE
 
 \ ******************************************************************************
+\
 \       Name: stack
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Temporary storage for the stack pointer when switching the BRKV
+\             handler between BRBR and MEBRK
+
 \ ******************************************************************************
 
 .stack
@@ -28981,13 +29111,41 @@ ENDIF
  EQUB 0
 
 \ ******************************************************************************
+\
 \       Name: MEBRK
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: The BRKV handler for disc access operations
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is used to display error messages from the disc filing system
+\ while disc access operations are being performed. When called, it makes a beep
+\ and prints the system error message in the block pointed to by (&FD &FE),
+\ which is where the disc filing system will put any disc errors (such as "File
+\ not found", "Disc error" and so on). It then waits for a key press and returns
+\ to the disc access menu.
+\
+\ BRKV is set to this routine at the start of the SVE routine, just before the
+\ disc access menu is shown, and it reverts to BRBR at the end of the SVE
+\ routine after the disc access menu has been processed. In other words, BRBR is
+\ the standard BRKV handler for the game, and it's swapped out to MRBRK for disc
+\ access operations only.
+\
+\ When it is the BRKV handler, the routine can be triggered using a BRK
+\ instruction. The main difference between this routine and the standard BRKV
+\ handler in BRBR is that this routine returns to the disc access menu rather
+\ than restarting the game, and it doesn't decrement the brkd counter.
+\
 \ ******************************************************************************
 
 .MEBRK
 
- LDX stack
- TXS
+ LDX stack              \ Set the stack pointer to the value that we stored in
+ TXS                    \ location stack, so that's back to the value it had
+                        \ before we set BRKV to point to MEBRK in the SVE
+                        \ routine
+
  JSR backtonormal       \ Disable the keyboard and set the SVN flag to 0
 
  TAY                    \ The call to backtonormal sets A to 0, so this sets Y
@@ -29004,7 +29162,10 @@ ENDIF
 
  INY                    \ Increment the loop counter
 
- BEQ retry
+ BEQ retry              \ If A = 0 then we have reached the end of the error
+                        \ message, so jump to retry to wait for a key press and
+                        \ display the disc access menu (this BEQ is effectively
+                        \ a JMP, as we didn't take the BNE branch above)
 
  LDA (&FD),Y            \ Fetch the Y-th byte of the block pointed to by
                         \ (&FD &FE), so that's the Y-th character of the message
@@ -29015,71 +29176,124 @@ ENDIF
                         \ until we fetch a zero (which marks the end of the
                         \ message)
 
- BEQ retry
+ BEQ retry              \ Jump to retry to wait for a key press and display the
+                        \ disc access menu (this BEQ is effectively a JMP, as we
+                        \ didn't take the BNE branch above)
 
 \ ******************************************************************************
+\
 \       Name: CAT
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Catalogue a disc, wait for a key press and display the disc access
+\             menu
+\
 \ ******************************************************************************
 
 .CAT
 
- JSR CATS
+ JSR CATS               \ Call CATS to catalogue a disc
 
-\ ******************************************************************************
+                        \ Fall through into retry to wait for a key press and
+                        \ display the disc access menu\ ******************************************************************************
+\
 \       Name: retry
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Scan the keyboard until a key is pressed and display the disc
+\             access menu
+\
 \ ******************************************************************************
 
 .retry
 
- JSR t
+ JSR t                  \ Scan the keyboard until a key is pressed, returning
+                        \ the ASCII code in A and X
+
+                        \ Fall through into SVE to display the disc access menu
 
 \ ******************************************************************************
 \
 \       Name: SVE
 \       Type: Subroutine
 \   Category: Save and load
-\    Summary: Show the disc menu to save or load the commander file
+\    Summary: Display the disc access menu and process saving of commander files
 \  Deep dive: The competition code
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   C flag              Set if we loaded a new file, clear otherwise
 \
 \ ******************************************************************************
 
 .SVE
 
- JSR ZEBC
- TSX
- STX stack
- LDA #(MEBRK MOD256)
- SEI
- STA BRKV
- LDA #(MEBRK DIV256)
- STA BRKV+1
+ JSR ZEBC               \ Call ZEBC to zero-fill pages &B and &C
+
+ TSX                    \ Transfer the stack pointer to X and store it in stack,
+ STX stack              \ so we can restore it in the MRBRK routine
+
+ LDA #LO(MEBRK)         \ Set BRKV to point to the MEBRK routine, disabling
+ SEI                    \ while we make the change and re-enabling them once we
+ STA BRKV               \ are done. MEBRK is the BRKV handler for disc access
+ LDA #HI(MEBRK)         \ operations, and replaces the standard BRKV handler in
+ STA BRKV+1             \ BRBR while disc access operations are happening
  CLI
- LDA #1
- JSR DETOK
- JSR t
- CMP #&31
- BCC SVEX
- CMP #&34
- BEQ DELT
- BCS SVEX
- CMP #&32
- BCS SV1
- JSR GTNMEW
- JSR LOD
- JSR TRNME
- SEC
- BCS SVEX+1
+
+ LDA #1                 \ Print extended token 1, the disc access menu, which
+ JSR DETOK              \ presents these options:
+                        \
+                        \   1. Load New Commander
+                        \   2. Save Commander {commander name}
+                        \   3. Catalogue
+                        \   4. Delete A File
+                        \   5. Exit
+
+ JSR t                  \ Scan the keyboard until a key is pressed, returning
+                        \ the ASCII code in A and X
+
+ CMP #'1'               \ If A < ASCII "1", jump to SVEX to exit as the key
+ BCC SVEX               \ press doesn't match a menu option
+
+ CMP #'4'               \ If "4" was pressed, jump to DELT to process option 4
+ BEQ DELT               \ (delete a file)
+
+ BCS SVEX               \ If A >= ASCII "4", jump to SVEX to exit as the key
+                        \ press is either option 5 (exit), or it doesn't match a
+                        \ menu option (as we already checked for "4" above)
+
+ CMP #'2'               \ If A >= ASCII "2" (i.e. save or catalogue), skip to
+ BCS SV1                \ SV1
+
+ JSR GTNMEW             \ If we get here then option 1 (load) was chosen, so
+                        \ call GTNMEW to fetch the name of the commander file
+                        \ to load
+
+ JSR LOD                \ Call LOD to load the commander file
+
+ JSR TRNME              \ Transfer the commander filename from INWK to NA%
+
+ SEC                    \ Set the C flag to indicate we loaded a new commander
+ BCS SVEX+1             \ file, and return from the subroutine (as SVEX+1
+                        \ contains an RTS)
 
 .SV1
 
- BNE CAT
- JSR GTNMEW
+ BNE CAT                \ We get here following the CMP #'2' above, so this
+                        \ jumps to CAT if option 2 was not chosen - in other
+                        \ words, if option 3 (catalogue) was chosen
+
+ JSR GTNMEW             \ If we get here then option 2 (save) was chosen, so
+                        \ call GTNMEW to fetch the name of the commander file
+                        \ to save
 
  JSR TRNME              \ Transfer the commander filename from INWK to NA%
 
  LSR SVC                \ Halve the save count value in SVC
 
- LDA #3
+ LDA #3                 \ Print extended token 3 ("COMPETITION NUMBER:")
  JSR DETOK
 
  LDX #NT%               \ We now want to copy the current commander data block
@@ -29122,9 +29336,17 @@ ENDIF
  EOR TALLY+1            \ the kill tally)
  STA K+3
 
- CLC
- JSR BPRNT
- JSR TT67
+ CLC                    \ Clear the C flag so the call to BPRNT does not include
+                        \ a decimal point
+ 
+ JSR BPRNT              \ Print the competition number stored in K to K+3. The
+                        \ value of U might affect how this is printed, and as
+                        \ it's a temporary variable in zero page that isn't
+                        \ reset by ZERO, it might have any value, but as the
+                        \ competition code is a 10-digit number, this just means
+                        \ it may or may not have an extra space of padding
+
+ JSR TT67               \ Print a newline
 
  PLA                    \ Restore the checksum from the stack
 
@@ -29153,8 +29375,12 @@ ENDIF
 
 .SVEX
 
- CLC
- JMP BRKBK
+ CLC                    \ Clear the C flag to indicate we didn't just load a new
+                        \ commander file
+
+ JMP BRKBK              \ Jump to BRKBK to set BRKV back to the standard BRKV
+                        \ handler for the game, and return from the subroutine
+                        \ using a tail call
 
 \ ******************************************************************************
 \
@@ -29165,8 +29391,9 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ The filename should be stored at INWK, terminated with a carriage return (13),
-\ and the routine should be called with Y set to &C.
+\ The filename should be stored at INWK, terminated with a carriage return (13).
+\ The routine asks for a drive number and updates the filename accordingly
+\ before performing the load or save.
 \
 \ Arguments:
 \
@@ -29177,6 +29404,10 @@ ENDIF
 \
 \                         * &FF (load file)
 \
+\ Returns:
+\
+\   C flag              Set if an invalid drive number was entered
+\
 \ ******************************************************************************
 
 .QUS1
@@ -29184,13 +29415,17 @@ ENDIF
  PHA                    \ Store A on the stack so we can restore it after the
                         \ call to GTDRV
 
- JSR GTDRV
+ JSR GTDRV              \ Get an ASCII disc drive drive number from the keyboard
+                        \ in A, setting the C flag if an invalid drive number
+                        \ was entered
 
- STA INWK+1
+ STA INWK+1             \ Store the ASCII drive number in INWK+1, which is the
+                        \ drive character of the filename string ":0.E."
 
  PLA                    \ Restore A from the stack
 
- BCS QUR
+ BCS QUR                \ If the C flag is set, then an invalid drive number was
+                        \ entered, so jump to QUR to return from the subroutine
 
  PHA                    \ Store A on the stack so we can restore it after the
                         \ call to DODOSVN
@@ -29208,7 +29443,8 @@ ENDIF
  LDY #&C
 
  JSR OSFILE             \ Call OSFILE to do the file operation specified in
-                        \ &0C00
+                        \ &0C00 (i.e. save or load a file depending on the value
+                        \ of A)
 
  JSR CLDELAY            \ Pause for 1280 empty loops
 
@@ -29222,23 +29458,52 @@ ENDIF
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: GTDRV
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Get an ASCII disc drive drive number from the keyboard
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   A                   The ASCII value of the entered drive number ("0" to "3")
+\
+\   C flag              Clear if a valid drive number was entered (0-3), set
+\                       otherwise
+\
 \ ******************************************************************************
 
 .GTDRV
 
- LDA #2
+ LDA #2                 \ Print extended token 2 ("{cr}WHICH DRIVE?")
  JSR DETOK
- JSR t
- ORA #&10
- JSR CHPR
- PHA
- JSR FEED
- PLA
- CMP #&30
- BCC LOR
- CMP #&34
- RTS
+
+ JSR t                  \ Scan the keyboard until a key is pressed, returning
+                        \ the ASCII code in A and X
+
+ ORA #%00010000         \ Set bit 4 of A, perhaps to avoid printing any control
+                        \ characters in the next instruction
+
+ JSR CHPR               \ Print the character in A
+
+ PHA                    \ Store A on the stack so we can retrieve it after the
+                        \ call to FEED
+
+ JSR FEED               \ Print a newline
+
+ PLA                    \ Restore A from the stack
+
+ CMP #'0'               \ If A < ASCII "0", then it is not a valid drive number,
+ BCC LOR                \ so jump to LOR to set the C flag and return from the
+                        \ subroutine
+
+ CMP #'4'               \ If A >= ASCII "4", then it is not a valid drive
+                        \ number, and this CMP sets the C flag, otherwise it is
+                        \ a valid drive number in the range 0-3, so clear it
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -29251,16 +29516,22 @@ ENDIF
 \
 \ The filename should be stored at INWK, terminated with a carriage return (13).
 \
+\ Other entry points:
+\
+\   LOR                 Set the C flag and return from the subroutine
+\
 \ ******************************************************************************
 
 .LOD
 
-\LDX #LO(MINI)
-\LDY #HI(MINI)
-\JSR SCLI
-\JMP LOL1-2
-\LDX #2
-\JSR FX200
+\LDX #LO(MINI)          \ These instructions are commented out in the original
+\LDY #HI(MINI)          \ source, but they would load a commander file called
+\JSR SCLI               \ "E.MINING" and continue below, so presumably this is
+\JMP LOL1-2             \ code for loading a test commander file
+
+\LDX #2                 \ These instructions are commented out in the original
+\JSR FX200              \ source, but they would enable the ESCAPE key and clear
+                        \ memory if the BREAK key is pressed (*FX 200, 2)
 
  JSR ZEBC               \ Call ZEBC to zero-fill pages &B and &C
 
@@ -29273,9 +29544,16 @@ ENDIF
  LDA #&FF               \ Call QUS1 with A = &FF, Y = &C to load the commander
  JSR QUS1               \ file at address &0B00
 
- BCS LOR
- LDA &B00
- BMI ELT2F
+ BCS LOR                \ If the C flag is set then an invalid drive number was
+                        \ entered during the call to QUS1 and the file wasn't
+                        \ loaded, so jump to LOR to return from the subroutine
+
+ LDA &B00               \ If the first byte of the loaded file has bit 7 set,
+ BMI ELT2F              \ jump to ELT2F, as this is an invalid commander file
+                        \
+                        \ ELT2F contains a BRK instruction, which will force an
+                        \ interrupt to call the address in BRKV, which will
+                        \ print out the system error at ELT2F
 
  LDX #NT%               \ We have successfully loaded the commander file at
                         \ &0B00, so now we want to copy it to the last saved
@@ -29293,15 +29571,20 @@ ENDIF
 
 .LOR
 
- SEC
- RTS
+ SEC                    \ Set the C flag
+
+ RTS                    \ Return from the subroutine
 
 .ELT2F
 
+ BRK                    \ The error that is printed if we try to load an
+ EQUS "IIllegal "       \ invalid commander file with bit 7 of byte #0 set
+ EQUS "ELITE II file"   \ (the spelling mistake is in the original source)
  BRK
- EQUS "IIllegal ELITE II file"
- BRK
-\.MINI \EQUS("L.E.MINING B00")\EQUB13
+ 
+\.MINI                  \ These instructions are commented out in the original
+\EQUS "L.E.MINING B00"  \ source, and form part of the commented section above
+\EQUB 13
 
 \ ******************************************************************************
 \
@@ -29314,6 +29597,22 @@ ENDIF
 \
 \ This is the equivalent of a *FX 200 command, which controls the behaviour of
 \ the ESCAPE and BREAK keys.
+\
+\ Arguments:
+\
+\   X                   Controls the behaviour as follows:
+\
+\                         * 0 = Enable ESCAPE key
+\                               Normal BREAK key action
+\
+\                         * 1 = Disable ESCAPE key
+\                               Normal BREAK key action
+\
+\                         * 2 = Enable ESCAPE key
+\                               Clear memory if the BREAK key is pressed
+\
+\                         * 3 = Disable ESCAPE key
+\                               Clear memory if the BREAK key is pressed
 \
 \ ******************************************************************************
 
@@ -29378,7 +29677,8 @@ ENDIF
 \       Name: DODOSVN
 \       Type: Subroutine
 \   Category: Save and load
-\    Summary: Set the SVN ("save in progress") flag
+\    Summary: Set the SVN ("save in progress") flag by sending a #DOsvn command
+\             to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -29713,7 +30013,8 @@ ENDIF
 \       Name: RDKEY
 \       Type: Subroutine
 \   Category: Keyboard
-\    Summary: Ask the I/O processor to scan the keyboard for key presses
+\    Summary: Scan the keyboard for key presses by sending an OSWORD 240 command
+\             to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -30366,7 +30667,8 @@ ENDIF
 \       Name: DKS4
 \       Type: Subroutine
 \   Category: Keyboard
-\    Summary: Ask the I/O processor to scan for a particular key press
+\    Summary: Scan for a particular key press by sending a #DODKS4 command to
+\             the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -30996,6 +31298,8 @@ ENDIF
 \ Other entry points:
 \
 \   out                 Contains an RTS
+\
+\   t                   As TT217 but don't preserve Y, set it to YSAV instead
 \
 \ ******************************************************************************
 
@@ -35966,25 +36270,27 @@ SAVE "output/ELTG.bin", CODE_G%, P%, LOAD%
 CODE_H% = P%
 LOAD_H% = LOAD% + P% - CODE%
 
-\CATLOD
-\DECCTLDL+8
-\JSRCATLODS
-\INCCTLDL+8
+\CATLOD                 \ These instructions are commented out in the original
+\DEC CTLDL+8            \ source
+\JSR CATLODS
+\INC CTLDL+8
+
 \.CATLODS
-\LDA#&7F
-\LDX#(CTLDL MOD256)
-\LDY#(CTLDL DIV256)
-\JMPOSWORD
+\LDA #127
+\LDX #LO(CTLDL)
+\LDY #HI(CTLDL)
+\JMP OSWORD
 
 \CTLDL
-\EQUB0
-\EQUD&E00
-\EQUB3
-\EQUB&53
-\EQUB0
-\EQUB1
-\EQUB&21
-\EQUB0
+\EQUB 0
+\EQUD &0E00
+\EQUB 3
+\EQUB &53
+\EQUB 0
+\EQUB 1
+\EQUB &21
+\EQUB 0
+
 \ ******************************************************************************
 \
 \       Name: MVEIT (Part 1 of 9)
@@ -37784,6 +38090,7 @@ ENDIF
 
 \ ******************************************************************************
 \       Name: CLYNS
+\ by sending a #clyns command to the I/O processor
 \ ******************************************************************************
 
 .CLYNS
@@ -38074,7 +38381,8 @@ ENDIF
 \       Name: WSCAN
 \       Type: Subroutine
 \   Category: Screen mode
-\    Summary: Ask the I/O processor to wait for the vertical sync
+\    Summary: Ask the I/O processor to wait for the vertical sync by sending a
+\             #wscn command to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -38097,7 +38405,7 @@ ENDIF
  PHX                    \ Store X and Y on the stack so we can restore them
  PHY                    \ later
 
- LDA #wscn
+ LDA #wscn              \ Set A in preparation for sending a #wscn command
 
  LDX #LO(WSCpars)       \ Set (Y X) to point to the parameter block above
  LDY #HI(WSCpars)
@@ -38146,24 +38454,55 @@ LOAD_I% = LOAD% + P% - CODE%
  EQUB 0
 
 \ ******************************************************************************
+\
 \       Name: ZINF2
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Reset the INWK workspace and orientation vectors
+\
+\ ------------------------------------------------------------------------------
+\
+\ Zero-fill the INWK ship workspace and reset the orientation vectors, with
+\ nosev pointing out of the screen.
+\
 \ ******************************************************************************
 
 .ZINF2
 
- LDA #0
- LDX #NI%-1
+ LDA #0                 \ Set A to 0 so we can zero-fill the workspace
+
+ LDX #NI%-1             \ There are NI% bytes in the INWK workspace, so set a
+                        \ counter in X so we can loop through them
 
 .DML1
 
- STA INWK,X
- DEX
- BPL DML1
- LDA #96
- STA INWK+18
- STA INWK+22
- STA INWK+14
- RTS
+ STA INWK,X             \ Zero the X-th byte of the INWK workspace
+
+ DEX                    \ Decrement the loop counter
+
+ BPL DML1               \ Loop back for the next byte, until we have zero-filled
+                        \ the last byte at INWK
+
+                        \ Finally, we reset the orientation vectors as follows:
+                        \
+                        \   sidev = (1,  0,  0)
+                        \   roofv = (0,  1,  0)
+                        \   nosev = (0,  0,  1)
+                        \
+                        \ 96 * 256 (&6000) represents 1 in the orientation
+                        \ vectors, and we already set the vectors to zero above,
+                        \ so we just need to set up the high bytes of the
+                        \ diagonal values and we're done
+
+ LDA #96                \ Set A to represent a 1 (in normalised vector terms)
+
+ STA INWK+18            \ Set byte #18 = roofv_y_hi = 96 = 1
+
+ STA INWK+22            \ Set byte #22 = sidev_x_hi = 96 = 1
+
+ STA INWK+14            \ Set byte #14 = nosev_z_hi = 96 = 1
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \       Name: TWIST
@@ -38191,20 +38530,36 @@ LOAD_I% = LOAD% + P% - CODE%
  JMP MVS5
 
 \ ******************************************************************************
+\
 \       Name: STORE
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Copy the ship data block at INWK back to the K% workspace
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   INF                 The ship data block in the K% workspace to copy INWK to
+\
 \ ******************************************************************************
 
 .STORE
 
- LDY #NI%-1
+ LDY #(NI%-1)           \ Set a counter in Y so we can loop through the NI%
+                        \ bytes in the ship data block
 
 .DML2
 
- LDA INWK,Y
- STA (INF),Y
- DEY
- BPL DML2
- RTS
+ LDA INWK,Y             \ Load the Y-th byte of INWK and store it in the Y-th
+ STA (INF),Y            \ byte of INF
+
+ DEY                    \ Decrement the loop counter
+
+ BPL DML2               \ Loop back for the next byte, until we have copied the
+                        \ last byte from INWK back to INF
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \       Name: DEMON
@@ -38225,7 +38580,10 @@ LOAD_I% = LOAD% + P% - CODE%
  LDX #(acorn MOD256)
  LDY #(acorn DIV256)
  JSR SLIDE
- JSR ZINF2
+
+ JSR ZINF2              \ Call ZINF2 to reset INWK and the orientation vectors,
+                        \ with nosev pointing out of the screen
+
  LDA #128
  STA INWK+5
  LDA #100
@@ -38264,8 +38622,13 @@ LOAD_I% = LOAD% + P% - CODE%
  JSR LL9
  LDA INWK+14
  BPL FLYL2
- JSR STORE
- JSR ZINF2
+
+ JSR STORE              \ Call STORE to copy the ship data block at INWK back to
+                        \ the K% workspace
+
+ JSR ZINF2              \ Call ZINF2 to reset INWK and the orientation vectors,
+                        \ with nosev pointing out of the screen
+
  LDA #108
  STA INWK+3
  LDA #40
@@ -38303,7 +38666,10 @@ LOAD_I% = LOAD% + P% - CODE%
  STA INWK+27
  LDA #&87
  STA INWK+30
- JSR STORE
+
+ JSR STORE              \ Call STORE to copy the ship data block at INWK back to
+                        \ the K% workspace
+
  LDA #128
  TSB K%+31 \++
  JSR EXNO3
@@ -38329,7 +38695,9 @@ LOAD_I% = LOAD% + P% - CODE%
  STA TYPE
  INC INWK
  JSR LL9
- JSR STORE
+
+ JSR STORE              \ Call STORE to copy the ship data block at INWK back to
+                        \ the K% workspace
 
  JSR PBFL               \ Call PBFL to send the contents of the pixel buffer to
                         \ the I/O processor for plotting on-screen
@@ -38356,7 +38724,10 @@ LOAD_I% = LOAD% + P% - CODE%
  STA TYPE
  JSR MVEIT
  JSR LL9
- JSR STORE
+
+ JSR STORE              \ Call STORE to copy the ship data block at INWK back to
+                        \ the K% workspace
+
  PLP
  BNE FLYL5
  LDA #14
@@ -38427,7 +38798,9 @@ LOAD_I% = LOAD% + P% - CODE%
 .SLIDE
 
  JSR GRIDSET
- JSR ZEVB
+
+ JSR ZEVB               \ Call ZEVB to zero-fill the Y1VB variable
+
  LDA #YELLOW
  JSR DOCOL
  LDA #254
@@ -38442,7 +38815,8 @@ LOAD_I% = LOAD% + P% - CODE%
 
 .SL1
 
- JSR ZEVB
+ JSR ZEVB               \ Call ZEVB to zero-fill the Y1VB variable
+
  LDA #2
  STA BALI
 
@@ -38608,20 +38982,31 @@ LOAD_I% = LOAD% + P% - CODE%
  RTS
 
 \ ******************************************************************************
+\
 \       Name: ZEVB
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Zero-fill the Y1VB variable
+\
 \ ******************************************************************************
 
 .ZEVB
 
- LDA #0
- TAY
+ LDA #0                 \ Set A = 0 so we can use it to zero-fill the variable
+
+ TAY                    \ Set Y = 0 to use as a loop counter, starting at 0 and
+                        \ working from 255 down to 1
 
 .SLL1
 
- STA Y1VB,Y
- DEY
- BNE SLL1
- RTS
+ STA Y1VB,Y             \ Zero the Y-th byte from Y1VB
+
+ DEY                    \ Decrement the loop counter
+
+ BNE SLL1               \ Jump back to zero the next byte until the whole page
+                        \ is done
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \       Name: GRIDSET
