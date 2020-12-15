@@ -4594,8 +4594,8 @@ ENDIF
  ADC #208               \ which will be in the range 48 ("FOOD") to 64 ("ALIEN
  JSR MESS               \ ITEMS"), so this prints the scooped item's name
 
- ASL NEWB               \ Set bit 7 of the ship's NEWB
- SEC
+ ASL NEWB               \ The item has now been scooped, so set bit 7 of its
+ SEC                    \ NEWB flags to indicate this
  ROR NEWB
 
 .MA65
@@ -4633,13 +4633,13 @@ ENDIF
 
 .ISDK
 
- LDA K%+NI%+36          \ 1. Fetch the NEWB (byte #36) of the second ship in the
- AND #%00000100         \ ship data workspace at K%, which is reserved for the
- BNE MA62               \ sun or the space station (in this case it's the
-                        \ latter), and if bit 2 is set, meaning the station is
-                        \ hostile, jump down to MA62 to fail docking (so trying
-                        \ to dock at a station that we have annoyed does not end
-                        \ well)
+ LDA K%+NI%+36          \ 1. Fetch the NEWB flags (byte #36) of the second ship
+ AND #%00000100         \ in the ship data workspace at K%, which is reserved
+ BNE MA62               \ for the sun or the space station (in this case it's
+                        \ the latter), and if bit 2 is set, meaning the station
+                        \ is hostile, jump down to MA62 to fail docking (so
+                        \ trying to dock at a station that we have annoyed does
+                        \ not end well)
 
  LDA INWK+14            \ 2. If nosev_z_hi < 214, jump down to MA62 to fail
  CMP #214               \ docking, as the angle of approach is greater than 26
@@ -4781,11 +4781,12 @@ ENDIF
 
 .MA26
 
- LDA NEWB               \ If bit 7 of the ship's NEWB byte is clear, skip the
+ LDA NEWB               \ If bit 7 of the ship's NEWB flags is clear, skip the
  BPL P%+5               \ following instruction
 
- JSR SCAN               \ Draw the ship on the scanner, which has the effect of
-                        \ removing it
+ JSR SCAN               \ Bit 7 of the ship's NEWB flags is set, which means the
+                        \ ship has docked or been scooped, so we draw the ship
+                        \ on the scanner, which has the effect of removing it
 
  LDA QQ11               \ If this is not a space view, jump to MA15 to skip
  BNE MA15               \ missile and laser locking
@@ -4928,8 +4929,10 @@ ENDIF
  LDA INWK+35            \ byte #35 in INF (so the ship's data in K% gets
  STA (INF),Y            \ updated)
 
- LDA NEWB               \ If bit 7 of the ship's NEWB is set, jump to KS1S to
- BMI KS1S               \ skip the following
+ LDA NEWB               \ If bit 7 of the ship's NEWB flags is set, which means
+ BMI KS1S               \ the ship has docked or been scooped, jump to KS1S to
+                        \ skip the following, as we can't get a bounty for a
+                        \ ship that's no longer around
 
  LDA INWK+31            \ If bit 7 of the ship's byte #31 is clear, then the
  BPL MAC1               \ ship hasn't been killed by energy bomb, collision or
@@ -4939,12 +4942,15 @@ ENDIF
  BEQ MAC1               \ ship is no longer exploding, so jump to MAC1 to skip
                         \ the following
 
- LDA NEWB               \ Extract bit 6 of NEWB, so A = 64 if bit 6 is set, 0
- AND #%01000000         \ if it is clear
+ LDA NEWB               \ Extract bit 6 of the ship's NEWB flags, so A = 64 if
+ AND #%01000000         \ bit 6 is set, or 0 if it is clear. Bit 6 is set if
+                        \ this ship is a cop, so A = 64 if we just killed a
+                        \ policeman, otherwise it is 0
 
- ORA FIST               \ We shot the sheriff, so update our FIST flag
- STA FIST               \ ("fugitive/innocent status") to at least 64, which
-                        \ will instantly make us a fugitive
+ ORA FIST               \ Update our FIST flag ("fugitive/innocent status") to
+ STA FIST               \ at least the value in A, which will instantly make us
+                        \ a fugitive if we just shot the sheriff, but won't
+                        \ affect our status if the enemy wasn't a copper
 
  LDA DLY                \ If we already have an in-flight message on-screen (in
  ORA MJ                 \ which case DLY > 0), or we are in witchspace (in
@@ -11007,11 +11013,13 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .TACTICS
 
- LDA #3
+ LDA #3                 \ Set RAT = 3
  STA RAT
- LDA #4
+
+ LDA #4                 \ Set RAT2 = 4
  STA RAT2
- LDA #22
+
+ LDA #22                \ Set CNT = 22
  STA CNT2
 
  CPX #MSL               \ If this is a missile, jump up to TA18 to implement
@@ -11020,51 +11028,85 @@ LOAD_C% = LOAD% +P% - CODE%
  CPX #SST               \ If this is not the space station, jump down to TA13
  BNE TA13
 
- LDA NEWB
- AND #4
- BNE TN5
- LDA MANY+SHU+1
- BNE TA1
- JSR DORND
- CMP #253
- BCC TA1
- AND #1
- ADC #SHU-1
- TAX
- BNE TN6
+ LDA NEWB               \ This is the space station, so check whether bit 2 of
+ AND #%00000100         \ the ship's NEWB flags is set, and if it is (i.e. the
+ BNE TN5                \ station is hostile), jump to TN5 to spawn some cops
+
+ LDA MANY+SHU+1         \ The station is not hostile, so check how many
+ BNE TA1                \ transporters there are in the vicinity, and if we
+                        \ already have one, return from the subroutine (as TA1
+                        \ contains an RTS)
+
+                        \ If we get here then the station is not hostile, so we
+                        \ can consider spawning a transporter or shuttle
+
+ JSR DORND              \ Set A and X to random numbers
+
+ CMP #253               \ If A < 253 (99.2% chance), return from the subroutine
+ BCC TA1                \ (as TA1 contains an RTS)
+
+ AND #1                 \ Set A = a random number that's either 0 or 1
+
+ ADC #SHU-1             \ The C flag is set (as we didn't take the BCC above),
+ TAX                    \ so this sets X to a value of either #SHU or #SHU + 1,
+                        \ which is the ship type for a shuttle or a transporter
+
+ BNE TN6                \ Jump to TN6 to spawn this ship type (this BNE is
+                        \ effectively a JMP as A is never zero)
 
 .TN5
 
- JSR DORND
- CMP #240
- BCC TA1
- LDA MANY+COPS
- CMP #7\!!
- BCS TA22
- LDX #COPS
+                        \ If we get here then the station is hostile and we need
+                        \ to spawn some cops
+
+ JSR DORND              \ Set A and X to random numbers
+
+ CMP #240               \ If A < 240 (93.8% chance), return from the subroutine
+ BCC TA1                \ (as TA1 contains an RTS)
+
+ LDA MANY+COPS          \ Check how many cops there are in the vicinity already,
+ CMP #7                 \ and if there are 7 or more, return from the subroutine
+ BCS TA22               \ (as TA22 contains an RTS)
+
+ LDX #COPS              \ Set X to the ship type for a cop
 
 .TN6
 
- LDA #&F1
- JMP SFS1
+ LDA #%11110001         \ Set the AI flag to give the ship E.C.M., enable AI and
+                        \ make it very aggressive (56 out of 63)
+
+ JMP SFS1               \ Jump to SFS1 to spawn the ship, returning from the
+                        \ subroutine using a tail call
 
 .TA13
 
- CPX #HER
+ CPX #HER               \ If this is not a rock hermit, jump down to TA17
  BNE TA17
- JSR DORND
- CMP #200
- BCC TA22
- LDX #0
- STX INWK+32
- STX NEWB
- AND #3
- ADC #SH3
- TAX
- JSR TN6
- LDA #0
- STA INWK+32
- RTS
+
+ JSR DORND              \ Set A and X to random numbers
+
+ CMP #200               \ If A < 200 (78% chance), return from the subroutine
+ BCC TA22               \ (as TA22 contains an RTS)
+
+ LDX #0                 \ Set byte #32 to %00000000 to disable AI, aggression
+ STX INWK+32            \ and E.C.M.
+
+ STX NEWB               \ Set the ship's NEWB flags to %00000000
+
+ AND #3                 \ Set A = a random number that's in the range 0-3
+
+ ADC #SH3               \ The C flag is set (as we didn't take the BCC above),
+ TAX                    \ so this sets X to a random value between #SH3 + 1 and
+                        \ #SH3 + 4, so that's a Sidewinder, Mamba, Krait, Adder
+                        \ or Gecko
+
+ JSR TN6                \ Call TN6 to spawn this ship with E.C.M., AI and a high
+                        \ aggression (56 out of 63)
+
+ LDA #0                 \ Set byte #32 to %00000000 to disable AI, aggression
+ STA INWK+32            \ and E.C.M.
+
+ RTS                    \ Return from the subroutine
 
 .TA17
 
@@ -11096,62 +11138,84 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .TA21
 
- CPX #TGL
+ CPX #TGL               \ If this is not a Thargon, jump down to TA14
  BNE TA14
- LDA MANY+THG
- BNE TA14
- LSR INWK+32
- ASL INWK+32
- LSR INWK+27
+
+ LDA MANY+THG           \ If there is at least one Thargoid in the vicinity,
+ BNE TA14               \ jump down to TA14
+
+ LSR INWK+32            \ This is a Thargon but there is no Thargoid mothership,
+ ASL INWK+32            \ so clear bit 0 of the AI flag to disable its E.C.M.
+
+ LSR INWK+27            \ And halve the Thargon's speed
 
 .TA22
 
- RTS
+ RTS                    \ Return from the subroutine
 
 .TA14
 
  JSR DORND
- LDA NEWB
- LSR A
- BCC TN1
- CPX #50
- BCS TA22
+
+ LDA NEWB               \ Extract bit 0 of the ship's NEWB flags into the C flag
+ LSR A                  \ and jump to TN1 if it is clear (i.e. if this is not a
+ BCC TN1                \ trader)
+
+ CPX #50                \ This is a trader, so if X >= 50 (80% chance), return
+ BCS TA22               \ from the subroutine (as TA22 contains an RTS)
 
 .TN1
 
- LSR A
- BCC TN2
- LDX FIST
- CPX #40
- BCC TN2
- LDA NEWB
- ORA #4
- STA NEWB
- LSR A
- LSR A
+ LSR A                  \ Extract bit 1 of the ship's NEWB flags into the C flag
+ BCC TN2                \ and jump to TN2 if it is clear (i.e. if this is not a
+                        \ bounty hunter)
+
+ LDX FIST               \ This is a bounty hunter, so check whether our FIST
+ CPX #40                \ rating is < 40 (where 50 is a fugitive), and jump to
+ BCC TN2                \ TN2 if we are not 100% evil
+
+ LDA NEWB               \ We are a fugitive or a bad offender, and this ship is
+ ORA #%00000100         \ a bounty hunter, so set bit 2 of the ship's NEWB flags
+ STA NEWB               \ to make it hostile
+
+ LSR A                  \ Shift A right twice so the next test in TN2 will check
+ LSR A                  \ bit 2
 
 .TN2
 
- LSR A
- BCS TN3
- LSR A
- LSR A
- BCC GOPL
- JMP DOCKIT
+ LSR A                  \ Extract bit 2 of the ship's NEWB flags into the C flag
+ BCS TN3                \ and jump to TN3 if it is set (i.e. if this ship is
+                        \ hostile)
+
+ LSR A                  \ The ship is not hostile, so extract bit 4 of the
+ LSR A                  \ ship's NEWB flags into the C flag, and jump to GOPL if
+ BCC GOPL               \ it is clear (i.e. if this ship is not docking)
+
+ JMP DOCKIT             \ The ship is not hostile and is docking, so jump to
+                        \ DOCKIT to apply the docking algorithm to this ship
 
 .GOPL
 
- JSR SPS1
- JMP TA151
+ JSR SPS1               \ The ship is not hostile and it is not docking, so call
+                        \ SPS1 to calculate the vector to the planet and store it
+                        \ in XX15
+
+ JMP TA151              \ Jump to TA151 to make the ship head towards the planet
 
 .TN3
 
- LSR A
- BCC TN4
- LDA SSPR
- BEQ TN4
- LDA INWK+32
- AND #129
+ LSR A                  \ Extract bit 2 of the ship's NEWB flags into the C flag
+ BCC TN4                \ and jump to TN4 if it is clear (i.e. if this ship is
+                        \ not a pirate)
+
+ LDA SSPR               \ If we are not inside the space station safe zone, jump
+ BEQ TN4                \ to TN4
+
+                        \ If we get here then this is a pirate and we are inside
+                        \ the space station safe zone
+
+ LDA INWK+32            \ Set bits 0 and 7 of the AI flag in byte #32 (has AI
+ AND #%10000001         \ enabled E.C.M.)
  STA INWK+32
 
 .TN4
@@ -11267,9 +11331,10 @@ LOAD_C% = LOAD% +P% - CODE%
  CMP #230               \ If A < 230 (90% chance), jump down to ta3 to consider
  BCC ta3                \ firing a missile
 
- LDX TYPE
- LDA E%-1,X
- BPL ta3
+ LDX TYPE               \ Fetch the ship blueprint's default NEWB flags from the
+ LDA E%-1,X             \ table at E%, and if bit 7 is clear (i.e. this ship
+ BPL ta3                \ does not have an escape pod), jump to ta3 to skip the
+                        \ spawning of an escape pod
 
                         \ By this point, the ship has run out of both energy and
                         \ luck, so it's time to bail
@@ -11748,8 +11813,9 @@ LOAD_C% = LOAD% +P% - CODE%
 
  LDA K3+10
  BNE TNRTS
- ASL NEWB
- SEC
+
+ ASL NEWB               \ Set bit 7 of the ship's NEWB flags to indicate that
+ SEC                    \ the ship has now docked
  ROR NEWB
 
 .TNRTS
@@ -12274,11 +12340,13 @@ LOAD_C% = LOAD% +P% - CODE%
  CMP #SST               \ If this is the space station, jump to AN2 to make the
  BEQ AN2                \ space station hostile
 
- LDY #36                \ Fetch the ship's byte #36
+ LDY #36                \ Fetch the ship's NEWB flags from byte #36
  LDA (INF),Y
 
- AND #%00100000         \ If bit 5 of the ship's byte #36 is clear, skip the
- BEQ P%+5               \ following instruction
+ AND #%00100000         \ If bit 5 of the ship's NEWB flags is clear, skip the
+ BEQ P%+5               \ following instruction, otherwise bit 5 is set, meaning
+                        \ this ship is an innocent bystander, and attacking it
+                        \ will annoy the space station
 
  JSR AN2                \ Call AN2 to make the space station hostile
 
@@ -12305,8 +12373,8 @@ LOAD_C% = LOAD% +P% - CODE%
  BCC AN3                \ boulder, asteroid, splinter, shuttle or transporter),
                         \ then jump to AN3 to skip the following
 
- LDY #36                \ Set bit 2 of the ship's byte #36
- LDA (INF),Y
+ LDY #36                \ Set bit 2 of the ship's NEWB flags in byte #36 to
+ LDA (INF),Y            \ make this ship hostile
  ORA #%00000100
  STA (INF),Y
 
@@ -12316,7 +12384,7 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .AN2
 
- LDA K%+NI%+36          \ Set bit 2 of byte #36 of the second ship in the ship
+ LDA K%+NI%+36          \ Set bit 2 of the NEWB flags in byte #36 of the second ship in the ship
  ORA #%00000100         \ data workspace at K%, which is reserved for the sun or
  STA K%+NI%+36          \ the space station (in this case it's the latter), to
                         \ make it hostile
@@ -22359,16 +22427,29 @@ LOAD_E% = LOAD% + P% - CODE%
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: DET1
-\ by sending a #DODIALS command to the I/O processor
+\       Type: Subroutine
+\   Category: Screen mode
+\    Summary: Show or hide the dashboard (for when we die) by sending a #DODIALS
+\             command to the I/O processor
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   X                   The number of text rows to display on the screen (24
+\                       will hide the dashboard, 31 will make it reappear)
+\
 \ ******************************************************************************
 
 .DET1
 
- LDA #DODIALS
- JSR OSWRCH
- TXA
- JMP OSWRCH
+ LDA #DODIALS           \ Send the first part of a #DODIALS command to the I/O
+ JSR OSWRCH             \ processor
+
+ TXA                    \ Send the new number of rows to the I/O processor, so
+ JMP OSWRCH             \ we've now sent a #DODIALS <rows> command
 
 \ ******************************************************************************
 \
@@ -22639,40 +22720,70 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ Fall through into DOT to draw the dot on the compass
 
 \ ******************************************************************************
+\
 \       Name: DOT
-\ by sending a #DOdot command to the I/O processor
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Draw a dot on the compass by sending a #DOdot command to the I/O
+\             processor
+\
+\ ------------------------------------------------------------------------------
+\
+\ Draw a dot on the compass.
+\
+\ Arguments:
+\
+\   COMX                The screen pixel x-coordinate of the dot
+\
+\   COMY                The screen pixel y-coordinate of the dot
+\
+\   COMC                The colour and thickness of the dot:
+\
+\                         * &F0 = a double-height dot in white, for when the
+\                           object in the compass is in front of us
+\
+\                         * &FF = a single-height dot in green, for when the
+\                           object in the compass is behind us
+\
 \ ******************************************************************************
 
 .DOT
 
- LDA COMY
- STA DOTY1
- LDA COMX
- STA DOTX1
- LDA COMC
- STA DOTCOL
- LDX #(DOTpars MOD256)
- LDY #(DOTpars DIV256)
- LDA #DOdot
- JMP OSWORD
+ LDA COMY               \ Store the y-coordinate of the dot in byte #0 of the
+ STA DOTY1              \ parameter block below
+
+ LDA COMX               \ Store the x-coordinate of the dot in byte #1 of the
+ STA DOTX1              \ parameter block below
+
+ LDA COMC               \ Store the dot colour in byte #2 of the parameter block
+ STA DOTCOL             \ below
+
+ LDX #LO(DOTpars)       \ Set (Y X) to point to the parameter block below
+ LDY #HI(DOTpars)
+
+ LDA #DOdot             \ Send a #DODKS4 command to the I/O processor to draw
+ JMP OSWORD             \ the dot on-screen, returning from the subroutine using
+                        \ a tail call
 
 .DOTpars
 
- EQUB 5
- EQUB 0
+ EQUB 5                 \ The number of bytes to transmit with this command
+
+ EQUB 0                 \ The number of bytes to receive with this command
 
 .DOTX1
 
- EQUB 0
+ EQUB 0                 \ The x-coordinate of the dot
 
 .DOTY1
 
- EQUB 0
+ EQUB 0                 \ The y-coordinate of the dot
 
 .DOTCOL
 
- EQUB 0
- RTS
+ EQUB 0                 \ The colour of the dot
+
+ RTS                    \ End of the parameter block
 
 \ ******************************************************************************
 \
@@ -22870,7 +22981,8 @@ LOAD_E% = LOAD% + P% - CODE%
  LDX #0                 \ Set pitch counter to 0 (no pitch, roll only)
  STX INWK+30
 
- STX NEWB               \ Set NEWB to %00000000
+ STX NEWB               \ Set NEWB to %00000000, though this gets overridden by
+                        \ the default flags from E% in NWSHP below
 
 \STX INWK+31            \ This instruction is commented out in the original
                         \ source. It would set the exploding state and missile
@@ -23171,12 +23283,15 @@ LOAD_E% = LOAD% + P% - CODE%
 
  LDY T                  \ Restore the ship type we stored above
 
- LDA E%-1,Y             \ Fetch the E% byte for this ship
+ LDA E%-1,Y             \ Fetch the E% byte for this ship to get the default
+                        \ settings for the ship's NEWB flags
 
- AND #%01101111         \ Zero bits 4 and 7
+ AND #%01101111         \ Zero bits 4 and 7 (so the new ship is not docking, has
+                        \ has not been scooped, and has not just docked)
 
- ORA NEWB               \ Apply the result to the ship's NEWB, which sets bits
- STA NEWB               \ 0-3 and 5-6 in NEWB if they are set in the E% byte
+ ORA NEWB               \ Apply the result to the ship's NEWB flags, which sets
+ STA NEWB               \ bits 0-3 and 5-6 in NEWB if they are set in the E%
+                        \ byte
 
  LDY #(NI%-1)           \ The final step is to copy the new ship's data block
                         \ from INWK to INF, so set up a counter for NI% bytes
@@ -25008,6 +25123,13 @@ LOAD_E% = LOAD% + P% - CODE%
 \    Summary: Draw the contents of the ball line heap by sending an OSWRCH 129
 \             command to the I/O processor
 \
+\ ------------------------------------------------------------------------------
+\
+\ If there are too many points for one batch of OSWRCH 129 calls, the line is
+\ split into two batches, with the last coordinate of the first batch being
+\ duplicated as the first coordinate of the second batch, so the two lines join
+\ up to make a complete circle.
+\
 \ ******************************************************************************
 
 .LS2FL
@@ -25028,18 +25150,29 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ to return from the subroutine
 
  LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
- JSR OSWRCH             \ tell it to start drawing a new line. This means the
-                        \ next byte we send to OSWRCH 
+ JSR OSWRCH             \ tell it to start receiving a new line to draw. The
+                        \ parameter to this call needs to contain the number of
+                        \ bytes we are going to send for the line's coordinates,
+                        \ so let's calculate that now
 
- TYA                    \ Transfer the Y counter into A
+ TYA                    \ Transfer the Y counter into A, so A now contains the
+                        \ number of coordinates to send to the I/O processor
 
  BMI WP2                \ If the counter in A > 127, then jump to WP2, as we
-                        \ need to send the points in two batches
+                        \ need to send the points in two batches (as the line
+                        \ buffer in the I/O processor can hold 256 bytes, and
+                        \ each coordinate occupies two bytes)
 
  SEC                    \ Set A = (A * 2) + 1
- ROL A
+ ROL A                  \
+                        \ so A now contains the number of bytes we are going to
+                        \ send, plus 1 (the extra 1 is required as the value
+                        \ sent needs to point to the first free byte after the
+                        \ end of the byte list)
 
- JSR OSWRCH             \ Send A 
+ JSR OSWRCH             \ Send A to the I/O processor as the argument to the
+                        \ OSWRCH 129 command, so the I/O processor can set the
+                        \ LINMAX variable in the BEGINLIN routine
 
                         \ We now want to send the points themselves to the I/O
                         \ processor
@@ -25054,7 +25187,7 @@ LOAD_E% = LOAD% + P% - CODE%
  LDA LSY2,Y             \ Send the y-coordinate of the start of the line segment
  JSR OSWRCH
 
- INY
+ INY                    \ Increment the pointer to point to the next coordinate
 
  LDA LSX2,Y             \ Send the x-coordinate of the end of the line segment
  JSR OSWRCH
@@ -25062,10 +25195,11 @@ LOAD_E% = LOAD% + P% - CODE%
  LDA LSY2,Y             \ Send the y-coordinate of the end of the line segment
  JSR OSWRCH
 
- INY
+ INY                    \ Increment the pointer to point to the next coordinate
 
- CPY T
- BCC WPL1
+ CPY T                  \ If Y < T then loop back to send the next coordinate,
+ BCC WPL1               \ until we have sent them all. The I/O processor will
+                        \ now draw the line
 
 .WP1
 
@@ -25074,18 +25208,42 @@ LOAD_E% = LOAD% + P% - CODE%
 .WP2
 
                         \ If we get here then there are more than 127 points in
-                        \ the line heap to send to the I/O processor
+                        \ the line heap to send to the I/O processor, so we need
+                        \ to send them in two batches. We start by sending the
+                        \ second half of the coordinates, making sure we include
+                        \ the last coordinate from the first batch to make sure
+                        \ the circles drawn by each batch join up
 
- ASL A                  \ Set A = A * 2 + 4
- ADC #4
+ ASL A                  \ Shift A left, shifting bit 7 (which we know is set)
+                        \ into the C flag, so this sets:
+                        \
+                        \   A = (A * 2) mod 256
+                        \
+                        \ So A contains the number of bytes left over in the
+                        \ second batch if we send a full first batch
 
- JSR OSWRCH             \ Send A
+ ADC #4                 \ Set A = A + 4 + C
+                        \       = A + 4 + 1
+                        \
+                        \ so A now contains the number of bytes we are going to
+                        \ send in each batch, plus 4 (because we need to send
+                        \ the extra coordinate at the start of the second
+                        \ batch), plus 1 (the extra 1 is required as the value
+                        \ sent needs to point to the first free byte after the
+                        \ end of the byte list)
 
- LDY #126               \ Call WPL1 above to send the first 127 points to the
- JSR WPL1               \ I/O processor
+ JSR OSWRCH             \ Send A to the I/O processor as the argument to the
+                        \ OSWRCH 129 command, so the I/O processor can set the
+                        \ LINMAX variable in the BEGINLIN routine
 
- LDY #126               \ Jump to WP3 above to send the rest of the points
- JMP WP3
+ LDY #126               \ Call WPL1 above with Y = 126 to send the second batch
+ JSR WPL1               \ of points from the ball line heap to the I/O
+                        \ processor, starting from the last coordinate of the
+                        \ first batch, so that gets sent in both batches (this
+                        \ is why Y = 126 rather than 127)
+
+ LDY #126               \ Jump to WP3 above to send a whole new OSWRCH 129
+ JMP WP3                \ command to draw the first batch of points
 
 \ ******************************************************************************
 \
@@ -26343,9 +26501,9 @@ LOAD_F% = LOAD% + P% - CODE%
 
  LDA (SC),Y             \ Fetch byte #36 of the source's ship data block at SC,
  STA (INF),Y            \ and store it in byte #36 of the destination's block
- DEY                    \ at INF, so that's the ship's NEWB copied from the
-                        \ source to the destination. One down, quite a few to
-                        \ go...
+ DEY                    \ at INF, so that's the ship's NEWB flags copied from
+                        \ the source to the destination. One down, quite a few
+                        \ to go...
 
  LDA (SC),Y             \ Fetch byte #35 of the source's ship data block at SC,
  STA (INF),Y            \ and store it in byte #35 of the destination's block
@@ -26950,12 +27108,15 @@ LOAD_F% = LOAD% + P% - CODE%
  BMI nodo               \ If A is negative (50% chance), jump to nodo to skip
                         \ the following
 
+                        \ If we get here then we are going to spawn a ship that
+                        \ is minding its own business and trying to dock
+
  LDA INWK+32            \ Set bits 6 and 7 of the ship's AI flag, to make it
- ORA #%11000000         \ hostile and with AI enabled
+ ORA #%11000000         \ aggressive if attacked, and enable its AI
  STA INWK+32
 
- LDX #%00010000         \ Set bit 4 of the ship's NEWB flag
- STX NEWB
+ LDX #%00010000         \ Set bit 4 of the ship's NEWB flags, to indicate that
+ STX NEWB               \ this ship is docking
 
 .nodo
 
@@ -27341,8 +27502,8 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .NOCON
 
- LDA #%00000100         \ Set bit 2 of NEWB and clear all other bits, so the
- STA NEWB               \ ship we are about to spawn is hostile
+ LDA #%00000100         \ Set bit 2 of the NEWB flags and clear all other bits,
+ STA NEWB               \ so the ship we are about to spawn is hostile
 
                         \ We now build the AI flag for this ship in A
 
@@ -33246,9 +33407,10 @@ ENDIF
                         \ update this value below with the actual ship's
                         \ distance if it turns out to be visible on-screen
 
- LDA NEWB               \ If bit 7 of the ship's NEWB is set, then the ship
- BMI EE51               \ is already on-screen, so jump down to EE51 to redraw
-                        \ its wireframe, which removes it from the screen
+ LDA NEWB               \ If bit 7 of the ship's NEWB flags is set, then the
+ BMI EE51               \ ship has been scooped or has docked, so jump down to
+                        \ EE51 to redraw its wireframe, to remove it from the
+                        \ screen
 
  LDA #%00100000         \ If bit 5 of the ship's byte #31 is set, then the ship
  BIT XX1+31             \ is currently exploding, so jump down to EE28
@@ -43748,7 +43910,12 @@ ENDMACRO
  RTS
 
 \ ******************************************************************************
+\
 \       Name: F%
+\       Type: Variable
+\   Category: Utility routines
+\    Summary: Denotes the end of the main game code, from Elite A to Elite J
+\
 \ ******************************************************************************
 
 .F%
@@ -44006,73 +44173,124 @@ ENDMACRO
 \       Name: E%
 \       Type: Variable
 \   Category: Drawing ships
-\    Summary: Ship blueprints NEWB table
+\    Summary: Ship blueprints default NEWB flags
 \
 \ ------------------------------------------------------------------------------
 \
+\ When spawning a new ship, bits 0-3 and 5-6 from the relevant byte in this
+\ table are applied to the new ship's NEWB flags in byte #36 (i.e. a set bit in
+\ this table will set that bit in the NEWB flags). In other words, if a ship
+\ blueprint is one of the following, then all spawned ships of that type will be
+\ too: trader, bounty hunter, hostile, pirate, innocent, cop.
+\
+\ Bit 4 (docking) is set randomly on spawning for traders only, so 50% of
+\ traders are trying to dock, while the other 50% fly towards the planet.
+\
+\ Bit 7 (has been scooped/has docked) is set when the ship docks or is scooped.
+\
+\ Bit 7 in the blueprint (as opposed to the spawned ship) is looked up during
+\ tactics, for when the ship is about to die, to see if that ship type has an
+\ escape pod. If it does, then the ship can launch an escape pod before dying.
+\
+\ Here's a breakdown of the NEWB flags:
+\
 \    * Bit 0: Trader flag (0 = not a trader, 1 = trader)
+\
+\             ???
+\
+\             Escape pod, Shuttle, Transporter, Anaconda, Rock hermit, Worm
 \
 \    * Bit 1: Bounty hunter flag (0 = not a bounty hunter, 1 = bounty hunter)
 \
+\             ???
+\
+\             Viper, Fer-de-lance
+\
 \    * Bit 2: Hostile flag (0 = not hostile, 1 = hostile)
-\             (replaces bit 7 of INWK+32, in ANGRY and ISDK, at least)
+\
+\             ???
+\
+\             Sidewinder, Mamba, Krait, Adder, Gecko, Cobra Mk I, Worm,
+\             Cobra Mk III, Asp Mk II, Python (pirate), Moray, Thargoid,
+\             Thargon, Constrictor
 \
 \    * Bit 3: Pirate flag (0 = not a pirate, 1 = pirate)
 \
-\    * Bit 4: Docking flag (0 = not docking, 1 = docking)
-\             but gets randomly set in main game loop 1
+\             ???
 \
-\    * Bit 5: Innocent flag?
-\             (in ANGRY if it's clear, this is not the space station)
+\             Sidewinder, Mamba, Krait, Adder, Gecko, Cobra Mk I, Cobra Mk III,
+\             Asp Mk II, Python (pirate), Moray, Thargoid
+\
+\    * Bit 4: Docking flag (0 = not docking, 1 = docking)
+\
+\             Traders with a set docking flag fly towards the space station to
+\             try to dock, otherwise they aim for the planet
+\
+\             This flag is randomly set for traders when they are spawned
+\
+\    * Bit 5: Innocent bystander (0 = normal, 1 = innocent bystander)
+\
+\             If we attack an innocent ship within the space station safe zone,
+\             then the station will get angry with us and start spawning cops
+\
+\             Shuttle, Transporter, Cobra Mk III, Python, Boa, Anaconda,
+\             Rock hermit, Cougar
 \
 \    * Bit 6: Cop flag (0 = not a cop, 1 = cop)
 \
-\    * Bit 7: Ship has been scooped/docked/disappeared, so remove with no explosion
-\             LL9 1,  it calls EE51 to remove itself
-\             gets set in main flight 8 when we scoop an item
-\             gets removed from the scanner in main flight 11
-\             skips legal checks
-\             Maybe also "has Escape pod" flag?
+\             If we destroy a cop ship, then we instantly becoime a fugitive
+\             (the transporter isn't actually a cop ship, but it's clearly under
+\             police protection)
+\
+\             Viper, Transporter
+\
+\    * Bit 7: For spawned ships, indicates that the ship been scooped or has
+\             docked (bit 7 is always clear on spawning)
+\
+\             For blueprints, indicates the ship type has an escape pod fitted
+\
+\             Cobra Mk III, Python, Boa, Anaconda, Rock hermit, Viper, Mamba,
+\             Krait, Adder, Cobra Mk I, Cobra Mk III (pirate), Asp Mk II,
+\             Python (pirate), Fer-de-lance
 \
 \ ******************************************************************************
 
 .E%
 
- EQUB 0
-
  EQUB %00000000         \ Missile
- EQUB %00000001         \ Coriolis space station
- EQUB %00000000         \ Escape pod
+ EQUB %00000000         \ Coriolis space station
+ EQUB %00000001         \ Escape pod                                      Trader
  EQUB %00000000         \ Alloy plate
  EQUB %00000000         \ Cargo canister
  EQUB %00000000         \ Boulder
  EQUB %00000000         \ Asteroid
- EQUB %00100001         \ Splinter
- EQUB %01100001         \ Shuttle
- EQUB %10100000         \ Transporter
- EQUB %10100000         \ Cobra Mk III
- EQUB %10100000         \ Python
- EQUB %10100001         \ Boa
- EQUB %10100001         \ Anaconda
- EQUB %11000010         \ Rock hermit (asteroid)
- EQUB %00001100         \ Viper
- EQUB %10001100         \ Sidewinder
- EQUB %10001100         \ Mamba
- EQUB %10001100         \ Krait
- EQUB %00001100         \ Adder
- EQUB %10001100         \ Gecko
- EQUB %00000101         \ Cobra Mk I
- EQUB %10001100         \ Worm
- EQUB %10001100         \ Cobra Mk III (pirate)
- EQUB %10001100         \ Asp Mk II
- EQUB %10000010         \ Python (pirate)
- EQUB %00001100         \ Fer-de-lance
- EQUB %00001100         \ Moray
- EQUB %00000100         \ Thargoid
- EQUB %00000100         \ Thargon
- EQUB %00000000         \ Constrictor
- EQUB %00100000         \ The Elite logo
- EQUB %00000000         \ Cougar
+ EQUB %00000000         \ Splinter
+ EQUB %00100001         \ Shuttle                               Trader, innocent
+ EQUB %01100001         \ Transporter                      Trader, innocent, cop
+ EQUB %10100000         \ Cobra Mk III                      Innocent, escape pod
+ EQUB %10100000         \ Python                            Innocent, escape pod
+ EQUB %10100000         \ Boa                               Innocent, escape pod
+ EQUB %10100001         \ Anaconda                  Trader, innocent, escape pod
+ EQUB %10100001         \ Rock hermit (asteroid)    Trader, innocent, escape pod
+ EQUB %11000010         \ Viper                   Bounty hunter, cop, escape pod 
+ EQUB %00001100         \ Sidewinder                             Hostile, pirate
+ EQUB %10001100         \ Mamba                      Hostile, pirate, escape pod
+ EQUB %10001100         \ Krait                      Hostile, pirate, escape pod
+ EQUB %10001100         \ Adder                      Hostile, pirate, escape pod
+ EQUB %00001100         \ Gecko                                  Hostile, pirate
+ EQUB %10001100         \ Cobra Mk I                 Hostile, pirate, escape pod
+ EQUB %00000101         \ Worm                                   Hostile, trader
+ EQUB %10001100         \ Cobra Mk III (pirate)      Hostile, pirate, escape pod
+ EQUB %10001100         \ Asp Mk II                  Hostile, pirate, escape pod
+ EQUB %10001100         \ Python (pirate)            Hostile, pirate, escape pod
+ EQUB %10000010         \ Fer-de-lance                 Bounty hunter, escape pod
+ EQUB %00001100         \ Moray                                  Hostile, pirate
+ EQUB %00001100         \ Thargoid                               Hostile, pirate
+ EQUB %00000100         \ Thargon                                        Hostile
+ EQUB %00000100         \ Constrictor                                    Hostile
+ EQUB %00000000         \ The Elite logo
+ EQUB %00100000         \ Cougar                                        Innocent
+ EQUB %00000000         \ 
 
 \ ******************************************************************************
 \
