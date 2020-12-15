@@ -176,7 +176,29 @@ ORG &2300
  SKIP &100
 
 \ ******************************************************************************
+\
 \       Name: FONT%
+\       Type: Variable
+\   Category: Text
+\    Summary: A copy of the character definition bitmap table from the MOS ROM
+\
+\ ------------------------------------------------------------------------------
+\
+\ This is used by the TT26 routine to save time looking up the character bitmaps
+\ from the ROM. Note that FONT% contains just the high byte (i.e. the page
+\ number) of the address of this table, rather than the full address.
+\
+\ The contents of the P.FONT.bin file included here are taken straight from the
+\ following three pages in the BBC Micro OS 1.20 ROM:
+\
+\   ASCII 32-63  are defined in &C000-&C0FF (page 0)
+\   ASCII 64-95  are defined in &C100-&C1FF (page 1)
+\   ASCII 96-126 are defined in &C200-&C2F0 (page 2)
+\
+\ The code could look these values up each time (as the cassette version does),
+\ but it's quicker to use a lookup table, at the expense of three pages of
+\ memory.
+\
 \ ******************************************************************************
 
 ORG CODE%
@@ -449,7 +471,21 @@ NEXT
 
 .CATF
 
- EQUB 0
+ EQUB 0                 \ The disc catalogue flag
+                        \
+                        \ Determines whether a disc catalogue is currently in
+                        \ progress, so the TT26 print routine can format the
+                        \ output correctly:
+                        \
+                        \   * 0 = disc is not currently being catalogued
+                        \
+                        \   * 1 = disc is currently being catalogued
+                        \
+                        \ Specifically, when CATF is non-zero, TT26 will omit
+                        \ column 17 from the catalogue so that it will fit
+                        \ on-screen (column 17 is blank column in the middle
+                        \ of the catalogue, between the two lists of filenames,
+                        \ so it can be dropped without affecting the layout)
 
 .K
 
@@ -610,7 +646,7 @@ NEXT
  EQUW SETXC             \ #SETXC     = 133 (&85)     5 = Set text cursor column
  EQUW SETYC             \ #SETYC     = 134 (&86)     6 = Set text cursor row
  EQUW CLYNS             \ #clyns     = 135 (&87)     7 = Clear bottom of screen
- EQUW RDPARAMS          \ #RDPARAMS  = 136 (&88)     8 = Reset dashboard params
+ EQUW RDPARAMS          \ #RDPARAMS  = 136 (&88)     8 = Update dashboard
  EQUW ADPARAMS          \              137 (&89)     9 = Add dashboard parameter
  EQUW DODIALS           \ #DODIALS   = 138 (&8A)    10 = Show or hide dashboard
  EQUW DOVIAE            \ #VIAE      = 139 (&8B)    11 = Set 6522 System VIA IER
@@ -1164,49 +1200,110 @@ NEXT
                         \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: DOBULB
+\       Type: Subroutine
+\   Category: Dashboard
+\    Summary: Implement the #DOBULB 0 command (draw the space station indicator
+\             bulb)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #DOBULB 0 command. It draws
+\ (or erases) the space station indicator bulb ("S") on the dashboard.
+\
 \ ******************************************************************************
 
 .DOBULB
 
- TAX
- BNE ECBLB
- LDA #16*8
- STA SC
- LDA #&7B
- STA SC+1
- LDY #15
+ TAX                    \ If the parameter to the #DOBULB command is non-zero,
+ BNE ECBLB              \ i.e. this is a #DOBULB 255 command, jump to EXBLB to
+                        \ draw the E.C.M. bulb instead
+
+ LDA #16*8              \ The space station bulb is in character block number 48
+ STA SC                 \ (counting from the left edge of the screen), with the
+                        \ first half of the row in one page, and the second half
+                        \ in another. We want to set the screen address to point
+                        \ to the second part of the row, as the bulb is in that
+                        \ half, so that's character block number 16 within that
+                        \ second half (as the first half takes up 32 character
+                        \ blocks, so given that each character block takes up 8
+                        \ bytes, this sets the low byte of the screen address
+                        \ of the character block we want to draw to
+
+ LDA #&7B               \ Set the high byte of SC(1 0) to &7B, as the bulbs are
+ STA SC+1               \ both in the character row from &7A00 to &7BFF, and the
+                        \ space station bulb is in the right half, which is from
+                        \ &7B00 to &7BFF
+
+ LDY #15                \ Now to poke the bulb bitmap into screen memory, and
+                        \ there are two character blocks' worth, each with eight
+                        \ lines of one byte, so set a counter in Y for 16 bytes
 
 .BULL
 
- LDA SPBT,Y
- EOR (SC),Y
- STA (SC),Y
- DEY
- BPL BULL
+ LDA SPBT,Y             \ Fetch the Y-th byte of the bulb bitmap
+
+ EOR (SC),Y             \ EOR the byte with the current contents of screen
+                        \ memory, so drawing the bulb when it is already
+                        \ on-screen will erase it
+
+ STA (SC),Y             \ Store the Y-th byte of the bulb bitmap in screen
+                        \ memory
+
+ DEY                    \ Decrement the loop counter
+
+ BPL BULL               \ Loop back to poke the next byte until we have done
+                        \ all 16 bytes across two character blocks
 
  JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
                         \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: ECBLB
+\       Type: Subroutine
+\   Category: Dashboard
+\    Summary: Implement the #DOBULB 255 command (draw the E.C.M. indicator bulb)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #DOBULB 255 command. It draws
+\ (or erases) the E.C.M. indicator bulb ("E") on the dashboard.
+\
 \ ******************************************************************************
 
 .ECBLB
 
- LDA #8*14
- STA SC
- LDA #&7A
- STA SC+1
- LDY #15
+ LDA #8*14              \ The E.C.M. bulb is in character block number 14 with
+ STA SC                 \ each character taking 8 bytes, so this sets the low
+                        \ byte of the screen address of the character block we
+                        \ want to draw to
+
+ LDA #&7A               \ Set the high byte of SC(1 0) to &7A, as the bulbs are
+ STA SC+1               \ both in the character row from &7A00 to &7BFF, and the
+                        \ E.C.M. bulb is in the left half, which is from &7A00
+                        \ to &7AFF
+
+ LDY #15                \ Now to poke the bulb bitmap into screen memory, and
+                        \ there are two character blocks' worth, each with eight
+                        \ lines of one byte, so set a counter in Y for 16 bytes
 
 .BULL2
 
- LDA ECBT,Y
- EOR (SC),Y
- STA (SC),Y
- DEY
- BPL BULL2
+ LDA ECBT,Y             \ Fetch the Y-th byte of the bulb bitmap
+ 
+ EOR (SC),Y             \ EOR the byte with the current contents of screen
+                        \ memory, so drawing the bulb when it is already
+                        \ on-screen will erase it
+
+ STA (SC),Y             \ Store the Y-th byte of the bulb bitmap in screen
+                        \ memory
+
+ DEY                    \ Decrement the loop counter
+
+ BPL BULL2              \ Loop back to poke the next byte until we have done
+                        \ all 16 bytes across two character blocks
 
  JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
                         \ return from the subroutine using a tail call
@@ -1216,46 +1313,108 @@ NEXT
 \       Name: SPBT
 \       Type: Variable
 \   Category: Dashboard
-\    Summary: The character definition for the space station indicator
+\    Summary: The bitmap definition for the space station indicator bulb
 \
 \ ------------------------------------------------------------------------------
 \
-\ The character definition for the space station indicator's "S" bulb that gets
-\ displayed on the dashboard. Each pixel is in mode 5 colour 2 (%10), which is
-\ yellow/white.
+\ The bitmap definition for the space station indicator's "S" bulb that gets
+\ displayed on the dashboard.
+\
+\ The bulb is four pixels wide, so it covers two mode 2 character blocks, one
+\ containing the left half of the "S", and the other the right half, which are
+\ displayed next to each other. Each pixel is in mode 2 colour 7 (%1111), which
+\ is white.
 \
 \ ******************************************************************************
 
 .SPBT
 
- EQUD &FFAAFFFF
- EQUD &FFFF00FF
- EQUD &FF00FFFF
- EQUD &FFFF55FF
+                        \ Left half of the "S" bulb
+                        \
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+ EQUB %10101010         \ x .
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+ EQUB %00000000         \ . .
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+
+                        \ Right half of the "S" bulb
+                        \
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+ EQUB %00000000         \ . .
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+ EQUB %01010101         \ . x
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+
+                        \ Combined "S" bulb
+                        \
+                        \ x x x x
+                        \ x x x x
+                        \ x . . .
+                        \ x x x x
+                        \ x x x x
+                        \ . . . x
+                        \ x x x x
+                        \ x x x x
 
 \ ******************************************************************************
 \
 \       Name: ECBT
 \       Type: Variable
 \   Category: Dashboard
-\    Summary: The character definition for the E.C.M. indicator
+\    Summary: The character bitmap for the E.C.M. indicator bulb
 \
 \ ------------------------------------------------------------------------------
 \
-\ The character definition for the E.C.M. indicator's "E" bulb that gets
-\ displayed on the dashboard. The E.C.M. indicator uses the first 5 rows of the
-\ space station's "S" bulb below, as the bottom 5 rows of the "E" match the top
-\ 5 rows of the "S". Each pixel is in mode 5 colour 2 (%10), which is
-\ yellow/white.
+\ The character bitmap for the E.C.M. indicator's "E" bulb that gets displayed
+\ on the dashboard.
+\
+\ The bulb is four pixels wide, so it covers two mode 2 character blocks, one
+\ containing the left half of the "E", and the other the right half, which are
+\ displayed next to each other. Each pixel is in mode 2 colour 7 (%1111), which
+\ is white.
 \
 \ ******************************************************************************
 
 .ECBT
 
- EQUD &FFAAFFFF
- EQUD &FFFFAAFF
- EQUD &FF00FFFF
- EQUD &FFFF00FF
+                        \ Left half of the "E" bulb
+                        \
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+ EQUB %10101010         \ x .
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+ EQUB %10101010         \ x .
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+
+                        \ Right half of the "E" bulb
+                        \
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+ EQUB %00000000         \ . .
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+ EQUB %00000000         \ . .
+ EQUB %11111111         \ x x
+ EQUB %11111111         \ x x
+
+                        \ Combined "E" bulb
+                        \
+                        \ x x x x
+                        \ x x x x
+                        \ x . . .
+                        \ x x x x
+                        \ x x x x
+                        \ x . . .
+                        \ x x x x
+                        \ x x x x
 
 \ ******************************************************************************
 \       Name: DOT
@@ -3511,32 +3670,57 @@ NEXT
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: ADPARAMS
+\       Type: Subroutine
+\   Category: Dashboard
+\    Summary: Implement the OSWRCH 137 command (add a dashboard parameter and
+\             update the dashboard when all parameters are received)
+\
 \ ******************************************************************************
 
 .ADPARAMS
 
- INC PARANO
- LDX PARANO
- STA PARAMS-1,X
- CPX #PARMAX
- BCS P%+3
- RTS
- JSR DIALS
+ INC PARANO             \ PARANO points to the last free byte in PARAMS, which
+                        \ is where we're about to store the new byte in A, so
+                        \ increment PARANO to point to the byte after this one
+
+ LDX PARANO             \ Store the new byte in A at position PARANO-1 in TABLE
+ STA PARAMS-1,X         \ (which was the last free byte before we incremented
+                        \ PARANO above)
+
+ CPX #PARMAX            \ If X >= #PARMAX, skip the following instruction, as we
+ BCS P%+3               \ have now received all the parameters we need to update
+                        \ the dashboard
+
+ RTS                    \ Otherwise we still have more parameters to receive, so
+                        \ return from the subroutine
+
+ JSR DIALS              \ Call DIALS to update the dashboard with the parameters
+                        \ in PARAMS
 
  JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
                         \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: RDPARAMS
+\       Type: Subroutine
+\   Category: Dashboard
+\    Summary: Implement the #RDPARAMS command (start receiving a new set of
+\             parameters for updating the dashboard)
+\
 \ ******************************************************************************
 
 .RDPARAMS
 
- LDA #0
- STA PARANO
- LDA #&89
- JMP USOSWRCH
+ LDA #0                 \ Set PARANO = 0 to point to the position of the next
+ STA PARANO             \ free byte in the PARAMS buffer (i.e. reset the buffer)
+
+ LDA #137               \ Send a USOSWRCH 137 command to the I/O processor so
+ JMP USOSWRCH           \ subsequent OSWRCH calls can send parameters that get
+                        \ added to PARAMS, and return from the subroutine using
+                        \ a tail call
 
 \ ******************************************************************************
 \
@@ -3996,6 +4180,8 @@ ENDMACRO
 \
 \ Returns:
 \
+\   X                   X is preserved
+\
 \   Y                   Y is set to 0
 \
 \ ******************************************************************************
@@ -4292,7 +4478,7 @@ ENDMACRO
                         \ font is at FONT%, page 1 is at FONT%+1, and page 2 at
                         \ FONT%+3
                         \
-                        \ There are definitions for 32 chracters in each of the
+                        \ There are definitions for 32 characters in each of the
                         \ three pages of MOS memory, as each definition takes up
                         \ 8 bytes (8 rows of 8 pixels) and 32 * 8 = 256 bytes =
                         \ 1 page. So:
@@ -4394,11 +4580,18 @@ ENDMACRO
  
                         \ If we get here, then CATF is non-zero, so we are
                         \ printing a disc catalogue and we are not printing a
-                        \ space
+                        \ space, so we drop column 17 from the output so the
+                        \ catalogue will fit on-screen (column 17 is a blank
+                        \ column in the middle of the catalogue, between the
+                        \ two lists of filenames, so it can be dropped without
+                        \ affecting the layout). Without this, the catalogue
+                        \ would be one character too wide for the square screen
+                        \ mode (it's 34 characters wide, while the screen mode
+                        \ is only 33 characters across)
 
  CMP #17                \ If A = 17, i.e. the text cursor is in column 17, jump
  BEQ RR4                \ to RR4 to restore the registers and return from the
-                        \ subroutine
+                        \ subroutine, thus omitting this column
 
 .RR5
 

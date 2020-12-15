@@ -746,7 +746,9 @@ NEWB = INWK+36
 
 .messXC
 
- SKIP 1
+ SKIP 1                 \ Temporary storage, used to store the text column
+                        \ of the in-flight message in MESS, so it can be erased
+                        \ from the screen at the correct time
 
 ORG &D1
 
@@ -3438,7 +3440,7 @@ LOAD_A% = LOAD%
 
 .CATF
 
- EQUB 0                 \ This bute is unused (the CATF variable in the I/O
+ EQUB 0                 \ This byte is unused (the CATF variable in the I/O
                         \ processor code is used to store the CATF flag, not
                         \ this one)
 
@@ -6666,27 +6668,47 @@ ENDIF
  EQUD 0
 
 \ ******************************************************************************
+\
 \       Name: LSX2
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: The ball line heap for storing x-coordinates
+\  Deep dive: The ball line heap
+\
 \ ******************************************************************************
 
 .LSX2
 
 IF _MATCH_EXTRACTED_BINARIES
+
  INCBIN "extracted/workspaces/ELTA-LSX2.bin"
+
 ELSE
+
  SKIP &100
+
 ENDIF
 
 \ ******************************************************************************
+\
 \       Name: LSY2
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: The ball line heap for storing y-coordinates
+\  Deep dive: The ball line heap
+\
 \ ******************************************************************************
 
 .LSY2
 
 IF _MATCH_EXTRACTED_BINARIES
+
  INCBIN "extracted/workspaces/ELTA-LSY2.bin"
+
 ELSE
+
  SKIP &100
+
 ENDIF
 
 \ ******************************************************************************
@@ -10335,50 +10357,75 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  EQUB 0
 
 \ ******************************************************************************
+\
 \       Name: DIALS
-\ by sending a #RDPARAMS command to the I/O processor
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Update the dashboard indicators by sending a #RDPARAMS command to
+\             the I/O processor
+\
 \ ******************************************************************************
 
 .DIALS
 
- LDA #RDPARAMS
+ LDA #RDPARAMS          \ Send a #RDPARAMS command to the I/O processor to tell
+ JSR OSWRCH             \ it to expect a sequence of parameters containing the
+ JSR OSWRCH             \ data it needs to update the dashboard dials
+
+ LDA ENERGY             \ Send the energy bank status to the I/O processor
  JSR OSWRCH
+
+ LDA ALP1               \ Send the magnitude of the roll angle to the I/O
+ JSR OSWRCH             \ processor
+
+ LDA ALP2               \ Send the sign of the roll angle to the I/O processor
  JSR OSWRCH
- LDA ENERGY
+
+ LDA BETA               \ Send the magnitude of the pitch angle to the I/O
+ JSR OSWRCH             \ processor
+
+ LDA BET1               \ Send the sign of the pitch angle to the I/O processor
  JSR OSWRCH
- LDA ALP1
+
+ LDA DELTA              \ Send the current speed to the I/O processor
  JSR OSWRCH
- LDA ALP2
+
+ LDA ALTIT              \ Send the current altitude to the I/O processor
  JSR OSWRCH
- LDA BETA
+
+ LDA MCNT               \ Send the value of the main loop counter to the I/O
+ JSR OSWRCH             \ processor
+
+ LDA FSH                \ Send the front shield status to the I/O processor
  JSR OSWRCH
- LDA BET1
+
+ LDA ASH                \ Send the aft shield status to the I/O processor
  JSR OSWRCH
- LDA DELTA
+
+ LDA QQ14               \ Send the current fuel level to the I/O processor
  JSR OSWRCH
- LDA ALTIT
+
+ LDA GNTMP              \ Send the laser temperature to the I/O processor
  JSR OSWRCH
- LDA MCNT
+
+ LDA CABTMP             \ Send the cabin temperature to the I/O processor
  JSR OSWRCH
- LDA FSH
+
+ LDA FLH                \ Send the flashing console bars configuration setting
+ JSR OSWRCH             \ to the I/O processor
+
+ LDA ESCP               \ Send the escape pod status to the I/O processor
  JSR OSWRCH
- LDA ASH
- JSR OSWRCH
- LDA QQ14
- JSR OSWRCH
- LDA GNTMP
- JSR OSWRCH
- LDA CABTMP
- JSR OSWRCH
- LDA FLH
- JSR OSWRCH
- LDA ESCP
- JSR OSWRCH
- LDA MCNT
- AND #3
- BEQ P%+3
- RTS
- JMP COMPAS
+
+ LDA MCNT               \ This value will be zero on one out of every four
+ AND #3                 \ iterations of the main loop, so skip the following
+ BEQ P%+3               \ instruction when that happens (so we only update the
+                        \ compass once every four iterations of the main loop)
+ 
+ RTS                    \ Return from the subroutine
+
+ JMP COMPAS             \ Jump to COMPAS to update the compass, returning from
+                        \ the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -19876,7 +19923,17 @@ LOAD_D% = LOAD% + P% - CODE%
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: RDLI
+\       Type: Variable
+\   Category: Utitlity routines
+\    Summary: The OS command string for loading the docked code in the disc
+\             version of Elite
+\
+\ ------------------------------------------------------------------------------
+\
+\ This command is not used in the 6502 Second Processor version of Elite.
+\
 \ ******************************************************************************
 
 .RDLI
@@ -23260,7 +23317,7 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Type: Subroutine
 \   Category: Dashboard
 \    Summary: Light up the E.C.M. indicator bulb ("E") on the dashboard by
-\             sending a #DOBULB command to the I/O processor
+\             sending a #DOBULB 255 command to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -23270,10 +23327,10 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .ECBLB
 
- LDA #DOBULB
- JSR OSWRCH
- LDA #&FF
- JMP OSWRCH
+ LDA #DOBULB            \ Send a #DOBULB 255 command to the I/O processor to
+ JSR OSWRCH             \ tell it to draw the E.C.M. indicator bulb on the
+ LDA #255               \ dashboard, and return from the subroutine using a tail
+ JMP OSWRCH             \ call
 
 \ ******************************************************************************
 \
@@ -23281,7 +23338,7 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Type: Subroutine
 \   Category: Dashboard
 \    Summary: Light up the space station indicator ("S") on the dashboard by
-\             sending a #DOBULB command to the I/O processor
+\             sending a #DOBULB 0 command to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
@@ -23292,35 +23349,87 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .SPBLB
 
- LDA #DOBULB
- JSR OSWRCH
- LDA #0
- JMP OSWRCH
+ LDA #DOBULB            \ Send a #DOBULB 0 command to the I/O processor to
+ JSR OSWRCH             \ tell it to draw the E.C.M. indicator bulb on the
+ LDA #0                 \ dashboard, and return from the subroutine using a tail
+ JMP OSWRCH             \ call
 
 \ ******************************************************************************
+\
 \       Name: MSBAR
-\ by sending a #DOmsbar command to the I/O processor
+\       Type: Subroutine
+\   Category: Dashboard
+\    Summary: Draw a specific indicator in the dashboard's missile bar by
+\             sending a #DOmsbar command to the I/O processor
+\
+\ ------------------------------------------------------------------------------
+\
+\ Each indicator is a rectangle that's 3 pixels wide and 5 pixels high. If the
+\ indicator is set to black, this effectively removes a missile.
+\
+\ Arguments:
+\
+\   X                   The number of the missile indicator to update (counting
+\                       from right to left, so indicator NOMSL is the leftmost
+\                       indicator)
+\
+\   Y                   The colour of the missile indicator:
+\
+\                         * &00 = black (no missile)
+\
+\                         * &0E = red (armed and locked)
+\
+\                         * &E0 = yellow/white (armed)
+\
+\                         * &EE = green/cyan (disarmed)
+\
+\ Returns:
+\
+\   X                   X is preserved
+\
+\   Y                   Y is set to 0
+\
 \ ******************************************************************************
 
 .msbpars
 
- EQUB 4
- EQUD 0
+ EQUB 4                 \ The number of bytes to transmit with this command
+
+ EQUB 0                 \ The number of bytes to receive with this command
+
+ EQUB 0                 \ The number of the missile indicator to update
+
+ EQUB 0                 \ The colour of the missile indicator
+
+ EQUB 0                 \ End of the parameter block
 
 .MSBAR
 
- PHX \++
- STX msbpars+2
- STY msbpars+3
- PHY
- LDX #(msbpars MOD256)
- LDY #(msbpars DIV256)
- LDA #DOmsbar
- JSR OSWORD
- LDY #0
- PLA
- PLX \++
- RTS
+ PHX                    \ Store the indicator number on the stack so we can
+                        \ retrieve it later
+
+ STX msbpars+2          \ Store the indicator number in byte #2 of the parameter
+                        \ block above
+
+ STY msbpars+3          \ Store the indicator colour in byte #3 of the parameter
+                        \ block above
+
+ PHY                    \ Store the indicator colour on the stack so we can
+                        \ retrieve it later
+
+ LDX #LO(msbpars)       \ Set (Y X) to point to the parameter block above
+ LDY #HI(msbpars)
+
+ LDA #DOmsbar           \ Send a #DOmsbar command to the I/O processor to update
+ JSR OSWORD             \ the missile indicator on the dashboard
+
+ LDY #0                 \ Set Y = 0
+
+ PLA                    \ Restore the indicator colour from the stack into A
+
+ PLX                    \ Restore the indicator number from the stack into X
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -27405,8 +27514,8 @@ LOAD_F% = LOAD% + P% - CODE%
 
  BPL dontdolinefeedontheprinternow
 
- LDA #prilf             \ Send two #prilf commands to the I/O processor to spit
- JSR OSWRCH             \ out two blank lines on the printer
+ LDA #prilf             \ Send a #prilf command to the I/O processor to print a
+ JSR OSWRCH             \ blank line on the printer
  JSR OSWRCH
 
 .dontdolinefeedontheprinternow
@@ -28511,7 +28620,7 @@ ENDIF
 
 .awe
 
- LDA brkd               \ If brkd = 0, jump to BRBR2 to skip the following, we
+ LDA brkd               \ If brkd = 0, jump to BRBR2 to skip the following, as
  BEQ BRBR2              \ we do not have a system error message to display
 
  INC brkd               \ Increment the brkd counter
@@ -28759,33 +28868,66 @@ ENDIF
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: GTNMEW
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Fetch the name of a commander file to save or load
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   INWK                The full filename, including drive and directory, in
+\                       the form ":0.E.JAMESON", for example
+\
 \ ******************************************************************************
 
 .GTNMEW
 
-\LDY#8\JSRDELAY
+\LDY #8                 \ These instructions are commented out in the original
+\JSR DELAY              \ source
 
 .GTNME
 
- LDX #4
+ LDX #4                 \ First we want to copy the drive and directory part of
+                        \ the commander file from S1% (which equals NA%-5), so
+                        \ set a counter in x for 5 bytes, as the string is of
+                        \ the form ":0.E."
 
 .GTL3
 
- LDA NA%-5,X
+ LDA NA%-5,X            \ Copy the X-th byte from NA%-5 to INWK
  STA INWK,X
- DEX
- BPL GTL3
- LDA #7
- STA RLINE+2
- LDA #8
- JSR DETOK
- JSR MT26
- LDA #9
- STA RLINE+2
- TYA
- BEQ TR1
- RTS
+
+ DEX                    \ Decrement the loop counter
+
+ BPL GTL3               \ Loop back until the whole drive and directory string
+                        \ has been copied to INWK to INWK+4
+
+ LDA #7                 \ The call to MT26 below uses the OSWORD block at RLINE
+ STA RLINE+2            \ to fetch the line, and RLINE+2 defines the maximum
+                        \ line length allowed, so this changes the maximum
+                        \ length to 7 (as that's the longest commander name
+                        \ allowed)
+
+ LDA #8                 \ Print extended token 8 ("{single cap}COMMANDER'S
+ JSR DETOK              \ NAME? ")
+
+ JSR MT26               \ Call MT26 to fetch a line of text from the keyboard
+                        \ to INWK+5, with the text length in Y, so INWK now
+                        \ contains the full pathname of the file, as in
+                        \ ":0.E.JAMESON", for example
+
+ LDA #9                 \ Reset the maximum length in RLINE+2 to the original
+ STA RLINE+2            \ value of 9
+
+ TYA                    \ Copy the length of the entered name into A
+
+ BEQ TR1                \ If A = 0, no name was entered, so jump to TR1 to
+                        \ restore the original name from NA% to INWK+5
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -28998,7 +29140,12 @@ ENDIF
  EQUB 13                \ actual drive number by the CATS routine
 
 \ ******************************************************************************
+\
 \       Name: DELI
+\       Type: Variable
+\   Category: Save and load
+\    Summary: The OS command string for deleting a file
+\
 \ ******************************************************************************
 
 .DELI
@@ -29011,7 +29158,19 @@ ENDIF
 \       Name: CATS
 \       Type: Subroutine
 \   Category: Save and load
-\    Summary: Catalogue a disc by sending a #DOCATF command to the I/O processor
+\    Summary: Ask for a disc drive number and print a catalogue of that drive
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine asks for a disc drive number, and if it is a valid number (0-3)
+\ it displays a catalogue of the disc in that drive. It also updates the OS
+\ command at CTLI so that when that command is run, it catalogues the correct
+\ drive.
+\
+\ Returns:
+\
+\   C flag              Clear if a valid drive number was entered (0-3), set
+\                       otherwise
 \
 \ ******************************************************************************
 
@@ -29064,7 +29223,19 @@ ENDIF
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: DELT
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Catalogue a disc, ask for a filename to delete, and delete the
+\             file
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine asks for a disc drive number, and if it is a valid number (0-3)
+\ it displays a catalogue of the disc in that drive. It then asks for a filename
+\ to delete, updates the OS command at DELI so that when that command is run, it
+\ it deletes the correct file, and then it does the deletion.
 \
 \ Other entry points:
 \
@@ -29074,27 +29245,54 @@ ENDIF
 
 .DELT
 
- JSR CATS \!!
- BCS SVE
- LDA CTLI+1
- STA DELI+7
- LDA #9
- JSR DETOK
- JSR MT26
- TYA
- BEQ SVE
- LDX #9
+ JSR CATS               \ Call CATS to ask for a drive number, catalogue that
+                        \ disc and update the catalogue command at CTLI
+
+ BCS SVE                \ If the C flag is set then an invalid drive number was
+                        \ entered as part of the catalogue process, so jump to
+                        \ SVE to display the disc access menu
+
+ LDA CTLI+1             \ The call to CATS above put the drive number into
+ STA DELI+7             \ CTLI+1, so copy the drive number into DELI+7 so that
+                        \ the drive number in the "DELETE:0.E.1234567" string
+                        \ gets updated (i.e. the number after the colon)
+
+ LDA #9                 \ Print extended token 9 ("{clear bottom of screen}FILE
+ JSR DETOK              \ TO DELETE?")
+
+ JSR MT26               \ Call MT26 to fetch a line of text from the keyboard
+                        \ to INWK+5, with the text length in Y
+
+ TYA                    \ If no text was entered (Y = 0) then jump to SVE to
+ BEQ SVE                \ display the disc access menu
+
+                        \ We now copy the entered filename from INWK to DELI, so
+                        \ that it overwrites the filename part of the string,
+                        \ i.e. the "E.1234567" part of "DELETE:0.E.1234567"
+
+ LDX #9                 \ Set up a counter in X to count from 9 to 1, so that we
+                        \ copy the string starting at INWK+4+1 (i.e. INWK+5) to
+                        \ DELI+8+1 (i.e. DELI+9 onwards, or "E.1234567")
 
 .DELL1
 
- LDA INWK+4,X
- STA DELI+8,X
- DEX
- BNE DELL1
- LDX #(DELI MOD256)
- LDY #(DELI DIV256)
- JSR SCLI2
- JMP SVE
+ LDA INWK+4,X           \ Copy the X-th byte of INWK+4 to the X-th byte of
+ STA DELI+8,X           \ DELI+8
+
+ DEX                    \ Decrement the loop counter
+
+ BNE DELL1              \ Loop back to DELL1 to copy the next character until we
+                        \ have copied the whole filename
+
+ LDX #LO(DELI)          \ Set (Y X) to point to the OS command at DELI, which
+ LDY #HI(DELI)          \ contains the DFS command for deleting this file
+
+ JSR SCLI2              \ Call SCLI2 to execute the OS command at (Y X), which
+                        \ deletes the file, setting the SVN flag while it's
+                        \ running to indicate disc access is in progress
+
+ JMP SVE                \ Jump to SVE to display the disc access menu and return
+                        \ from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -29192,10 +29390,13 @@ ENDIF
 
 .CAT
 
- JSR CATS               \ Call CATS to catalogue a disc
+ JSR CATS               \ Call CATS to ask for a drive number, catalogue that
+                        \ disc and update the catalogue command at CTLI
 
                         \ Fall through into retry to wait for a key press and
-                        \ display the disc access menu\ ******************************************************************************
+                        \ display the disc access menu
+
+\ ******************************************************************************
 \
 \       Name: retry
 \       Type: Subroutine
@@ -29269,7 +29470,8 @@ ENDIF
 
  JSR GTNMEW             \ If we get here then option 1 (load) was chosen, so
                         \ call GTNMEW to fetch the name of the commander file
-                        \ to load
+                        \ to load (including drive number and directory) into
+                        \ INWK
 
  JSR LOD                \ Call LOD to load the commander file
 
@@ -29287,7 +29489,8 @@ ENDIF
 
  JSR GTNMEW             \ If we get here then option 2 (save) was chosen, so
                         \ call GTNMEW to fetch the name of the commander file
-                        \ to save
+                        \ to save (including drive number and directory) into
+                        \ INWK
 
  JSR TRNME              \ Transfer the commander filename from INWK to NA%
 
@@ -37597,11 +37800,16 @@ LOAD_H% = LOAD% + P% - CODE%
  ADC (V),Y
  EOR T
  SBC V+1
+
  DEY
+
  BNE CHKLoop
+
  INX
+
  CPX #&A0
  BCC CHKLoop
+
  CMP S%-1
 
 IF _REMOVE_CHECKSUMS
@@ -38089,29 +38297,47 @@ ENDIF
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: CLYNS
-\ by sending a #clyns command to the I/O processor
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Clear the bottom three text rows of the mode 1 screen by sending a
+\             #clyns command to the I/O processor
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   A                   A is set to 0
+\
+\   Y                   Y is set to 0
+\
 \ ******************************************************************************
 
 .CLYNS
 
- LDA #&FF
- STA DTW2
- LDA #128
- STA QQ17
- LDA #21
+ LDA #%11111111         \ Set DTW2 = %11111111 to denote that we are not
+ STA DTW2               \ currently printing a word
+
+ LDA #%10000000         \ Set bit 7 of QQ17 to switch standard tokens to
+ STA QQ17               \ Sentence Case
+
+ LDA #21                \ Move the text cursor to column 1, row 21
  STA YC
  LDA #1
  STA XC
- LDA #clyns
- JSR OSWRCH
- JSR OSWRCH
- LDA #0
- TAY
+
+ LDA #clyns             \ Send a #clyns command to the I/O processor to clear
+ JSR OSWRCH             \ the bottom three text rows of the top part of the
+ JSR OSWRCH             \ screen
+
+ LDA #0                 \ Set A = 0
+
+ TAY                    \ Set Y = 0
 
 .SC5
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -43782,15 +44008,71 @@ ENDMACRO
 \   Category: Drawing ships
 \    Summary: Ship blueprints NEWB table
 \
+\ ------------------------------------------------------------------------------
+\
+\    * Bit 0: Trader flag (0 = not a trader, 1 = trader)
+\
+\    * Bit 1: Bounty hunter flag (0 = not a bounty hunter, 1 = bounty hunter)
+\
+\    * Bit 2: Hostile flag (0 = not hostile, 1 = hostile)
+\             (replaces bit 7 of INWK+32, in ANGRY and ISDK, at least)
+\
+\    * Bit 3: Pirate flag (0 = not a pirate, 1 = pirate)
+\
+\    * Bit 4: Docking flag (0 = not docking, 1 = docking)
+\             but gets randomly set in main game loop 1
+\
+\    * Bit 5: Innocent flag?
+\             (in ANGRY if it's clear, this is not the space station)
+\
+\    * Bit 6: Cop flag (0 = not a cop, 1 = cop)
+\
+\    * Bit 7: Ship has been scooped/docked/disappeared, so remove with no explosion
+\             LL9 1,  it calls EE51 to remove itself
+\             gets set in main flight 8 when we scoop an item
+\             gets removed from the scanner in main flight 11
+\             skips legal checks
+\             Maybe also "has Escape pod" flag?
+\
 \ ******************************************************************************
 
 .E%
 
- EQUB &00, &00, &01, &00, &00, &00, &00, &00
- EQUB &21, &61, &A0, &A0, &A0, &A1, &A1, &C2
- EQUB &0C, &8C, &8C, &8C, &0C, &8C, &05, &8C
- EQUB &8C, &8C, &82, &0C, &0C, &04, &04, &00
- EQUB &20, &00
+ EQUB 0
+
+ EQUB %00000000         \ Missile
+ EQUB %00000001         \ Coriolis space station
+ EQUB %00000000         \ Escape pod
+ EQUB %00000000         \ Alloy plate
+ EQUB %00000000         \ Cargo canister
+ EQUB %00000000         \ Boulder
+ EQUB %00000000         \ Asteroid
+ EQUB %00100001         \ Splinter
+ EQUB %01100001         \ Shuttle
+ EQUB %10100000         \ Transporter
+ EQUB %10100000         \ Cobra Mk III
+ EQUB %10100000         \ Python
+ EQUB %10100001         \ Boa
+ EQUB %10100001         \ Anaconda
+ EQUB %11000010         \ Rock hermit (asteroid)
+ EQUB %00001100         \ Viper
+ EQUB %10001100         \ Sidewinder
+ EQUB %10001100         \ Mamba
+ EQUB %10001100         \ Krait
+ EQUB %00001100         \ Adder
+ EQUB %10001100         \ Gecko
+ EQUB %00000101         \ Cobra Mk I
+ EQUB %10001100         \ Worm
+ EQUB %10001100         \ Cobra Mk III (pirate)
+ EQUB %10001100         \ Asp Mk II
+ EQUB %10000010         \ Python (pirate)
+ EQUB %00001100         \ Fer-de-lance
+ EQUB %00001100         \ Moray
+ EQUB %00000100         \ Thargoid
+ EQUB %00000100         \ Thargon
+ EQUB %00000000         \ Constrictor
+ EQUB %00100000         \ The Elite logo
+ EQUB %00000000         \ Cougar
 
 \ ******************************************************************************
 \
