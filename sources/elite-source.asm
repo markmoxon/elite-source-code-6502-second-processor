@@ -10735,7 +10735,8 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .HAS1
 
- JSR ZINF
+ JSR ZINF               \ Call ZINF to reset the INWK ship workspace
+
  LDA XX15
  STA INWK+6
  LSR A
@@ -11561,9 +11562,9 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \ This section looks at manoeuvring the ship. Specifically:
 \
-\   * Work out which direction the ship should be moving, depending on whether
-\     it's an escape pod, where it is, which direction it is pointing, and how
-\     aggressive it is
+\   * Work out which direction the ship should be moving, depending on the type
+\     of ship, where it is, which direction it is pointing, and how aggressive
+\     it is
 \
 \   * Set the pitch and roll counters to head in that direction
 \
@@ -11624,8 +11625,8 @@ LOAD_C% = LOAD% +P% - CODE%
 
                         \ If we get here, then one of the following is true:
                         \
-                        \   * This is an escape pod and XX15 is pointing towards
-                        \     the planet
+                        \   * This is a trader and XX15 is pointing towards the
+                        \     planet
                         \
                         \   * The ship is pretty close to us, or it's just not
                         \     very aggressive (though there is a random factor
@@ -11641,7 +11642,7 @@ LOAD_C% = LOAD% +P% - CODE%
                         \
                         \ We now want to move the ship in the direction of XX15,
                         \ which will make aggressive ships head towards us, and
-                        \ ships that are too close turn away. Escape pods,
+                        \ ships that are too close turn away. Peaceful traders,
                         \ meanwhile, head off towards the planet in search of a
                         \ space station, and missiles home in on their targets
 
@@ -15421,7 +15422,9 @@ LOAD_C% = LOAD% +P% - CODE%
  ROL TP
 
  JSR BRIS
- JSR ZINF
+
+ JSR ZINF               \ Call ZINF to reset the INWK ship workspace
+
  LDA #CON
  STA TYPE
  JSR NWSHP
@@ -28480,8 +28483,8 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \       Name: BEGIN
 \       Type: Subroutine
-\   Category: Start and end
-\    Summary: Reset the configuration variables and start the game
+\   Category: Loader
+\    Summary: Initialise the configuration variables and start the game
 \
 \ ******************************************************************************
 
@@ -31464,89 +31467,139 @@ ENDIF
 
 .auton
 
- JSR ZINF
+ JSR ZINF               \ Call ZINF to reset the INWK ship workspace
 
- LDA #96
+ LDA #96                \ Set nosev_z_hi = 96
  STA INWK+14
 
- ORA #128
+ ORA #%10000000         \ Set sidev_x_hi = -96
  STA INWK+22
 
- STA TYPE
+ STA TYPE               \ Set the ship type to 224
 
- LDA DELTA
+ LDA DELTA              \ Set the ship speed to DELTA (our speed)
  STA INWK+27
 
- JSR DOCKIT
+ JSR DOCKIT             \ Call DOCKIT to calculate the docking computer's moves
+                        \ and update INWK with the results
 
- LDA INWK+27
- CMP #22
+                        \ We now "press" the relevant flight keys, depending on
+                        \ the results from DOCKIT, starting with the pitch keys
+
+ LDA INWK+27            \ Fetch the updated ship speed from byte #27 into A
+
+ CMP #22                \ If A < 22, skip the next instruction
  BCC P%+4
 
- LDA #22
- 
- STA DELTA
+ LDA #22                \ Set A = 22, so the maximum speed during docking is 22
 
- LDA #&FF
- LDX #0
+ STA DELTA              \ Update DELTA to the new value in A
 
- LDY INWK+28
- BEQ DK11
+ LDA #&FF               \ Set A = &FF, which we can insert into the key logger
+                        \ to "fake" the docking computer working the keyboard
 
- BMI P%+3
+ LDX #0                 \ Set X = 0, so we "press" KY1 below ("?", slow down)
 
- INX
+ LDY INWK+28            \ If the updated acceleration in byte #28 is zero, skip
+ BEQ DK11               \ to DK11
 
- STA KY1,X
+ BMI P%+3               \ If the updated acceleration is negative, skip the
+                        \ following instruction
+
+ INX                    \ The updated acceleration is positive, so increment X
+                        \ to 1, so we "press" KY2 below (Space, speed up)
+
+ STA KY1,X              \ Store &FF in either KY1 or KY2 to "press" the relevant
+                        \ key, depending on whether the updated acceleration is
+                        \ negative (in which case we "press" KY1, "?", to slow
+                        \ down) or positive (in which case we "press" KY2,
+                        \ Space, to speed up)
 
 .DK11
 
- LDA #128
- LDX #0
+                        \ We now "press" the relevant roll keys, depending on
+                        \ the results from DOCKIT
 
- ASL INWK+29
+ LDA #128               \ Set A = 128, which indicates no change in roll when
+                        \ stored in JSTX (i.e. the centre of the roll indicator)
 
- BEQ DK12
+ LDX #0                 \ Set X = 0, so we "press" KY3 below ("<", increase
+                        \ roll)
 
- BCC P%+3
+ ASL INWK+29            \ Shift ship byte #29 left, which shifts bit 7 of the
+                        \ updated roll counter (i.e. the roll direction) into
+                        \ the C flag
 
- INX
+ BEQ DK12               \ If the remains of byte #29 is zero, then the updated
+                        \ roll counter is zero, so jump to DK12 set JSTX to 128,
+                        \ to indicate there's no change in the roll
 
- BIT INWK+29
- BPL DK14
+ BCC P%+3               \ If the C flag is clear, skip the following instruction
 
- LDA #64
- STA JSTX
+ INX                    \ The C flag is set, i.e. the direction of the updated
+                        \ roll counter is negative, so increment X to 1 so we
+                        \ "press" KY4 below (">", decrease roll)
 
- LDA #0
+ BIT INWK+29            \ We shifted the updated roll counter to the left above,
+ BPL DK14               \ so this tests bit 6 of the original value, and if it
+                        \ is is clear (i.e. the magnitude is less than 64), jump
+                        \ to DK14 to "press" the key and leave JSTX unchanged
+
+ LDA #64                \ The magnitude of the updated roll is 64 or more, so
+ STA JSTX               \ set JSTX to 64 (so the roll decreases at half the
+                        \ maximum rate)
+
+ LDA #0                 \ And set A = 0 so we do not "press" any keys (so if the
+                        \ docking computer needs to make a serious roll, it does
+                        \ so by setting JSTX directly rather than by "pressing"
+                        \ a key)
 
 .DK14
 
- STA KY3,X
- LDA JSTX
+ STA KY3,X              \ Store A in either KY3 or KY4, depending on whether
+                        \ the updated roll rate is increasing (KY3) or decreasing
+                        \ (KY4)
+
+ LDA JSTX               \ Fetch A from JSTX so the next instruction has no effect
 
 .DK12
 
- STA JSTX
+ STA JSTX               \ Store A in JSTX to update the current roll rate
 
- LDA #128
- LDX #0
+                        \ We now "press" the relevant pitch keys, depending on
+                        \ the results from DOCKIT
 
- ASL INWK+30
+ LDA #128               \ Set A = 128, which indicates no change in pitch when
+                        \ stored in JSTX (i.e. the centre of the pitch indicator)
 
- BEQ DK13
+ LDX #0                 \ Set X = 0, so we "press" KY5 below ("X", decrease
+                        \ pitch)
 
- BCS P%+3
+ ASL INWK+30            \ Shift ship byte #30 left, which shifts bit 7 of the
+                        \ updated pitch counter (i.e. the pitch direction) into
+                        \ the C flag
 
- INX
+ BEQ DK13               \ If the remains of byte #30 is zero, then the updated
+                        \ pitch counter is zero, so jump to DK13 set JSTY to
+                        \ 128, to indicate there's no change in the pitch
 
- STA KY5,X
+ BCS P%+3               \ If the C flag is set, skip the following instruction
 
- LDA JSTY
+ INX                    \ The C flag is clear, i.e. the direction of the updated
+                        \ pitch counter is positive, so increment X to 1 so we
+                        \ "press" KY6 below ("S", increase pitch)
+
+ STA KY5,X              \ Store 128 in either KY5 or KY6 to "press" the relevant
+                        \ key, depending on whether the pitch direction is
+                        \ negative (in which case we "press" KY5, "X", to
+                        \ decrease the pitch) or positive (in which case we
+                        \ "press" KY6, "S", to increase the pitch)
+
+ LDA JSTY               \ Fetch A from JSTY so the next instruction has no effect
 
 .DK13
 
- STA JSTY
+ STA JSTY               \ Store A in JSTY to update the current pitch rate
 
 .DK15
 
@@ -43986,47 +44039,76 @@ ENDMACRO
  EQUB 125               \ Token 37: a random extended token between 125 and 129
 
 \ ******************************************************************************
+\
 \       Name: COLD
+\       Type: Subroutine
+\   Category: Loader
+\    Summary: Copy the recursive tokens and ship blueprints to their correct
+\             locations
+\
 \ ******************************************************************************
 
 .COLD
 
-\Move WORDS and SHIPS to proper places
- LDA #(F%MOD256)
+                        \ First we copy the 4 pages of recursive tokens from F%
+                        \ to QQ18
+
+ LDA #LO(F%)            \ Set V(1 0) = F%
  STA V
- LDA #(F%DIV256)
+ LDA #HI(F%)
  STA V+1
- LDA #(QQ18 MOD256)
+
+ LDA #LO(QQ18)          \ Set SC(1 0) = QQ18
  STA SC
- LDA #(QQ18 DIV256)
+ LDA #HI(QQ18)
  STA SC+1
- LDX #4
- JSR mvblock
- LDA #(F%MOD256)
+
+ LDX #4                 \ Set X = 4 to act as a counter for copying 4 pages
+
+ JSR mvblock            \ Call mvblock to copy the recursive tokens
+
+                        \ And then we copy the &22 pages of ship blueprints from
+                        \ F% + &0400 to D%
+
+ LDA #LO(F%)            \ Set V(1 0) = F% + &0400
  STA V
- LDA #((F%DIV256)+4)
+ LDA #HI(F%)+4
  STA V+1
- LDA #(D%MOD256)
+
+ LDA #LO(D%)            \ Set SC(1 0) = D%
  STA SC
- LDA #(D%DIV256)
+ LDA #HI(D%)
  STA SC+1
- LDX #&22
+
+ LDX #&22               \ Set X = &22 to act as a counter for copying &22 pages
+
+                        \ Fall through into mvblock to copy the ship blueprints
 
 .mvblock
 
- LDY #0
+ LDY #0                 \ Set Y = 0 to count through the bytes in each page
 
 .mvbllop
 
- LDA (V),Y
- STA (SC),Y
- INY
- BNE mvbllop
- INC V+1
- INC SC+1
- DEX
- BNE mvbllop
- RTS
+ LDA (V),Y              \ Copy the Y-th byte of V(1 0) to the Y-th byte of
+ STA (SC),Y             \ SC(1 0)
+
+ INY                    \ Increment the byte counter to point to the next byte
+
+ BNE mvbllop            \ Loop back to mvbllop until we have copied a whole page
+
+ INC V+1                \ Increment the high byte of V(1 0) to point to the next
+                        \ page to copy from
+
+ INC SC+1               \ Increment the high byte of SC(1 0) to point to the
+                        \ next page to copy into
+
+ DEX                    \ Decrement the page counter in X
+
+ BNE mvbllop            \ Loop back to copy the next page until we have copied
+                        \ all of them
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -44315,19 +44397,22 @@ ENDMACRO
 \
 \    * Bit 0: Trader flag (0 = not a trader, 1 = trader)
 \
-\             ???
+\             80% of traders are peaceful and mind their own business plying
+\             their trade between the planet and space station, but 20% of them
+\             moonlight as bounty hunters
 \
 \             Escape pod, Shuttle, Transporter, Anaconda, Rock hermit, Worm
 \
 \    * Bit 1: Bounty hunter flag (0 = not a bounty hunter, 1 = bounty hunter)
 \
-\             ???
+\             If we are a fugitive or a serious offender and we bump into a
+\             bounty hunter, they will become hostile and attack us
 \
 \             Viper, Fer-de-lance
 \
 \    * Bit 2: Hostile flag (0 = not hostile, 1 = hostile)
 \
-\             ???
+\             Hostile ships will attack us on sight
 \
 \             Sidewinder, Mamba, Krait, Adder, Gecko, Cobra Mk I, Worm,
 \             Cobra Mk III, Asp Mk II, Python (pirate), Moray, Thargoid,
@@ -44335,15 +44420,16 @@ ENDMACRO
 \
 \    * Bit 3: Pirate flag (0 = not a pirate, 1 = pirate)
 \
-\             ???
+\             Hostile pirates will attack us on sight, but once we get inside
+\             the space station safe zone, they will stop
 \
 \             Sidewinder, Mamba, Krait, Adder, Gecko, Cobra Mk I, Cobra Mk III,
 \             Asp Mk II, Python (pirate), Moray, Thargoid
 \
 \    * Bit 4: Docking flag (0 = not docking, 1 = docking)
 \
-\             Traders with a set docking flag fly towards the space station to
-\             try to dock, otherwise they aim for the planet
+\             Traders with their docking flag set fly towards the space station
+\             to try to dock, otherwise they aim for the planet
 \
 \             This flag is randomly set for traders when they are spawned
 \
@@ -44357,16 +44443,17 @@ ENDMACRO
 \
 \    * Bit 6: Cop flag (0 = not a cop, 1 = cop)
 \
-\             If we destroy a cop ship, then we instantly becoime a fugitive
-\             (the transporter isn't actually a cop ship, but it's clearly under
-\             police protection)
+\             If we destroy a cop, then we instantly becoime a fugitive (the
+\             transporter isn't actually a cop, but it's clearly under police
+\             protection)
 \
 \             Viper, Transporter
 \
-\    * Bit 7: For spawned ships, indicates that the ship been scooped or has
-\             docked (bit 7 is always clear on spawning)
+\    * Bit 7: For spawned ships, this flag indicates that the ship been scooped
+\             or has docked (bit 7 is always clear on spawning)
 \
-\             For blueprints, indicates the ship type has an escape pod fitted
+\             For blueprints, this flag indicates whether the ship type has an
+\             escape pod fitted, so it can launch it when in dire straits
 \
 \             Cobra Mk III, Python, Boa, Anaconda, Rock hermit, Viper, Mamba,
 \             Krait, Adder, Cobra Mk I, Cobra Mk III (pirate), Asp Mk II,
