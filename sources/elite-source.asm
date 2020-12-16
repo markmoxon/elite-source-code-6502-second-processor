@@ -10992,16 +10992,16 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \   * If this is a missile, jump up to the missile code in part 1
 \
-\   * If this is an escape pod, point it at the planet and jump to the
-\     manoeuvring code in part 7
+\   * If this is the space station and it is hostile, consider spawning a cop
+\     (6.2% chance, up to a maximum of seven) and we're done
 \
-\   * If this is the space station and it is hostile, spawn a cop and we're done
+\   * If this is the space station and it is not hostile, consider spawning
+\     (0.8% chance if there are no transporters around) a transporter or shuttle
+\     (equal odds of each type) and we're done
 \
-\   * If this is a lone Thargon without a mothership, set it adrift aimlessly
-\     and we're done
-\
-\   * If this is a pirate and we are within the space station safe zone, stop
-\     the pirate from attacking
+\   * If this is a rock hermit, consider spawning (22% chance) a highly
+\     aggressive and hostile Sidewinder, Mamba, Krait, Adder or Gecko (equal
+\     odds of each type) and we're done
 \
 \   * Recharge the ship's energy banks by 1
 \
@@ -11013,14 +11013,29 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .TACTICS
 
- LDA #3                 \ Set RAT = 3
- STA RAT
+ LDA #3                 \ Set RAT = 3, which is the magnitude we set the pitch
+ STA RAT                \ or roll counter to in part 7 when turning a ship
+                        \ towards a vector (a higher value giving a longer
+                        \ turn). This value is not changed in the TACTICS
+                        \ routine, but it is set to different values by the
+                        \ DOCKIT routine
 
- LDA #4                 \ Set RAT2 = 4
- STA RAT2
+ LDA #4                 \ Set RAT2 = 4, which is the threshold below which we
+ STA RAT2               \ don't apply pitch and roll to the ship (so a lower
+                        \ value means we apply pitch and roll more often, and a
+                        \ value of 0 means we always apply them). The value is
+                        \ compared with double the high byte of sidev . XX15,
+                        \ where XX15 is the vector from the ship to the enemy
+                        \ or planet. This value is set to different values by
+                        \ both the TACTICS and DOCKIT routines
 
- LDA #22                \ Set CNT = 22
- STA CNT2
+ LDA #22                \ Set CNT2 = 22, which is the maximum angle beyond which
+ STA CNT2               \ a ship will slow down to start turning towards its
+                        \ prey (a lower value means a ship will start to slow
+                        \ down even if its angle with the enemy ship is large,
+                        \ which gives a tighter turn). This value is not changed
+                        \ in the TACTICS routine, but it is set to different
+                        \ values by the DOCKIT routine
 
  CPX #MSL               \ If this is a missile, jump up to TA18 to implement
  BEQ TA18               \ missile tactics
@@ -11051,7 +11066,8 @@ LOAD_C% = LOAD% +P% - CODE%
  TAX                    \ so this sets X to a value of either #SHU or #SHU + 1,
                         \ which is the ship type for a shuttle or a transporter
 
- BNE TN6                \ Jump to TN6 to spawn this ship type (this BNE is
+ BNE TN6                \ Jump to TN6 to spawn this ship type and return from
+                        \ the subroutine using a tail call (this BNE is
                         \ effectively a JMP as A is never zero)
 
 .TN5
@@ -11091,7 +11107,8 @@ LOAD_C% = LOAD% +P% - CODE%
  LDX #0                 \ Set byte #32 to %00000000 to disable AI, aggression
  STX INWK+32            \ and E.C.M.
 
- STX NEWB               \ Set the ship's NEWB flags to %00000000
+ STX NEWB               \ Set the ship's NEWB flags to %00000000 so the ship we
+                        \ spawn below will inherit the default values from E%
 
  AND #3                 \ Set A = a random number that's in the range 0-3
 
@@ -11104,7 +11121,7 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ aggression (56 out of 63)
 
  LDA #0                 \ Set byte #32 to %00000000 to disable AI, aggression
- STA INWK+32            \ and E.C.M.
+ STA INWK+32            \ and E.C.M. (for the rock hermit)
 
  RTS                    \ Return from the subroutine
 
@@ -11128,6 +11145,23 @@ LOAD_C% = LOAD% +P% - CODE%
 \ ------------------------------------------------------------------------------
 \
 \ This section sets up some vectors and calculates dot products. Specifically:
+\
+\   * If this is a lone Thargon without a mothership, set it adrift aimlessly
+\     and we're done
+\
+\   * If this is a trader, 80% of the time we're done, 20% of the time the
+\     trader performs the same checks as the bounty hunter
+\
+\   * If this is a bounty hunter (or one of the 20% of traders) and we have been
+\     really bad (i.e. a fugitive or serious offender), the ship becomes hostile
+\     (if it isn't already)
+\
+\   * If the ship is not hostile, then either perform docking manouevres (if
+\     it's docking) or fly towards the planet (if it isn't docking) and we're
+\     done
+\
+\   * If the ship is hostile, and a pirate, and we are within the space station
+\     safe zone, stop the pirate from attacking by removing all its aggression
 \
 \   * Calculate the dot product of the ship's nose vector (i.e. the direction it
 \     is pointing) with the vector between us and the ship. This value will help
@@ -11155,7 +11189,7 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .TA14
 
- JSR DORND
+ JSR DORND              \ Set A and X to random numbers
 
  LDA NEWB               \ Extract bit 0 of the ship's NEWB flags into the C flag
  LSR A                  \ and jump to TN1 if it is clear (i.e. if this is not a
@@ -11197,8 +11231,8 @@ LOAD_C% = LOAD% +P% - CODE%
 .GOPL
 
  JSR SPS1               \ The ship is not hostile and it is not docking, so call
-                        \ SPS1 to calculate the vector to the planet and store it
-                        \ in XX15
+                        \ SPS1 to calculate the vector to the planet and store
+                        \ it in XX15
 
  JMP TA151              \ Jump to TA151 to make the ship head towards the planet
 
@@ -11215,7 +11249,7 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ the space station safe zone
 
  LDA INWK+32            \ Set bits 0 and 7 of the AI flag in byte #32 (has AI
- AND #%10000001         \ enabled E.C.M.)
+ AND #%10000001         \ enabled and has an E.C.M.)
  STA INWK+32
 
 .TN4
@@ -11267,16 +11301,20 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \ This section works out what kind of condition the ship is in. Specifically:
 \
+\   * If this is an Anaconda, consider spawning (22% chance) a Worm (61% of the
+\     time) or a Sidewinder (39% of the time)
+\
 \   * Rarely (2.5% chance) roll the ship by a noticeable amount
 \
 \   * If the ship has at least half its energy banks full, jump to part 6 to
 \     consider firing the lasers
 \
-\   * If the ship isn't really low on energy, jump to part 5 to consider firing
-\     a missile
+\   * If the ship is not into the last 1/8th of its energy, jump to part 5 to
+\     consider firing a missile
 \
-\   * Rarely (10% chance) the ship runs out of both energy and luck, and bails,
-\     launching an escape pod and drifting in space
+\   * If the ship is into the last 1/8th of its energy, and this ship type has
+\     an escape pod fitted, then rarely (10% chance) the ship launches an escape
+\     pod and is left drifting in space
 \
 \ ******************************************************************************
 
@@ -11287,17 +11325,25 @@ LOAD_C% = LOAD% +P% - CODE%
  JMP TA20               \ This is a missile, so jump down to TA20 to get
                         \ straight into some aggressive manoeuvring
 
- CMP #ANA
- BNE TN7
- JSR DORND
- CMP #200
- BCC TN7
- JSR DORND
- LDX #WRM
- CMP #100
- BCS P%+4
- LDX #SH3
- JMP TN6
+ CMP #ANA               \ If this is not an Anaconda, jump down to TN7 to skip
+ BNE TN7                \ the following
+
+ JSR DORND              \ Set A and X to random numbers
+
+ CMP #200               \ If A < 200 (78% chance), jump down to TN7 to skip the
+ BCC TN7                \ following
+
+ JSR DORND              \ Set A and X to random numbers
+
+ LDX #WRM               \ Set X to the ship type for a Worm
+ 
+ CMP #100               \ If A >= 100 (61% chance), skip the following
+ BCS P%+4               \ instruction
+
+ LDX #SH3               \ Set X to the ship type for a Sidewinder
+
+ JMP TN6                \ Jump to TN6 to spawn the Worm or Sidewinder and return
+                        \ from the subroutine using a tail call
 
 .TN7
 
@@ -11439,8 +11485,8 @@ LOAD_C% = LOAD% +P% - CODE%
  JSR MAS4
 
  AND #%11100000         \ If any of the hi bytes have any of bits 5-7 set, then
- BNE TA4                \ jump to TA4 to skip the laser, as the ship is too far
-                        \ away from us to hit us with a laser
+ BNE TA4                \ jump to TA4 to skip the laser checks, as the ship is
+                        \ too far away from us to hit us with a laser
 
  LDX CNT                \ Set X = the dot product set above in CNT. If this is
                         \ positive, this ship and our ship are facing in similar
@@ -11463,31 +11509,38 @@ LOAD_C% = LOAD% +P% - CODE%
                         \       shoot us, they can hit us
 
  CPX #160               \ If X < 160, i.e. X > -32, then we are not in the enemy
- BCC TA4                \ ship's line of fire, so jump to TA4
+ BCC TA4                \ ship's line of fire, so jump to TA4 to skip the laser
+                        \ checks
 
- LDY #19
- LDA (XX0),Y
- AND #&F8
- BEQ TA4
+ LDY #19                \ Fetch the enemy ship's byte #19 from their ship's
+ LDA (XX0),Y            \ blueprint into A
+
+ AND #%11111000         \ Extract bits 3-7, which contain the enemy's laser
+                        \ power
+
+ BEQ TA4                \ If the enemy has no laser power, jump to TA4 to skip
+                        \ the laser checks
 
  LDA INWK+31            \ Set bit 6 in byte #31 to denote that the ship is
  ORA #%01000000         \ firing its laser at us
  STA INWK+31
 
  CPX #163               \ If X < 163, i.e. X > -35, then we are not in the enemy
- BCC TA4                \ ship's crosshairs, so jump to TA4
+ BCC TA4                \ ship's crosshairs, so jump to TA4 to skip the laser
 
- LDA (XX0),Y
+ LDA (XX0),Y            \ Fetch the enemy ship's byte #19 from their ship's
+                        \ blueprint into A
 
- LSR A                  \ Halve their laser power to get the amount of damage we
-                        \ should take
+ LSR A                  \ Halve the enemy ship's byte #19 (which contains both
+                        \ the laser power and number of missiles) to get the
+                        \ amount of damage we should take
 
  JSR OOPS               \ Call OOPS to take some damage, which could do anything
                         \ from reducing the shields and energy, all the way to
                         \ losing cargo or dying (if the latter, we don't come
                         \ back from this subroutine)
 
- DEC INWK+28            \ Halve the attacking ship's acceleration in byte #28,
+ DEC INWK+28            \ Halve the attacking ship's acceleration in byte #28
 
  LDA ECMA               \ If an E.C.M. is currently active (either our's or an
  BNE TA9-1              \ opponent's), return from the subroutine without making
@@ -11556,14 +11609,16 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ here, but we also get here if the ship is either far
                         \ away and aggressive, or not too close
 
- JSR TAS6
+ JSR TAS6               \ Call TAS6 to negate the vector in XX15 so it points in
+                        \ the opposite direction
 
- LDA CNT
- EOR #%10000000
+ LDA CNT                \ Change the sign of the dot product in CNT, so now it's
+ EOR #%10000000         \ positive if the ships are facing each other, and
+                        \ negative if they are facing the same way
 
 .TA152
 
- STA CNT
+ STA CNT                \ Update CNT with the new value in A
 
 .TA15
 
@@ -11597,25 +11652,31 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ other words if the ship should pull up to head in the
                         \ direction of XX15
 
- TAX
+ TAX                    \ Copy A into X so we can retrieve it below
 
- EOR #%10000000
- AND #%10000000
+ EOR #%10000000         \ Give the ship's pitch counter the opposite sign to the
+ AND #%10000000         \ dot product result, with a value of 0
  STA INWK+30
- TXA
- ASL A
- CMP RAT2
- BCC TA11
- LDA RAT
- ORA INWK+30
+
+ TXA                    \ Retrieve the original value of A from X
+
+ ASL A                  \ Shift A left to double it and drop the sign bit
+
+ CMP RAT2               \ If A < RAT2, skip to TA11 (so if RAT2 = 0, we always
+ BCC TA11               \ set the pitch counter to RAT)
+
+ LDA RAT                \ Set the magnitude of the ship's pitch counter to RAT
+ ORA INWK+30            \ (we already set the sign above)
  STA INWK+30
 
 .TA11
 
- LDA INWK+29
- ASL A
- CMP #32
- BCS TA6
+ LDA INWK+29            \ Fetch the roll counter from byte #29 into A
+
+ ASL A                  \ Shift A left to double it and drop the sign bit
+
+ CMP #32                \ If A >= 32 then jump to TA6, as the ship is already
+ BCS TA6                \ in the process of rolling
 
  LDY #22                \ Set (A X) = sidev . XX15
  JSR TAS3               \
@@ -11624,18 +11685,22 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ ship, in other words if the ship should roll right to
                         \ head in the direction of XX15
 
- TAX
+ TAX                    \ Copy A into X so we can retrieve it below
 
- EOR INWK+30
- AND #%10000000
- EOR #%10000000
+ EOR INWK+30            \ Give the ship's roll counter a positive sign if the
+ AND #%10000000         \ pitch counter and dot product have different signs,
+ EOR #%10000000         \ negative if they have the same sign, with a value of 0
  STA INWK+29
- TXA
- ASL A
- CMP RAT2
- BCC TA12
- LDA RAT
- ORA INWK+29
+
+ TXA                    \ Retrieve the original value of A from X
+
+ ASL A                  \ Shift A left to double it and drop the sign bit
+
+ CMP RAT2               \ If A < RAT2, skip to TA12 (so if RAT2 = 0, we always
+ BCC TA12               \ set the roll counter to RAT)
+
+ LDA RAT                \ Set the magnitude of the ship's roll counter to RAT
+ ORA INWK+29            \ (we already set the sign above)
  STA INWK+29
 
 .TA12
@@ -11646,8 +11711,10 @@ LOAD_C% = LOAD% +P% - CODE%
  BMI TA9                \ TA9, as the ships are facing away from each other and
                         \ the ship might want to slow down to take another shot
 
- CMP CNT2
- BCC TA9
+ CMP CNT2               \ The dot product is positive, so the ships are facing
+ BCC TA9                \ each other. If A < CNT2 then the ships are not heading
+                        \ directly towards each other, so jump to TA9 to slow
+                        \ down
 
 .PH10E
 
@@ -11674,7 +11741,7 @@ LOAD_C% = LOAD% +P% - CODE%
  ASL A                  \ This is a missile, so set A = -2, as missiles are more
                         \ nimble and can brake more quickly
 
- STA INWK+28            \ Ser the ship's acceleration to A
+ STA INWK+28            \ Set the ship's acceleration to A
 
 .TA10
 
@@ -11682,16 +11749,33 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .TA151
 
- LDY #10
- JSR TAS3
- CMP #&98
+                        \ This is called from part 3 with the vector to the
+                        \ planet in XX15, when we want the ship to turn towards
+                        \ the planet. It does the same dot product calculation
+                        \ as part 3, but it can also change the value of RAT2
+                        \ so that roll and pitch is always applied
+
+ LDY #10                \ Set (A X) = nosev . XX15
+ JSR TAS3               \
+                        \ The bigger the value of the dot product, the more
+                        \ aligned the two vectors are, with a maximum magnitude
+                        \ in A of 36 (96 * 96 >> 8). If A is positive, the
+                        \ vectors are facing in a similar direction, if it's
+                        \ negative they are facing in opposite directions
+
+ CMP #&98               \ If A is positive or A <= -24, jump to ttt
  BCC ttt
- LDX #0
- STX RAT2
+
+ LDX #0                 \ A > -24, which means the vectors are facing in
+ STX RAT2               \ opposite directions but are quite aligned, so set
+                        \ RAT2 = 0 instead of the default value of 4, so we
+                        \ always apply roll and pitch when we turn the ship
+                        \ towards the planet
 
 .ttt
 
- JMP TA152
+ JMP TA152              \ Jump to TA152 to store A in CNT and move the ship in
+                        \ the direction of XX15
 
 \ ******************************************************************************
 \       Name: DOCKIT
@@ -12002,21 +12086,29 @@ LOAD_C% = LOAD% +P% - CODE%
  JMP MAD
 
 \ ******************************************************************************
+\
 \       Name: TAS6
+\       Type: Subroutine
+\   Category: Maths (Geometry)
+\    Summary: Negate the vector in XX15 so it points in the opposite direction
+\
 \ ******************************************************************************
 
 .TAS6
 
- LDA XX15
- EOR #128
+ LDA XX15               \ Reverse the sign of the x-coordinate of the vector in
+ EOR #%10000000         \ XX15
  STA XX15
- LDA XX15+1
- EOR #128
+
+ LDA XX15+1             \ Then reverse the sign of the y-coordinate
+ EOR #%10000000
  STA XX15+1
- LDA XX15+2
- EOR #128
+
+ LDA XX15+2             \ And then the z-coordinate, so now the XX15 vector is
+ EOR #%10000000         \ pointing in the opposite direction
  STA XX15+2
- RTS
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \       Name: DCS1
@@ -31373,39 +31465,59 @@ ENDIF
 .auton
 
  JSR ZINF
+
  LDA #96
  STA INWK+14
+
  ORA #128
  STA INWK+22
+
  STA TYPE
+
  LDA DELTA
  STA INWK+27
+
  JSR DOCKIT
+
  LDA INWK+27
  CMP #22
  BCC P%+4
+
  LDA #22
+ 
  STA DELTA
+
  LDA #&FF
  LDX #0
+
  LDY INWK+28
  BEQ DK11
+
  BMI P%+3
+
  INX
+
  STA KY1,X
 
 .DK11
 
  LDA #128
  LDX #0
+
  ASL INWK+29
+
  BEQ DK12
+
  BCC P%+3
+
  INX
+
  BIT INWK+29
  BPL DK14
+
  LDA #64
  STA JSTX
+
  LDA #0
 
 .DK14
@@ -31416,13 +31528,20 @@ ENDIF
 .DK12
 
  STA JSTX
+
  LDA #128
  LDX #0
+
  ASL INWK+30
+
  BEQ DK13
+
  BCS P%+3
+
  INX
+
  STA KY5,X
+
  LDA JSTY
 
 .DK13
@@ -31437,11 +31556,11 @@ ENDIF
  LDA #7                 \ Set A to 7, which is the amount we want to alter the
                         \ roll rate by if the roll keys are being pressed
 
- LDY KL+3               \ If the < key is being pressed, then call the BUMP2
+ LDY KL+3               \ If the "<" key is being pressed, then call the BUMP2
  BEQ P%+5               \ routine to increase the roll rate in X by A
  JSR BUMP2
 
- LDY KL+4               \ If the > key is being pressed, then call the REDU2
+ LDY KL+4               \ If the ">" key is being pressed, then call the REDU2
  BEQ P%+5               \ routine to decrease the roll rate in X by A, taking
  JSR REDU2              \ the keyboard auto re-centre setting into account
 
@@ -31452,11 +31571,11 @@ ENDIF
  LDX JSTY               \ Set X = JSTY, the current pitch rate (as shown in the
                         \ DC indicator on the dashboard)
 
- LDY KL+5               \ If the > key is being pressed, then call the REDU2
+ LDY KL+5               \ If the "X" key is being pressed, then call the REDU2
  BEQ P%+5               \ routine to decrease the pitch rate in X by A, taking
  JSR REDU2              \ the keyboard auto re-centre setting into account
 
- LDY KL+6               \ If the S key is being pressed, then call the BUMP2
+ LDY KL+6               \ If the "S" key is being pressed, then call the BUMP2
  BEQ P%+5               \ routine to increase the pitch rate in X by A
  JSR BUMP2
 
