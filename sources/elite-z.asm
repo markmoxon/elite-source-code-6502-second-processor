@@ -1030,14 +1030,28 @@ NEXT
                         \ return from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: DOBRK
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Implement the OSWRCH 145 command (execute a BRK instruction)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This command doesn't appear to be used, but it would execute a BRK on the I/O
+\ processor, causing a call to BRKV. This typically  points to BRBR or MEBRK,
+\ both of which print out the current system error, if there is one.
+\
 \ ******************************************************************************
 
 .DOBRK
 
- EQUB 0
- EQUS "TTEST"
- EQUW 13
+ BRK                    \ Execute a BRK instruction
+
+ EQUS "TTEST"           \ A carriage-return-terminated test string, which
+ EQUB 13                \ doesn't appear to be used anywhere
+
+ BRK                    \ End of the test string
 
 \ ******************************************************************************
 \
@@ -1418,6 +1432,7 @@ NEXT
 
 \ ******************************************************************************
 \       Name: DOT
+\    Summary: Implement the #DOdot command (draw a dot)
 \ ******************************************************************************
 
 .DOT
@@ -1555,6 +1570,7 @@ NEXT
 
 \ ******************************************************************************
 \       Name: SC48 - is like the last half of common/subroutine/scan.asm
+\    Summary: Implement the #onescan command (draw a ship on the 3D scanner)
 \ ******************************************************************************
 
 \  ...................... Scanners  ..............................
@@ -1634,8 +1650,8 @@ NEXT
 \       Name: BEGINLIN
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: Implement the OSWRCH 129 command (start receiving a new line to
-\             draw)
+\    Summary: Implement the OSWRCH 129 <size> command (start receiving a new
+\             line to draw)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -1673,8 +1689,8 @@ NEXT
 \       Name: ADDBYT
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: Implement the OSWRCH 130 command (add a byte to a line
-\             and draw it when all bytes are received)
+\    Summary: Implement the OSWRCH 130 <byte> command (add a byte to a line and
+\             draw it when all bytes are received)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -2945,6 +2961,7 @@ NEXT
 
 \ ******************************************************************************
 \       Name: HLOIN
+\    Summary: Implement the OSWORD 247 command (draw a horizontal line)
 \ ******************************************************************************
 
 .HLOIN
@@ -3127,6 +3144,7 @@ NEXT
 
 \ ******************************************************************************
 \       Name: PIXEL
+\    Summary: Implement the OSWORD 240 command (draw a pixel)
 \ ******************************************************************************
 
 .PIXEL
@@ -3462,6 +3480,7 @@ NEXT
 
 \ ******************************************************************************
 \       Name: HANGER
+\    Summary: Implement the OSWORD 248 command (display the ship hanger
 \ ******************************************************************************
 
 .HANGER
@@ -3684,8 +3703,8 @@ NEXT
 \       Name: ADPARAMS
 \       Type: Subroutine
 \   Category: Dashboard
-\    Summary: Implement the OSWRCH 137 command (add a dashboard parameter and
-\             update the dashboard when all parameters are received)
+\    Summary: Implement the OSWRCH 137 <param> command (add a dashboard
+\             parameter and update the dashboard when all are received)
 \
 \ ******************************************************************************
 
@@ -3853,7 +3872,8 @@ ENDMACRO
 \       Name: KEYBOARD
 \       Type: Subroutine
 \   Category: Keyboard
-\    Summary: Scan the keyboard and joystick key presses and log the results
+\    Summary: Implement the OSWORD 240 command (scan the keyboard and joystick
+\             and log the results)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -4165,7 +4185,8 @@ ENDMACRO
 \       Name: MSBAR
 \       Type: Subroutine
 \   Category: Dashboard
-\    Summary: Draw a specific indicator in the dashboard's missile bar
+\    Summary: Implement the #DOmsbar command (draw a specific indicator in the
+\             dashboard's missile bar
 \
 \ ------------------------------------------------------------------------------
 \
@@ -4264,7 +4285,7 @@ ENDMACRO
 \       Name: WSCAN
 \       Type: Subroutine
 \   Category: Screen mode
-\    Summary: Wait for the vertical sync
+\    Summary: Implement the #wscn command (wait for the vertical sync)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -4381,6 +4402,9 @@ ENDMACRO
 \ Print a character at the text cursor (XC, YC), do a beep, print a newline,
 \ or delete left (backspace).
 \
+\ Calls to OSWRCH will end up here when A is not in the range 128-147, as those
+\ are reserved for the special jump table OSWRCH commands.
+\
 \ Arguments:
 \
 \   A                   The character to be printed. Can be one of the
@@ -4388,7 +4412,12 @@ ENDMACRO
 \
 \                         * 7 (beep)
 \
-\                         * 10-13 (line feeds and carriage returns)
+\                         * 10 (line feed)
+\
+\                         * 11 (clear the top part of the screen and draw a
+\                           border)
+\
+\                         * 12-13 (carriage return)
 \
 \                         * 32-95 (ASCII capital letters, numbers and
 \                           punctuation)
@@ -4426,9 +4455,9 @@ ENDMACRO
                         \ RR4S) to restore the registers and return from the
                         \ subroutine using a tail call
 
- CMP #11                \ If this is control code 11 (line feed), jump to cls to
- BEQ cls                \ clear the top part of the screen, draw a white border
-                        \ and return from the subroutine via RR4
+ CMP #11                \ If this is control code 11 (clear screen), jump to cls
+ BEQ cls                \ ro clear the top part of the screen, draw a white
+                        \ border and return from the subroutine via RR4
 
  CMP #7                 \ If this is not control code 7 (beep), skip the next
  BNE P%+5               \ instruction
@@ -4444,8 +4473,8 @@ ENDMACRO
  BEQ RRX1               \ RRX1, which will move down a line, restore the
                         \ registers and return from the subroutine
 
- LDX #1                 \ If we get here, then this is control code 12 or 13, of
- STX XC                 \ which only 13 is used. This code prints a newline,
+ LDX #1                 \ If we get here, then this is control code 12 or 13,
+ STX XC                 \ both of which are used. This code prints a newline,
                         \ which we can achieve by moving the text cursor
                         \ to the start of the line (carriage return) and down
                         \ one line (line feed). These two lines do the first
@@ -4992,7 +5021,7 @@ ENDMACRO
 \       Name: SETXC
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Implement the #SETXC <column> command (move text cursor to a
+\    Summary: Implement the #SETXC <column> command (move the text cursor to a
 \             specific column)
 \
 \ ------------------------------------------------------------------------------
@@ -5018,8 +5047,8 @@ ENDMACRO
 \       Name: SETYC
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Implement the #SETYC <row> command (move text cursor to a specific
-\             row)
+\    Summary: Implement the #SETYC <row> command (move the text cursor to a
+\             specific row)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -5041,6 +5070,7 @@ ENDMACRO
 
 \ ******************************************************************************
 \       Name: SOMEPROT
+\    Summary: Implement the OSWORD 249 command (some copy protection)
 \ ******************************************************************************
 
 .SOMEPROT
@@ -5057,42 +5087,86 @@ ENDMACRO
  RTS
 
 \ ******************************************************************************
+\
 \       Name: CLYNS
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Implement the #clyns command (clear the bottom of the screen)
+\
 \ ******************************************************************************
 
 .CLYNS
 
- LDA #20
+ LDA #20                \ Move the text cursor in YC to row 20
  STA YC
- LDA #&6A
+
+ LDA #&6A               \ Set SC+1 = &6A, for the high byte of SC(1 0)
  STA SC+1
- JSR TT67
- LDA #0
+
+ JSR TT67               \ Print a newline
+
+ LDA #0                 \ Set SC = 0, so now SC(1 0) = &6A00
  STA SC
- LDX #3
+
+ LDX #3                 \ We want to clear three text rows, so set a counter in
+                        \ X for 3 rows
 
 .CLYL
 
- LDY #8
+ LDY #8                 \ We want to clear each text row, starting from the
+                        \ left, but we don't want to overwrite the border, so we
+                        \ start from the second character block, which is byte
+                        \ #8 from the edge, so set Y to 8 to act as the byte
+                        \ counter within the row
 
 .EE2
 
- STA (SC),Y
- INY
- BNE EE2
- INC SC+1
- STA (SC),Y
- LDY #&F7
+ STA (SC),Y             \ Zero the Y-th byte from SC(1 0), which clears it by
+                        \ setting it to colour 0, black
+
+ INY                    \ Increment the byte counter in Y
+
+ BNE EE2                \ Loop back to EE2 to blank the next byte along, until
+                        \ we have done one page's worth (from byte #8 to #255)
+
+ INC SC+1               \ We have just finished the first page - which covers
+                        \ the left half of the text row - so we increment SC+1
+                        \ so SC(1 0) points to the start of the next page, or
+                        \ the start of the right half of the row
+
+ STA (SC),Y             \ Clear the byte at SC(1 0), as that won't be caught by
+                        \ the next loop
+
+ LDY #247               \ The second page covers the right half of the text row,
+                        \ and as before we don't want to overwrite the border,
+                        \ which we can do by starting from the last-but-one
+                        \ character block and working our way left towards the
+                        \ centre of the row. The last-but-one character block
+                        \ ends at byte 247 (that's 255 - 8, as each character
+                        \ is 8 bytes), so we put this in Y to act as a byte
+                        \ counter, as before
 
 .EE3
 
- STA (SC),Y
- DEY
- BNE EE3
- INC SC+1
- DEX
- BNE CLYL
-\INX\STXSC
+ STA (SC),Y             \ Zero the Y-th byte from SC(1 0), which clears it by
+                        \ setting it to colour 0, black
+
+ DEY                    \ Decrement the byte counter in Y
+
+ BNE EE3                \ Loop back to EE2 to blank the next byte to the left,
+                        \ until we have done one page's worth (from byte #247 to
+                        \ #1)
+
+ INC SC+1               \ We have now blanked a whole text row, so increment
+                        \ SC+1 so that SC(1 0) points to the next row
+
+ DEX                    \ Decrement the row counter in X
+
+ BNE CLYL               \ Loop back to blank another row, until we have done the
+                        \ number of rows in X
+
+\INX                    \ These instructions are commented out in the original
+\STX SC                 \ source
 
  JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
                         \ return from the subroutine using a tail call
