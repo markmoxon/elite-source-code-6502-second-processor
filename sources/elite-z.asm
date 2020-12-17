@@ -58,34 +58,21 @@ Y = 96
 \protlen = 0
 PARMAX = 15
 
-YELLOW = %00001111      \ Four mode 1 pixels of colour 1 (yellow)
-
-RED    = %11110000      \ Four mode 1 pixels of colour 2 (red, magenta or white)
-
-CYAN   = %11111111      \ Four mode 1 pixels of colour 3 (cyan or white)
-
-GREEN  = %10101111      \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
-
-WHITE  = %11111010      \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
-
+YELLOW  = %00001111     \ Four mode 1 pixels of colour 1 (yellow)
+RED     = %11110000     \ Four mode 1 pixels of colour 2 (red, magenta or white)
+CYAN    = %11111111     \ Four mode 1 pixels of colour 3 (cyan or white)
+GREEN   = %10101111     \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
+WHITE   = %11111010     \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
 MAGENTA = RED
-
-DUST = WHITE
+DUST    = WHITE
 
 RED2    = %00000011     \ Two mode 2 pixels of colour 1    (red)
-
 GREEN2  = %00001100     \ Two mode 2 pixels of colour 2    (green)
-
 YELLOW2 = %00001111     \ Two mode 2 pixels of colour 3    (yellow)
-
 BLUE2   = %00110000     \ Two mode 2 pixels of colour 4    (blue)
-
 MAG2    = %00110011     \ Two mode 2 pixels of colour 5    (magenta)
-
 CYAN2   = %00111100     \ Two mode 2 pixels of colour 6    (cyan)
-
 WHITE2  = %00111111     \ Two mode 2 pixels of colour 7    (white)
-
 STRIPE  = %00100011     \ Two mode 2 pixels of colour 5, 1 (magenta/red)
 
 \ ******************************************************************************
@@ -278,7 +265,36 @@ ELSE
 ENDIF
 
 \ ******************************************************************************
+\
 \       Name: ylookup
+\       Type: Variable
+\   Category: Drawing pixels
+\    Summary: Lookup table for converting pixel y-coordinate to page number of
+\             screen address
+\
+\ ------------------------------------------------------------------------------
+\
+\ Elite's screen mode is based on mode 1, so it allocates two pages of screen
+\ memory to each character row (where a character row is 8 pixels high). This
+\ table enables us to convert a pixel y-coordinate in the range 0-247 into the
+\ page number for the start of the character row containing that coordinate.
+\
+\ Screen memory is from &4000 to &7DFF, so the lookup works like this:
+
+\   Y =   0 to  7,  lookup value = &40 (so row 1 is from &4000 to &41FF)
+\   Y =   8 to 15,  lookup value = &42 (so row 2 is from &4200 to &43FF)
+\   Y =  16 to 23,  lookup value = &44 (so row 3 is from &4400 to &45FF)
+\   Y =  24 to 31,  lookup value = &46 (so row 4 is from &4600 to &47FF)
+\
+\   ...
+\
+\   Y = 232 to 239, lookup value = &7A (so row 31 is from &7A00 to &7BFF)
+\   Y = 240 to 247, lookup value = &7C (so row 31 is from &7C00 to &7DFF)
+\
+\ There is also a lookup value for y-coordinates from 248 to 255, but that's off
+\ the end of the screen, as the special Elite screen mode only has 31 character
+\ rows.
+\
 \ ******************************************************************************
 
 .ylookup
@@ -1458,7 +1474,7 @@ NEXT
 \
 \ ------------------------------------------------------------------------------
 \
-\ Draw a double-height mode 5 dot (2 pixels high, 2 pixels wide).
+\ Draw a double-height mode 2 dot (2 pixels high, 2 pixels wide).
 \
 \ Arguments:
 \
@@ -1468,7 +1484,7 @@ NEXT
 \   Y1                  The screen pixel y-coordinate of the bottom-left corner
 \                       of the dot
 \
-\   COL                 The colour of the dot as a mode 5 character row byte
+\   COL                 The colour of the dot as a mode 2 character row byte
 \
 \ ******************************************************************************
 
@@ -1492,7 +1508,7 @@ NEXT
 \
 \ ------------------------------------------------------------------------------
 \
-\ Draw a single-height mode 5 dash (1 pixel high, 2 pixels wide).
+\ Draw a single-height mode 2 dash (1 pixel high, 2 pixels wide).
 \
 \ Arguments:
 \
@@ -1500,7 +1516,7 @@ NEXT
 \
 \   Y1                  The screen pixel y-coordinate of the dash
 \
-\   COL                 The colour of the dash as a mode 5 character row byte
+\   COL                 The colour of the dash as a mode 2 character row byte
 \
 \ ******************************************************************************
 
@@ -1514,38 +1530,60 @@ NEXT
 
  TAY                    \ Store the y-coordinate in Y
 
- LDA ylookup,Y
- STA SC+1
+ LDA ylookup,Y          \ Look up the page number of the character row that
+ STA SC+1               \ contains the pixel with the y-coordinate in Y, and
+                        \ store it in the high byte of SC(1 0) at SC+1
 
- LDA X1
- AND #&FC
- ASL A
- STA SC
- BCC P%+5
- INC SC+1
- CLC
+ LDA X1                 \ Each character block contains 8 pixel rows, so to get
+ AND #%11111100         \ the address of the first byte in the character block
+ ASL A                  \ that we need to draw into, as an offset from the start
+                        \ of the row, we clear bits 0-1 and shift left to double
+                        \ it (as each character row contains two pages of bytes,
+                        \ or 512 bytes, which cover 256 pixels). This also
+                        \ shifts bit 7 of X1 into the C flag
+
+ STA SC                 \ Store the address of the character block in the low
+                        \ byte of SC(1 0), so now SC(1 0) points to the
+                        \ character block we need to draw into
+
+ BCC P%+5               \ If the C flag is clear then skip the next two
+                        \ instructions
+
+ INC SC+1               \ The C flag is set, which means bit 7 of X1 was set
+                        \ before the ASL above, so the x-coordinate is in the
+                        \ right half of the screen (i.e. in the range 128-255).
+                        \ Each row takes up two pages in memory, so the right
+                        \ half is in the second page but SC+1 contains the value
+                        \ we looked up from ylookup, which is the page number of
+                        \ the first memory page for the row... so we need to
+                        \ increment SC+1 to point to the correct page
+
+ CLC                    \ Clear the C flag
 
  TYA                    \ Set Y to just bits 0-2 of the y-coordinate, which will
  AND #%00000111         \ be the number of the pixel row we need to draw into
  TAY                    \ within the character block
 
- LDA X1
- AND #2
- TAX
+ LDA X1                 \ Copy bit 1 of X1 to bit 1 of X. X will now be either
+ AND #%00000010         \ 0 or 2, and will be double the pixel number in the
+ TAX                    \ character row for the left pixel in the dash (so 0
+                        \ means the left pixel in the 2-pixel character row,
+                        \ while 2 means the right pixel)
 
- LDA CTWOS,X            \ Fetch a mode 5 1-pixel byte with the pixel position
- AND COL                \ at X, and AND with the colour byte so that pixel takes
-                        \ on the colour we want to draw (i.e. A is acting as a
-                        \ mask on the colour byte)
+ LDA CTWOS,X            \ Fetch a mode 2 1-pixel byte with the pixel position
+ AND COL                \ at X/2, and AND with the colour byte so that pixel
+                        \ takes on the colour we want to draw (i.e. A is acting
+                        \ as a mask on the colour byte)
 
  EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
  STA (SC),Y             \ remove it later without ruining the background that's
                         \ already on-screen
 
- LDA CTWOS+2,X
+ LDA CTWOS+2,X          \ Fetch a mode 2 1-pixel byte with the pixel position
+                        \ at (X+1)/2, so we can draw the right pixel of the dash
 
- BPL CP1                \ The CTWOS table has an extra row at the end of it that
-                        \ repeats the first value, %10001000, so if we have not
+ BPL CP1                \ The CTWOS table has 2 extra rows at the end of it that
+                        \ repeat the first values, %10101010, so if we have not
                         \ fetched that value, then the right pixel of the dash
                         \ is in the same character block as the left pixel, so
                         \ jump to CP1 to draw it
@@ -1556,9 +1594,15 @@ NEXT
                         \ along (as there are 8 bytes in a character block).
                         \ The C flag was cleared above, so this ADC is correct
 
- BCC P%+4
- INC SC+1
- LDA CTWOS+2,X
+ BCC P%+4               \ If the addition we just did overflowed, then increment
+ INC SC+1               \ the high byte of SC(1 0), as this means we just moved
+                        \ into the right half of the screen row
+
+ LDA CTWOS+2,X          \ Refetch the mode 2 1-pixel byte, as we just overwrote
+                        \ A (the byte will still be the fifth or sixth byte from
+                        \ the table, which is correct as we want to draw the
+                        \ leftmost pixel in the next character along as the
+                        \ dash's right pixel)
 
 .CP1
 
@@ -1569,81 +1613,191 @@ NEXT
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
-\       Name: SC48 - is like the last half of common/subroutine/scan.asm
+\
+\       Name: SC48
+\       Type: Subroutine
+\   Category: Dashboard
 \    Summary: Implement the #onescan command (draw a ship on the 3D scanner)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #onescan command with parameters
+\ in the block at OSSC(1 0). It draws a ship on the 3D scanner. The parameters
+\ match those put into the SCANpars block in the parasite.
+\
+\ Arguments:
+\
+\   OSSC(1 0)           A parameter block as follows:
+\
+\                         * Byte #2 = The sign of the stick height (in bit 7)
+\
+\                         * Byte #3 = The stick height for this ship on the
+\                                     scanner
+\
+\                         * Byte #4 = The colour of the ship on the scanner
+\
+\                         * Byte #5 = The screen x-coordinate of the dot on the
+\                                     scanner
+\
+\                         * Byte #6 = The screen y-coordinate of the dot on the
+\                                     scanner
+\                       
 \ ******************************************************************************
-
-\  ...................... Scanners  ..............................
 
 .SC48
 
- LDY #4
- LDA (OSSC),Y
+ LDY #4                 \ Fetch byte #4 from the parameter block (the colour)
+ LDA (OSSC),Y           \ and store it in COL
  STA COL
- INY
- LDA (OSSC),Y
+
+ INY                    \ Fetch byte #5 from the parameter block (the screen
+ LDA (OSSC),Y           \ x-coordinate) and store it in X1
  STA X1
- INY
- LDA (OSSC),Y
+
+ INY                    \ Fetch byte #6 from the parameter block (the screen
+ LDA (OSSC),Y           \ y-coordinate) and store it in Y1
  STA Y1
- JSR CPIX4
- LDA CTWOS+2,X
- AND COL
- STA X1
- STY Q
- LDY #2
- LDA (OSSC),Y
- ASL A
- INY
- LDA (OSSC),Y
- BEQ RTS
- LDY Q
- TAX
- BCC RTS+1
+
+ JSR CPIX4              \ Draw a double-height mode 2 dot at (X1, Y1). This also
+                        \ leaves the following variables set up for the dot's
+                        \ top-right pixel, the last pixel to be drawn (as the
+                        \ dot gets drawn from the bottom up):
+                        \
+                        \   SC(1 0) = screen address of the pixel's character
+                        \             block
+                        \
+                        \   Y = number of the character row containing the pixel
+                        \
+                        \   X = the pixel's number (0-3) in that row
+                        \
+                        \ We can use there as the starting point for drawing the
+                        \ stick, if there is one
+
+ LDA CTWOS+2,X          \ Load the same mode 2 1-pixel byte that we just used
+ AND COL                \ for the top-right pixel, and mask it with the same
+ STA X1                 \ colour, storing the result in X1, so we can use it as
+                        \ the character row byte for the stick
+
+ STY Q                  \ Store Y in Q so we can retrieve it after fetching the
+                        \ stick details
+
+ LDY #2                 \ Fetch byte #2 from the parameter block (the sign of
+ LDA (OSSC),Y           \ the stick height) and shift bit 7 into the C flag, so
+ ASL A                  \ C now contains the sign of the stick height
+
+ INY                    \ Set A to byte #3 from the parameter block (the stick
+ LDA (OSSC),Y           \ height)
+
+ BEQ RTS                \ If the stick height is zero, then there is no stick to
+                        \ draw, so return from the subroutine (as RTS contains
+                        \ an RTS)
+
+ LDY Q                  \ Restore the value of Y from Q, so Y now contains the
+                        \ character row containing the dot we drew above
+
+ TAX                    \ Copy the stick height into X
+
+ BCC RTS+1              \ If the C flag is clear then the stick height in A is
+                        \ negative, so jump down to RTS+1
 
 .VLL1
 
- DEY
- BPL VL1
- LDY #7
- DEC SC+1
- DEC SC+1
+                        \ If we get here then the stick length is positive (so
+                        \ the dot is below the ellipse and the stick is above
+                        \ the dot, and we need to draw the stick upwards from
+                        \ the dot)
+
+ DEY                    \ We want to draw the stick upwards, so decrement the
+                        \ pixel row in Y
+
+ BPL VL1                \ If Y is still positive then it correctly points at the
+                        \ line above, so jump to VL1 to skip the following
+
+ LDY #7                 \ We just decremented Y up through the top of the
+                        \ character block, so we need to move it to the last row
+                        \ in the character above, so set Y to 7, the number of
+                        \ the last row
+
+ DEC SC+1               \ Decrement the high byte of the screen address twice to
+ DEC SC+1               \ move to the character block above (we do this twice as
+                        \ there are two pages in memory per character row)
 
 .VL1
 
- LDA X1
- EOR (SC),Y
+ LDA X1                 \ Set A to the character row byte for the stick, which
+                        \ we stored in X1 above, and which has the same pixel
+                        \ pattern as the bottom-right pixel of the dot (so the
+                        \ stick comes out of the right side of the dot)
+
+ EOR (SC),Y             \ Draw the stick on row Y of the character block using
  STA (SC),Y
- DEX
- BNE VLL1
+
+ DEX                    \ Decrement (positive) the stick height in X
+
+ BNE VLL1               \ If we still have more stick to draw, jump up to VLL1
+                        \ to draw the next pixel
 
 .RTS
 
- RTS
- INY
- CPY #8
- BNE VLL2
- LDY #0
- INC SC+1
- INC SC+1
+ RTS                    \ Return from the subroutine
+
+                        \ If we get here then the stick length is negative (so
+                        \ the dot is above the ellipse and the stick is below
+                        \ the dot, and we need to draw the stick downwards from
+                        \ the dot)
+
+ INY                    \ We want to draw the stick downwards, so we first
+                        \ increment the row counter so that it's pointing to the
+                        \ bottom-right pixel in the dot (as opposed to the top-
+                        \ right pixel that the call to CPIX4 finished on)
+
+ CPY #8                 \ If the row number in Y is less than 8, then it
+ BNE VLL2               \ correctly points at the next line down, so jump to
+                        \ VLL2 to skip the following
+
+ LDY #0                 \ We just incremented Y down through the bottom of the
+                        \ character block, so we need to move it to the first
+                        \ row in the character below, so set Y to 0, the number
+                        \ of the first row
+
+ INC SC+1               \ Increment the high byte of the screen address twice to
+ INC SC+1               \ move to the character block above (we do this twice as
+                        \ there are two pages in memory per character row)
 
 .VLL2
 
- INY
- CPY #8
- BNE VL2
- LDY #0
- INC SC+1
- INC SC+1
+ INY                    \ We want to draw the stick itself, heading downwards,
+                        \ so increment the pixel row in Y
+
+ CPY #8                 \ If the row number in Y is less than 8, then it
+ BNE VL2                \ correctly points at the next line down, so jump to
+                        \ VL2 to skip the following
+
+ LDY #0                 \ We just incremented Y down through the bottom of the
+                        \ character block, so we need to move it to the first
+                        \ row in the character below, so set Y to 0, the number
+                        \ of the first row
+
+ INC SC+1               \ Increment the high byte of the screen address twice to
+ INC SC+1               \ move to the character block above (we do this twice as
+                        \ there are two pages in memory per character row)
 
 .VL2
 
- LDA X1
- EOR (SC),Y
+ LDA X1                 \ Set A to the character row byte for the stick, which
+                        \ we stored in X1 above, and which has the same pixel
+                        \ pattern as the bottom-right pixel of the dot (so the
+                        \ stick comes out of the right side of the dot)
+
+ EOR (SC),Y             \ Draw the stick on row Y of the character block using
  STA (SC),Y
- INX
- BNE VLL2
- RTS
+
+ INX                    \ Decrement the (negative) stick height in X
+
+ BNE VLL2               \ If we still have more stick to draw, jump up to VLL2
+                        \ to draw the next pixel
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -1825,29 +1979,83 @@ NEXT
                         \ (this BNE is effectively a JMP as A is never zero)
 
 \ ******************************************************************************
+\
 \       Name: TWOS
+\       Type: Variable
+\   Category: Drawing pixels
+\    Summary: Ready-made single-pixel character row bytes for mode 1
+\
+\ ------------------------------------------------------------------------------
+\
+\ Ready-made bytes for plotting one-pixel points in mode 1 (the top part of the
+\ split screen).
+\
 \ ******************************************************************************
 
 .TWOS
 
- EQUD &11224488
+ EQUB %10001000
+ EQUB %01000100
+ EQUB %00100010
+ EQUB %00010001
 
 \ ******************************************************************************
+\
 \       Name: TWOS2
+\       Type: Variable
+\   Category: Drawing pixels
+\    Summary: Ready-made double-pixel character row bytes for mode 1
+\
+\ ------------------------------------------------------------------------------
+\
+\ Ready-made bytes for plotting two-pixel dashes in mode 1 (the top part of the
+\ split screen).
+\
 \ ******************************************************************************
 
 .TWOS2
 
- EQUD &333366CC
+ EQUB %11001100
+ EQUB %01100110
+ EQUB %00110011
+ EQUB %00110011
 
 \ ******************************************************************************
+\
 \       Name: CTWOS
+\       Type: Variable
+\   Category: Drawing pixels
+\    Summary: Ready-made single-pixel character row bytes for mode 2
+\
+\ ------------------------------------------------------------------------------
+\
+\ Ready-made bytes for plotting one-pixel points in mode 2 (the bottom part of
+\ the split screen).
+\
+\ In mode 2, each character row is one byte, which is two pixels. Rows 0 and 1
+\ of the table contain a character row byte with just the left pixel plotted,
+\ while rows 2 and 3 contain a character row byte with just the right pixel
+\ plotted.
+\
+\ In other words, looking up row X will return a character row byte with pixel
+\ X/2 plotted (if the pixels are numbered 0 and 1).
+\
+\ There are two extra rows to support the use of CTWOS+2,X indexing in the CPIX2
+\ routine. The extra rows are repeats of the first two rows, and save us from
+\ having to work out whether CTWOS+2+X needs to be wrapped around when drawing a
+\ two-pixel dash that crosses from one character block into another. See CPIX2
+\ for more details.
+\
 \ ******************************************************************************
 
 .CTWOS
 
- EQUD &5555AAAA
- EQUW &AAAA
+ EQUB %10101010
+ EQUB %10101010
+ EQUB %01010101
+ EQUB %01010101
+ EQUB %10101010
+ EQUB %10101010
 
 \ ******************************************************************************
 \       Name: HLOIN2
@@ -1918,8 +2126,11 @@ NEXT
 .LI3
 
  LDY Y1
- LDA ylookup,Y
- STA SC+1
+
+ LDA ylookup,Y          \ Look up the page number of the character row that
+ STA SC+1               \ contains the pixel with the y-coordinate in Y, and
+                        \ store it in the high byte of SC(1 0) at SC+1
+
  LDA Y1
  AND #7
  TAY
@@ -2294,8 +2505,10 @@ NEXT
 
 .LI15
 
- LDA ylookup,Y
- STA SC+1
+ LDA ylookup,Y          \ Look up the page number of the character row that
+ STA SC+1               \ contains the pixel with the y-coordinate in Y, and
+                        \ store it in the high byte of SC(1 0) at SC+1
+
  TXA
  AND #&FC
  ASL A
@@ -3003,8 +3216,11 @@ NEXT
 
  DEC X2
  LDY Y1
- LDA ylookup,Y
- STA SC+1
+
+ LDA ylookup,Y          \ Look up the page number of the character row that
+ STA SC+1               \ contains the pixel with the y-coordinate in Y, and
+                        \ store it in the high byte of SC(1 0) at SC+1
+
  TYA
  AND #7
  STA SC
@@ -3171,8 +3387,11 @@ NEXT
  LDA (OSSC),Y
  STY T1
  TAY
- LDA ylookup,Y
- STA SC+1
+
+ LDA ylookup,Y          \ Look up the page number of the character row that
+ STA SC+1               \ contains the pixel with the y-coordinate in Y, and
+                        \ store it in the high byte of SC(1 0) at SC+1
+
  TXA
  AND #&FC
  ASL A
@@ -3239,8 +3458,11 @@ NEXT
  LDA (OSSC),Y
  STY T1
  TAY
- LDA ylookup,Y
- STA SC+1
+
+ LDA ylookup,Y          \ Look up the page number of the character row that
+ STA SC+1               \ contains the pixel with the y-coordinate in Y, and
+                        \ store it in the high byte of SC(1 0) at SC+1
+
  TXA
  AND #&FC
  ASL A
@@ -3497,8 +3719,11 @@ NEXT
  CLC
  ADC #Y
  TAY
- LDA ylookup,Y
- STA SC+1
+
+ LDA ylookup,Y          \ Look up the page number of the character row that
+ STA SC+1               \ contains the pixel with the y-coordinate in Y, and
+                        \ store it in the high byte of SC(1 0) at SC+1
+
  STA R
  LDA P
  AND #7
@@ -4186,28 +4411,35 @@ ENDMACRO
 \       Type: Subroutine
 \   Category: Dashboard
 \    Summary: Implement the #DOmsbar command (draw a specific indicator in the
-\             dashboard's missile bar
+\             dashboard's missile bar)
 \
 \ ------------------------------------------------------------------------------
 \
 \ Each indicator is a rectangle that's 3 pixels wide and 5 pixels high. If the
 \ indicator is set to black, this effectively removes a missile.
 \
+\ This routine is run when the parasite sends a #DOmsbar command with parameters
+\ in the block at OSSC(1 0). It draws a specific indicator in the dashboard's
+\ missile bar. The parameters match those put into the msbpars block in the
+\ parasite.
+\
 \ Arguments:
 \
-\   X                   The number of the missile indicator to update (counting
-\                       from right to left, so indicator NOMSL is the leftmost
-\                       indicator)
+\   OSSC(1 0)           A parameter block as follows:
 \
-\   Y                   The colour of the missile indicator:
+\                         * Byte #2 = The number of the missile indicator to
+\                           update (counting from right to left, so indicator
+\                           NOMSL is the leftmost indicator)
 \
-\                         * &00 = black (no missile)
+\                         * Byte #3 = The colour of the missile indicator:
 \
-\                         * &0E = red (armed and locked)
+\                           * &00 = black (no missile)
 \
-\                         * &E0 = yellow/white (armed)
+\                           * #RED2 = red (armed and locked)
 \
-\                         * &EE = green (disarmed)
+\                           * #YELLOW2 = yellow/white (armed)
+\
+\                           * #GREEN2 = green (disarmed)
 \
 \ Returns:
 \
@@ -4219,24 +4451,25 @@ ENDMACRO
 
 .MSBAR
 
- LDY #2
- LDA (OSSC),Y
- ASL A
+ LDY #2                 \ Fetch byte #2 from the parameter block (the number of
+ LDA (OSSC),Y           \ the missile indicator) into A
+
+ ASL A                  \ Set T = A * 8
  ASL A
  ASL A
  ASL A
  STA T
 
- LDA #97
- SBC T
+ LDA #97                \ Set SC = 97 - T
+ SBC T                  \        = 96 + 1 - (X * 8)
  STA SC
 
                         \ So the low byte of SC(1 0) contains the row address
                         \ for the rightmost missile indicator, made up as
                         \ follows:
                         \
-                        \   * 48 (character block 7, or byte #7 * 8 = 48, which
-                        \     is the character block of the rightmost missile
+                        \   * 96 (character block 14, as byte #14 * 8 = 96), the
+                        \     character block of the rightmost missile
                         \
                         \   * 1 (so we start drawing on the second row of the
                         \     character block)
@@ -4246,29 +4479,20 @@ ENDMACRO
                         \     missile, for X = 1 we hop to the left by one
                         \     character, and so on
 
- LDA #&7C
- STA SCH
- LDY #3
- LDA (OSSC),Y
- LDY #5
+ LDA #&7C               \ Set the high byte of SC(1 0) to &7C, the character row
+ STA SCH                \ that contains the missile indicators (i.e. the bottom
+                        \ row of the screen)
+
+ LDY #3                 \ Fetch byte #2 from the parameter block (the indicator
+ LDA (OSSC),Y           \ colour) into A. This is one of #GREEN2, #YELLOW2 or
+                        \ #RED2, or 0 for black, so this is a 2-pixel wide mode
+                        \ 2 character row byte in the specified colour
+
+ LDY #5                 \ We now want to draw this line five times to do the
+                        \ left two pixels of the indicator, so set a counter in
+                        \ Y
 
 .MBL1
-
- STA (SC),Y
- DEY
- BNE MBL1
- PHA
- LDA SC
- CLC
- ADC #8
- STA SC
- PLA
- AND #&AA
-
- LDY #5                 \ We now want to draw this line five times, so set a
-                        \ counter in Y
-
-.MBL2
 
  STA (SC),Y             \ Draw the 3-pixel row, and as we do not use EOR logic,
                         \ this will overwrite anything that is already there
@@ -4276,7 +4500,35 @@ ENDMACRO
 
  DEY                    \ Decrement the counter for the next row
 
- BNE MBL2
+ BNE MBL1               \ Loop back to MBL1 if have more rows to draw
+
+ PHA                    \ Store the value of A on the stack so we can retrieve
+                        \ it after the following addition
+
+ LDA SC                 \ Set SC = SC + 8
+ CLC                    \
+ ADC #8                 \ so SC(1 0) now points to the next character block on
+ STA SC                 \ the row (for the right half of the indicator)
+
+ PLA                    \ Retrieve A from the stack
+
+ AND #%10101010         \ Mask the character row to plot just the first pixel
+                        \ in the next character block, as we already did a
+                        \ two-pixel wide band in the previous character block,
+                        \ so we need to plot just one more pixel, width-wise
+
+ LDY #5                 \ We now want to draw this line five times, so set a
+                        \ counter in Y
+
+.MBL2
+
+ STA (SC),Y             \ Draw the 1-pixel row, and as we do not use EOR logic,
+                        \ this will overwrite anything that is already there
+                        \ (so drawing a black missile will delete what's there)
+
+ DEY                    \ Decrement the counter for the next row
+
+ BNE MBL2               \ Loop back to MBL2 if have more rows to draw
 
  RTS                    \ Return from the subroutine
 
@@ -4873,9 +5125,11 @@ ENDMACRO
 
 .R5
 
- LDX #LO(BELI)          \ We call this from above with A = 7, so this calls
- LDY #HI(BELI)          \ OSWORD 7 with (Y X) pointing to the BELI parameter
- JSR OSWORD             \ block below, which makes a short, high beep
+ LDX #LO(BELI)          \ Set (Y X) to point to the parameter block below
+ LDY #HI(BELI)
+
+ JSR OSWORD             \ We call this from above with A = 7, so this calls
+                        \ OSWORD 7 to make a short, high beep
 
  JMP RR4                \ Jump to RR4 to restore the registers and return from
                         \ the subroutine using a tail call
@@ -4893,58 +5147,108 @@ ENDMACRO
                         \ A = 32 (a short, high beep)
 
 \ ******************************************************************************
+\
 \       Name: TTX66
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Clear the top part of the screen and draw a white border
+\
+\ ------------------------------------------------------------------------------
+\
+\ Clear the top part of the screen (the space view) and draw a white border
+\ along the top and sides.
+\
 \ ******************************************************************************
 
 .TTX66
 
- LDX #&40
+ LDX #&40               \ Set X to point to page &40, which is the start of the
+                        \ screen memory at &4000
 
 .BOL1
 
- JSR ZES1
- INX
- CPX #&70
- BNE BOL1
+ JSR ZES1               \ Call ZES1 below to zero-fill the page in X, which will
+                        \ clear half a character row
+
+ INX                    \ Increment X to point to the next page in screen
+                        \ memory
+
+ CPX #&70               \ Loop back to keep clearing character rows until we
+ BNE BOL1               \ have cleared up to &7000, which is where the dashoard
+                        \ starts
 
 .BOX
 
- LDA #&F
- STA COL
- LDY #1
+ LDA #%00001111         \ Set COL = %00001111 to act as a four-pixel yellow
+ STA COL                \ character byte (i.e. set the line colour to yellow)
+
+ LDY #1                 \ Move the text cursor to row 1
  STY YC
- LDY #11
+
+ LDY #11                \ Move the text cursor to column 11
  STY XC
- LDX #0
+
+ LDX #0                 \ Set X1 = Y1 = Y2 = 0
  STX X1
  STX Y1
  STX Y2
-\STXQQ17
- DEX
+
+\STX QQ17               \ This instruction is commented out in the original
+                        \ source
+
+ DEX                    \ Set X2 = 255
  STX X2
- JSR LOIN
- LDA #2
+
+ JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2), so that's from
+                        \ (0, 0) to (255, 0), along the very top of the screen
+
+ LDA #2                 \ Set X1 = X2 = 2
  STA X1
  STA X2
- JSR BOS2
+
+ JSR BOS2               \ Call BOS2 below, which will call BOS1 twice, and then
+                        \ fall through into BOS2 again, so we effectively do
+                        \ BOS1 four times, decrementing X1 and X2 each time
+                        \ before calling LOIN, so this whole loop-within-a-loop
+                        \ mind-bender ends up drawing these four lines:
+                        \
+                        \   (1, 0)   to (1, 191)
+                        \   (0, 0)   to (0, 191)
+                        \   (255, 0) to (255, 191)
+                        \   (254, 0) to (254, 191)
+                        \
+                        \ So that's a 2-pixel wide vertical border along the
+                        \ left edge of the upper part of the screen, and a
+                        \ 2-pixel wide vertical border along the right edge
 
 .BOS2
 
- JSR BOS1
+ JSR BOS1               \ Call BOS1 below and then fall through into it, which
+                        \ ends up running BOS1 twice. This is all part of the
+                        \ loop-the-loop border-drawing mind-bender explained
+                        \ above
 
 .BOS1
 
- LDA #0
+ LDA #0                 \ Set Y1 = 0
  STA Y1
- LDA #2*Y-1
- STA Y2
- DEC X1
+
+ LDA #2*Y-1             \ Set Y2 = 2 * #Y - 1. The constant #Y is 96, the
+ STA Y2                 \ y-coordinate of the mid-point of the space view, so
+                        \ this sets Y2 to 191, the y-coordinate of the bottom
+                        \ pixel row of the space view
+
+ DEC X1                 \ Decrement X1 and X2
  DEC X2
- JSR LOIN
- LDA #&F
- STA &4000
- STA &41F8
- RTS
+
+ JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
+
+ LDA #%00001111         \ Set locations &4000 &41F8 to %00001111, as otherwise
+ STA &4000              \ the top-left and top-right corners will be black (as
+ STA &41F8              \ the lines overlap at the corners, and the EOR logic
+                        \ used by LOIN will otherwise make them black)
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \

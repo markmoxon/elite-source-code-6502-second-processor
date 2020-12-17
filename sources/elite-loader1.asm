@@ -105,8 +105,8 @@ ORG CODE%
  EQUB 0, 0, 0           \
  EQUB 0, 0, 0           \ This is the "vertical displayed" register, and sets
                         \ the number of displayed character rows to 31. For
-                        \ comparison, this value is 32 for standard modes 4 and
-                        \ 5, but we claw back the last row for storing code just
+                        \ comparison, this value is 32 for standard modes 1 and
+                        \ 2, but we claw back the last row for storing code just
                         \ above the end of screen memory
 
  EQUB 23, 0, 12, &08    \ Set 6845 register R12 = &08 and R13 = &00
@@ -207,9 +207,10 @@ ORG CODE%
 
 MACRO FNE I%
 
-  LDX #LO(E%+I%*14)     \ Call OSWORD with A = 8 and (Y X) pointing to the
-  LDY #HI(E%+I%*14)     \ I%-th set of envelope data in E%, to set up sound
-  LDA #8                \ envelope I%
+  LDX #LO(E%+I%*14)     \ Set (Y X) to point to the I%-th set of envelope data
+  LDY #HI(E%+I%*14)     \ in E%
+
+  LDA #8                \ Call OSWORD with A = 8 to set up sound envelope I%
   JSR OSWORD
 
 ENDMACRO

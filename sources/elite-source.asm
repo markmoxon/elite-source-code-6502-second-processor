@@ -35,42 +35,48 @@ VEC = &7FFE
 
 Q% = _ENABLE_MAX_COMMANDER
 
-MSL = 1
-SST = 2
-ESC = 3
-PLT = 4
-OIL = 5
-AST = 7
-SPL = 8
-SHU = 9
-CYL = 11
-ANA = 14
-HER = 15
-COPS = 16
-SH3 = 17
-KRA = 19
-ADA = 20
-WRM = 23
-CYL2 = 24
-ASP = 25
-THG = 29
-TGL = 30
-CON = 31
-LGO = 32
-COU = 33
-DOD = 34
+NOST = 18               \ The number of stardust particles in normal space (this
+                        \ goes down to 3 in witchspace)
 
-NOST = 18
-NOSH = 20
+NOSH = 20               \ The maximum number of ships in our local bubble of
+                        \ universe (counting from 0, so there are actually 21
+                        \ ship slots)
 
-JL = ESC                \ Junk low = Escape pod
+MSL = 1                 \ Ship type for a missile
+SST = 2                 \ Ship type for a Coriolis space station
+ESC = 3                 \ Ship type for an escape pod
+PLT = 4                 \ Ship type for an alloy plate
+OIL = 5                 \ Ship type for a cargo canister
+AST = 7                 \ Ship type for an asteroid
+SPL = 8                 \ Ship type for a splinter
+SHU = 9                 \ Ship type for a shuttle
+CYL = 11                \ Ship type for a Cobra Mk III
+ANA = 14                \ Ship type for an Anaconda
+HER = 15                \ Ship type for a rock hermit (asteroid)
+COPS = 16               \ Ship type for a Viper
+SH3 = 17                \ Ship type for a Sidewinder
+KRA = 19                \ Ship type for a Krait
+ADA = 20                \ Ship type for a Adder
+WRM = 23                \ Ship type for a Worm
+CYL2 = 24               \ Ship type for a Cobra Mk III (pirate)
+ASP = 25                \ Ship type for an Asp Mk II
+THG = 29                \ Ship type for a Thargoid
+TGL = 30                \ Ship type for a Thargon
+CON = 31                \ Ship type for a Constrictor
+LGO = 32                \ Ship type for the Elite logo
+COU = 33                \ Ship type for a Cougar
+DOD = 34                \ Ship type for a Dodecahedron ("Dodo") space station
 
-JH = SHU+2              \ Junk high = Cobra Mk III
+JL = ESC                \ Junk is defined as starting from the escape pod
 
-                        \ So junk is escape pod, alloy plate, cargo canister,
-                        \ asteroid, splinter, shuttle, transporter
+JH = SHU+2              \ Junk is defined as ending before the Cobra Mk III
+                        \
+                        \ So junk is defined as the following: escape pod,
+                        \ alloy plate, cargo canister, asteroid, splinter,
+                        \ shuttle, transporter
 
 PACK = SH3
+
 NI% = 37
 POW = 15
 B = &30
@@ -80,34 +86,21 @@ NRU% = 0
 VE = &57
 LL = 30
 
-YELLOW = %00001111      \ Four mode 1 pixels of colour 1 (yellow)
-
-RED    = %11110000      \ Four mode 1 pixels of colour 2 (red, magenta or white)
-
-CYAN   = %11111111      \ Four mode 1 pixels of colour 3 (cyan or white)
-
-GREEN  = %10101111      \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
-
-WHITE  = %11111010      \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
-
+YELLOW  = %00001111     \ Four mode 1 pixels of colour 1 (yellow)
+RED     = %11110000     \ Four mode 1 pixels of colour 2 (red, magenta or white)
+CYAN    = %11111111     \ Four mode 1 pixels of colour 3 (cyan or white)
+GREEN   = %10101111     \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
+WHITE   = %11111010     \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
 MAGENTA = RED
-
-DUST = WHITE
+DUST    = WHITE
 
 RED2    = %00000011     \ Two mode 2 pixels of colour 1    (red)
-
 GREEN2  = %00001100     \ Two mode 2 pixels of colour 2    (green)
-
 YELLOW2 = %00001111     \ Two mode 2 pixels of colour 3    (yellow)
-
 BLUE2   = %00110000     \ Two mode 2 pixels of colour 4    (blue)
-
 MAG2    = %00110011     \ Two mode 2 pixels of colour 5    (magenta)
-
 CYAN2   = %00111100     \ Two mode 2 pixels of colour 6    (cyan)
-
 WHITE2  = %00111111     \ Two mode 2 pixels of colour 7    (white)
-
 STRIPE  = %00100011     \ Two mode 2 pixels of colour 5, 1 (magenta/red)
 
 OSWRCH = &FFEE
@@ -446,10 +439,18 @@ ORG &0000
 
 .XX19
 
- SKIP NI% - 33          \ XX19(1 0) shares its location with INWK(34 33), which
+ SKIP NI% - 34          \ XX19(1 0) shares its location with INWK(34 33), which
                         \ contains the address of the ship line heap
 
-NEWB = INWK+36
+.NEWB                   \ The ship's "new byte flags" (or NEWB flags)
+                        \
+ SKIP 1                 \ Contains details about the ship's type and associated
+                        \ behaviour, such as whether they are a trader, a bounty
+                        \ hunter, a pirate, currently hostile, currently docking,
+                        \ inside the hold having been scooped, and so on. The
+                        \ default values for each ship type are taken from the
+                        \ table at E%, where the NEWB flags are descrobed in
+                        \ more detail
 
 .LSP
 
@@ -3627,20 +3628,23 @@ ENDIF
 
  CLD
  SEC
- LDA #G%MOD256
+ LDA #LO(G%)
  STA 0
  STA SC
- LDA #G%DIV256
+ LDA #HI(G%)
  STA 1
  STA SC+1
- LDA #(F%-1)MOD256
+ LDA #LO(F%-1)
  STA 2
- LDA #(F%-1)DIV256
+ LDA #HI(F%-1)
  STA 3
- LDX #prtblock MOD256
- LDY #prtblock DIV256
- LDA #249
+
+ LDX #LO(prtblock)      \ Set (Y X) to point to the prtblock parameter block
+ LDY #HI(prtblock)
+
+ LDA #249               \ Send an OSWORD 249 command to the I/O processor
  JSR OSWORD
+
  LDX #SC
  EQUB &AD  \&8D
 
@@ -6775,8 +6779,9 @@ NEXT
 \
 \ ------------------------------------------------------------------------------
 \
-\ Ready-made bytes for plotting one-pixel points in mode 4 (the top part of the
-\ split screen). See the PIXEL routine for details.
+\ This table is not used by the 6502 Second Processor version of Elite. Instead,
+\ the TWOS table in the I/O processor code is used, which contains single-pixel
+\ character row bytes for the mode 1 screen.
 \
 \ ******************************************************************************
 
@@ -6800,8 +6805,9 @@ NEXT
 \
 \ ------------------------------------------------------------------------------
 \
-\ Ready-made bytes for plotting two-pixel dashes in mode 4 (the top part of the
-\ split screen). See the PIXEL routine for details.
+\ This table is not used by the 6502 Second Processor version of Elite. Instead,
+\ the TWOS2 table in the I/O processor code is used, which contains double-pixel
+\ character row bytes for the mode 1 screen.
 \
 \ ******************************************************************************
 
@@ -6825,15 +6831,9 @@ NEXT
 \
 \ ------------------------------------------------------------------------------
 \
-\ Ready-made bytes for plotting one-pixel points in mode 5 (the bottom part of
-\ the split screen). See the dashboard routines SCAN, DIL2 and CPIX2 for
-\ details.
-\
-\ There is one extra row to support the use of CTWOS+1,X indexing in the CPIX2
-\ routine. The extra row is a repeat of the first row, and saves us from having
-\ to work out whether CTWOS+1+X needs to be wrapped around when drawing a
-\ two-pixel dash that crosses from one character block into another. See CPIX2
-\ for more details.
+\ This table is not used by the 6502 Second Processor version of Elite. Instead,
+\ the CTWOS table in the I/O processor code is used, which contains single-pixel
+\ character row bytes for the mode 2 dashboard.
 \
 \ ******************************************************************************
 
@@ -7132,8 +7132,10 @@ ENDIF
  LDA #2
  STA HBUP
  LDA #247
- LDX #(HBUF MOD256)
- LDY #(HBUF DIV256)
+
+ LDX #LO(HBUF)          \ Set (Y X) to point to the HBUF parameter block
+ LDY #HI(HBUF)
+
  JSR OSWORD
 
 .HBZE2
@@ -7371,10 +7373,13 @@ ENDIF
  JSR DOCOL              \ switch to stripe 3-2-3-2, which is cyan/red in the
                         \ space view
 
- LDA #241               \ Send an OSWORD 241 command to the I/O processor to
- LDX #LO(pixbl)         \ draw the pixel described in the pixbl block
+ LDA #241               \ Set A in preparation for sending an OSWORD 241 command
+
+ LDX #LO(pixbl)         \ Set (Y X) to point to the pixbl parameter block
  LDY #HI(pixbl)
- JSR OSWORD
+
+ JSR OSWORD             \ Send an OSWORD 241 command to the I/O processor to
+                        \ draw the pixel described in the pixbl block
 
 .PBZE2
 
@@ -10784,9 +10789,10 @@ LOAD_C% = LOAD% +P% - CODE%
  STY HANG+2
  JSR UNWISE
  LDA #248
- LDX #(HANG MOD256)
- LDY #(HANG DIV256)
- JMP OSWORD \ =  =
+
+ LDX #LO(HANG)          \ Set (Y X) to point to the HANG parameter block
+ LDY #HI(HANG)
+ JMP OSWORD
 
 \ ******************************************************************************
 \       Name: HANG
@@ -13808,37 +13814,72 @@ LOAD_C% = LOAD% +P% - CODE%
 
  LDA #0                 \ Set A = 0 so we can start building the answer in A
 
- TAX \just in case
- LSR P
- BCC P%+4
+ TAX                    \ Copy A into X. There is a comment in the original
+                        \ source here that says "just in case", which refers to
+                        \ the MU11 routine in the cassette and disc versions,
+                        \ which set X to 0 (as they use X as a loop counter).
+                        \ The version here doesn't use a loop, but this
+                        \ instruction makes sure the unrolled version returns
+                        \ the same results as the loop versions, just in case
+                        \ something out there relies on MU11 returning X = 0
+
+ LSR P                  \ Set P = P >> 1
+                        \ and C flag = bit 0 of P
+
+                        \ We now repeat the following four instruction block
+                        \ eight times, one for each bit in P. In the cassette
+                        \ and disc versions of Elite the following is done with
+                        \ a loop, but it is marginally faster to unroll the loop
+                        \ and have eight copies of the code, though it does take
+                        \ up a bit more memory (though that isn't a concern when
+                        \ you have a 6502 Second Processor)
+
+ BCC P%+4               \ If C (i.e. bit 0 of P) is set, do the
+ ADC T                  \ addition for this bit of P:
+                        \
+                        \   A = A + T + C
+                        \     = A + X - 1 + 1
+                        \     = A + X
+
+ ROR A                  \ Shift A right to catch the next digit of our result,
+                        \ which the next ROR sticks into the left end of P while
+                        \ also extracting the next bit of P
+
+ ROR P                  \ Add the overspill from shifting A to the right onto
+                        \ the start of P, and shift P right to fetch the next
+                        \ bit for the calculation into the C flag
+
+ BCC P%+4               \ Repeat for the second time
  ADC T
  ROR A
- ROR P\7
- BCC P%+4
+ ROR P
+
+ BCC P%+4               \ Repeat for the third time
  ADC T
  ROR A
- ROR P\6
- BCC P%+4
+ ROR P
+
+ BCC P%+4               \ Repeat for the fourth time
  ADC T
  ROR A
- ROR P\5
- BCC P%+4
+ ROR P
+
+ BCC P%+4               \ Repeat for the fifth time
  ADC T
  ROR A
- ROR P\4
- BCC P%+4
+ ROR P
+
+ BCC P%+4               \ Repeat for the sixth time
  ADC T
  ROR A
- ROR P\3
- BCC P%+4
+ ROR P
+
+ BCC P%+4               \ Repeat for the seventh time
  ADC T
  ROR A
- ROR P\2
- BCC P%+4
- ADC T
- ROR A
- ROR P\1
- BCC P%+4
+ ROR P
+ 
+ BCC P%+4               \ Repeat for the eighth time
  ADC T
  ROR A
  ROR P
@@ -14160,32 +14201,37 @@ LOAD_C% = LOAD% +P% - CODE%
 
  LDA #0                 \ Set A = 0 so we can start building the answer in A
 
- TAX \just in case
-\MUL4 BCCP%+4\ADCT1\RORA\RORP\DEX\BNEMUL4\LSRA\RORP\ORAT\RTS\.mu10 STAP\RTS
- BCC P%+4
- ADC T1
- ROR A
- ROR P\6
- BCC P%+4
- ADC T1
- ROR A
- ROR P\5
- BCC P%+4
- ADC T1
- ROR A
- ROR P\4
- BCC P%+4
- ADC T1
- ROR A
- ROR P\3
- BCC P%+4
- ADC T1
- ROR A
- ROR P\2
- BCC P%+4
- ADC T1
- ROR A
- ROR P\1
+ TAX                    \ Copy A into X. There is a comment in the original
+                        \ source here that says "just in case", which refers to
+                        \ the MULT1 routine in the cassette and disc versions,
+                        \ which set X to 0 (as they use X as a loop counter).
+                        \ The version here doesn't use a loop, but this
+                        \ instruction makes sure the unrolled version returns
+                        \ the same results as the loop versions, just in case
+                        \ something out there relies on MULT1 returning X = 0
+
+\MUL4                   \ These instructions are commented out in the original
+\BCC P%+4               \ source. They contain the original loop version of the
+\ADC T1                 \ code that's used in the disc and cassette versions
+\ROR A
+\ROR P
+\DEX
+\BNE MUL4
+\LSR A
+\ROR P
+\ORA T
+\RTS
+\.mu10
+\STA P
+\RTS
+
+                        \ We now repeat the following four instruction block
+                        \ seven times, one for each remaining bit in P. In the
+                        \ cassette and disc versions of Elite the following is
+                        \ done with a loop, but it is marginally faster to
+                        \ unroll the loop and have seven copies of the code,
+                        \ though it does take up a bit more memory (though that
+                        \ isn't a concern when you have a 6502 Second Processor)
 
  BCC P%+4               \ If C (i.e. the next bit from P) is set, do the
  ADC T1                 \ addition for this bit of P:
@@ -14203,6 +14249,36 @@ LOAD_C% = LOAD% +P% - CODE%
  ROR P                  \ Add the overspill from shifting A to the right onto
                         \ the start of P, and shift P right to fetch the next
                         \ bit for the calculation
+
+ BCC P%+4               \ Repeat for the second time
+ ADC T1
+ ROR A
+ ROR P
+
+ BCC P%+4               \ Repeat for the third time
+ ADC T1
+ ROR A
+ ROR P
+
+ BCC P%+4               \ Repeat for the fourth time
+ ADC T1
+ ROR A
+ ROR P
+
+ BCC P%+4               \ Repeat for the fifth time
+ ADC T1
+ ROR A
+ ROR P
+
+ BCC P%+4               \ Repeat for the sixth time
+ ADC T1
+ ROR A
+ ROR P
+
+ BCC P%+4               \ Repeat for the seventh time
+ ADC T1
+ ROR A
+ ROR P
 
  LSR A                  \ Rotate (A P) once more to get the final result, as
  ROR P                  \ we only pushed 7 bits through the above process
@@ -22007,7 +22083,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .LABEL_1
 
-                        \ In the 6502 second processor version, the LABEL_1
+                        \ In the 6502 Second Processor version, the LABEL_1
                         \ label is actually `_ (a backtick followed by an
                         \ underscore), but that doesn't compile in BeebAsm and
                         \ it's pretty cryptic, so instead this version sticks
@@ -23546,11 +23622,11 @@ LOAD_E% = LOAD% + P% - CODE%
 \
 \                         * &00 = black (no missile)
 \
-\                         * &0E = red (armed and locked)
+\                         * #RED2 = red (armed and locked)
 \
-\                         * &E0 = yellow/white (armed)
+\                         * #YELLOW2 = yellow/white (armed)
 \
-\                         * &EE = green (disarmed)
+\                         * #GREEN2 = green (disarmed)
 \
 \ ******************************************************************************
 
@@ -27606,7 +27682,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .LABEL_2
 
-                        \ In the 6502 second processor version, the LABEL_2
+                        \ In the 6502 Second Processor version, the LABEL_2
                         \ label is actually ` (a backtick), but that doesn't
                         \ compile in BeebAsm and it's pretty cryptic, so
                         \ instead this version sticks with the label LABEL_2
@@ -28019,7 +28095,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .LABEL_3
 
-                        \ In the 6502 second processor version, the LABEL_3
+                        \ In the 6502 Second Processor version, the LABEL_3
                         \ label is actually `` (two backticks), but that doesn't
                         \ compile in BeebAsm and it's pretty cryptic, so instead
                         \ this version sticks with the label LABEL_3 from the
@@ -29291,10 +29367,11 @@ ENDIF
 
  JSR FLKB               \ Call FLKB to flush the keyboard buffer
 
- LDX #LO(RLINE)         \ Call OSWORD with A = 0 and (Y X) pointing to the
- LDY #HI(RLINE)         \ configuration block in RLINE, which reads a line from
- LDA #0                 \ the current input stream (i.e. the keyboard)
- JSR OSWORD
+ LDX #LO(RLINE)         \ Set (Y X) to point to the RLINE parameter block
+ LDY #HI(RLINE)
+
+ LDA #0                 \ Call OSWORD with A = 0 to read a line from the current
+ JSR OSWORD             \ input stream (i.e. the keyboard)
 
  BCC P%+4               \ The C flag will be set if we pressed ESCAPE when
                         \ entering the name, otherwise it will be clear, so
@@ -30570,10 +30647,15 @@ ENDIF
 
 .RDKEY
 
- LDA #240               \ Send an OSWORD 240 command to the I/O processor to
- LDY #HI(buf)           \ scan the keyboard and joysticks, and populate the key
- LDX #LO(buf)           \ logger buffer in KTRAN, which is the part of the buf
- JSR OSWORD             \ buffer just after the two OSWORD size bytes
+ LDA #240               \ Set A in preparation for sending an OSWORD 240 command
+
+ LDY #HI(buf)           \ Set (Y X) to point to the parameter block at buf
+ LDX #LO(buf)
+
+ JSR OSWORD             \ Send an OSWORD 240 command to the I/O processor to
+                        \ scan the keyboard and joysticks, and populate the key
+                        \ logger buffer in KTRAN, which is the part of the buf
+                        \ buffer just after the two OSWORD size bytes
 
  LDX KTRAN              \ Set X to the first byte of the updated KTRAN, which
                         \ contains the internal key number of the key being
@@ -31046,10 +31128,12 @@ ENDIF
  BNE KYTB               \ If DNOIZ is non-zero, then sound is disabled, so
                         \ return from the subroutine (as KYTB contains an RTS)
 
- LDX #LO(XX16)          \ Otherwise call OSWORD 7, with (Y X) pointing to the
- LDY #HI(XX16)          \ sound block in XX16. This makes the sound as
- LDA #7                 \ described in the documentation for variable SFX,
- JMP OSWORD             \ and returns from the subroutine using a tail call
+ LDX #LO(XX16)          \ Otherwise set (Y X) to point to the sound block in
+ LDY #HI(XX16)          \ XX16
+
+ LDA #7                 \ Call OSWORD 7 to makes the sound, as described in the
+ JMP OSWORD             \ documentation for variable SFX, and return from the
+                        \ subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -38571,7 +38655,8 @@ ENDIF
 \       Name: TTX66
 \       Type: Subroutine
 \   Category: Utility routines
-\    Summary: Clear the top part of the screen and draw a white border
+\    Summary: Send control code 11 to the I/O processor to clear the top part
+\             of the screen and draw a white border
 \
 \ ------------------------------------------------------------------------------
 \
@@ -38618,7 +38703,7 @@ ENDIF
  STZ de                 \ Clear de, the flag that appends " DESTROYED" to the
                         \ end of the next text token, so that it doesn't
 
- LDA #11                \ Write control code 11 to OSWRCH, to instruct the I/O
+ LDA #11                \ Send control code 11 to OSWRCH, to instruct the I/O
  JSR OSWRCH             \ processor to clear the top part of the screen
 
  LDX QQ22+1             \ Fetch into X the number that's shown on-screen during
@@ -39066,10 +39151,12 @@ ENDIF
 
 .SC48
 
- LDX #LO(SCANpars)      \ Send a #onescan command to the I/O processor to draw
- LDY #HI(SCANpars)      \ the ship on the scanner, returning from the subroutine
- LDA #onescan           \ using a tail call
- JMP OSWORD
+ LDX #LO(SCANpars)      \ Set (Y X) to point to the SCANpars parameter block
+ LDY #HI(SCANpars)      
+
+ LDA #onescan           \ Send a #onescan command to the I/O processor to draw
+ JMP OSWORD             \ the ship on the scanner, returning from the subroutine
+                        \ using a tail call
 
 \ ******************************************************************************
 \
@@ -39651,7 +39738,8 @@ LOAD_I% = LOAD% + P% - CODE%
  STA X2
  LDA Y2VB,Y
  STA Y2
- JSR LOIN
+
+ JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
 
 .GR4
 
@@ -39667,7 +39755,9 @@ LOAD_I% = LOAD% + P% - CODE%
  LDA Y2UB,Y
  STA Y2
  STA Y2VB,Y
- JSR LOIN
+
+ JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
+
  DEY
  BNE GRL2
  JSR LBFL
