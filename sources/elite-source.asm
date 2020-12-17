@@ -28363,7 +28363,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .BRBRLOOP
 
- JSR OSWRCH             \ Print the character in A (which contains a line feed
+ JSR OSWRCH             \ Print the character in A, which contains a line feed
                         \ on the first loop iteration, and then any non-zero
                         \ characters we fetch from the error message
 
@@ -31860,27 +31860,56 @@ ENDIF
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: savscr
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: Save a screenshot if CTRL-D is pressed when the game is paused
+\
+\ ------------------------------------------------------------------------------
+\
+\ Screen memory from &4000 to &8000 is saved to disc with an incremental
+\ filename, starting with ":0.X.SCREEN1" for the first screenshot, then
+\ ":0.X.SCREEN2" for the next, and so on.
+\
 \ ******************************************************************************
 
 .savscr
 
- JSR CTRL
- BPL FREEZE
- LDX #&11
+ JSR CTRL               \ Scan the keyboard to see if CTRL is currently pressed,
+                        \ returning a negative value in A if it is
+
+ BPL FREEZE             \ If CTRL is not being pressed, jump to FREEZE to keep
+                        \ listening for configuration keys while we're paused
+
+ LDX #17                \ We start by copying the 18 bytes in oscobl2 to oscobl,
+                        \ so set a counter in X for 18 bytes. The oscobl block
+                        \ is not altered by this routine or any other, so it
+                        \ isn't clear why we copy oscobl2 to oscobl, but perhaps
+                        \ there was a reason at some point
 
 .savscl
 
- LDA oscobl2,X
- STA oscobl,X
- DEX
- BPL savscl
- LDX #(oscobl MOD256)
- LDY #(oscobl DIV256)
- LDA #0
- JSR OSFILE
- INC scname+11
- JMP FREEZE
+ LDA oscobl2,X          \ Copy the X-th byte of oscobl2 to the X-th byte of
+ STA oscobl,X           \ oscobl
+
+ DEX                    \ Decrement the byte counter
+
+ BPL savscl             \ Loop back for the next byte until we have copied all
+                        \ 18 bytes
+
+ LDX #LO(oscobl)        \ Set (Y X) to point to the oscobl parameter block
+ LDY #HI(oscobl)
+
+ LDA #0                 \ Call OSFILE with A = 0 to save a file containing the
+ JSR OSFILE             \ screen memory from &4000 to &8000
+
+ INC scname+11          \ Increment the screenshot number in the filename at
+                        \ scname, so ":0.X.SCREEN1" becomes ":0.X.SCREEN2" and
+                        \ so on
+
+ JMP FREEZE             \ Jump back into the pause loop to keep listening for
+                        \ configuration key presses
 
 \ ******************************************************************************
 \
@@ -32346,37 +32375,70 @@ ENDMACRO
  ITEM 53,  15, 't', 192, %00000111   \ 16 = Alien Items
 
 \ ******************************************************************************
+\
 \       Name: oscobl
+\       Type: Variable
+\   Category: Save and load
+\    Summary: OSFILE configuration block for saving a screenshot
+\
+\ ------------------------------------------------------------------------------
+\
+\ This OSFILE configuration block is overwritten by the block at oscobl2 before
+\ being passed to OSFILE to save a screenshot.
+\
 \ ******************************************************************************
 
 .oscobl
 
- EQUW scname
- EQUD &FFFF4000
- EQUD &FFFF4000
- EQUD &FFFF4000
- EQUD &FFFF8000
+ EQUW scname            \ The address of the filename to save
+
+ EQUD &FFFF4000         \ Load address of the saved file
+
+ EQUD &FFFF4000         \ Execution address of the saved file
+
+ EQUD &FFFF4000         \ Start address of the memory block to save
+
+ EQUD &FFFF8000         \ End address of the memory block to save
 
 \ ******************************************************************************
+\
 \       Name: scname
+\       Type: Variable
+\   Category: Save and load
+\    Summary: Filename to be used when saving a screenshot
+\
 \ ******************************************************************************
 
 .scname
 
  EQUS ":0.X.SCREEN1"
- EQUB &D
+ EQUB 13
 
 \ ******************************************************************************
+\
 \       Name: oscobl2
+\       Type: Variable
+\   Category: Save and load
+\    Summary: Master OSFILE configuration block for saving a screenshot
+\
+\ ------------------------------------------------------------------------------
+\
+\ This OSFILE configuration block is copied from oscobl2 to oscobl in order to
+\ save a screenshot.
+\
 \ ******************************************************************************
 
 .oscobl2
 
- EQUW scname
- EQUD &FFFF4000
- EQUD &FFFF4000
- EQUD &FFFF4000
- EQUD &FFFF8000
+ EQUW scname            \ The address of the filename to save
+
+ EQUD &FFFF4000         \ Load address of the saved file
+
+ EQUD &FFFF4000         \ Execution address of the saved file
+
+ EQUD &FFFF4000         \ Start address of the memory block to save
+
+ EQUD &FFFF8000         \ End address of the memory block to save
 
 \ ******************************************************************************
 \
@@ -35804,7 +35866,7 @@ ENDIF
  BCC nolines            \ draw, so return from the subroutine (as nolines
                         \ contains an RTS)
 
- LDA #&81               \ Send an OSWRCH &81 command to the I/O processor to
+ LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
  JSR OSWRCH             \ tell it to start receiving a new line to draw (so
                         \ when we send it OSWRCH commands from now on, the I/O
                         \ processor will add these bytes to this line until
@@ -38556,8 +38618,8 @@ ENDIF
  STZ de                 \ Clear de, the flag that appends " DESTROYED" to the
                         \ end of the next text token, so that it doesn't
 
- LDA #11                \ Write ASCII character 11, to move the system cursor up
- JSR OSWRCH             \ one line
+ LDA #11                \ Write control code 11 to OSWRCH, to instruct the I/O
+ JSR OSWRCH             \ processor to clear the top part of the screen
 
  LDX QQ22+1             \ Fetch into X the number that's shown on-screen during
                         \ the hyperspace countdown
