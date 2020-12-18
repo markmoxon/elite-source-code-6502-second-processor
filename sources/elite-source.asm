@@ -28744,7 +28744,7 @@ LOAD_F% = LOAD% + P% - CODE%
  JSR DOXC
 
  LDX #3                 \ Disable the ESCAPE key and clear memory if the BREAK
- JSR FX200              \ key is pressed (*FX 200, 3)
+ JSR FX200              \ key is pressed (*FX 200,3)
 
  LDX #CYL               \ Call the TITLE subroutine to show the rotating ship
  LDA #6                 \ and load prompt. The arguments sent to TITLE are:
@@ -30151,7 +30151,7 @@ ENDIF
 
 \LDX #2                 \ These instructions are commented out in the original
 \JSR FX200              \ source, but they would enable the ESCAPE key and clear
-                        \ memory if the BREAK key is pressed (*FX 200, 2)
+                        \ memory if the BREAK key is pressed (*FX 200,2)
 
  JSR ZEBC               \ Call ZEBC to zero-fill pages &B and &C
 

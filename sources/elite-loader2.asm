@@ -123,7 +123,7 @@ ENDMACRO
  LDY #HI(MESS3)
 
  JMP SCLI               \ Call SCLI to run the OS command in MESS3, which *RUNs
-                        \ the main parasite game code in P.CODE, and return from
+                        \ the main parasite game code in P.CODE, returning from
                         \ the subroutine using a tail call
 
 \ ******************************************************************************
