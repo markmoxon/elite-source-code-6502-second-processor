@@ -216,32 +216,51 @@ MACRO FNE I%
 ENDMACRO
 
 \ ******************************************************************************
+\
 \       Name: Elite loader
+\       Type: Subroutine
+\   Category: Loader
+\    Summary: Check for a 6502 Second Processor, perform a number of OS calls,
+\             set up sound and run the second loader
+\
 \ ******************************************************************************
 
 .ENTRY
 
- CLD 
- LDA #129
- LDX #0
- LDY #&FF
- JSR OSBYTE
- TXA 
+\  Only run if OSBYTE129,0,&FF returns X and Y zero OR if (OSBYTE129,0,&FF         returns XY = &FFFF AND OSBYTE&EA,0,&FF returns X nonzero)
+
+ CLD                    \ Clear the decimal flag, so we're not in decimal mode
+
+ LDA #129               \ Call OSBYTE with A = 129, X = 0 and Y = 255 to detect
+ LDX #0                 \ the machine sub-type. This returns X = 0 if the MOS
+ LDY #255               \ version is 0.1, X = 1 if this is an Electron, or
+ JSR OSBYTE             \ X = 255 if this is MOS 1.00 or 1.20
+
+ TXA                    \ If X is non-zero then this is not MOS 0.1, so jump to
+ BNE not0               \ not0
+
+ TYA                    \ If Y is non-zero then this is MOS 0.1, so jump to not0
  BNE not0
- TYA 
- BNE not0
- JMP happy
+
+ JMP happy              \ If we get here then X and Y are both 0, so jump to
+                        \ happy to continue the loading process
 
 .not0
 
- INX 
- BNE blap1
- INY 
- BEQ blap2
+                        \ One or both of X and Y are non-zero, so this section
+                        \ jumps to blap2 if X <> 255 and Y = 255
+
+ INX                    \ Increment X, which will give us zero if X was 255
+
+ BNE blap1              \ If X is non-zero, jump to blap1
+
+ INY                    \ Increment Y, which will give us zero if Y was 255
+
+ BEQ blap2              \ If Y is now 0, jump to blap2 for further checks
 
 .blap1
 
- JMP happy
+ JMP happy              \ Jump to happy to continue the loading process
 
 \JSR ZZZAP
 \BRK
@@ -252,14 +271,20 @@ ENDMACRO
 
 .blap2
 
- LDA #&EA
- DEY 
- JSR OSBYTE
- TXA 
- BNE happy
- JSR ZZZAP
+                        \ We arrive here with X = 0 and Y = 0
 
- BRK
+ LDA #234               \ Call OSBYTE with A = 234, X = 0 and Y = &FF, which
+ DEY                    \ detects whether Tube hardware is present, returning
+ JSR OSBYTE             \ X = 0 (Tune is not present) or X = 255 (Tube is
+                        \ present)
+
+ TXA                    \ If X <> 255 (i.e. the Tube is present) then jump to
+ BNE happy              \ happy to continue the loading process
+
+ JSR ZZZAP              \ Call ZZZAP to blank out memory
+
+ BRK                    \ Display the following system error, and stop loading
+
  BRK
  EQUS "This program needs a 6502 Second Processor"
  EQUW &0D0A
@@ -267,21 +292,23 @@ ENDMACRO
 
 .ZZZAP
 
- LDA #(happy MOD256)
+ LDA #LO(happy)
  STA ZP
- LDX #(happy DIV256)
+
+ LDX #HI(happy)
+
  LDY #0
 
 .ZZZAPL
 
  STX ZP+1
  STA (ZP),Y
- INY 
+ INY
  BNE ZZZAPL
- INX 
+ INX
  CPX #((MESS2 DIV256)+1)
  BNE ZZZAPL
- RTS 
+ RTS
 
 .happy
 
@@ -313,7 +340,7 @@ ENDMACRO
 
  LDA (ZP),Y
  JSR OSWRCH
- INY 
+ INY
  CPY #N%
  BNE LOOP \set up mode
 
@@ -719,7 +746,11 @@ ENDMACRO
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: RAND
+\       Type: Variable
+\   Category: Drawing planets
+\    Summary: The random number seed used for drawing Saturn
 \ ******************************************************************************
 
 .RAND
@@ -1019,16 +1050,27 @@ ENDMACRO
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: OSB
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: A convenience routine for calling OSBYTE with Y = 0
+\
 \ ******************************************************************************
 
 .OSB
 
- LDY #0
- JMP OSBYTE
+ LDY #0                 \ Call OSBYTE with Y = 0, returning from the subroutine
+ JMP OSBYTE             \ using a tail call (so we can call OSB to call OSBYTE
+                        \ for when we know we want Y set to 0)
 
 \ ******************************************************************************
+\
 \       Name: MESS1
+\       Type: Variable
+\   Category: Loader
+\    Summary: The OS command string for changing the disc directory to E
+\
 \ ******************************************************************************
 
 .MESS1
@@ -1037,12 +1079,18 @@ ENDMACRO
  EQUB 13
 
 \ ******************************************************************************
+\
 \       Name: MESS2
+\       Type: Variable
+\   Category: Loader
+\    Summary: The OS command string for loading and running the second part of
+\             the loader
+\
 \ ******************************************************************************
 
 .MESS2
 
- EQUS "R.I.ELITEa"
+ EQUS "R.I.ELITEa"        \ This is short for "*RUN I.ELITEa"
  EQUB 13
 
 \ ******************************************************************************

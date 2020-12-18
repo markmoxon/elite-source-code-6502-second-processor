@@ -38,89 +38,221 @@ LOAD% = &2000
 ORG CODE%
 
 \ ******************************************************************************
+\
 \       Name: MVE
+\       Type: Macro
+\   Category: Utility routines
+\    Summary: Move a one-page block of memory from one location to another
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following macro is used to move a block of memory from one location to
+\ another:
+\
+\   MVE S%, D%, PA%
+\
+\ It is used to move the component parts of the loading screen into screen
+\ memory, such as the dashboard background and Acornsoft copyright message.
+\
+\ Arguments:
+\
+\   S%                  The source address of the block to move
+\
+\   D%                  The destination address of the block to move
+\
+\   PA%                 Number of pages of memory to move (1 page = 256 bytes)
+\
 \ ******************************************************************************
 
 MACRO MVE S%, D%, PA%
 
-  LDA #(S%MOD256)
+  LDA #LO(S%)           \ Set Z1(1 0) = S%
   STA Z1
-  LDA #(S%DIV256)
+  LDA #HI(S%)
   STA Z1+1
-  LDA #(D%MOD256)
+
+  LDA #LO(D%)           \ Set Z1(1 0) = D%
   STA Z2
-  LDA #(D%DIV256)
+  LDA #HI(D%)
   STA Z2+1
-  LDX #PA%
-  JSR MVBL
+
+  LDX #PA%              \ Set X = PA%
+
+  JSR MVBL              \ Call MVBL to copy X pages from S% to D%
 
 ENDMACRO
 
 \ ******************************************************************************
+\
 \       Name: Elite loader (Part 1 of 2)
+\       Type: Subroutine
+\   Category: Loader
+\    Summary: Move loading screen binaries into screen memory and load and run
+\             the main game code
+\
 \ ******************************************************************************
 
 .ENTRY
 
- MVE DIALS, &7000, &E \Move Dials bit dump to screen
-\MVE DATE, &6000, &1
- MVE ASOFT, &4200, &1
- MVE ELITE, &4600, &1
- MVE CpASOFT, &6C00, &1
+ MVE DIALS, &7000, &E   \ Move the binary at DIALS (the dashboard background) to
+                        \ locations &7000-&7EFF in screen memory (14 pages)
 
- LDX #(MESS2 MOD256)
- LDY #(MESS2 DIV256)
- JSR SCLI \*RUN I-CODE
+\MVE DATE, &6000, &1    \ This instruction is commented out in the original
+                        \ course, but it would move the binary at DATE to
+                        \ locations &6000-&60FF in screen memory (1 page),
+                        \ which would display the following message on the
+                        \ loading screen: "2nd Pro ELITE -Finished 13/12/84"
 
- LDX #(MESS3 MOD256)
- LDY #(MESS3 DIV256)
- JMP SCLI \*RUN P-CODE
+ MVE ASOFT, &4200, &1   \ Move the binary at ASOFT (the "Acornsoft" heading) to
+                        \ locations &4200-&42FF in screen memory (1 page)
+
+ MVE ELITE, &4600, &1   \ Move the binary at ELITE (the "ELITE" heading) to
+                        \ locations &4600-&46FF in screen memory (1 page)
+
+ MVE CpASOFT, &6C00, &1 \ Move the binary at CpASOFT (the Acornsoft copyright
+                        \ message) to locations &6C00-&6CFF in screen memory
+                        \ (1 page)
+
+ LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("R.I.CODE")
+ LDY #HI(MESS2)
+
+ JSR SCLI               \ Call SCLI to run the OS command in MESS2, which *RUNs
+                        \ the main I/O processor game code in I.CODE
+
+ LDX #LO(MESS3)         \ Set (Y X) to point to MESS3 ("R.P.CODE")
+ LDY #HI(MESS3)
+
+ JMP SCLI               \ Call SCLI to run the OS command in MESS3, which *RUNs
+                        \ the main parasite game code in P.CODE, and return from
+                        \ the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: MESS2
+\       Type: Variable
+\   Category: Loader
+\    Summary: The OS command string for loading and running the I/O processor's
+\             main game code
+\
 \ ******************************************************************************
 
 .MESS2
 
- EQUS "R.I.CODE"
+ EQUS "R.I.CODE"        \ This is short for "*RUN I.CODE"
  EQUB 13
 
 \ ******************************************************************************
+\
 \       Name: MESS3
+\       Type: Variable
+\   Category: Loader
+\    Summary: The OS command string for loading and running the parasite's
+\             main game code
+\
 \ ******************************************************************************
 
 .MESS3
 
- EQUS "R.P.CODE"
+ EQUS "R.P.CODE"        \ This is short for "*RUN P.CODE"
  EQUB 13
 
 \ ******************************************************************************
+\
 \       Name: MVBL
+\       Type: Macro
+\   Category: Utility routines
+\    Summary: Move a multi-page block of memory from one location to another
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   Z1(1 0)             The source address of the block to move
+\
+\   Z2(1 0)             The destination address of the block to move
+\
+\   X                   Number of pages of memory to move (1 page = 256 bytes)
+\
 \ ******************************************************************************
 
 .MVPG
 
- LDY #0
+                        \ This subroutine is called from below to copy one page
+                        \ of memory from the address in Z1(1 0) to the address
+                        \ in Z2(1 0)
+
+ LDY #0                 \ We want to move one page of memory, so set Y as a byte
+                        \ counter
 
 .MPL
 
- LDA (Z1),Y
- STA (Z2),Y
- DEY 
- BNE MPL
- RTS 
+ LDA (Z1),Y             \ Copy the Y-th byte of the Z1(1 0) memory block to the
+ STA (Z2),Y             \ Y-th byte of the Z2(1 0) memory block
+
+ DEY                    \ Decrement the byte counter
+
+ BNE MPL                \ Loop back to copy the next byte until we have done a
+                        \ whole page of 256 bytes
+
+ RTS                    \ Return from the subroutine
 
 .MVBL
 
- JSR MVPG
- INC Z1+1
- INC Z2+1
- DEX 
- BPL MVBL
- RTS 
+ JSR MVPG               \ Call MVPG above to copy one page of memory from the
+                        \ address in Z1(1 0) to the address in Z2(1 0)
+
+ INC Z1+1               \ Increment the high byte of the source address to point
+                        \ to the next page
+
+ INC Z2+1               \ Increment the high byte of the destination address to
+                        \ point to the next page
+
+ DEX                    \ Decrement the page counter
+
+ BPL MVBL               \ Loop back to copy the next page until we have done X
+                        \ pages
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: Elite loader (Part 2 of 2)
+\       Type: Subroutine
+\   Category: Loader
+\    Summary: Include binaries for loading screen and dashboard images
+\
+\ ------------------------------------------------------------------------------
+\
+\ The loader bundles a number of binary files in with the loader code, and moves
+\ them to their correct memory locations in part 1 above.
+\
+\ There are five files, all containing images, which are all moved into screen
+\ memory by the loader:
+\
+\   * Z.ASOFT.bin contains the "ACORNSOFT" title across the top of the loading
+\     screen, which gets moved to screen address &4200, on the second character
+\     row of the mode 1 part of the screen (the top part)
+\
+\   * Z.ELITE.bin contains the "ELITE" title across the top of the loading
+\     screen, which gets moved to screen address &4600, on the fourth character
+\     row of the mode 1 part of the screen (the top part)
+\
+\   * Z.CpASOFT.bin contains the "(C) Acornsoft 1984" title across the bottom
+\     of the loading screen, which gets moved to screen address &6C00, the
+\     penultimate character row of the top part of the screen, just above the
+\     dashboard
+\
+\   * Z.DIALS.bin contains the dashboard, which gets moved to screen address
+\     &7000, which is the starting point of the eight-colour mode 2 portion at
+\     the bottom of the split screen
+\
+\   * P.DATE2P.bin contains the version text "2nd Pro ELITE -Finished 13/12/84",
+\     though the code to show this on-screen in part 1 is commented out, as this
+\     was presumably used to identify versions of the game during development.
+\     If the MVE macro instruction in part 1 is uncommented, then this binary
+\     gets moved to screen address &6000, which displays the version message in
+\     the middle of the top part of the screen
+\
 \ ******************************************************************************
 
 .DIALS

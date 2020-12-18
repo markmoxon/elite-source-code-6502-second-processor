@@ -446,11 +446,11 @@ ORG &0000
                         \
  SKIP 1                 \ Contains details about the ship's type and associated
                         \ behaviour, such as whether they are a trader, a bounty
-                        \ hunter, a pirate, currently hostile, currently docking,
-                        \ inside the hold having been scooped, and so on. The
-                        \ default values for each ship type are taken from the
-                        \ table at E%, where the NEWB flags are descrobed in
-                        \ more detail
+                        \ hunter, a pirate, currently hostile, in the process of
+                        \ docking, inside the hold having been scooped, and so
+                        \ on. The default values for each ship type are taken
+                        \ from the table at E%, where the NEWB flags are
+                        \ described in more detail
 
 .LSP
 
@@ -2144,7 +2144,7 @@ ENDMACRO
 FOR I%, 0, 31
   N = ABS(SIN((I% / 64) * 2 * PI))
   IF N >= 1
-    EQUB &FF
+    EQUB 255
   ELSE
     EQUB INT(256 * N + 0.5)
   ENDIF
@@ -3320,21 +3320,21 @@ LOAD_A% = LOAD%
 
 .MOS
 
- EQUB 0
+ SKIP 1                 \ This variable appears to be unused
 
 .COMC
 
- EQUB 0                 \ The colour of the dot on the compass
+ SKIP 1                 \ The colour of the dot on the compass
                         \
-                        \   * &F0 = the object in the compass is in front of us,
-                        \     so the dot is yellow/white
+                        \   * #WHITE2 = the object in the compass is in front of
+                        \     us, so the dot is white
                         \
-                        \   * &FF = the object in the compass is behind us, so
-                        \     the dot is green
+                        \   * #GREEN2 = the object in the compass is behind us,
+                        \     so the dot is green
 
 .DNOIZ
 
- EQUB 0                 \ Sound on/off configuration setting
+ SKIP 1                 \ Sound on/off configuration setting
                         \
                         \   * 0 = sound is on (default)
                         \
@@ -3345,7 +3345,7 @@ LOAD_A% = LOAD%
 
 .DAMP
 
- EQUB 0                 \ Keyboard damping configuration setting
+ SKIP 1                 \ Keyboard damping configuration setting
                         \
                         \   * 0 = damping is enabled (default)
                         \
@@ -3356,7 +3356,7 @@ LOAD_A% = LOAD%
 
 .DJD
 
- EQUB 0                 \ Keyboard auto-recentre configuration setting
+ SKIP 1                 \ Keyboard auto-recentre configuration setting
                         \
                         \   * 0 = auto-recentre is enabled (default)
                         \
@@ -3367,7 +3367,7 @@ LOAD_A% = LOAD%
 
 .PATG
 
- EQUB 0                 \ Configuration setting to show the author names on the
+ SKIP 1                 \ Configuration setting to show the author names on the
                         \ start-up screen and enable manual hyperspace mis-jumps
                         \
                         \   * 0 = no author names or manual mis-jumps (default)
@@ -3386,7 +3386,7 @@ LOAD_A% = LOAD%
 
 .FLH
 
- EQUB 0                 \ Flashing console bars configuration setting
+ SKIP 1                 \ Flashing console bars configuration setting
                         \
                         \   * 0 = static bars (default)
                         \
@@ -3397,7 +3397,7 @@ LOAD_A% = LOAD%
 
 .JSTGY
 
- EQUB 0                 \ Reverse joystick Y-channel configuration setting
+ SKIP 1                 \ Reverse joystick Y-channel configuration setting
                         \
                         \   * 0 = standard Y-channel (default)
                         \
@@ -3408,7 +3408,7 @@ LOAD_A% = LOAD%
 
 .JSTE
 
- EQUB 0                 \ Reverse both joystick channels configuration setting
+ SKIP 1                 \ Reverse both joystick channels configuration setting
                         \
                         \   * 0 = standard channels (default)
                         \
@@ -3419,7 +3419,7 @@ LOAD_A% = LOAD%
 
 .JSTK
 
- EQUB 0                 \ Keyboard or joystick configuration setting
+ SKIP 1                 \ Keyboard or joystick configuration setting
                         \
                         \   * 0 = keyboard (default)
                         \
@@ -3430,7 +3430,7 @@ LOAD_A% = LOAD%
 
 .BSTK
 
- EQUB 0                 \ Bitstik configuration setting
+ SKIP 1                 \ Bitstik configuration setting
                         \
                         \   * 0 = keyboard or joystick (default)
                         \
@@ -3441,15 +3441,22 @@ LOAD_A% = LOAD%
 
 .CATF
 
- EQUB 0                 \ This byte is unused (the CATF variable in the I/O
+ SKIP 1                 \ This byte is unused (the CATF variable in the I/O
                         \ processor code is used to store the CATF flag, not
                         \ this one)
 
 .ZIP
 
+ SKIP 0                \ This label is not used but is in the original source
+
 .S1%
 
- EQUS ":0.E."
+ EQUS ":0.E."           \ The drive and directory number used when saving or
+                        \ loading a commander file
+                        \
+                        \ The drive part of this string (the "0") is updated
+                        \ with the chosen drive in the QUS1 routine, but the
+                        \ directory part (the "E") is fixed
 
 \ ******************************************************************************
 \
@@ -4140,7 +4147,7 @@ ENDIF
 
 .MA76
 
- LDA KY20               \ If "P" is being pressed, keep going, otherwise skip 
+ LDA KY20               \ If "P" is being pressed, keep going, otherwise skip
  BEQ MA78               \ the next two instructions
 
  LDA #0                 \ The "cancel docking computer" key is bring pressed,
@@ -5692,7 +5699,7 @@ ENDIF
 \   DTEN                Print recursive token number X from the token table
 \                       pointed to by (A V), used to print tokens from the RUTOK
 \                       table via calls to DETOK3
-\ 
+\
 \ ******************************************************************************
 
 .DETOK
@@ -8871,7 +8878,7 @@ ENDIF
  LDA #103               \ Set A to token 103 ("PULSE LASER")
 
  LDX CNT                \ Set Y = the laser power for view X
- LDY LASER,X 
+ LDY LASER,X
 
  CPY #128+POW           \ If the laser power for view X is not #POW+128 (beam
  BNE P%+4               \ laser), skip the next LDA instruction
@@ -9692,7 +9699,7 @@ ENDIF
 \ by setting bit 5 (if DTW1 is %00100000). However, this OR is only done if bit
 \ 7 of DTW2 is clear, i.e. we are printing a word, so this doesn't affect the
 \ first letter of the word, which remains capitalised.
-\ 
+\
 \ ******************************************************************************
 
 .DTW1
@@ -10372,8 +10379,13 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 \       Name: DIALS
 \       Type: Subroutine
 \   Category: Utility routines
-\    Summary: Update the dashboard indicators by sending a #RDPARAMS command to
-\             the I/O processor
+\    Summary: Update the dashboard indicators and flight variables by sending a
+\             #RDPARAMS command to the I/O processor
+\
+\ ------------------------------------------------------------------------------
+\
+\ The paramaters sent by this command not only update the dashboard, they also
+\ update all the flight variables in the I/O processor, from ENERGY to ESCP.
 \
 \ ******************************************************************************
 
@@ -10432,7 +10444,7 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
  AND #3                 \ iterations of the main loop, so skip the following
  BEQ P%+3               \ instruction when that happens (so we only update the
                         \ compass once every four iterations of the main loop)
- 
+
  RTS                    \ Return from the subroutine
 
  JMP COMPAS             \ Jump to COMPAS to update the compass, returning from
@@ -11412,7 +11424,7 @@ LOAD_C% = LOAD% +P% - CODE%
  JSR DORND              \ Set A and X to random numbers
 
  LDX #WRM               \ Set X to the ship type for a Worm
- 
+
  CMP #100               \ If A >= 100 (61% chance), skip the following
  BCS P%+4               \ instruction
 
@@ -12010,7 +12022,6 @@ LOAD_C% = LOAD% +P% - CODE%
 
  LDA #LO(K%+NI%)        \ Set the low byte of V(1 0) to point to the coordinates
  STA V                  \ of the sun or space station
- 
 
  LDA #HI(K%+NI%)        \ Set A to the high byte of the address of the
                         \ coordinates of the sun or space station
@@ -12767,7 +12778,7 @@ LOAD_C% = LOAD% +P% - CODE%
  STA INWK+29            \ damping randomly enabled or disabled, depending on the
                         \ C flag from above
 
- PLA                    \ Retrieve the child's ship type from the stack 
+ PLA                    \ Retrieve the child's ship type from the stack
 
 .NOIL
 
@@ -13878,7 +13889,7 @@ LOAD_C% = LOAD% +P% - CODE%
  ADC T
  ROR A
  ROR P
- 
+
  BCC P%+4               \ Repeat for the eighth time
  ADC T
  ROR A
@@ -15698,17 +15709,17 @@ LOAD_C% = LOAD% +P% - CODE%
 
  LDA #112
  STA INWK+3
- 
+
  LDA #0
  STA INWK
- 
+
  STA INWK+6
- 
+
  LDA #2
  STA INWK+7
- 
+
  JSR LL9
- 
+
  JSR MVEIT
 
  JMP RDKEY              \ Scan the keyboard for a key press and return the
@@ -16026,7 +16037,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
  PHA                    \ Store the new row number on the stack
 
- LDA #SETYC             \ Set A to #SETYC, ready to send to the I/O processor 
+ LDA #SETYC             \ Set A to #SETYC, ready to send to the I/O processor
 
                         \ Fall through into label to send a #SETYC <row> command
                         \ to the I/O processor
@@ -18998,7 +19009,7 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ set our legal status in FIST to 0 ("clean")
 
  LDA #2                 \ Call wW2 with A = 2 to start the hyperspace countdown,
- JSR wW2                \ but starting the countdown from 2 
+ JSR wW2                \ but starting the countdown from 2
 
  LDX #5                 \ To move galaxy, we rotate the galaxy's seeds left, so
                         \ set a counter in X for the 6 seed bytes
@@ -20388,7 +20399,7 @@ LOAD_D% = LOAD% + P% - CODE%
  PHA                    \ Store A on the stack so we can restore it after the
                         \ following call to DOXC
 
- LDA #2                 \ Move the text cursor to column 2 
+ LDA #2                 \ Move the text cursor to column 2
  JSR DOXC
 
  JSR INCYC              \ Move the text cursor down one line
@@ -22979,10 +22990,10 @@ LOAD_E% = LOAD% + P% - CODE%
 \
 \   COMC                The colour and thickness of the dot:
 \
-\                         * &F0 = a double-height dot in white, for when the
+\                         * #WHITE2 = a double-height dot in white, for when the
 \                           object in the compass is in front of us
 \
-\                         * &FF = a single-height dot in green, for when the
+\                         * #GREEN2 = a single-height dot in green, for when the
 \                           object in the compass is behind us
 \
 \ ******************************************************************************
@@ -23505,7 +23516,7 @@ LOAD_E% = LOAD% + P% - CODE%
  CPX #HER               \ If the ship type is a rock hermit, jump to gangbang
  BEQ gangbang           \ to increase the junk count
 
- CPX #JL                \ If JL <= X < JH, i.e. the type of ship we killed in X 
+ CPX #JL                \ If JL <= X < JH, i.e. the type of ship we killed in X
  BCC NW7                \ is junk (escape pod, alloy plate, cargo canister,
  CPX #JH                \ asteroid, splinter, shuttle or transporter), then keep
  BCS NW7                \ going, otherwise jump to NW7
@@ -26586,7 +26597,7 @@ LOAD_F% = LOAD% + P% - CODE%
  CPX #HER               \ Did we just kill a rock hermit? If we did, jump to
  BEQ blacksuspenders    \ blacksuspenders to increase the junk count
 
- CPX #JL                \ If JL <= X < JH, i.e. the type of ship we killed in X 
+ CPX #JL                \ If JL <= X < JH, i.e. the type of ship we killed in X
  BCC KS7                \ is junk (escape pod, alloy plate, cargo canister,
  CPX #JH                \ asteroid, splinter, shuttle or transporter), then keep
  BCS KS7                \ going, otherwise jump to KS7
@@ -26985,7 +26996,7 @@ LOAD_F% = LOAD% + P% - CODE%
  STA FSH,X              \ Set the X-th byte of FSH to &FF to charge up that
                         \ shield/bank
 
- DEX                    \ Decrement the lopp counter 
+ DEX                    \ Decrement the lopp counter
 
  BPL REL5               \ Loop back to REL5 until we have recharged both shields
                         \ and the energy bank
@@ -27527,7 +27538,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
  LDA #HER               \ Set A to #HER so we spawn a rock hermit 1.2% of the
                         \ time
- 
+
  STA INWK+32            \ Set byte #32 to %00001111 to give the rock hermit an
                         \ E.C.M.
 
@@ -27539,7 +27550,7 @@ LOAD_F% = LOAD% + P% - CODE%
  CMP #10                \ If random A >= 10 (96% of the time), set the C flag
 
  AND #1                 \ Reduce A to a random number that's 0 or 1
- 
+
  ADC #OIL               \ Set A = #OIL + A + C, so there's a tiny chance of us
                         \ spawning a cargo canister (#OIL) and an even chance of
                         \ us spawning either a boulder (#OIL + 1) or an asteroid
@@ -27888,7 +27899,7 @@ LOAD_F% = LOAD% + P% - CODE%
 .EE20
 
  LDX LASCT              \ Set X to the value of LASCT, the laser pulse count
- 
+
  BEQ NOLASCT            \ If X = 0 then jump to NOLASCT to skip reducing LASCT,
                         \ as it can't be reduced any further
 
@@ -27897,7 +27908,7 @@ LOAD_F% = LOAD% + P% - CODE%
  BEQ P%+3               \ If X = 0, skip the next instruction
 
  DEX                    \ Decrement the value of LASCT in X again
- 
+
  STX LASCT              \ Store the decremented value of X in LASCT, so LASCT
                         \ gets reduced by 2, but not into negative territory
 
@@ -28653,7 +28664,7 @@ LOAD_F% = LOAD% + P% - CODE%
  STA COMC,X             \ Zero the X-th configuration variable
 
  DEX                    \ Decrement the loop counter
- 
+
  BPL BEL1               \ Loop back to BEL1 to zero the next byte, until we have
                         \ zeroed them all
 
@@ -28731,7 +28742,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
  LDA #3                 \ Move the text cursor to column 3
  JSR DOXC
-                        
+
  LDX #3                 \ Disable the ESCAPE key and clear memory if the BREAK
  JSR FX200              \ key is pressed (*FX 200, 3)
 
@@ -28796,7 +28807,7 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ in QQ15 into QQ2, where we store the seeds for the
                         \ current system, so set up a counter in X for copying
                         \ 6 bytes (for three 16-bit seeds)
-                        
+
                         \ The label below is called likeTT112 because this code
                         \ is almost identical to the TT112 loop in the hyp
                         \ routine in the cassette version
@@ -28931,7 +28942,7 @@ ENDIF
                         \ disc version)
 
  STA COK                \ Store the updated competition flags in COK
- 
+
  RTS                    \ Retirn from the subroutine
 
 \ ******************************************************************************
@@ -29149,7 +29160,7 @@ ENDIF
  DEC CNT2               \ Decrement the outer loop counter in CNT2
 
  BNE TLL2               \ Loop back to keep the ship rotating, until the outer
-                        \ loop counter is zero 
+                        \ loop counter is zero
 
  JMP DEMON              \ Once we have iterated through CNT2 iterations of MCNT,
                         \ jump to DEMON to start the demo
@@ -29947,7 +29958,7 @@ ENDIF
 
  CLC                    \ Clear the C flag so the call to BPRNT does not include
                         \ a decimal point
- 
+
  JSR BPRNT              \ Print the competition number stored in K to K+3. The
                         \ value of U might affect how this is printed, and as
                         \ it's a temporary variable in zero page that isn't
@@ -30190,7 +30201,7 @@ ENDIF
  EQUS "IIllegal "       \ invalid commander file with bit 7 of byte #0 set
  EQUS "ELITE II file"   \ (the spelling mistake is in the original source)
  BRK
- 
+
 \.MINI                  \ These instructions are commented out in the original
 \EQUS "L.E.MINING B00"  \ source, and form part of the commented section above
 \EQUB 13
@@ -31362,7 +31373,7 @@ ENDIF
 
 .DKS2
 
- LDA KTRAN+7,X          \ Fetch either the joystick X value or joystick Y value 
+ LDA KTRAN+7,X          \ Fetch either the joystick X value or joystick Y value
                         \ from the key logger buffer, depending on the value of
                         \ X (i.e. fetch either KTRAN+8 or KTRAN+0)
 
@@ -32962,7 +32973,7 @@ ENDMACRO
 \
 \ Other entry points:
 \
-\   buf                 The two OSWORD size bytes for transmitting the key 
+\   buf                 The two OSWORD size bytes for transmitting the key
 \                       logger from the I/O processor to the parasite
 \
 \ ******************************************************************************
@@ -38976,7 +38987,7 @@ ENDIF
                         \ contains an RTS)
 
  LDA scacol,X           \ Set A to the scanner colour for this ship type from
-                        \ the X-th entry in the scacol table 
+                        \ the X-th entry in the scacol table
 
  STA SCANcol            \ Store the scanner colour in SCANcol so it can be sent
                         \ to the I/O processor with the #onescan command
@@ -39014,7 +39025,7 @@ ENDIF
 .SC2
 
  ADC #123               \ Set A = 123 + x_hi
- 
+
  STA SCANx1             \ Store the x-coordinate in SCANx1 so it can be sent
                         \ to the I/O processor with the #onescan command
 
@@ -39152,7 +39163,7 @@ ENDIF
 .SC48
 
  LDX #LO(SCANpars)      \ Set (Y X) to point to the SCANpars parameter block
- LDY #HI(SCANpars)      
+ LDY #HI(SCANpars)
 
  LDA #onescan           \ Send a #onescan command to the I/O processor to draw
  JMP OSWORD             \ the ship on the scanner, returning from the subroutine
@@ -40485,7 +40496,7 @@ ENDMACRO
  EJMP 23                \ Token 10:     "{move to row 10, white, lower case}
  EJMP 14                \                {justify}
  EJMP 2                 \                {sentence case}
- ECHR 'G'               \                GREETINGS {single cap}COMMANDER 
+ ECHR 'G'               \                GREETINGS {single cap}COMMANDER
  ETWO 'R', 'E'          \                {commander name}, I {lower case}AM
  ETWO 'E', 'T'          \                {sentence case} CAPTAIN {mission 1
  ETWO 'I', 'N'          \                captain's name} {lower case}OF{sentence
@@ -42705,12 +42716,12 @@ ENDMACRO
  ECHR 'K'               \                 {single cap}THE PLANS ARE UNIPULSE
  ECHR 'E'               \                CODED WITHIN THIS TRANSMISSION.{cr}
  ECHR ' '               \                 {single cap}{tab 6}YOU WILL BE PAID.{cr}
- ECHR 'O'               \                 {single cap}    {single cap}GOOD LUCK 
+ ECHR 'O'               \                 {single cap}    {single cap}GOOD LUCK
  ECHR 'F'               \                {single cap}COMMANDER.{cr}
  ECHR ' '               \                {left align}
  EJMP 19                \                {tab 6}{all caps}  MESSAGE ENDS
  ECHR 'N'               \                {wait for key press}"
- ECHR 'A'               \                
+ ECHR 'A'               \
  ECHR 'V'               \ Encoded as:   "{25}{9}{30}{29}{14}{2}GOOD DAY [154]
  ECHR 'A'               \                 {4}[204]I{13} AM {19}AG<246>T {19}B
  ECHR 'L'               \                <249>KE OF {19}NAVAL {19}<240>TEL<229>
@@ -43151,7 +43162,7 @@ ENDMACRO
  ETOK 204               \                {left align}
  ETOK 179               \                {tab 6}{all caps}  MESSAGE ENDS
  ECHR ' '               \                {wait for key press}"
- ECHR 'H'               \                
+ ECHR 'H'               \
  ECHR 'A'               \ Encoded as:   "{25}{9}{29}{30}{8}{14}{13}{19}WELL D
  ETWO 'V', 'E'          \                <223>E [154][204][179] HA<250> <218>RV
  ECHR ' '               \                [196]US WELL[178]WE SH<228>L <242>MEMB
@@ -43540,7 +43551,7 @@ ENDMACRO
 
 .RUTOK
 
- EQUB VE                
+ EQUB VE                \ Token 0:      ""
                         \
                         \ Encoded as:   ""
 
@@ -43838,8 +43849,8 @@ ENDMACRO
  EQUB VE
 
  ECHR 'O'               \ Token 7:      "OH DEAR ME YES. A FRIGHTFUL ROGUE WITH
- ECHR 'H'               \                WHAT I BELIEVE YOU PEOPLE CALL A LEAD 
- ECHR ' '               \                POSTERIOR SHOT UP LOTS OF THOSE BEASTLY 
+ ECHR 'H'               \                WHAT I BELIEVE YOU PEOPLE CALL A LEAD
+ ECHR ' '               \                POSTERIOR SHOT UP LOTS OF THOSE BEASTLY
  ECHR 'D'               \                PIRATES AND WENT TO USLERI"
  ECHR 'E'               \
  ETWO 'A', 'R'          \ Encoded as:   "OH DE<238> ME Y<237>.[208]FRIGHTFUL ROG
@@ -43848,7 +43859,7 @@ ENDMACRO
  ECHR 'E'               \                <222><244>I<253> SHOT UP <224>TS OF
  ECHR ' '               \                 <226>O<218> <247>A<222>LY PI<248>T
  ECHR 'Y'               \                <237>[178]W<246>T[201]<236><229>RI"
- ETWO 'E', 'S' 
+ ETWO 'E', 'S'
  ECHR '.'
  ETOK 208
  ECHR 'F'
@@ -44703,7 +44714,7 @@ ENDMACRO
  EQUB %10100000         \ Boa                               Innocent, escape pod
  EQUB %10100001         \ Anaconda                  Trader, innocent, escape pod
  EQUB %10100001         \ Rock hermit (asteroid)    Trader, innocent, escape pod
- EQUB %11000010         \ Viper                   Bounty hunter, cop, escape pod 
+ EQUB %11000010         \ Viper                   Bounty hunter, cop, escape pod
  EQUB %00001100         \ Sidewinder                             Hostile, pirate
  EQUB %10001100         \ Mamba                      Hostile, pirate, escape pod
  EQUB %10001100         \ Krait                      Hostile, pirate, escape pod
@@ -44721,7 +44732,8 @@ ENDMACRO
  EQUB %00000100         \ Constrictor                                    Hostile
  EQUB %00000000         \ The Elite logo
  EQUB %00100000         \ Cougar                                        Innocent
- EQUB %00000000         \ 
+
+ EQUB 0
 
 \ ******************************************************************************
 \
@@ -45390,7 +45402,7 @@ ENDMACRO
  EQUB 46                \ Number of edges          = 46
  EQUW 0                 \ Bounty                   = 0
  EQUB 56                \ Number of faces          = 56 / 4 = 14
- EQUB 16                \ Visibility distance      = 
+ EQUB 16                \ Visibility distance      = 16
  EQUB 32                \ Max. energy              = 32
  EQUB 10                \ Max. speed               = 10
  EQUB &00               \ Edges data offset (high) = &00F2
@@ -45814,7 +45826,7 @@ ENDMACRO
  EQUB 25                \ Number of edges          = 25
  EQUW 0                 \ Bounty                   = 0
  EQUB 48                \ Number of faces          = 48 / 4 = 12
- EQUB 36                \ Visibility distance      = 
+ EQUB 36                \ Visibility distance      = 36
  EQUB 252               \ Max. energy              = 252
  EQUB 14                \ Max. speed               = 14
  EQUB &00               \ Edges data offset (high) = &006E
@@ -46405,10 +46417,10 @@ ENDMACRO
  EQUB 26                \ Explosion count          = 5, as (4 * n) + 6 = 26
  EQUB 72                \ Number of vertices       = 72 / 6 = 12
  EQUB 17                \ Number of edges          = 17
- EQUW &0037             \ Bounty                   = 
+ EQUW 55                \ Bounty                   = 55
  EQUB 36                \ Number of faces          = 36 / 4 = 9
- EQUB 18                \ Visibility distance      = 
- EQUB 70                \ Max. energy              = 
+ EQUB 18                \ Visibility distance      = 18
+ EQUB 70                \ Max. energy              = 70
  EQUB 30                \ Max. speed               = 30
  EQUB &00               \ Edges data offset (high) = &005C
  EQUB &00               \ Faces data offset (high) = &00A0
@@ -46846,7 +46858,7 @@ ENDMACRO
  EQUB 52                \ Number of faces          = 52 / 4 = 13
  EQUB 40                \ Visibility distance      = 40
  EQUB 250               \ Max. energy              = 250
- EQUB &14               \ Max. speed               = 
+ EQUB 20                \ Max. speed               = 20
  EQUB &00               \ Edges data offset (high) = &0056
  EQUB &00               \ Faces data offset (high) = &00BE
  EQUB 0                 \ Normals are scaled by    = 2^0 = 1

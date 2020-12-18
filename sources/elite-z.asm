@@ -412,7 +412,7 @@ NEXT
 
 .K3
 
- EQUB 0                 \ Temporary storage, used in a number of places
+ SKIP 1                 \ Temporary storage, used in a number of places
 
 .U
 
@@ -420,14 +420,14 @@ NEXT
 
 .LINTAB
 
- EQUB 0                 \ The offset of the first free byte in the TABLE buffer,
+ SKIP 1                 \ The offset of the first free byte in the TABLE buffer,
                         \ which stores bytes in the current line as they are
                         \ transmitted from the parasite using the OSWRCH 129 and
                         \ 130 commands
 
 .LINMAX
 
- EQUB 0                 \ The number of points in the line currently being
+ SKIP 1                 \ The number of points in the line currently being
                         \ transmitted from the parasite using the OSWRCH 129
                         \ and 130 commands
 
@@ -438,7 +438,7 @@ NEXT
 
 .svn
 
- EQUB 0                 \ "Saving in progress" flag
+ SKIP 1                 \ "Saving in progress" flag
                         \
                         \   * Non-zero while the disc is being accessed (so this
                         \     is also the case for cataloguing, loading etc.)
@@ -447,7 +447,10 @@ NEXT
 
 .PARANO
 
- EQUB 0
+ SKIP 1                 \ PARANO points to the last free byte in PARAMS, which
+                        \ is used as a buffer for bytes sent from the parasite
+                        \ by the #RDPARAMS and OSWRCH 137 <param> commands when
+                        \ updating the dashboard
 
 .DL
 
@@ -461,7 +464,7 @@ NEXT
 
 .VEC
 
- EQUW 0                 \ VEC = &7FFE
+ SKIP 2                 \ VEC = &7FFE
                         \
                         \ Set to the original IRQ1 vector by elite-loader.asm
 
@@ -487,7 +490,7 @@ NEXT
 
 .CATF
 
- EQUB 0                 \ The disc catalogue flag
+ SKIP 1                 \ The disc catalogue flag
                         \
                         \ Determines whether a disc catalogue is currently in
                         \ progress, so the TT26 print routine can format the
@@ -509,6 +512,15 @@ NEXT
 
 .PARAMS
 
+ SKIP 0                 \ PARAMS points to the start of the dashboard parameter
+                        \ block that is populated by the parasite when it sends
+                        \ the #RDPARAMS and OSWRCH 137 <param> commands
+                        \
+                        \ These commands update the dashboard, but because the
+                        \ parameter block uses the same locations as the flight
+                        \ variables, these commands also have the effect of
+                        \ updating the following variables, from ENERGY to ESCP
+
 .ENERGY
 
  SKIP 1                 \ Energy bank status
@@ -524,7 +536,7 @@ NEXT
 
 .ALP2
 
- EQUB 0                 \ Bit 7 of ALP2 = sign of the roll angle in ALPHA
+ SKIP 1                 \ Bit 7 of ALP2 = sign of the roll angle in ALPHA
 
 .BETA
 
@@ -620,7 +632,7 @@ NEXT
 
 .FLH
 
- EQUB 0                 \ Flashing console bars configuration setting
+ SKIP 1                 \ Flashing console bars configuration setting
                         \
                         \   * 0 = static bars (default)
                         \
@@ -785,7 +797,7 @@ NEXT
 \ Arguments:
 \
 \   A                   The character to print:
-\                       
+\
 \                         * 128-147: Run the jump command in A (see JMPTAB)
 \
 \                         * All others: Print the character in A
@@ -819,7 +831,7 @@ NEXT
  SEI                    \ Disable interrupts while we update the WRCHV vector
 
  STA WRCHV              \ Store the low byte of the jump table entry in the low
-                        \ byte of WRCHV 
+                        \ byte of WRCHV
 
  LDA JMPTAB+1,X         \ Fetch the high byte of the jump table address pointed
  STA WRCHV+1            \ to by X from JMPTAB+1 + X, and store it in the high
@@ -897,7 +909,7 @@ NEXT
 \ Arguments:
 \
 \   A                   The new value of SHEILA &21
-\                       
+\
 \ ******************************************************************************
 
 .DOFE21
@@ -927,7 +939,7 @@ NEXT
 \                         * 0 = no colour effect
 \
 \                         * Non-zero = enable hyperspace colour effect
-\                       
+\
 \ ******************************************************************************
 
 .DOHFX
@@ -984,7 +996,7 @@ NEXT
 \                         * 0 = disc is not currently being catalogued
 \
 \                         * 1 = disc is currently being catalogued
-\                       
+\
 \ ******************************************************************************
 
 .DOCATF
@@ -1009,7 +1021,7 @@ NEXT
 \ Arguments:
 \
 \   A                   The new colour
-\                       
+\
 \ ******************************************************************************
 
 .DOCOL
@@ -1035,7 +1047,7 @@ NEXT
 \ Arguments:
 \
 \   A                   The new value of the "save in progress" flag
-\                       
+\
 \ ******************************************************************************
 
 .DOSVN
@@ -1089,7 +1101,7 @@ NEXT
 
  PHA                    \ Store A on the stack so we can retrieve it after the
                         \ following call to TT26
- 
+
  JSR TT26               \ Call TT26 to print the character in A on-screen
 
  PLA                    \ Retrieve A from the stack
@@ -1098,7 +1110,7 @@ NEXT
  BEQ nottosend          \ one line", jump to nottosend to skip sending this
                         \ character to the printer, as you can't roll back time
                         \ when you're printing hard copy
- 
+
  PHA                    \ Store A on the stack so we can retrieve it after the
                         \ following call to NVOSWRCH
 
@@ -1109,10 +1121,10 @@ NEXT
  PLA                    \ Retrieve A from the stack, though this is a bit
                         \ pointless given the next instruction, as they cancel
                         \ each other out
- 
+
  PHA                    \ Store A on the stack so we can retrieve it after the
                         \ following calls to POSWRCH and/or NVOSWRCH
- 
+
  CMP #' '               \ If A is greater than ASCII " ", then it's a printable
  BCS tosend             \ character, so jump to tosend to print the character
                         \ and jump back to sent to turn the printer off and
@@ -1322,7 +1334,7 @@ NEXT
 .BULL2
 
  LDA ECBT,Y             \ Fetch the Y-th byte of the bulb bitmap
- 
+
  EOR (SC),Y             \ EOR the byte with the current contents of screen
                         \ memory, so drawing the bulb when it is already
                         \ on-screen will erase it
@@ -1641,7 +1653,7 @@ NEXT
 \
 \                         * Byte #6 = The screen y-coordinate of the dot on the
 \                                     scanner
-\                       
+\
 \ ******************************************************************************
 
 .SC48
@@ -4343,7 +4355,7 @@ ENDMACRO
 \ Arguments:
 \
 \   A                   The OSWORD call to perform:
-\                       
+\
 \                         * 240-255: Run the jump command in A (see OSWVECS)
 \
 \                         * All others: Call the standard OSWORD routine
@@ -4593,7 +4605,7 @@ ENDMACRO
 \                           the original key number from byte #2, but with bit 7
 \                           set (i.e. key number + 128). If the key is not being
 \                           pressed, it contains the unchanged key number
-\                       
+\
 \ ******************************************************************************
 
 .DODKS4
@@ -4868,7 +4880,7 @@ ENDMACRO
 
  CPY #' '               \ If the character we want to print in Y is a space,
  BNE RR5                \ jump to RR5
- 
+
                         \ If we get here, then CATF is non-zero, so we are
                         \ printing a disc catalogue and we are not printing a
                         \ space, so we drop column 17 from the output so the
@@ -5087,7 +5099,7 @@ ENDMACRO
 
  AND #%00001111         \ This time we extract the bottom nibble of the
                         \ character definition, to get 0000 xxxx
- 
+
  STA U                  \ Set A = (A << 4) OR A
  ASL A                  \
  ASL A                  \ which duplicates the bottom nibble into the top nibble
@@ -5336,7 +5348,7 @@ ENDMACRO
 \ Arguments:
 \
 \   A                   The text column
-\                       
+\
 \ ******************************************************************************
 
 .SETXC
@@ -5362,7 +5374,7 @@ ENDMACRO
 \ Arguments:
 \
 \   A                   The text row
-\                       
+\
 \ ******************************************************************************
 
 .SETYC
@@ -6292,7 +6304,7 @@ protlen = end65C02-do65C02
 
  AND #4                 \ Set A = 4 if we have an escape pod fitted, or 0 if we
                         \ don't
- 
+
  EOR #&34               \ Set A = &30 if we have an escape pod fitted, or &34 if
                         \ we don't
 
@@ -6406,7 +6418,7 @@ protlen = end65C02-do65C02
 \ Arguments:
 \
 \   A                   The offset within the TVT3 table of palettes:
-\                     
+\
 \                         * 0 = Yellow, red, cyan palette (space view)
 \
 \                         * 16 = Yellow, red, white palette (charts)
