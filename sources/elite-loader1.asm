@@ -235,8 +235,8 @@ ENDMACRO
  JSR OSBYTE             \ (OSBYTE 0 is the correct way), but this call returns
                         \ the following:
                         \
-                        \  * X = Y = 0 if this is a BBC Micro with MOS 0.1
-                        \  * X = Y = &FF if this is BBC Micro with MOS 1.20
+                        \   * X = Y = 0   if this is a BBC Micro with MOS 0.1
+                        \   * X = Y = &FF if this is a BBC Micro with MOS 1.20
 
  TXA                    \ If X is non-zero then jump to not0, as this is not MOS
  BNE not0               \ 0.1

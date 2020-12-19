@@ -229,7 +229,7 @@ ENDMACRO
 \ There are five files, all containing images, which are all moved into screen
 \ memory by the loader:
 \
-\   * Z.ASOFT.bin contains the "ACORNSOFT" title across the top of the loading
+\   * Z.ACSOFT.bin contains the "ACORNSOFT" title across the top of the loading
 \     screen, which gets moved to screen address &4200, on the second character
 \     row of the mode 1 part of the screen (the top part)
 \
@@ -237,12 +237,12 @@ ENDMACRO
 \     screen, which gets moved to screen address &4600, on the fourth character
 \     row of the mode 1 part of the screen (the top part)
 \
-\   * Z.CpASOFT.bin contains the "(C) Acornsoft 1984" title across the bottom
+\   * Z.(C)ASFT.bin contains the "(C) Acornsoft 1984" title across the bottom
 \     of the loading screen, which gets moved to screen address &6C00, the
 \     penultimate character row of the top part of the screen, just above the
 \     dashboard
 \
-\   * Z.DIALS.bin contains the dashboard, which gets moved to screen address
+\   * P.DIALS2P.bin contains the dashboard, which gets moved to screen address
 \     &7000, which is the starting point of the eight-colour mode 2 portion at
 \     the bottom of the split screen
 \
