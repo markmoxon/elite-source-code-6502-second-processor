@@ -13,15 +13,22 @@
 \
 \ The terminology and notations used in this commentary are explained at
 \ https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html
+
+\ ******************************************************************************
+\
+\ The following routines from the S.PCODES BBC BASIC source file are implemented
+\ in the elite-checksum.py script. This file is purely for reference and is
+\ not used in the build process.
 \
 \ ******************************************************************************
 
-\ The following routines from the S.PCODES BBC BASIC source file are implemented
-\ in the elite-checksum.py script - this file is purely for reference and is
-\ not used in the build process
-
 \ ******************************************************************************
-\ ZP: This sets the checksum byte at S%-1
+\
+\       Name: ZP
+\       Type: Subroutine
+\   Category: Copy protection
+\    Summary: Sets the checksum byte at S%-1
+\
 \ ******************************************************************************
 
 .ZP
@@ -58,7 +65,12 @@
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
-\ SC: This EORs bytes between &1300 and &9FFF
+\
+\       Name: SC
+\       Type: Subroutine
+\   Category: Copy protection
+\    Summary: EORs bytes between &1300 and &9FFF
+\
 \ ******************************************************************************
 
 .SC
@@ -86,7 +98,12 @@
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
-\ V: This reverses the order of bytes between G% and F%-1
+\
+\       Name: V
+\       Type: Subroutine
+\   Category: Copy protection
+\    Summary: Reverses the order of bytes between G% and F%-1
+\
 \ ******************************************************************************
 
 .V
@@ -131,3 +148,4 @@
  BCS whiz
 
  RTS                    \ Return from the subroutine
+

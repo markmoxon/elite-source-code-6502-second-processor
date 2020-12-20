@@ -2641,16 +2641,19 @@ ORG &0800
 
  SKIP 1                 \ The current mission status:
                         \
-                        \   * 0 = no missions started
+                        \   * Bits 0-1 = Mission 1 status
                         \
-                        \   * Bit 0 set = mission 1 in progress
-                        \   * Bit 1 set = mission 1 completed
+                        \     * %00 = Mission not started
+                        \     * %01 = Mission in progress, hunting for ship
+                        \     * %11 = Constrictor killed, not debriefed yet
+                        \     * %10 = Mission and debrief complete
                         \
-                        \   * Bit 2 set = mission 2 in progress
-                        \   * Bit 3 set = mission 2 completed
+                        \   * Bits 2-3 = Mission 2 status
                         \
-                        \ Bit 7 must not be set, as otherwise commander files
-                        \ saved with this value will give an error when loaded
+                        \     * %00 = Mission not started
+                        \     * %01 = Mission in progress, plans not picked up
+                        \     * %10 = Mission in progress, plans picked up
+                        \     * %11 = Mission complete
 
 .QQ0
 
@@ -3701,7 +3704,12 @@ ENDIF
  NOP
 
 \ ******************************************************************************
+\
 \       Name: DEEOR
+\       Type: Subroutine
+\   Category: Copy protection
+\    Summary: 
+\
 \ ******************************************************************************
 
 .DEEOR
@@ -3716,12 +3724,18 @@ ENDIF
  TYA
  EOR (SC),Y
  EOR #&75
+
 IF _REMOVE_CHECKSUMS
+
  NOP
  NOP
+
 ELSE
+
  STA (SC),Y
+
 ENDIF
+
  DEY
  BNE DEEL
  INX
@@ -3730,84 +3744,152 @@ ENDIF
  JMP BRKBK
 
 \ ******************************************************************************
+\
 \       Name: DOENTRY
+\       Type: Subroutine
+\   Category: Flight
+\    Summary: Dock at the space station, show the ship hanger and work out any
+\             mission progression
+\
 \ ******************************************************************************
 
 .DOENTRY
 
- \after dock
- JSR RES2
- JSR LAUN
- STZ DELTA
- STZ QQ22+1 \<<
- STZ GNTMP
-\++
- LDA #&FF
+ JSR RES2               \ Reset a number of flight variables and workspaces
+
+ JSR LAUN               \ Show the space station docking tunnel
+
+ STZ DELTA              \ Reduce the speed to 0
+
+ STZ QQ22+1             \ Reset the on-screen hyperspace counter
+
+ STZ GNTMP              \ Cool down the lasers completely
+
+ LDA #&FF               \ Recharge the forward and aft shields
  STA FSH
  STA ASH
- STA ENERGY
- JSR HALL
- LDY #44
+
+ STA ENERGY             \ Recharge the energy banks
+
+ JSR HALL               \ Show the ship hanger
+
+ LDY #44                \ Wait for 44/50 of a second (0.88 seconds)
  JSR DELAY
 
- LDA TP                 \ Fetch bits 0 and 1 of TP, and is they are non-zero
+ LDA TP                 \ Fetch bits 0 and 1 of TP, and if they are non-zero
  AND #%00000011         \ (i.e. mission 1 is either in progress or has been
  BNE EN1                \ completed), skip to EN1
 
- LDA TALLY+1
- BEQ EN4
- LDA GCNT
- LSR A
- BNE EN4
- JMP BRIEF
+ LDA TALLY+1            \ If the high byte of TALLY is zero (so we have a combat
+ BEQ EN4                \ rank below Competent), jump to EN4 as we are not yet
+                        \ good enough to qualify for a mission
+
+ LDA GCNT               \ Fetch the galaxy number into A, and if any of bits 1-7
+ LSR A                  \ are set (i.e. A > 1), jump to EN4 as mission 1 can
+ BNE EN4                \ only be triggered in the first two galaxies
+
+ JMP BRIEF              \ If we get here, mission 1 hasn't started, we have
+                        \ reached a combat rank of Competent, and we are in
+                        \ galaxy 0 or 1 (shown in-game as galaxy 1 or 2), so
+                        \ it's time to start mission 1 by calling BRIEF
 
 .EN1
 
- CMP #3
+                        \ If we get here then mission 1 is either in progress or
+                        \ has been completed
+
+ CMP #%00000011         \ If bits 0 and 1 are not both set, then jump to EN2
  BNE EN2
- JMP DEBRIEF
+
+ JMP DEBRIEF            \ Bits 0 and 1 are both set, so mission 1 is both in
+                        \ progress and has been completed, which means we have
+                        \ only just completed it, so jump to DEBRIEF to end the
+                        \ mission get our reward
 
 .EN2
 
- LDA GCNT
- CMP #2
- BNE EN4
- LDA TP
- AND #&F
- CMP #2
- BNE EN3
- LDA TALLY+1
- CMP #5
- BCC EN4
- JMP BRIEF2
+                        \ Mission 1 has been completed, so now to check for
+                        \ mission 2
+
+ LDA GCNT               \ Fetch the galaxy number into A
+
+ CMP #2                 \ If this is not galaxy 2 (shown in-game as galaxy 3),
+ BNE EN4                \ jump to EN4 as we can only start mission 2 in the
+                        \ third galaxy
+
+ LDA TP                 \ Extract bits 0-3 of TP into A
+ AND #%00001111
+
+ CMP #%00000010         \ If mission 1 is complete and no longer in progress,
+ BNE EN3                \ and mission 2 is not yet started, then bits 0-3 of TP
+                        \ will be %0010, so this jumps to EN3 if this is not the
+                        \ case
+
+ LDA TALLY+1            \ If the high byte of TALLY is < 5 (so we have a combat
+ CMP #5                 \ rank that is less than 3/8 of the way from Dangerous
+ BCC EN4                \ to Deadly), jump to EN4 as our rank isn't high enough
+                        \ for mission 2
+
+ JMP BRIEF2             \ If we get here, mission 1 is complete and no longer in
+                        \ progress, mission 2 hasn't started, we have reached a
+                        \ combat rank of 3/8 of the way from Dangerous to
+                        \ Deadly, and we are in galaxy 2 (shown in-game as
+                        \ galaxy 3), so it's time to start mission 2 by calling
+                        \ BRIEF2
 
 .EN3
 
- CMP #6
- BNE EN5
- LDA QQ0
- CMP #215
+ CMP #%00000110         \ If mission 1 is complete and no longer in progress,
+ BNE EN5                \ and mission 2 has started but we have not yet been
+                        \ briefed and picked up the plans, then bits 0-3 of TP
+                        \ will be %0110, so this jumps to EN5 if this is not the
+                        \ case
+
+ LDA QQ0                \ Set A = the current system's galactic x-coordinate
+
+ CMP #215               \ If A <> 215 then jump to EN4
  BNE EN4
- LDA QQ1
- CMP #84
+
+ LDA QQ1                \ Set A = the current system's galactic y-coordinate
+
+ CMP #84                \ If A <> 84 then jump to EN4
  BNE EN4
- JMP BRIEF3
+
+ JMP BRIEF3             \ If we get here, mission 1 is complete and no longer in
+                        \ progress, mission 2 has started but we have not yet
+                        \ picked up the plans, and we have just arrived at
+                        \ Ceerdi at galactic coordinates (215, 84), so we jump
+                        \ to BRIEF3 to get a mission brief and pick up the plans
+                        \ that we need to carry to Birera
 
 .EN5
 
- CMP #10
+ CMP #%00001010         \ If mission 1 is complete and no longer in progress,
+ BNE EN4                \ and mission 2 has started and we have picked up the
+                        \ plans, then bits 0-3 of TP will be %1010, so this
+                        \ jumps to EN5 if this is not the case
+
+ LDA QQ0                \ Set A = the current system's galactic x-coordinate
+
+ CMP #63                \ If A <> 63 then jump to EN4
  BNE EN4
- LDA QQ0
- CMP #63
- BNE EN4
- LDA QQ1
+
+ LDA QQ1                \ Set A = the current system's galactic y-coordinate
+
  CMP #72
- BNE EN4
- JMP DEBRIEF2
+ BNE EN4                \ If A <> 72 then jump to EN4
+
+ JMP DEBRIEF2           \ If we get here, mission 1 is complete and no longer in
+                        \ progress, mission 2 has started and we have picked up
+                        \ the plans, and we have just arrived at Birera at
+                        \ galactic coordinates (63, 72), so we jump to DEBRIEF2
+                        \ to end the mission and get our reward
 
 .EN4
 
- JMP BAY
+ JMP BAY                \ If we get here them we didn't start or any missions,
+                        \ so jump to BAY to go to the docking bay (i.e. show the
+                        \ Status Mode screen)
 
 \ ******************************************************************************
 \
@@ -6864,8 +6946,12 @@ NEXT
  EQUB %10001000
 
 \ ******************************************************************************
+\
 \       Name: LL30
-\ by sending an OSWRCH 129 command to the I/O processor
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a line by sending an OSWRCH 129 command to the I/O processor
+\
 \ ******************************************************************************
 
 .LL30
@@ -6884,8 +6970,12 @@ NEXT
  JMP OSWRCH
 
 \ ******************************************************************************
+\
 \       Name: LOIN
-\ by sending an OSWRCH 129 command to the I/O processor
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a line by sending an OSWRCH 129 command to the I/O processor
+\
 \ ******************************************************************************
 
 .LOIN
@@ -6935,7 +7025,12 @@ NEXT
  RTS
 
 \ ******************************************************************************
+\
 \       Name: LBUF
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: 
+\
 \ ******************************************************************************
 
 .LBUF
@@ -7114,8 +7209,13 @@ ENDIF
                         \ Fall through into HLOIN to draw a horizontal line from
                         \ (X1, Y) to (X2, Y)
 
-\ ******************************************************************************
+\ \ ******************************************************************************
+\
 \       Name: HLOIN
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: 
+\
 \ ******************************************************************************
 
 .HLOIN
@@ -7137,8 +7237,13 @@ ENDIF
  RTS
 
 \ ******************************************************************************
+\
 \       Name: HBFL
-\ by sending an OSWORD 247 command to the I/O processor
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a horizontal line by sending an OSWORD 247 command to the I/O
+\             processor
+\
 \ ******************************************************************************
 
 .HBFL
@@ -7168,7 +7273,12 @@ ENDIF
  RTS
 
 \ ******************************************************************************
+\
 \       Name: HBUF
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: 
+\
 \ ******************************************************************************
 
 .HBUF
@@ -7347,7 +7457,12 @@ ENDIF
                         \ screen coordinates in (X, A)
 
 \ ******************************************************************************
+\
 \       Name: PIXEL
+\       Type: Subroutine
+\   Category: Drawing pixels
+\    Summary: 
+\
 \ ******************************************************************************
 
 .PIXEL
@@ -7372,8 +7487,12 @@ ENDIF
  RTS
 
 \ ******************************************************************************
+\
 \       Name: PBFL
-\ by sending an OSWORD 241 command to the I/O processor
+\       Type: Subroutine
+\   Category: Drawing pixels
+\    Summary: Draw a pixel by sending an OSWORD 241 command to the I/O processor
+\
 \ ******************************************************************************
 
 .PBFL
@@ -7411,7 +7530,12 @@ ENDIF
  RTS
 
 \ ******************************************************************************
+\
 \       Name: PIXEL3
+\       Type: Subroutine
+\   Category: Drawing pixels
+\    Summary: 
+\
 \ ******************************************************************************
 
 .PIXEL3
@@ -10705,7 +10829,12 @@ CODE_C% = P%
 LOAD_C% = LOAD% +P% - CODE%
 
 \ ******************************************************************************
+\
 \       Name: HATB
+\       Type: Variable
+\   Category: Ship hanger
+\    Summary: 
+\
 \ ******************************************************************************
 
 \ Ship,X,Z(low bit = sgn X)
@@ -10750,8 +10879,13 @@ LOAD_C% = LOAD% +P% - CODE%
  EQUB 0
 
 \ ******************************************************************************
+\
 \       Name: HALL
-\ by sending an OSWORD 248 command to the I/O processor
+\       Type: Subroutine
+\   Category: Ship hanger
+\    Summary: Draw the ship hanger by sending an OSWORD 248 command to the I/O
+\             processor
+\
 \ ******************************************************************************
 
 .HALL
@@ -10818,7 +10952,12 @@ LOAD_C% = LOAD% +P% - CODE%
  JMP OSWORD
 
 \ ******************************************************************************
+\
 \       Name: HANG
+\       Type: Variable
+\   Category: Ship hanger
+\    Summary: 
+\
 \ ******************************************************************************
 
 .HANG
@@ -10828,7 +10967,12 @@ LOAD_C% = LOAD% +P% - CODE%
  EQUB 0
 
 \ ******************************************************************************
+\
 \       Name: HAS1
+\       Type: Subroutine
+\   Category: Ship hanger
+\    Summary: 
+\
 \ ******************************************************************************
 
 .HAS1
@@ -11877,7 +12021,12 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ the direction of XX15
 
 \ ******************************************************************************
+\
 \       Name: DOCKIT
+\       Type: Subroutine
+\   Category: Flight
+\    Summary: 
+\
 \ ******************************************************************************
 
 .DOCKIT
@@ -12261,7 +12410,12 @@ LOAD_C% = LOAD% +P% - CODE%
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: DCS1
+\       Type: Subroutine
+\   Category: Flight
+\    Summary: 
+\
 \ ******************************************************************************
 
 .DCS1
@@ -15503,11 +15657,11 @@ LOAD_C% = LOAD% +P% - CODE%
 \ string by Ian Bell on his website (where he also refers to the species string
 \ as the "pink felines" string).
 \
-\ For some special systems the procedurally generated extended description is
-\ overridden and a text token from the RUTOK table is shown instead. If mission
-\ 1 is in progress, then a number of systems along the route of that mission's
-\ story will show custom mission-related directives in place of that system's
-\ normal "goat soup" phrase.
+\ For some special systems, when you are docked at them, the procedurally
+\ generated extended description is overridden and a text token from the RUTOK
+\ table is shown instead. If mission 1 is in progress, then a number of systems
+\ along the route of that mission's story will show custom mission-related
+\ directives in place of that system's normal "goat soup" phrase.
 \
 \ Arguments:
 \
@@ -15532,11 +15686,14 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ system
 
  LDY #NRU%              \ Set Y as a loop counter as we work our way through the
-                        \ system numbers in RUPLA, starting at NRU%
+                        \ system numbers in RUPLA, starting at NRU% (which is
+                        \ the number of entries in RUPLA, 26) and working our
+                        \ way down to 1
 
 .PDL1
 
- LDA RUPLA-1,Y          \ Fetch the Y-th byte from RUPLA-1 into A
+ LDA RUPLA-1,Y          \ Fetch the Y-th byte from RUPLA-1 into A (we use
+                        \ RUPLA-1 because Y is looping from 26 to 1
 
  CMP ZZ                 \ If A doesn't match the system whose description we
  BNE PD2                \ are printing (in ZZ), junp to PD2 to keep looping
@@ -15631,58 +15788,105 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: BRIEF2
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: Start mission 2
+\
 \ ******************************************************************************
 
 .BRIEF2
 
  LDA TP                 \ Set bit 2 of TP to indicate mission 2 is in progress
- ORA #%00000100
+ ORA #%00000100         \ but plans have not yet been picked up
  STA TP
 
- LDA #11
+ LDA #11                \ Set A = 11 so the call to BRP prints extended token 11
+                        \ (the initial contact at the start of mission 2, asking
+                        \ us to head for Ceerdi for a mission briefing)
+
+                        \ Fall through into BRP to print the extended token in A
+                        \ and show the Status Mode screen
 
 \ ******************************************************************************
+\
 \       Name: BRP
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: Print an extended token and show the Status Mode screen
+\
 \ ******************************************************************************
 
 .BRP
 
- JSR DETOK
- JMP BAY
+ JSR DETOK              \ Print the extended token in A
+
+ JMP BAY                \ Jump to BAY to go to the docking bay (i.e. show the
+                        \ Status Mode screen) and return from the subroutine
+                        \ using a tail call
 
 \ ******************************************************************************
+\
 \       Name: BRIEF3
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: Receive the briefing and plans for mission 2
+\
 \ ******************************************************************************
 
 .BRIEF3
 
- LDA TP                 \ Set bits 1 and 3 of TP to indicate that both missions
- AND #%11110000         \ are now complete, and clear bits 0 and 2 to indicate
- ORA #%00001010         \ that neither of them are in progress
+ LDA TP                 \ Set bits 1 and 3 of TP to indicate that mission 1 is
+ AND #%11110000         \ complete, and mission 2 is in progress and the plans
+ ORA #%00001010         \ have been picked up
  STA TP
 
- LDA #222
- BNE BRP
+ LDA #222               \ Set A = 222 so the call to BRP prints extended token
+                        \ 222 (the briefing for mission 2 where we pick up the
+                        \ plans we need to take to Birera)
+
+ BNE BRP                \ Jump to BRP to print the extended token in A and show
+                        \ the Status Mode screen), returning from the subroutine
+                        \ using a tail call (this BNE is effectively a JMP as A
+                        \ is never zero)
 
 \ ******************************************************************************
+\
 \       Name: DEBRIEF2
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: Finish mission 2
+\
 \ ******************************************************************************
 
 .DEBRIEF2
 
- LDA TP                 \ Set bit 2 of TP to indicate mission 2 is in progress
- ORA #%00000100
+ LDA TP                 \ Set bit 2 of TP to indicate mission 2 is complete (so
+ ORA #%00000100         \ both bits 2 and 3 are now set)
  STA TP
 
- LDA #2
- STA ENGY
- INC TALLY+1
- LDA #223
- BNE BRP
+ LDA #2                 \ Set ENGY to 2 so our energy banks recharge at twice
+ STA ENGY               \ the speed, as our mission reward is a special navy
+                        \ energy unit
+
+ INC TALLY+1            \ Award 256 kill points for completing the mission
+
+ LDA #223               \ Set A = 223 so the call to BRP prints extended token
+                        \ 223 (the thank you message at the end of mission 2)
+
+ BNE BRP                \ Jump to BRP to print the extended token in A and show
+                        \ the Status Mode screen), returning from the subroutine
+                        \ using a tail call (this BNE is effectively a JMP as A
+                        \ is never zero)
 
 \ ******************************************************************************
+\
 \       Name: DEBRIEF
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: Finish mission 1
+\
 \ ******************************************************************************
 
 .DEBRIEF
@@ -15690,20 +15894,33 @@ LOAD_C% = LOAD% +P% - CODE%
  LSR TP                 \ Clear bit 0 of TP to indicate that mission 1 is no
  ASL TP                 \ longer in progress, as we have completed it
 
- INC TALLY+1            \ Award a single kill for the Constrictor
+ INC TALLY+1            \ Award 256 kill points for completing the mission
 
- LDX #LO(50000)
- LDY #HI(50000)
+ LDX #LO(50000)         \ Increase our cash reserves by the generous mission
+ LDY #HI(50000)         \ reward of 50,000 CR
  JSR MCASH
 
- LDA #15
+ LDA #15                \ Set A = 15 so the call to BRP prints extended token 15
+                        \ (the thank you message at the end of mission 1)
 
 .BRPS
 
- BNE BRP
+ BNE BRP                \ Jump to BRP to print the extended token in A and show
+                        \ the Status Mode screen), returning from the subroutine
+                        \ using a tail call (this BNE is effectively a JMP as A
+                        \ is never zero)
 
 \ ******************************************************************************
+\
 \       Name: BRIEF
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: Start mission 1
+\
+\ ------------------------------------------------------------------------------
+\
+\
+\
 \ ******************************************************************************
 
 .BRIEF
@@ -15767,7 +15984,12 @@ LOAD_C% = LOAD% +P% - CODE%
  JMP DELAY
 
 \ ******************************************************************************
+\
 \       Name: PAUSE
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: 
+\
 \ ******************************************************************************
 
 .PAUSE
@@ -15837,7 +16059,12 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ returning from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: PAS1
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: 
+\
 \ ******************************************************************************
 
 .PAS1
@@ -15862,7 +16089,12 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ returning from the subroutine using a tail call
 
 \ ******************************************************************************
+\
 \       Name: PAUSE2
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: 
+\
 \ ******************************************************************************
 
 .PAUSE2
@@ -27793,8 +28025,9 @@ LOAD_F% = LOAD% + P% - CODE%
  AND #%00001100         \ mission 2
 
  CMP #%00001000         \ If bit 3 is set and bit 2 is clear, keep going to
- BNE nopl               \ spawn a Thargoid as we are in mission 2, otherwise
-                        \ jump to nopl to skip spawning a Thargoid
+ BNE nopl               \ spawn a Thargoid as we are transporting the plans in
+                        \ mission 2 and the Thargoids are trying to stop us,
+                        \ otherwise jump to nopl to skip spawning a Thargoid
 
  JSR DORND              \ Set A and X to random numbers
 
@@ -33278,7 +33511,12 @@ ELSE
 ENDIF
 
 \ ******************************************************************************
+\
 \       Name: log
+\       Type: Variable
+\   Category: Maths (Arithmetic)
+\    Summary: 
+\
 \ ******************************************************************************
 
 .log
@@ -33294,7 +33532,12 @@ ELSE
 ENDIF
 
 \ ******************************************************************************
+\
 \       Name: logL
+\       Type: Variable
+\   Category: Maths (Arithmetic)
+\    Summary: 
+\
 \ ******************************************************************************
 
 .logL
@@ -33310,7 +33553,12 @@ ELSE
 ENDIF
 
 \ ******************************************************************************
+\
 \       Name: antilog
+\       Type: Variable
+\   Category: Maths (Arithmetic)
+\    Summary: 
+\
 \ ******************************************************************************
 
 .antilog
@@ -33329,7 +33577,12 @@ ELSE
 ENDIF
 
 \ ******************************************************************************
+\
 \       Name: antilogODD
+\       Type: Variable
+\   Category: Maths (Arithmetic)
+\    Summary: 
+\
 \ ******************************************************************************
 
 .antilogODD
@@ -38480,7 +38733,12 @@ LOAD_H% = LOAD% + P% - CODE%
                         \ routine at MV45 to apply all the other movements
 
 \ ******************************************************************************
-\       Name: Checksum
+\
+\       Name: 
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: 
+\
 \ ******************************************************************************
 
 .Checksum
@@ -39374,7 +39632,12 @@ CODE_I% = P%
 LOAD_I% = LOAD% + P% - CODE%
 
 \ ******************************************************************************
+\
 \       Name: HIMCNT
+\       Type: Variable
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .HIMCNT
@@ -39433,7 +39696,12 @@ LOAD_I% = LOAD% + P% - CODE%
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: TWIST
+\       Type: Subroutine
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .TWIST2
@@ -39490,7 +39758,12 @@ LOAD_I% = LOAD% + P% - CODE%
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: DEMON
+\       Type: Subroutine
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .DEMON
@@ -39720,7 +39993,12 @@ LOAD_I% = LOAD% + P% - CODE%
  JMP DEATH2 \More Demo stuff here
 
 \ ******************************************************************************
+\
 \       Name: SLIDE
+\       Type: Subroutine
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .SLIDE
@@ -39940,7 +40218,12 @@ LOAD_I% = LOAD% + P% - CODE%
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
+\
 \       Name: GRIDSET
+\       Type: Subroutine
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .GRIDSET
@@ -40032,7 +40315,12 @@ LOAD_I% = LOAD% + P% - CODE%
  RTS
 
 \ ******************************************************************************
+\
 \       Name: ZZAAP
+\       Type: Subroutine
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .ZZAAP
@@ -40049,7 +40337,12 @@ LOAD_I% = LOAD% + P% - CODE%
  JMP LL30
 
 \ ******************************************************************************
+\
 \       Name: LTDEF
+\       Type: Variable
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .LTDEF
@@ -40103,7 +40396,12 @@ LOAD_I% = LOAD% + P% - CODE%
  EQUB &02, &26, &68, &00, &00
 
 \ ******************************************************************************
+\
 \       Name: NOFX
+\       Type: Variable
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .NOFX
@@ -40122,7 +40420,12 @@ LOAD_I% = LOAD% + P% - CODE%
  EQUB 12
 
 \ ******************************************************************************
+\
 \       Name: NOFY
+\       Type: Variable
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .NOFY
@@ -40141,10 +40444,13 @@ LOAD_I% = LOAD% + P% - CODE%
  EQUB 2.5*WY
 
 \ ******************************************************************************
+\
 \       Name: acorn
+\       Type: Variable
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
-
-\           \......+......./\......+......./\......+......./\......+......"
 
 .acorn
 
@@ -40152,7 +40458,12 @@ LOAD_I% = LOAD% + P% - CODE%
  EQUB 0
 
 \ ******************************************************************************
+\
 \       Name: byian
+\       Type: Variable
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .byian
@@ -40161,7 +40472,12 @@ LOAD_I% = LOAD% + P% - CODE%
  EQUB 0
 
 \ ******************************************************************************
+\
 \       Name: true3
+\       Type: Variable
+\   Category: Demo
+\    Summary: 
+\
 \ ******************************************************************************
 
 .true3
@@ -42850,42 +43166,42 @@ ENDMACRO
  ETWO 'L', 'A'          \                 {single cap}YOU'RE ELECTED.{cr}
  ECHR 'K'               \                 {single cap}THE PLANS ARE UNIPULSE
  ECHR 'E'               \                CODED WITHIN THIS TRANSMISSION.{cr}
- ECHR ' '               \                 {single cap}{tab 6}YOU WILL BE PAID.{cr}
- ECHR 'O'               \                 {single cap}    {single cap}GOOD LUCK
- ECHR 'F'               \                {single cap}COMMANDER.{cr}
- ECHR ' '               \                {left align}
- EJMP 19                \                {tab 6}{all caps}  MESSAGE ENDS
- ECHR 'N'               \                {wait for key press}"
- ECHR 'A'               \
- ECHR 'V'               \ Encoded as:   "{25}{9}{30}{29}{14}{2}GOOD DAY [154]
- ECHR 'A'               \                 {4}[204]I{13} AM {19}AG<246>T {19}B
- ECHR 'L'               \                <249>KE OF {19}NAVAL {19}<240>TEL<229>
- ECHR ' '               \                G<246><233>[204]AS [179] K<227>W, [147]
- EJMP 19                \                {19}NAVY HA<250> <247><246> KEEP[195]
- ETWO 'I', 'N'          \                [147]{19}<226><238>GOIDS OFF [179]R ASS
- ECHR 'T'               \                 <217>T <240> DEEP SPA<233> F<253>
- ECHR 'E'               \                 <239>NY YE<238>S <227>W. {19}WELL
- ECHR 'L'               \                 [147]S<219>UA<251><223> HAS CH<255>G
- ETWO 'L', 'E'          \                <252>[204]<217>R BOYS <238>E <242>ADY F
- ECHR 'G'               \                <253>[208]PUSH RIGHT[201][147]HOME
- ETWO 'E', 'N'          \                 SYSTEM OF <226>O<218> MO<226><244>S
- ETWO 'C', 'E'          \                [204]{24}{9}{30}{29}I{13} HA<250> OBTA
- ETOK 204               \                <240>[196][147]DEF<246><233> P<249>NS F
- ECHR 'A'               \                <253> <226>EIR {19}HI<250> {19}W<253>LD
- ECHR 'S'               \                S[204][147]<247><221><229>S K<227>W WE
- ECHR ' '               \                [39]<250> GOT <235>ME<226>[195]BUT
- ETOK 179               \                 <227>T WH<245>[204]IF {19}I T<248>NSM
- ECHR ' '               \                <219> [147]P<249>NS[201]<217>R BA<218>
- ECHR 'K'               \                 <223> {19}<234><242><248> <226>EY[39]L
- ETWO 'N', 'O'          \                L <240>T<244><233>PT [147]TR<255>SMISSI
- ECHR 'W'               \                <223>. {19}I NE<252>[208][207][201]
- ECHR ','               \                <239>KE [147]RUN[204][179][39]<242> E
- ECHR ' '               \                <229>CT<252>[204][147]P<249>NS A<242>
- ETOK 147               \                 UNIPUL<218> COD[196]WI<226><240> [148]
- EJMP 19                \                TR<255>SMISSI<223>[204]{8}[179] W<220>L
- ECHR 'N'               \                 <247> PAID[204]    {19}GOOD LUCK [154]
- ECHR 'A'               \                [212]{24}"
- ECHR 'V'
+ ECHR ' '               \                 {single cap}{tab 6}YOU WILL BE
+ ECHR 'O'               \                PAID.{cr}
+ ECHR 'F'               \                 {single cap}    {single cap}GOOD LUCK
+ ECHR ' '               \                {single cap}COMMANDER.{cr}
+ EJMP 19                \                {left align}
+ ECHR 'N'               \                {tab 6}{all caps}  MESSAGE ENDS
+ ECHR 'A'               \                {wait for key press}"
+ ECHR 'V'               \
+ ECHR 'A'               \ Encoded as:   "{25}{9}{30}{29}{14}{2}GOOD DAY [154]
+ ECHR 'L'               \                 {4}[204]I{13} AM {19}AG<246>T {19}B
+ ECHR ' '               \                <249>KE OF {19}NAVAL {19}<240>TEL<229>
+ EJMP 19                \                G<246><233>[204]AS [179] K<227>W, [147]
+ ETWO 'I', 'N'          \                {19}NAVY HA<250> <247><246> KEEP[195]
+ ECHR 'T'               \                [147]{19}<226><238>GOIDS OFF [179]R ASS
+ ECHR 'E'               \                 <217>T <240> DEEP SPA<233> F<253>
+ ECHR 'L'               \                 <239>NY YE<238>S <227>W. {19}WELL
+ ETWO 'L', 'E'          \                 [147]S<219>UA<251><223> HAS CH<255>G
+ ECHR 'G'               \                <252>[204]<217>R BOYS <238>E <242>ADY F
+ ETWO 'E', 'N'          \                <253>[208]PUSH RIGHT[201][147]HOME
+ ETWO 'C', 'E'          \                 SYSTEM OF <226>O<218> MO<226><244>S
+ ETOK 204               \                [204]{24}{9}{30}{29}I{13} HA<250> OBTA
+ ECHR 'A'               \                <240>[196][147]DEF<246><233> P<249>NS F
+ ECHR 'S'               \                <253> <226>EIR {19}HI<250> {19}W<253>LD
+ ECHR ' '               \                S[204][147]<247><221><229>S K<227>W WE
+ ETOK 179               \                [39]<250> GOT <235>ME<226>[195]BUT
+ ECHR ' '               \                 <227>T WH<245>[204]IF {19}I T<248>NSM
+ ECHR 'K'               \                <219> [147]P<249>NS[201]<217>R BA<218>
+ ETWO 'N', 'O'          \                 <223> {19}<234><242><248> <226>EY[39]L
+ ECHR 'W'               \                L <240>T<244><233>PT [147]TR<255>SMISSI
+ ECHR ','               \                <223>. {19}I NE<252>[208][207][201]
+ ECHR ' '               \                <239>KE [147]RUN[204][179][39]<242> E
+ ETOK 147               \                <229>CT<252>[204][147]P<249>NS A<242>
+ EJMP 19                \                 UNIPUL<218> COD[196]WI<226><240> [148]
+ ECHR 'N'               \                TR<255>SMISSI<223>[204]{8}[179] W<220>L
+ ECHR 'A'               \                 <247> PAID[204]    {19}GOOD LUCK [154]
+ ECHR 'V'               \                [212]{24}"
  ECHR 'Y'
  ECHR ' '
  ECHR 'H'
@@ -43618,88 +43934,111 @@ ENDMACRO
 \
 \ ------------------------------------------------------------------------------
 \
-\ Contains system numbers that potentially have special tokens for their
-\ extended descriptions.
+\ This table contains the extended token numbers to show as the specified
+\ system's extended description, if the criteria in the RUGAL table are met.
+\
+\ The three variables work as follows:
+\
+\   * The RUPLA table contains the system numbers
+\
+\   * The RUGAL table contains the galaxy numbers and mission criteria
+\
+\   * The RUTOK table contains the extended token to display instead of the
+\     normal extended description if the criteria in RUPLA and RUGAL are met
+\
+\ See the PDESC routine for details of how extended system descriptions work.
 \
 \ ******************************************************************************
 
 .RUPLA
 
- EQUB 211
- EQUB 150
- EQUB 36
- EQUB 28
- EQUB 253
- EQUB 79
- EQUB 53
- EQUB 118
- EQUB 100
- EQUB 32
- EQUB 68
- EQUB 164
- EQUB 220
- EQUB 106
- EQUB 16
- EQUB 162
- EQUB 3
- EQUB 107
- EQUB 26
- EQUB 192
- EQUB 184
- EQUB 5
- EQUB 101
- EQUB 193
- EQUB 41
- EQUB 7
+ EQUB 211                \ System 211, Galaxy 0                Teorge = Token  1
+ EQUB 150                \ System 150, Galaxy 0, Mission 1       Xeer = Token  2
+ EQUB 36                 \ System  36, Galaxy 0, Mission 1   Reesdice = Token  3
+ EQUB 28                 \ System  28, Galaxy 0, Mission 1      Arexe = Token  4
+ EQUB 253                \ System 253, Galaxy 1, Mission 1     Errius = Token  5
+ EQUB 79                 \ System  79, Galaxy 1, Mission 1     Inbibe = Token  6
+ EQUB 53                 \ System  53, Galaxy 1, Mission 1      Ausar = Token  7
+ EQUB 118                \ System 118, Galaxy 1, Mission 1     Usleri = Token  8
+ EQUB 100                \ System 100, Galaxy 2                Arredi = Token  9
+ EQUB 32                 \ System  32, Galaxy 1, Mission 1     Bebege = Token 10
+ EQUB 68                 \ System  68, Galaxy 1, Mission 1     Cearso = Token 11
+ EQUB 164                \ System 164, Galaxy 1, Mission 1     Dicela = Token 12
+ EQUB 220                \ System 220, Galaxy 1, Mission 1     Eringe = Token 13
+ EQUB 106                \ System 106, Galaxy 1, Mission 1     Gexein = Token 14
+ EQUB 16                 \ System  16, Galaxy 1, Mission 1     Isarin = Token 15
+ EQUB 162                \ System 162, Galaxy 1, Mission 1   Letibema = Token 16
+ EQUB 3                  \ System   3, Galaxy 1, Mission 1     Maisso = Token 17
+ EQUB 107                \ System 107, Galaxy 1, Mission 1       Onen = Token 18
+ EQUB 26                 \ System  26, Galaxy 1, Mission 1     Ramaza = Token 19
+ EQUB 192                \ System 192, Galaxy 1, Mission 1     Sosole = Token 20
+ EQUB 184                \ System 184, Galaxy 1, Mission 1     Tivere = Token 21
+ EQUB 5                  \ System   5, Galaxy 1, Mission 1     Veriar = Token 22
+ EQUB 101                \ System 101, Galaxy 2, Mission 1     Xeveon = Token 23
+ EQUB 193                \ System 193, Galaxy 1, Mission 1     Orarra = Token 24
+ EQUB 41                 \ System  41, Galaxy 2                Anreer = Token 25
+ EQUB 7                  \ System   7, Galaxy 0                  Lave = Token 26
 
 \ ******************************************************************************
 \
 \       Name: RUGAL
 \       Type: Variable
 \   Category: Text
-\    Summary: The tokens to show for systems with special extended descriptions
+\    Summary: The criteria for systems with special extended descriptions
 \
 \ ------------------------------------------------------------------------------
 \
-\ Contains the conditions for printing a special extended description.
+\ This table contains the criteria for printing a special extended description
+\ for a system. The galaxy number is in bits 0-6, while bit 7 determines whether
+\ to show this token during mission 1 only (bit 7 is clear, i.e. a value of &0x
+\ in the table below), or all of the time (bit 7 is set, i.e. a value of &8x in
+\ the table below).
 \
-\ Bits 0-6 have to match the current galaxy, then the corresponding entry in the
-\ RUTOK table is shown
+\ In other words, Teorge, Arredi, Anreer and Lave have special extended
+\ descriptions that are always shown, while the rest only appear when mission 1
+\ is in progress.
 \
-\ &0x means only print second extended token if mission 1 is in progress
+\ The three variables work as follows:
 \
-\ &8x means print second extended token x anyway
+\   * The RUPLA table contains the system numbers
+\
+\   * The RUGAL table contains the galaxy numbers and mission criteria
+\
+\   * The RUTOK table contains the extended token to display instead of the
+\     normal extended description if the criteria in RUPLA and RUGAL are met
+\
+\ See the PDESC routine for details of how extended system descriptions work.
 \
 \ ******************************************************************************
 
 .RUGAL
 
- EQUB &80
- EQUB 0
- EQUB 0
- EQUB 0
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB &82
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 1
- EQUB 2
- EQUB 1
- EQUB &82
- EQUB &80
+ EQUB &80                \ System 211, Galaxy 0                Teorge = Token  1
+ EQUB &00                \ System 150, Galaxy 0, Mission 1       Xeer = Token  2
+ EQUB &00                \ System  36, Galaxy 0, Mission 1   Reesdice = Token  3
+ EQUB &00                \ System  28, Galaxy 0, Mission 1      Arexe = Token  4
+ EQUB &01                \ System 253, Galaxy 1, Mission 1     Errius = Token  5
+ EQUB &01                \ System  79, Galaxy 1, Mission 1     Inbibe = Token  6
+ EQUB &01                \ System  53, Galaxy 1, Mission 1      Ausar = Token  7
+ EQUB &01                \ System 118, Galaxy 1, Mission 1     Usleri = Token  8
+ EQUB &82                \ System 100, Galaxy 2                Arredi = Token  9
+ EQUB &01                \ System  32, Galaxy 1, Mission 1     Bebege = Token 10
+ EQUB &01                \ System  68, Galaxy 1, Mission 1     Cearso = Token 11
+ EQUB &01                \ System 164, Galaxy 1, Mission 1     Dicela = Token 12
+ EQUB &01                \ System 220, Galaxy 1, Mission 1     Eringe = Token 13
+ EQUB &01                \ System 106, Galaxy 1, Mission 1     Gexein = Token 14
+ EQUB &01                \ System  16, Galaxy 1, Mission 1     Isarin = Token 15
+ EQUB &01                \ System 162, Galaxy 1, Mission 1   Letibema = Token 16
+ EQUB &01                \ System   3, Galaxy 1, Mission 1     Maisso = Token 17
+ EQUB &01                \ System 107, Galaxy 1, Mission 1       Onen = Token 18
+ EQUB &01                \ System  26, Galaxy 1, Mission 1     Ramaza = Token 19
+ EQUB &01                \ System 192, Galaxy 1, Mission 1     Sosole = Token 20
+ EQUB &01                \ System 184, Galaxy 1, Mission 1     Tivere = Token 21
+ EQUB &01                \ System   5, Galaxy 1, Mission 1     Veriar = Token 22
+ EQUB &02                \ System 101, Galaxy 2, Mission 1     Xeveon = Token 23
+ EQUB &01                \ System 193, Galaxy 1, Mission 1     Orarra = Token 24
+ EQUB &82                \ System  41, Galaxy 2                Anreer = Token 25
+ EQUB &80                \ System   7, Galaxy 0                  Lave = Token 26
 
 \ ******************************************************************************
 \
@@ -43712,6 +44051,17 @@ ENDMACRO
 \
 \ Contains the tokens for special extended descriptions of systems that match
 \ the system number in RUPLA and the conditions in RUGAL.
+\
+\ The three variables work as follows:
+\
+\   * The RUPLA table contains the system numbers
+\
+\   * The RUGAL table contains the galaxy numbers and mission criteria
+\
+\   * The RUTOK table contains the extended token to display instead of the
+\     normal extended description if the criteria in RUPLA and RUGAL are met
+\
+\ See the PDESC routine for details of how extended system descriptions work.
 \
 \ ******************************************************************************
 
