@@ -3641,21 +3641,49 @@ ENDIF
 
  EQUB &03               \ The checksum value for the default commander, #75
 
- EQUD 0
+\ ******************************************************************************
+\
+\       Name: S%
+\       Type: Subroutine
+\   Category: Loader
+\    Summary: Checksum, decrypt and unscramble the main game code, and start the
+\             game
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine reverses the three copy protection mechanisms that the Big Code
+\ File puts in place: the checksum in Checksum, the encryption in DEEOR, and
+\ the code reversal in do65c02. In the BeebAsm version here, these three
+\ protections are applied by elite-checksum.py, and the original 6502 assembly
+\ language versions of the three encryption routines can be found in the
+\ elite-checksum.asm file.
+\
+\ It also adds in a bit of Tube-specific copy protection, by transmitting the
+\ do65c02 routine over the Tube before it is run. It's very crafty stuff!
+\
+\ ******************************************************************************
 
- RTS  \ checksum byte goes here, set by first call to ZP in BCFS
+ EQUD 0                 \ These bytes appear to be unused
+
+ RTS                    \ The checksum byte goes here, at S%-1. In the original
+                        \ source this byte is set by the first call to ZP in the
+                        \ Big Code File, though in the BeebAsm version this is
+                        \ populated by elite-checksum.py
 
 .S%
 
- CLD
- SEC
- LDA #LO(G%)
+ CLD                    \ Clear the D flag to make sure we are in binary mode
+
+ SEC                    \ Set the C flag
+
+ LDA #LO(G%)            \ Set (1 0) = SC(1 0) = G%
  STA 0
  STA SC
  LDA #HI(G%)
  STA 1
  STA SC+1
- LDA #LO(F%-1)
+ 
+ LDA #LO(F%-1)          \ Set (3 2) = F% - 1
  STA 2
  LDA #HI(F%-1)
  STA 3
@@ -3663,30 +3691,36 @@ ENDIF
  LDX #LO(prtblock)      \ Set (Y X) to point to the prtblock parameter block
  LDY #HI(prtblock)
 
- LDA #249               \ Send an OSWORD 249 command to the I/O processor
- JSR OSWORD
+ LDA #249               \ Send an OSWORD 249 command to the I/O processor, which
+ JSR OSWORD             \ copies the code of the do65c02 routine from the I/O
+                        \ processor to prtblock+2
 
- LDX #SC
- EQUB &AD  \&8D
+ LDX #SC                \ Set X = SC, and because SC is in zero page, this means
+                        \ that X contains the whole value of SC, so jumping to
+                        \ (X), for example, would jump to the address in SC(1 0)
+
+ EQUB &AD               \ This is the opcode for an LDA absolute instruction, so
+                        \ it converts the two OSWORD size bytes at prtblock into
+                        \ a harmless LDA &2702 instruction
 
 .prtblock
 
- EQUB 2
- EQUB &27
- JMP (SC,X)
- PHP
- PHY
- LDA #&34
- PHA
- LDX #0
- RTS
+ EQUB 2                 \ The number of bytes to transmit with this command
 
+ EQUB &27               \ The number of bytes to receive with this command
+
+ JMP (SC,X)             \ This block, between here and G%, is overwritten by the
+ PHP                    \ code of the do65c02 routine from the I/O processor, so
+ PHY                    \ this code is never run and is presumably just here to
+ LDA #&34               \ throw the crackers off the scent - it just needs to be
+ PHA                    \ at least as long as the do65c02 routine, which ends
+ LDX #0                 \ with a jump to G% below to start the game
+ RTS
  BRK
  EQUS "ELITE - By Ian Bell & David Braben"
  EQUB 10
  EQUB 13
  BRK
-
  LDA SC
  ADC 2
  CMP F%-1
@@ -3697,51 +3731,73 @@ ENDIF
 
 .G%
 
- JSR DEEOR
- JSR COLD
- JSR Checksum
- JMP BEGIN
- NOP
+ JSR DEEOR              \ Decrypt the main game code between &1300 and &9FFF
+
+ JSR COLD               \ Copy the recursive tokens and ship blueprints to their
+                        \ correct locations
+
+ JSR Checksum           \ Checksum the code from &1000 to &9FFF and check it
+                        \ against S%-1
+
+ JMP BEGIN              \ Jump to BEGIN to start the game
+
+ NOP                    \ This instruction is not used
 
 \ ******************************************************************************
 \
 \       Name: DEEOR
 \       Type: Subroutine
 \   Category: Copy protection
-\    Summary: 
+\    Summary: Decrypt bytes between &1300 and &9FFF by EOR'ing them with their
+\             page offset
+\
+\ ------------------------------------------------------------------------------
+\
+\ In the original source, the bytes between &1300 and &9FFF are EOR'd by the
+\ first call to SC in the Big Code File, though in the BeebAsm version they are
+\ EOR'd by elite-checksum.py.
+\
+\ The original 6502 assembly language version of the SC routine can be found in
+\ the elite-checksum.asm file.
 \
 \ ******************************************************************************
 
 .DEEOR
 
- LDY #0
+ LDY #0                 \ Set (X Y) = SC(1 0) = &1300
  STY SC
  LDX #&13
 
 .DEEL
 
- STX SC+1
- TYA
- EOR (SC),Y
- EOR #&75
+ STX SC+1               \ Set SC+1 = X, so now SC(1 0) = (X 0)
+
+ TYA                    \ Set A = contents of (SC(1 0) + Y) EOR Y EOR &75
+ EOR (SC),Y             \       = contents of ((X 0) + Y) EOR Y EOR &75
+ EOR #&75               \       = contents of (X Y) EOR Y EOR &75
 
 IF _REMOVE_CHECKSUMS
 
- NOP
- NOP
+ NOP                    \ If we have disabled checksums, then don't update (X Y)
+ NOP                    \ with the result, and just move on to the next byte
 
 ELSE
 
- STA (SC),Y
+ STA (SC),Y             \ Store the EOR'd value in SC(1 0) + Y, i.e. (X Y)
 
 ENDIF
 
- DEY
- BNE DEEL
- INX
- CPX #&A0
- BNE DEEL
- JMP BRKBK
+ DEY                    \ Decrement the loop counter to process the next byte
+
+ BNE DEEL               \ Loop back until we have done the whole page
+
+ INX                    \ Increment the page counter to point to the next page
+
+ CPX #&A0               \ Loop back to do the next page until X = &A0, when
+ BNE DEEL               \ (X Y) = &A000
+
+ JMP BRKBK              \ Jump to BRKBK to set the standard BRKV handler for the
+                        \ game and return from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -29375,8 +29431,8 @@ LOAD_F% = LOAD% + P% - CODE%
 
 IF _REMOVE_CHECKSUMS
 
- NOP                    \ If we have disabled the commander check, then ignore
- NOP                    \ the checksum and fall through into the next part
+ NOP                    \ If we have disabled checksums, then ignore the result
+ NOP                    \ of the comparison and fall through into the next part
 
 ELSE
 
@@ -38836,46 +38892,74 @@ LOAD_H% = LOAD% + P% - CODE%
 \       Name: Checksum
 \       Type: Subroutine
 \   Category: Copy protection
-\    Summary: 
+\    Summary: Checksum the code from &1000 to &9FFF and check against S%-1
+\
+\ ------------------------------------------------------------------------------
+\
+\ In the original source, the checksum byte at S%-1 is set by the first call to
+\ ZP in the Big Code File, though in the BeebAsm version this is populated by
+\ elite-checksum.py.
+\
+\ The original 6502 assembly language version of the ZP routine can be found in
+\ the elite-checksum.asm file.
 \
 \ ******************************************************************************
 
 .Checksum
 
- SEC
- LDY #0
- STY V
- LDX #&10
- LDA (SC)
- TXA
+ SEC                    \ Set the C flag, so it gets included in the checksum
+
+ LDY #0                 \ Set Y = 0, to act as a byte counter
+
+ STY V                  \ Set V = 0
+
+ LDX #&10               \ Set X = &10, so we start with (X Y) = &1000
+
+ LDA (SC)               \ This has no effect, as A is overwritten by the next
+                        \ instruction
+
+ TXA                    \ Set A = &10
 
 .CHKLoop
 
- STX V+1
- STY T
- ADC (V),Y
- EOR T
- SBC V+1
+ STX V+1                \ Set V(1 0) = (X 0)
 
- DEY
+ STY T                  \ Set T = Y
 
- BNE CHKLoop
+ ADC (V),Y              \ Set A = A + C + contents of (V(1 0) + Y)
+                        \       = A + C + contents of ((X 0) + Y)
+                        \       = A + C + contents of (X Y)
 
- INX
+ EOR T                  \ Set A = A EOR Y
 
- CPX #&A0
- BCC CHKLoop
+ SBC V+1                \ Set A = A - (1 - C) - X
 
- CMP S%-1
+ DEY                    \ Decrement the loop counter to process the next byte
+
+ BNE CHKLoop            \ Loop back until we have done the whole page
+
+ INX                    \ Increment the page counter to point to the next page
+
+ CPX #&A0               \ Loop back to do the next page until X = &A0, when
+ BCC CHKLoop            \ (X Y) = &A000
+
+ CMP S%-1               \ Compare the calculated checksum in A with the checksum
+                        \ stored in S%-1
 
 IF _REMOVE_CHECKSUMS
- NOP
- NOP
+
+ NOP                    \ If we have disabled checksums, then ignore the result
+ NOP                    \ of the comparison and return from the subroutine
+
 ELSE
- BNE Checksum
+
+ BNE Checksum           \ If the checksum we just calculated does not match
+                        \ the value in location S%-1, jump to Checksum to enter
+                        \ an infinite loop, which crashes the game
+
 ENDIF
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
