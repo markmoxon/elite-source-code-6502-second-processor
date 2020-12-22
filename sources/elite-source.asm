@@ -732,7 +732,8 @@ ORG &0000
 
 .widget
 
- SKIP 1
+ SKIP 1                 \ Temporary storage, used to store the original argument
+                        \ in A in the logarithmic FMLTU and LL28 routines
 
 .safehouse
 
@@ -14228,48 +14229,148 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \   A = A * Q / 256
 \
+\ Let La be the x-th entry in the 16-bit log/logL table, so:
+\
+\   La = 32 * log(a) * 256
+\
+\ Let Ar be the r-th entry in the antilog table
+\
+\   Ar = 2^(r / 32 + 8) / 256
+\
+\ These are all logarithms to base 2, so this is true:
+\
+\   x * y = 2^(log(a) + log(q))
+\
+\ Let's reduce this. First, we have the following:
+\
+\   log(a) + log(q) = (log(a) + log(q)) * 1
+\                   = (log(a) + log(q)) * (32 * 256) / (32 * 256)
+\                   = (32 * log(a) * 256 + 32 * log(q) * 256) / (32 * 256)
+\                   = (La + Lq) / (32 * 256)
+\
+\ Now we calculate La + Lq.
+\
+\ * If La + Lq < 256, then
+\
+\     log(a) + log(q) < 256 / (32 * 256) = 1/32
+\
+\   So:
+\
+\     x * y = 2^(log(a) + log(q))
+\           < 2^(1/32)
+\           < 1
+\
+\   so, because this routine returns A = x * y / 256, we return A = 0
+\
+\ * If La + Lq >= 256, then
+\
+\     La + Lq >= 256
+\
+\   so:
+\
+\     La + Lq = r + 256
+\
+\   for some value of r > 0. Plugging this into the above gives:
+\
+\   log(a) + log(q) = (La + Lq) / (32 * 256)
+\                   = (r + 256) / (32 * 256)
+\                   = (r / 32 + 8) / 256
+\
+\   And plugging this into the above gives:
+\
+\     x * y = 2^(log(a) + log(q))
+\           = 2^((r / 32 + 8) / 256)
+\           = Ar
+\
+\   so we return A = Ar
+\
+\ In summary, given two numbers A and Q, we can calculate A * Q / 256 by adding
+\ La and Lq, subtracting 256 to get R, and then looking up the result in Ar.
+\
 \ ******************************************************************************
 
 .FMLTU
 
- STX P
- STA widget
- TAX
- BEQ MU3
- LDA logL,X
- LDX Q
- BEQ MU3again
- CLC
- ADC logL,X
- BMI oddlog
- LDA log,X
- LDX widget
- ADC log,X
- BCC MU3again
- TAX
- LDA antilog,X
- LDX P
- RTS
+ STX P                  \ Store X in P so we can preserve it through the call to
+                        \ FMULTU
+
+ STA widget             \ Store A in widget, so now widget = argument A
+
+ TAX                    \ Transfer A into X, so now X = argument A
+
+ BEQ MU3                \ If A = 0, jump to MU3 to return a result of 0, as
+                        \ 0 * Q / 256 is always 0
+
+                        \ We now want to calculate La + Lq, first adding the low
+                        \ bytes (from the logL table), and then the high bytes
+                        \ (from the log table)
+
+ LDA logL,X             \ Set A = low byte of La
+                        \       = low byte of La (as we set X to A above)
+
+ LDX Q                  \ Set X = Q
+
+ BEQ MU3again           \ If X = 0, jump to MU3again to return a result of 0, as
+                        \ A * 0 / 256 is always 0
+
+ CLC                    \ Set A = A + low byte of Lq
+ ADC logL,X             \       = low byte of La + low byte of Lq
+
+ BMI oddlog             \ If A > 127, jump to oddlog
+
+ LDA log,X              \ Set A = high byte of Lq
+
+ LDX widget             \ Set A = A + C + high byte of La
+ ADC log,X              \       = high byte of Lq + high byte of La + C
+                        \
+                        \ so we now have:
+                        \
+                        \   A = high byte of (La + Lq)
+
+ BCC MU3again           \ If the addition fitted into one byte and didn't carry,
+                        \ then La + Lq < 256, so we jump to MU3again to return a
+                        \ result of 0
+
+ TAX                    \ Otherwise La + Lq >= 256, so we return the A-th entry
+ LDA antilog,X          \ from the antilog table
+
+ LDX P                  \ Restore X from P so it is preserved
+
+ RTS                    \ Return from the subroutine
 
 .oddlog
 
- LDA log,X
- LDX widget
- ADC log,X
- BCC MU3again
- TAX
- LDA antilogODD,X
+ LDA log,X              \ Set A = high byte of Lq
+
+ LDX widget             \ Set A = A + C + high byte of La
+ ADC log,X              \       = high byte of Lq + high byte of La + C
+                        \
+                        \ so we now have:
+                        \
+                        \   A = high byte of (La + Lq)
+
+ BCC MU3again           \ If the addition fitted into one byte and didn't carry,
+                        \ then La + Lq < 256, so we jump to MU3again to return a
+                        \ result of 0
+
+ TAX                    \ Otherwise La + Lq >= 256, so we return the A-th entry
+ LDA antilogODD,X       \ from the antilogODD table
 
 .MU3
 
- LDX P
- RTS
+                        \ If we get here then A (our result) is already 0
+
+ LDX P                  \ Restore X from P so it is preserved
+
+ RTS                    \ Return from the subroutine
 
 .MU3again
 
- LDA #0
- LDX P
- RTS
+ LDA #0                 \ Set A = 0
+
+ LDX P                  \ Restore X from P so it is preserved
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -14979,7 +15080,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \   (P R) = 256 * A / Q
 \
 \ This uses the same shift-and-subtract algorithm as TIS2, but this time we
-\ keep the remainder.
+\ keep the remainder and the loop is unrolled.
 \
 \ Returns:
 \
@@ -14994,54 +15095,67 @@ LOAD_C% = LOAD% +P% - CODE%
 
  LDA #0                 \ Set A = 0 for us to build a remainder
 
- ROL A
+                        \ We now repeat the following five instruction block
+                        \ eight times, one for each bit in P. In the cassette
+                        \ and disc versions of Elite the following is done with
+                        \ a loop, but it is marginally faster to unroll the loop
+                        \ and have eight copies of the code, though it does take
+                        \ up a bit more memory (though that isn't a concern when
+                        \ you have a 6502 Second Processor)
+
+ ROL A                  \ Shift A to the left
+
+ CMP Q                  \ If A < Q skip the following subtraction
+ BCC P%+4
+
+ SBC Q                  \ A >= Q, so set A = A - Q
+
+ ROL P                  \ Shift P to the left, pulling the C flag into bit 0
+
+ ROL A                  \ Repeat for the second time
  CMP Q
  BCC P%+4
  SBC Q
  ROL P
-\7
- ROL A
+
+ ROL A                  \ Repeat for the third time
  CMP Q
  BCC P%+4
  SBC Q
  ROL P
-\6
- ROL A
+
+ ROL A                  \ Repeat for the fourth time
  CMP Q
  BCC P%+4
  SBC Q
  ROL P
-\5
- ROL A
+
+ ROL A                  \ Repeat for the fifth time
  CMP Q
  BCC P%+4
  SBC Q
  ROL P
-\4
- ROL A
+
+ ROL A                  \ Repeat for the sixth time
  CMP Q
  BCC P%+4
  SBC Q
  ROL P
-\3
- ROL A
+
+ ROL A                  \ Repeat for the seventh time
  CMP Q
  BCC P%+4
  SBC Q
  ROL P
-\2
- ROL A
+
+ ROL A                  \ Repeat for the eighth time
  CMP Q
  BCC P%+4
  SBC Q
  ROL P
-\1
- ROL A
- CMP Q
- BCC P%+4
- SBC Q
- ROL P
- LDX #0
+
+ LDX #0                 \ Set X = 0 so this unrolled version of DVID4 also
+                        \ returns X = 0
 
  JMP LL28+4             \ Jump to LL28+4 to convert the remainder in A into an
                         \ integer representation of the fractional value A / Q,
@@ -33670,7 +33784,21 @@ ENDIF
 \       Name: log
 \       Type: Variable
 \   Category: Maths (Arithmetic)
-\    Summary: 
+\    Summary: Binary logarithm table (high byte)
+\
+\ ------------------------------------------------------------------------------
+\
+\ At byte n, the table contains the high byte of:
+\
+\   &2000 * log10(n) / log10(2) = 32 * 256 * log10(n) / log10(2)
+\
+\ where log10 is the logarithm to base 10. The change-of-base formula says that:
+\
+\   log2(n) = log10(n) / log10(2)
+\
+\ so byte n contains the high byte of:
+\
+\   32 * log2(n) * 256
 \
 \ ******************************************************************************
 
@@ -33691,7 +33819,13 @@ ENDIF
 \       Name: logL
 \       Type: Variable
 \   Category: Maths (Arithmetic)
-\    Summary: 
+\    Summary: Binary logarithm table (low byte)
+\
+\ ------------------------------------------------------------------------------
+\
+\ Byte n contains the low byte of:
+\
+\   32 * log2(n) * 256
 \
 \ ******************************************************************************
 
@@ -33712,7 +33846,17 @@ ENDIF
 \       Name: antilog
 \       Type: Variable
 \   Category: Maths (Arithmetic)
-\    Summary: 
+\    Summary: Binary antilogarithm table
+\
+\ ------------------------------------------------------------------------------
+\
+\ At byte n, the table contains:
+\
+\   2^((n / 2 + 128) / 16) / 256
+\
+\ which equals:
+\
+\   2^(n / 32 + 8) / 256
 \
 \ ******************************************************************************
 
@@ -33736,7 +33880,18 @@ ENDIF
 \       Name: antilogODD
 \       Type: Variable
 \   Category: Maths (Arithmetic)
-\    Summary: 
+\    Summary: Binary antilogarithm table
+\
+\ ------------------------------------------------------------------------------
+\
+\ At byte n, the table contains:
+\
+\   2^((n / 2 + 128.25) / 16) / 256
+\
+\ which equals:
+\
+\   2^(n / 32 + 8.015625) / 256 = 2^(n / 32 + 8) * 2^(.015625) / 256
+\                               = (2^(n / 32 + 8) + 1) / 256
 \
 \ ******************************************************************************
 
@@ -33965,8 +34120,9 @@ ENDIF
 \ The result is returned in one byte as the result of the division multiplied
 \ by 256, so we can return fractional results using integers.
 \
-\ This routine uses the same shift-and-subtract algorithm that's documented in
-\ TIS2, but it leaves the fractional result in the integer range 0-255.
+\ This routine uses the same logarithm algorithm that's documented in FMLTU,
+\ except it subtracts the logarithm values, to do a division instead of a
+\ multiplication.
 \
 \ Returns:
 \
@@ -33991,38 +34147,60 @@ ENDIF
  CMP Q                  \ If A >= Q, then the answer will not fit in one byte,
  BCS LL2                \ so jump to LL2 to return 255
 
- STA widget
- TAX
- BEQ LLfix
- LDA logL,X
- LDX Q
- SEC
- SBC logL,X
- BMI noddlog
- LDX widget
+ STA widget             \ Store A in widget, so now widget = argument A
+
+ TAX                    \ Transfer A into X, so now X = argument A
+
+ BEQ LLfix              \ If A = 0, jump to LLfix to return a result of 0, as
+                        \ 0 * Q / 256 is always 0
+
+                        \ We now want to calculate La + Lq, first adding the low
+                        \ bytes (from the logL table), and then the high bytes
+                        \ (from the log table)
+
+ LDA logL,X             \ Set A = low byte of La
+                        \       = low byte of La (as we set X to A above)
+
+ LDX Q                  \ Set X = Q
+
+ SEC                    \ Set A = A - low byte of Lq
+ SBC logL,X             \       = low byte of La - low byte of Lq
+
+ BMI noddlog            \ If the subtraction is negative, jump to noddlog
+
+ LDX widget             \ Set A = high byte of La - high byte of Lq
  LDA log,X
  LDX Q
  SBC log,X
- BCS LL2
- TAX
- LDA antilog,X
+
+ BCS LL2                \ If the subtraction underflowed, the result is too big,
+                        \ so jump to LL2 to return 255
+
+ TAX                    \ Otherwise we return the A-th entry from the antilog
+ LDA antilog,X          \ table
 
 .LLfix
 
- STA R
- RTS
+ STA R                  \ Set the result in R to the value of A
+
+ RTS                    \ Return from the subroutine
 
 .noddlog
 
- LDX widget
+ LDX widget             \ Set A = high byte of La - high byte of Lq
  LDA log,X
  LDX Q
  SBC log,X
- BCS LL2
- TAX
- LDA antilogODD,X
- STA R
- RTS
+
+ BCS LL2                \ If the subtraction underflowed, the result is too big,
+                        \ so jump to LL2 to return 255
+
+ TAX                    \ Otherwise we return the A-th entry from the antilogODD
+ LDA antilogODD,X       \ table
+
+ STA R                  \ Set the result in R to the value of A
+
+ RTS                    \ Return from the subroutine
 
 .LL31
 
@@ -34058,7 +34236,7 @@ ENDIF
  BCS LL31               \ If we still have set bits in R, loop back to LL31 to
                         \ do the next iteration of 7
 
- LDA R
+ LDA R                  \ Set A to the remainder in R
 
  RTS                    \ Return from the subroutine with R containing the
                         \ remainder of the division
