@@ -12088,6 +12088,41 @@ LOAD_C% = LOAD% +P% - CODE%
 \   Category: Flight
 \    Summary: Apply docking manoeuvres to the ship in INWK
 \
+\ ------------------------------------------------------------------------------
+\
+\ The docking computer does the following:
+\
+\ * If we are outside the space station safe zone, head for the planet and we're
+\   done for this iteration
+\
+\ * If we are a long way away from the station, head for the planet and we're
+\   done
+\
+\ * If we're approaching the station from behind or the side, aim for the docking
+\   point and we're done
+\
+\ * If we're approaching the station from the front, then:
+\
+\   * If we are pointing towards the station, refine our approach  and we're done
+\
+\   * If we are not pointing towards the station, then check our distance to the
+\     station
+\
+\     * If we're too close, turn away and we're done
+\
+\     * Otherwise if this is us docking, refine our approach and we're done
+\
+\     * Otherwise this is an NPC, so turn away from station and we're done
+\ 
+\ Refine our approach means:
+\
+\   * If this is us docking (rather than an NPC), apply pitch and roll to get
+\     the station in our sights
+\
+\   * Once the station is in our sights, match roll with station
+\
+\   * Once we are matching the station roll, accelerate into slot
+\
 \ ******************************************************************************
 
 .DOCKIT
@@ -12160,8 +12195,8 @@ LOAD_C% = LOAD% +P% - CODE%
                         \   (A X) = cos(t)
                         \
                         \ where t is the angle between the two vectors
-
- BMI PH1                \ If the dot product is positive, that means the vector
+                        \
+                        \ If the dot product is positive, that means the vector
                         \ from the station to the ship and the nosev sticking
                         \ out of the docking slot are facing in a broadly
                         \ similar direction (so the ship is essentially heading
@@ -12169,23 +12204,33 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ if it's negative they are facing in broadly opposite
                         \ directions (so the station slot is on the opposite
                         \ side of the station as the ship approaches)
-                        \
-                        \ In the latter case, jump to PH1 to fly towards the
-                        \ ideal docking position, some way in front of the slot
 
- CMP #35                \ If the dot product < 35, jump to PH1 to keep flying
- BCC PH1                \ towards the station, as the angle of approach is not
-                        \ close enough to optimal, as:
+ BMI PH1                \ If the dot product is negative, i.e. the station slot
+                        \ is on the opposite side, jump to PH1 to fly towards
+                        \ the ideal docking position, some way in front of the
+                        \ slot
+
+ CMP #35                \ If the dot product < 35, jump to PH1 to fly towards
+ BCC PH1                \ the ideal docking position, some way in front of the
+                        \ slot, as there is a large angle between the vector from
+                        \ the station to the ship and the station's nosev, so the
+                        \ angle of approach is not very optimal. Specifically, as
+                        \ the unit vector length is 96 in our vector system,
                         \
                         \   (A X) = cos(t) < 35 / 96
                         \
-                        \   t > 68.6 degrees
+                        \ so:
+                        \
+                        \   t > arccos(35 / 96) = 68.6 degrees
                         \
                         \ so the ship is coming in from the side of the station
+                        \ at an angle between 68.6 and 90 degrees off the
+                        \ optimal entry angle
 
                         \ If we get here, the slot is on the same side as the
                         \ ship and the angle of approach is less than 68.6
-                        \ degrees, so we're not doing too badly
+                        \ degrees, so we're heading in pretty much the correct
+                        \ direction for a good approach to the docking slot
 
  LDY #10                \ Call TAS3 to calculate:
  JSR TAS3               \
@@ -12198,28 +12243,35 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ is pointing at the station, and positive meaning it is
                         \ pointing away from the station
 
- CMP #&A2               \ If the dot product >= -34, jump to PH3 to refine our
- BCS PH3                \ approach, as we are pointing away from the station ???
+ CMP #&A2               \ If the dot product is in the range 0 to -34, jump to
+ BCS PH3                \ PH3 to refine our approach, as we are pointing towards
+                        \ the station
+
+                        \ If we get here, then we are not pointing straight at
+                        \ the station, so check how close we are
 
  LDA K                  \ Fetch the distance to the station into A
 
 \BEQ PH10               \ This instruction is commented out in the original
                         \ source
 
- CMP #157               \ If A < 157, jump to PH2 to turn away from the station
- BCC PH2
+ CMP #157               \ If A < 157, jump to PH2 to turn away from the station,
+ BCC PH2                \ as we are too close
 
  LDA TYPE               \ Fetch the ship type into A
 
  BMI PH3                \ If bit 7 is set, then that means the ship type was set
                         \ to -96 in the DOKEY routine when we switched on our
-                        \ docking compter, so this ship is us auto-docking, so
-                        \ jump to PH3 to refine our approach
+                        \ docking compter, so this is us auto-docking our Cobra,
+                        \ so jump to PH3 to refine our approach. Otherwise this
+                        \ is an NPC trying to dock, so turn away from the
+                        \ station
 
 .PH2
 
-                        \ If we get here then we need to turn away from the
-                        \ station and slow right down
+                        \ If we get here then we turn away from the station and
+                        \ slow right down, effectively aborting this approach
+                        \ attempt
 
  JSR TAS6               \ Call TAS6 to negate the vector in XX15 so it points in
                         \ the opposite direction, away from from the station and
@@ -12230,7 +12282,8 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .PH22
 
-                        \ If we get here then we need to slow right down
+                        \ If we get here then we slam on the brakes and slow
+                        \ right down
 
  LDX #0                 \ Set the acceleration in byte #28 to 0
  STX INWK+28
@@ -12244,7 +12297,7 @@ LOAD_C% = LOAD% +P% - CODE%
 
                         \ If we get here then the slot is on the opposite side
                         \ of the station to the ship, or it's on the same side
-                        \ and the approach angle is not optimal, so just fly
+                        \ and the approach angle is not optimal, so we just fly
                         \ towards the station, aiming for the ideal docking
                         \ position some distance in front of the slot
 
@@ -12270,19 +12323,22 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .TN11
 
-                        \ Accelerate and roll
+                        \ If we get here, we accelerate and apply a full
+                        \ clockwise roll (which matches the space station's
+                        \ roll)
 
  INC INWK+28            \ Increment the acceleration in byte #28
 
  LDA #%01111111         \ Set the roll counter to a positive roll with no
- STA INWK+29            \ damping
+ STA INWK+29            \ damping, to match the space station's roll
 
  BNE TN13               \ Jump down to TN13 (this BNE is effectively a JMP as
                         \ A will never be zero)
 
 .PH3
 
-                        \ Adjust approach?
+                        \ If we get here, we refine our approach using pitch and
+                        \ roll to aim for the station
 
  LDX #0                 \ Set RAT2 = 0
  STX RAT2
@@ -12292,34 +12348,42 @@ LOAD_C% = LOAD% +P% - CODE%
  LDA TYPE               \ If this is not our ship's docking computer, but is an
  BPL PH32               \ NPC ship trying to dock, jump to PH32
 
- EOR XX15
- EOR XX15+1
- ASL A
+                        \ In the following, ship_x and ship_y are the x and
+                        \ y-coordinates of XX15, the vector from the station to
+                        \ the ship
 
- LDA #2
- ROR A
- STA INWK+29
+ EOR XX15               \ A is negative, so this sets the sign of A to the same
+ EOR XX15+1             \ as -XX15 * XX15+1, or -ship_x * ship_y 
 
- LDA XX15
- ASL A
- CMP #12
+ ASL A                  \ Shift the sign bit into the C flag, so the C flag has
+                        \ the following sign:
+                        \
+                        \   * Positive if ship_x and ship_y have different signs
+                        \   * Negative if ship_x and ship_y have the same sign
+
+ LDA #2                 \ Set A = +2 or -2, giving it the sign in the C flag,
+ ROR A                  \ and store it in byte #29, the roll counter, so that
+ STA INWK+29            \ the ship rolls towards the station
+
+ LDA XX15               \ If |ship_x * 2| >= 12, i.e. |ship_x| >= 6, then jump
+ ASL A                  \ to PH22 to slow right down and return from the
+ CMP #12                \ subroutine, as the station is not in our sights
  BCS PH22
 
- LDA XX15+1
- ASL A
-
- LDA #2
+ LDA XX15+1             \ Set A = +2 or -2, giving it the same sign as ship_y,
+ ASL A                  \ and store it in byte #30, the pitch counter, so that
+ LDA #2                 \ the ship pitches towards the station
  ROR A
  STA INWK+30
 
- LDA XX15+1
- ASL A
- CMP #12
+ LDA XX15+1             \ If |ship_y * 2| >= 12, i.e. |ship_y| >= 6, then jump
+ ASL A                  \ to PH22 to slow right down and return from the
+ CMP #12                \ subroutine, as the station is not in our sights
  BCS PH22
 
 .PH32
 
-                        \ Match the station roll
+                        \ If we get here, we try to match the station roll
 
  STX INWK+29            \ Set the roll counter to 0 to stop any pitching
 
@@ -12337,19 +12401,28 @@ LOAD_C% = LOAD% +P% - CODE%
  JSR TAS4               \
                         \   (A X) = roofv . XX15
                         \
-                        \ where roofv is the roof vector of the space station
+                        \ where roofv is the roof vector of the space station.
+                        \ To dock with the slot horizontal, we want roofv to be
+                        \ pointing off to the side, i.e. parallel to the ship's
+                        \ sidev vector, which means we want the dot product to
+                        \ be large (it can be positive or negative, as roofv can
+                        \ point left or right - it just needs to be parallel to
+                        \ the ship's sidev)
 
- ASL A                  \ Set A = |A * 2|
+ ASL A                  \ If |A * 2| >= 66, i.e. |A| >= 33, then the ship is
+ CMP #66                \ lined up with the slot, so jump to TN11 to accelerate
+ BCS TN11               \ and roll clockwise (a positive roll) before jumping
+                        \ down to TN13 to check if we're docked yet
 
- CMP #66                \ If A >= 66, i.e. |A| >= 33, jump to TN11 to accelerate
- BCS TN11               \ and roll before jumping down to TN13
-
- JSR PH22               \ Call PH22 to slow right down
+ JSR PH22               \ Call PH22 to slow right down, as we haven't yet
+                        \ matched the station's roll
 
 .TN13
 
+                        \ If we get here, we check to see if we have docked
+
  LDA K3+10              \ If K3+10 is non-zero, skip to TNRTS to return from the
- BNE TNRTS              \ subroutine ????
+ BNE TNRTS              \ subroutine
 
  ASL NEWB               \ Set bit 7 of the ship's NEWB flags to indicate that
  SEC                    \ the ship has now docked
@@ -12654,6 +12727,14 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \   K3                  The vector from the station to the ship
 \
+\ Returns:
+\
+\   K3                  The vector from the ship to the ideal docking position
+\                       (4 unit vectors from the centre of the station for each
+\                       call to DCS1, so two calls will return the vector to a
+\                       point that's 8 unit vectors from the centre of the
+\                       station)
+\
 \ ******************************************************************************
 
 .DCS1
@@ -12742,16 +12823,18 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ result we want, so jump to TS72 to return from the
                         \ subroutine
 
- LDA K3,X
- EOR #&FF
- ADC #1
- STA K3,X
- LDA K3+1,X
- EOR #&FF
+ LDA K3,X               \ Negate the result in K3(2 1 0) by flipping all the
+ EOR #%11111111         \ bits and adding 1, i.e. using two's complement to
+ ADC #1                 \ give it the opposite sign, starting with the low
+ STA K3,X               \ bytes
+
+ LDA K3+1,X             \ Then doing the high bytes
+ EOR #%11111111
  ADC #0
  STA K3+1,X
- LDA K3+2,X
- EOR #128
+
+ LDA K3+2,X             \ And finally, flipping the sign bit
+ EOR #%10000000
  STA K3+2,X
 
  JMP TS72               \ Jump to TS72 to return from the subroutine
