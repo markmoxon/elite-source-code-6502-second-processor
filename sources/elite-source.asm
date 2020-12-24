@@ -644,11 +644,12 @@ ORG &0000
 
 .HBUP
 
- SKIP 1
+ SKIP 1                 \ The size of the horizontal line buffer at HBUF
+                        \ (including the two OSWORD size bytes)
 
 .LBUP
 
- SKIP 1
+ SKIP 1                 \ The size of the multi-segment line buffer at LBUF
 
 .QQ12
 
@@ -7007,20 +7008,39 @@ NEXT
 \       Name: LL30
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: Draw a line by sending an OSWRCH 129 command to the I/O processor
+\    Summary: Draw a one-segment line by sending an OSWRCH 129 command to the
+\             I/O processor
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   X1                  The screen x-coordinate of the start of the line
+\
+\   Y1                  The screen y-coordinate of the start of the line
+\
+\   X2                  The screen x-coordinate of the end of the line
+\
+\   Y2                  The screen y-coordinate of the end of the line
 \
 \ ******************************************************************************
 
 .LL30
 
- LDA #129
- JSR OSWRCH
- LDA #5
- JSR OSWRCH
- LDA X1
- JSR OSWRCH
- LDA Y1
- JSR OSWRCH
+ LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
+ JSR OSWRCH             \ tell it to start receiving a new line to draw. The
+                        \ parameter to this call needs to contain the number of
+                        \ bytes we are going to send for the line's coordinates,
+                        \ plus 1, which we send next
+
+ LDA #5                 \ Send 5 to the I/O processor as the argument to the
+ JSR OSWRCH             \ OSWRCH 129 command, so the I/O processor should expect
+                        \ 4 bytes (as we send the count plus 1)
+ 
+ LDA X1                 \ Send X1, Y1, X2 and Y2 to the I/O processor, so the
+ JSR OSWRCH             \ I/O processor will draw a line from (X1, Y1) to
+ LDA Y1                 \ (X2, Y2), returning from the subroutine using a tail
+ JSR OSWRCH             \ call
  LDA X2
  JSR OSWRCH
  LDA Y2
@@ -7031,71 +7051,130 @@ NEXT
 \       Name: LOIN
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: Draw a line by sending an OSWRCH 129 command to the I/O processor
+\    Summary: Add a line segment to the multi-segment line buffer
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   X1                  The screen x-coordinate of the start of the segment
+\
+\   Y1                  The screen y-coordinate of the start of the segment
+\
+\   X2                  The screen x-coordinate of the end of the segment
+\
+\   Y2                  The screen y-coordinate of the end of the segment
+\
+\ Returns:
+\
+\   Y                   Y is preserved
 \
 \ ******************************************************************************
 
 .LOIN
 
- STY T1
- LDY LBUP
- LDA X1
- STA LBUF,Y
+ STY T1                 \ Store Y in T1 so we can preserve it through the call
+                        \ to LOIN
+
+ LDY LBUP               \ Set Y to the size of the line buffer
+
+ LDA X1                 \ Store X1, Y1, X2 and Y2 in the Y-th to Y+3-th bytes of
+ STA LBUF,Y             \ the line buffer at LBUF
  LDA Y1
  STA LBUF+1,Y
  LDA X2
  STA LBUF+2,Y
  LDA Y2
  STA LBUF+3,Y
- TYA
- CLC
+
+ TYA                    \ Set A = Y + 4
+ CLC                    \       = LBUP + 4
  ADC #4
- STA LBUP
- CMP #250
- BCS LBFL
- LDY T1
- RTS
+
+ STA LBUP               \ Update LBUP with the value in A, to grow the line
+                        \ buffer by the four bytes we just added
+
+ CMP #250               \ If A >= 250, jump to LBFL to draw the line in the
+ BCS LBFL               \ line buffer
+
+ LDY T1                 \ Restore the value of Y from T1, so it is preserved
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: LBFL
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw the lines in the multi-segment line buffer by sending an
+\             OSWRCH 129 command to the I/O processor
+\
+\ ******************************************************************************
 
 .LBFL
 
- LDY LBUP
- BEQ LBZE2
- INY
- LDA #129
- JSR OSWRCH
- TYA
- JSR OSWRCH
- LDY #0
+ LDY LBUP               \ Set Y to LBUP, the size of the multi-segment line
+                        \ buffer
+
+ BEQ LBZE2              \ If LBUP = 0 then jump to LBZE2 as there is no line
+                        \ data to transmit to the I/O processor
+
+ INY                    \ Increment Y, as we need to send the number of points
+                        \ in the new line, plus 1, to OSWRCH 129
+
+ LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
+ JSR OSWRCH             \ tell it to start receiving a new line to draw. The
+                        \ parameter to this call needs to contain the number of
+                        \ bytes we are going to send for the line's coordinates,
+                        \ plus 1, so let's calculate that now
+
+ TYA                    \ Transfer the Y counter into A, so A now contains the
+                        \ number of bytes to send to the I/O processor, plus 1
+
+ JSR OSWRCH             \ Send A to the I/O processor as the argument to the
+                        \ OSWRCH 129 command, so the I/O processor can set the
+                        \ LINMAX variable in the BEGINLIN routine
+
+ LDY #0                 \ Set Y = 0 to act as a loop through the points in LBUF
 
 .LBFLL
 
- LDA LBUF,Y
+ LDA LBUF,Y             \ Send the Y-th byte of LBUF to the I/O processor
  JSR OSWRCH
- INY
- CPY LBUP
- BNE LBFLL
+
+ INY                    \ Increment the pointer to point to the next coordinate
+
+ CPY LBUP               \ If Y < LBUP then loop back to send the next byte,
+ BNE LBFLL              \ until we have sent them all. The I/O processor will
+                        \ now draw the line
 
 .LBZE2
 
- STZ LBUP \++
- LDY T1
- RTS
+ STZ LBUP               \ Set LBUP = 0 to reset the line buffer
+
+ LDY T1                 \ Restore the value of Y from T1, so it is preserved
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
 \       Name: LBUF
 \       Type: Variable
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: The multi-segment line buffer used by LOIN
 \
 \ ******************************************************************************
 
 .LBUF
 
 IF _MATCH_EXTRACTED_BINARIES
+
  INCBIN "extracted/workspaces/ELTB-LBUF.bin"
+
 ELSE
+
  SKIP &100
+
 ENDIF
 
 \ ******************************************************************************
@@ -7266,87 +7345,132 @@ ENDIF
                         \ Fall through into HLOIN to draw a horizontal line from
                         \ (X1, Y) to (X2, Y)
 
-\ \ ******************************************************************************
+\ ******************************************************************************
 \
 \       Name: HLOIN
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: Add a horizontal line segment to the horizontal line buffer
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   X1                  The screen x-coordinate of the start of the segment
+\
+\   X2                  The screen x-coordinate of the end of the segment
+\
+\   Y1                  The screen y-coordinate of the segment
+\
+\ Returns:
+\
+\   Y                   Y is preserved
 \
 \ ******************************************************************************
 
 .HLOIN
 
- STY T1
- LDY HBUP
- LDA X1
- STA HBUF,Y
+ STY T1                 \ Store Y in T1 so we can preserve it through the call
+                        \ to HLOIN
+
+ LDY HBUP               \ Set Y to the size of the horizontal line buffer
+
+ LDA X1                 \ Store X1, X2 and Y1 in the Y-th to Y+2-th bytes of
+ STA HBUF,Y             \ the horizontal line buffer at HBUF
  LDA X2
  STA HBUF+1,Y
  LDA Y1
  STA HBUF+2,Y
- TYA
- CLC
+
+ TYA                    \ Set A = Y + 3
+ CLC                    \       = HBUP + 3
  ADC #3
  STA HBUP
- BMI HBFL
- LDY T1
- RTS
+
+ BMI HBFL               \ If A > 127, jump to HBFL to draw the line in the
+                        \ horizontal line buffer
+
+ LDY T1                 \ Restore the value of Y from T1, so it is preserved
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
 \       Name: HBFL
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: Draw a horizontal line by sending an OSWORD 247 command to the I/O
-\             processor
+\    Summary: Draw the line in the horizontal line buffer by sending an OSWORD
+\             247 command to the I/O processor
 \
 \ ******************************************************************************
 
 .HBFL
 
- LDA HBUP
- STA HBUF
- CMP #2
- BEQ HBZE2
- LDA #2
- STA HBUP
- LDA #247
+ LDA HBUP               \ Set the first byte in HBUF (the number of bytes to
+ STA HBUF               \ transmit with the OSWORD 247 command) to HBUP, the
+                        \ size of the horizontal line buffer
+
+ CMP #2                 \ If HBUP = 2 then jump to HBZE2 as there is no line
+ BEQ HBZE2              \ data to transmit to the I/O processor
+
+ LDA #2                 \ Set HBUP = 2 to reset the line buffer (as the size in
+ STA HBUP               \ HBUP includes the two OSWORD size bytes)
+
+ LDA #247               \ Set A in preparation for sending an OSWORD 247 command
 
  LDX #LO(HBUF)          \ Set (Y X) to point to the HBUF parameter block
  LDY #HI(HBUF)
 
- JSR OSWORD
+ JSR OSWORD             \ Send an OSWORD 247 command to the I/O processor to
+                        \ draw the horizontal line described in the HBUF block
 
 .HBZE2
 
- LDY T1
- RTS
+ LDY T1                 \ Restore Y to the value in T1, so if we jump here from
+                        \ the HLOIN routine, Y will be preserved from the
+                        \ original call to that routine
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: HBZE
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Reset the horizontal line buffer
+\
+\ ******************************************************************************
 
 .HBZE
 
- LDA #2
- STA HBUP
- RTS
+ LDA #2                 \ Set HBUP = 2 to reset the horizontal line buffer (as
+ STA HBUP               \ the size in HBUP includes the two OSWORD size bytes)
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
 \       Name: HBUF
 \       Type: Variable
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: The horizontal line buffer to send with the OSWORD 247 command
 \
 \ ******************************************************************************
 
 .HBUF
 
- EQUB 0
- EQUB 0
+ EQUB 0                 \ The number of bytes to transmit with this command
+
+ EQUB 0                 \ The number of bytes to receive with this command
 
 IF _MATCH_EXTRACTED_BINARIES
+
  INCBIN "extracted/workspaces/ELTB-HBUF.bin"
+
 ELSE
+
  SKIP &100
+
 ENDIF
 
 \ ******************************************************************************
@@ -7518,50 +7642,85 @@ ENDIF
 \       Name: PIXEL
 \       Type: Subroutine
 \   Category: Drawing pixels
-\    Summary: 
+\    Summary: Add a 1-pixel dot, 2-pixel dash or 4-pixel square to the pixel
+\             buffer, with distance a multiple of 8
+\
+\ ------------------------------------------------------------------------------
+\
+\ Draw a point at screen coordinate (X, A) with the point size determined by the
+\ distance in ZZ, by adding it to the pixel buffer.
+\
+\ Arguments:
+\
+\   X                   The screen x-coordinate of the point to draw
+\
+\   A                   The screen y-coordinate of the point to draw
+\
+\   ZZ                  The distance of the point (further away = smaller point)
+\
+\ Returns:
+\
+\   Y                   Y is preserved
+\
+\ Other entry points:
+\
+\   PX4                 Contains an RTS
 \
 \ ******************************************************************************
 
 .PIXEL
 
- STY T1
- LDY PBUP
- STA PBUF+2,Y
- TXA
+ STY T1                 \ Store Y in T1 so we can preserve it through the call
+                        \ to PIXEL
+
+ LDY PBUP               \ Set Y to the size of the pixel buffer
+
+ STA PBUF+2,Y           \ Store the y-coordinate in PBUF+2
+
+ TXA                    \ Store the x-coordinate in PBUF+2
  STA PBUF+1,Y
- LDA ZZ
- AND #&F8
+
+ LDA ZZ                 \ Store the distance in PBUF, with bits 0-2 cleared to
+ AND #%11111000         \ make ZZ a multiple of 8
  STA PBUF,Y
- TYA
- CLC
+
+ TYA                    \ Set A = Y + 3
+ CLC                    \       = PBUP + 3
  ADC #3
- STA PBUP
- BMI PBFL
- LDY T1
+
+ STA PBUP               \ Update PBUP with the value in A, to grow the line
+                        \ buffer by the three bytes we just added
+
+ BMI PBFL               \ If A > 127, jump to PBFL to draw the pixels in the
+                        \ pixel buffer
+
+ LDY T1                 \ Restore the value of Y from T1, so it is preserved
 
 .PX4
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
 \       Name: PBFL
 \       Type: Subroutine
 \   Category: Drawing pixels
-\    Summary: Draw a pixel by sending an OSWORD 241 command to the I/O processor
+\    Summary: Draw the pixel in the pixel buffer by sending an OSWORD 241
+\             command to the I/O processor
 \
 \ ******************************************************************************
 
 .PBFL
 
  LDA PBUP               \ Set the first byte in pixbl (the number of bytes to
- STA pixbl              \ transmit with the OSWORD 241 command) to PBUP
+ STA pixbl              \ transmit with the OSWORD 241 command) to PBUP, the
+                        \ size of the pixel buffer
 
  CMP #2                 \ If PBUP = 2 then jump to PBZE2 as there is no pixel
  BEQ PBZE2              \ data to transmit to the I/O processor
 
- LDA #2                 \ Set PBUP = 2 to reset the pixel buffer
- STA PBUP
+ LDA #2                 \ Set PBUP = 2 to reset the pixel buffer (as the size in
+ STA PBUP               \ PBUP includes the two OSWORD size bytes)
 
  LDA #DUST              \ Send a #SETCOL DUST command to the I/O processor to
  JSR DOCOL              \ switch to stripe 3-2-3-2, which is cyan/red in the
@@ -7577,41 +7736,84 @@ ENDIF
 
 .PBZE2
 
- LDY T1
- RTS
+ LDY T1                 \ Restore Y to the value in T1, so if we jump here from
+                        \ the PIXEL or PIXEL3 routines, Y will be preserved from
+                        \ the original call to that routine
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: PBZE
+\       Type: Subroutine
+\   Category: Drawing pixels
+\    Summary: Reset the pixel buffer
+\
+\ ******************************************************************************
 
 .PBZE
 
- LDA #2
- STA PBUP
- RTS
+ LDA #2                 \ Set PBUP = 2 to reset the pixel buffer (as the size in
+ STA PBUP               \ PBUP includes the two OSWORD size bytes)
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
 \       Name: PIXEL3
 \       Type: Subroutine
 \   Category: Drawing pixels
-\    Summary: 
+\    Summary: Add a 1-pixel dot, 2-pixel dash or 4-pixel square to the pixel
+\             buffer
+\
+\ ------------------------------------------------------------------------------
+\
+\ Draw a point at screen coordinate (X, A) with the point size determined by the
+\ distance in ZZ, by adding it to the pixel buffer.
+\
+\ Arguments:
+\
+\   X                   The screen x-coordinate of the point to draw
+\
+\   A                   The screen y-coordinate of the point to draw
+\
+\   ZZ                  The distance of the point (further away = smaller point)
+\
+\ Returns:
+\
+\   Y                   Y is preserved
 \
 \ ******************************************************************************
 
 .PIXEL3
 
- STY T1
- LDY PBUP
- STA PBUF+2,Y
- TXA
+ STY T1                 \ Store Y in T1 so we can preserve it through the call
+                        \ to PIXEL3
+
+ LDY PBUP               \ Set Y to the size of the pixel buffer
+
+ STA PBUF+2,Y           \ Store the y-coordinate in PBUF+2
+
+ TXA                    \ Store the x-coordinate in PBUF+2
  STA PBUF+1,Y
- LDA ZZ
- ORA #1
+
+ LDA ZZ                 \ Store the distance in PBUF, making sure it is at
+ ORA #1                 \ least 1
  STA PBUF,Y
- TYA
- CLC
+
+ TYA                    \ Set A = Y + 3
+ CLC                    \       = PBUP + 3
  ADC #3
- STA PBUP
- BMI PBFL
- LDY T1
- RTS
+
+ STA PBUP               \ Update PBUP with the value in A, to grow the line
+                        \ buffer by the three bytes we just added
+
+ BMI PBFL               \ If A > 127, jump to PBFL to draw the pixels in the
+                        \ pixel buffer
+
+ LDY T1                 \ Restore the value of Y from T1, so it is preserved
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -12092,36 +12294,42 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \ The docking computer does the following:
 \
-\ * If we are outside the space station safe zone, head for the planet and we're
-\   done for this iteration
+\   * If we are outside the space station safe zone, head for the planet and
+\     we're done for this iteration
 \
-\ * If we are a long way away from the station, head for the planet and we're
-\   done
+\   * If we are a long way away from the station, head for the planet and we're
+\     done
 \
-\ * If we're approaching the station from behind or the side, aim for the docking
-\   point and we're done
+\   * If we're approaching the station from behind or the side, aim for the
+\     docking point and we're done
 \
-\ * If we're approaching the station from the front, then:
+\   * If we're approaching the station from the front, then:
 \
-\   * If we are pointing towards the station, refine our approach  and we're done
+\     * If we are pointing towards the station, refine our approach and we're
+\       done
 \
-\   * If we are not pointing towards the station, then check our distance to the
-\     station
+\     * If we are not pointing towards the station, then check our distance to
+\       the station
 \
-\     * If we're too close, turn away and we're done
+\       * If we're too close, turn away and we're done
 \
-\     * Otherwise if this is us docking, refine our approach and we're done
+\       * Otherwise if this is us docking, refine our approach and we're done
 \
-\     * Otherwise this is an NPC, so turn away from station and we're done
+\       * Otherwise this is an NPC, so turn away from station and we're done
 \ 
-\ Refine our approach means:
+\ "Refine our approach" means:
 \
 \   * If this is us docking (rather than an NPC), apply pitch and roll to get
 \     the station in our sights
 \
-\   * Once the station is in our sights, match roll with station
+\   * Once the station is in our sights, match roll with the station to get a
+\     horizontal slot
 \
-\   * Once we are matching the station roll, accelerate into slot
+\   * Once we are matching the station roll, accelerate into the slot
+\
+\ The docking point is 8 unit vector lengths from the centre of the space
+\ station, through the slot and out into space, so it's a good starting point
+\ for the final approach towards the slot.
 \
 \ ******************************************************************************
 
@@ -12212,10 +12420,12 @@ LOAD_C% = LOAD% +P% - CODE%
 
  CMP #35                \ If the dot product < 35, jump to PH1 to fly towards
  BCC PH1                \ the ideal docking position, some way in front of the
-                        \ slot, as there is a large angle between the vector from
-                        \ the station to the ship and the station's nosev, so the
-                        \ angle of approach is not very optimal. Specifically, as
-                        \ the unit vector length is 96 in our vector system,
+                        \ slot, as there is a large angle between the vector
+                        \ from the station to the ship and the station's nosev,
+                        \ so the angle of approach is not very optimal.
+                        \
+                        \ Specifically, as the unit vector length is 96 in our
+                        \ vector system,
                         \
                         \   (A X) = cos(t) < 35 / 96
                         \
@@ -12421,12 +12631,22 @@ LOAD_C% = LOAD% +P% - CODE%
 
                         \ If we get here, we check to see if we have docked
 
- LDA K3+10              \ If K3+10 is non-zero, skip to TNRTS to return from the
- BNE TNRTS              \ subroutine
+ LDA K3+10              \ If K3+10 is non-zero, skip to TNRTS, to return from
+ BNE TNRTS              \ the subroutine
+                        \
+                        \ I have to say I have no idea what K3+10 contains, as
+                        \ it isn't mentioned anywhere in the whole codebase
+                        \ apart from here, but it does share a location with
+                        \ XX2+10, so it will sometimes be non-zero (specifically
+                        \ when face #10 in the ship we're drawing is visible,
+                        \ which probably happens quite a lot). This would seem
+                        \ to affect whether an NPC ship can dock, as that's the
+                        \ code that gets skipped if K3+10 is non-zero, but as
+                        \ to what this means... that's not yet clear
 
  ASL NEWB               \ Set bit 7 of the ship's NEWB flags to indicate that
- SEC                    \ the ship has now docked
- ROR NEWB
+ SEC                    \ the ship has now docked, which only has meaning if
+ ROR NEWB               \ this is an NPC trying to dock
 
 .TNRTS
 
