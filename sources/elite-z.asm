@@ -1563,28 +1563,48 @@ NEXT
 \       Name: DOT
 \       Type: Subroutine
 \   Category: Drawing pixels
-\    Summary: Implement the #DOdot command (draw a dot)
+\    Summary: Implement the #DOdot command (draw a dot on the compass)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends a #DOdot command with parameters
+\ in the block at OSSC(1 0). It draws a dot on the compass.
+\
+\ The parameters match those put into the DOTpars block in the parasite.
+\
+\ Arguments:
+\
+\   OSSC(1 0)           A parameter block as follows:
+\
+\                         * Byte #2 = The screen pixel x-coordinate of the dot
+\
+\                         * Byte #3 = The screen pixel x-coordinate of the dot
+\
+\                         * Byte #4 = The colour of the dot
 \
 \ ******************************************************************************
 
 .DOT
 
- LDY #2
- LDA (OSSC),Y
+ LDY #2                 \ Fetch byte #2 from the parameter block (the dot's
+ LDA (OSSC),Y           \ x-coordinate) and store it in X1
  STA X1
 
- INY
- LDA (OSSC),Y
+ INY                    \ Fetch byte #3 from the parameter block (the dot's
+ LDA (OSSC),Y           \ y-coordinate) and store it in X1
  STA Y1
 
- INY
- LDA (OSSC),Y
+ INY                    \ Fetch byte #3 from the parameter block (the dot's
+ LDA (OSSC),Y           \ colour) and store it in COL
  STA COL
 
- CMP #WHITE2
- BNE CPIX2
+ CMP #WHITE2            \ If the dot's colour is not white, jump to CPIX2 to
+ BNE CPIX2              \ draw a single-height dot in the compass, as it is
+                        \ showing that the planet or station is behind us
 
-\ ******************************************************************************
+                        \ Otherwise the dot is white, which is in front of us,
+                        \ so fall through into CPIX4 to draw a double-height
+                        \ dot in the compass\ ******************************************************************************
 \
 \       Name: CPIX4
 \       Type: Subroutine
@@ -3570,168 +3590,361 @@ NEXT
 \       Name: PIXEL
 \       Type: Subroutine
 \   Category: Drawing pixels
-\    Summary: Implement the OSWORD 240 command (draw a pixel)
+\    Summary: Implement the OSWORD 241 command (draw space view pixels)
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is run when the parasite sends an OSWORD 241 command with
+\ parameters in the block at OSSC(1 0). It draws a dot (or collection of dots)
+\ in the space view.
+\
+\ It can draw two types of dot, depending on bits 0-2 of the dot's distance:
+\
+\   * Draw the dot using the dot's distance to determine both the dot's colour
+\     and size. This draws a a 1-pixel dot, 2-pixel dash or 4-pixel square in
+\     a colour that's determined by the distance (as per the colour table in
+\     PXCL). These kinds of dot are sent by the PIXEL3 routine in the parasite.
+\
+\   * Draw the dot using the dot's distance to determine the dot's size, either
+\     a 2-pixel dash or 4-pixel square. The dot is always drawn in white (which
+\     is actually a cyan/red stripe). These kinds of dot are sent by the PIXEL
+\     routine in the parasite.
+\
+\
+\ The parameters match those put into the PBUF/pixbl block in the parasite.
+\
+\ Arguments:
+\
+\   OSSC(1 0)           A parameter block as follows:
+\
+\                         * Byte #0 = The size of the pixel buffer being sent
+\
+\                         * Byte #2 = The distance of the first dot
+\
+\                           * Bits 0-2 clear = Draw a 2-pixel dash or 4-pixel
+\                             square, as determined by the distance, in white
+\                             (cyan/red)
+\
+\                           * Any of bits 0-2 set = Draw a 1-pixel dot, 2-pixel
+\                             dash or 4-pixel square in the correct colour, as
+\                             determined by the distance
+\
+\                         * Byte #3 = The x-coordinate of the first dot
+\
+\                         * Byte #4 = The y-coordinate of the first dot
+\
+\                         * Byte #5 = The distance of the second dot
+\
+\                         * Byte #6 = The x-coordinate of the second dot
+\
+\                         * Byte #7 = The y-coordinate of the second dot
+\
+\                       and so on
 \
 \ ******************************************************************************
 
 .PIXEL
 
- LDY #0
- LDA (OSSC),Y
+ LDY #0                 \ Set Q to byte #0 from the block pointed to by OSSC,
+ LDA (OSSC),Y           \ which contains the size of the pixel buffer
  STA Q
 
- INY
- INY
+ INY                    \ Increment Y to 2, so y now points at the data for the
+ INY                    \ first pixel in the command block
 
 .PXLO
 
- LDA (OSSC),Y
- STA P
+ LDA (OSSC),Y           \ Set P to byte #2 from the Y-th pixel block in OSSC,
+ STA P                  \ which contains the point's distance value (ZZ)
 
- AND #7
- BEQ PX5
+ AND #%00000111         \ If ZZ is a multiple of 8 (which will be the case for
+ BEQ PX5                \ pixels sent by the parasite's PIXEL routine), jump to
+                        \ PX5
 
- TAX
- LDA PXCL,X
- STA S
- INY
- LDA (OSSC),Y
- TAX
- INY
- LDA (OSSC),Y
- STY T1
- TAY
+                        \ Otherwise this pixel was sent by the parasite's PIXEL3
+                        \ routine and will have an odd value of ZZ, and we use
+                        \ the distance value to determine the dot's colour and
+                        \ size
+
+ TAX                    \ Set S to the ZZ-th value from the PXCL table, to get
+ LDA PXCL,X             \ the correct colour byte for this pixel, depending on
+ STA S                  \ the distance
+
+ INY                    \ Increment Y to 3
+
+ LDA (OSSC),Y           \ Set X to byte #3 from the Y-th pixel block in OSSC,
+ TAX                    \ contains the pixel's x-coordinate
+
+ INY                    \ Increment Y to 4
+
+ LDA (OSSC),Y           \ Set Y to byte #4 from the Y-th pixel block in OSSC,
+ STY T1                 \ which contains the pixel's y-coordinate, and store Y,
+ TAY                    \ the index of this pixel's y-coordinate, in T1
 
  LDA ylookup,Y          \ Look up the page number of the character row that
  STA SC+1               \ contains the pixel with the y-coordinate in Y, and
                         \ store it in the high byte of SC(1 0) at SC+1
 
- TXA
- AND #&FC
- ASL A
- STA SC
- BCC P%+4
- INC SC+1
- TYA
- AND #7
- TAY
- TXA
- AND #3
- TAX
- LDA P
- BMI PX3
- CMP #&50
- BCC PX2
- LDA TWOS2,X
- AND S
- EOR (SC),Y
- STA (SC),Y
- LDY T1
- INY
- CPY Q
- BNE PXLO
- RTS
+ TXA                    \ Each character block contains 8 pixel rows, so to get
+ AND #%11111100         \ the address of the first byte in the character block
+ ASL A                  \ that we need to draw into, as an offset from the start
+                        \ of the row, we clear bits 0-1 and shift left to double
+                        \ it (as each character row contains two pages of bytes,
+                        \ or 512 bytes, which cover 256 pixels). This also
+                        \ shifts bit 7 of the x-coordinate into the C flag
+
+ STA SC                 \ Store the address of the character block in the low
+                        \ byte of SC(1 0), so now SC(1 0) points to the
+                        \ character block we need to draw into
+
+ BCC P%+4               \ If the C flag is clear then skip the next instruction
+
+ INC SC+1               \ The C flag is set, which means bit 7 of X1 was set
+                        \ before the ASL above, so the x-coordinate is in the
+                        \ right half of the screen (i.e. in the range 128-255).
+                        \ Each row takes up two pages in memory, so the right
+                        \ half is in the second page but SC+1 contains the value
+                        \ we looked up from ylookup, which is the page number of
+                        \ the first memory page for the row... so we need to
+                        \ increment SC+1 to point to the correct page
+
+ TYA                    \ Set Y to just bits 0-2 of the y-coordinate, which will
+ AND #%00000111         \ be the number of the pixel row we need to draw into
+ TAY                    \ within the character block
+
+ TXA                    \ Copy bits 0-1 of the x-coordinate to bits 0-1 of X,
+ AND #%00000011         \ which will now be in the range 0-3, and will contain
+ TAX                    \ the two pixels to show in the character row
+
+ LDA P                  \ If the pixel's ZZ distance, which we stored in P, is
+ BMI PX3                \ greater than 127, jump to PX3 to plot a 1-pixel dot
+
+ CMP #80                \ If the pixel's ZZ distance is < 80, then the dot is
+ BCC PX2                \ pretty close, so jump to PX2 to to draw a four-pixel
+                        \ square
+
+ LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
+ AND S                  \ X, and AND with the colour byte we fetched into S
+                        \ so that pixel takes on the colour we want to draw
+                        \ (i.e. A is acting as a mask on the colour byte)
+
+ EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+ STA (SC),Y             \ remove it later without ruining the background that's
+                        \ already on-screen
+
+ LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
+                        \ in the command block, which we stored in T1 above
+
+ INY                    \ Increment Y, so it now points to the first byte of
+                        \ the next pixel in the command block
+
+ CPY Q                  \ If the index hasn't reached the value in Q (which
+ BNE PXLO               \ contains the size of the pixel buffer), loop back to
+                        \ PXLO to draw the next pixel in the buffer
+
+ RTS                    \ Return from the subroutine
 
 .PX2
 
- LDA TWOS2,X
- AND S
- EOR (SC),Y
- STA (SC),Y
- DEY
- BPL P%+4
- LDY #1
- LDA TWOS2,X
- AND S
- EOR (SC),Y
- STA (SC),Y
- LDY T1
- INY
- CPY Q
- BNE PXLO
- RTS
+                        \ If we get here, we need to plot a 4-pixel square in
+                        \ in the correct colour for this pixel's distance
+
+ LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
+ AND S                  \ X, and AND with the colour byte we fetched into S
+                        \ so that pixel takes on the colour we want to draw
+                        \ (i.e. A is acting as a mask on the colour byte)
+
+ EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+ STA (SC),Y             \ remove it later without ruining the background that's
+                        \ already on-screen
+
+ DEY                    \ Reduce Y by 1 to point to the pixel row above the one
+ BPL P%+4               \ we just plotted, and if it is still positive, skip the
+                        \ next instruction
+
+ LDY #1                 \ Reducing Y by 1 made it negative, which means Y was
+                        \ 0 before we did the DEY above, so set Y to 1 to point
+                        \ to the pixel row after the one we just plotted
+
+                        \ We now draw our second dash
+
+ LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
+ AND S                  \ X, and AND with the colour byte we fetched into S
+                        \ so that pixel takes on the colour we want to draw
+                        \ (i.e. A is acting as a mask on the colour byte)
+
+ EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+ STA (SC),Y             \ remove it later without ruining the background that's
+                        \ already on-screen
+
+ LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
+                        \ in the command block, which we stored in T1 above
+
+ INY                    \ Increment Y, so it now points to the first byte of
+                        \ the next pixel in the command block
+
+ CPY Q                  \ If the index hasn't reached the value in Q (which
+ BNE PXLO               \ contains the size of the pixel buffer), loop back to
+                        \ PXLO to draw the next pixel in the buffer
+
+ RTS                    \ Return from the subroutine
 
 .PX3
 
- LDA TWOS,X
- AND S
- EOR (SC),Y
- STA (SC),Y
- LDY T1
- INY
- CPY Q
- BNE PXLO
- RTS
+                        \ If we get here, the dot is a long way away (at a
+                        \ distance that is > 127), so we want to draw a 1-pixel
+                        \ dot
+
+ LDA TWOS,X             \ Fetch a mode 1 1-pixel byte with the pixel set as in
+ AND S                  \ X, and AND with the colour byte we fetched into S
+                        \ so that pixel takes on the colour we want to draw
+                        \ (i.e. A is acting as a mask on the colour byte)
+
+ EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+ STA (SC),Y             \ remove it later without ruining the background that's
+                        \ already on-screen
+
+ LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
+                        \ in the command block, which we stored in T1 above
+
+ INY                    \ Increment Y, so it now points to the first byte of
+                        \ the next pixel in the command block
+
+ CPY Q                  \ If the index hasn't reached the value in Q (which
+ BNE PXLO               \ contains the size of the pixel buffer), loop back to
+                        \ PXLO to draw the next pixel in the buffer
+
+ RTS                    \ Return from the subroutine
 
 .PX5
 
- INY
- LDA (OSSC),Y
- TAX
- INY
- LDA (OSSC),Y
- STY T1
- TAY
+                        \ If we get here then the pixel's distance value (ZZ) is
+                        \ a multiple of 8, as set by the parasite's PIXEL
+                        \ routine
+
+ INY                    \ Increment Y to 3
+
+ LDA (OSSC),Y           \ Set X to byte #3 from the Y-th pixel block in OSSC,
+ TAX                    \ contains the pixel's x-coordinate
+
+ INY                    \ Increment Y to 4
+
+ LDA (OSSC),Y           \ Set Y to byte #4 from the Y-th pixel block in OSSC,
+ STY T1                 \ which contains the pixel's y-coordinate, and store Y,
+ TAY                    \ the index of this pixel's y-coordinate, in T1
 
  LDA ylookup,Y          \ Look up the page number of the character row that
  STA SC+1               \ contains the pixel with the y-coordinate in Y, and
                         \ store it in the high byte of SC(1 0) at SC+1
 
- TXA
- AND #&FC
- ASL A
- STA SC
- BCC P%+4
- INC SC+1
- TYA
- AND #7
- TAY
- TXA
- AND #3
- TAX
- LDA P
- CMP #&50
- BCS PX6
- LDA TWOS2,X
- AND #WHITE
- EOR (SC),Y
- STA (SC),Y
- DEY
- BPL P%+4
- LDY #1
+ TXA                    \ Each character block contains 8 pixel rows, so to get
+ AND #%11111100         \ the address of the first byte in the character block
+ ASL A                  \ that we need to draw into, as an offset from the start
+                        \ of the row, we clear bits 0-1 and shift left to double
+                        \ it (as each character row contains two pages of bytes,
+                        \ or 512 bytes, which cover 256 pixels). This also
+                        \ shifts bit 7 of the x-coordinate into the C flag
+
+ STA SC                 \ Store the address of the character block in the low
+                        \ byte of SC(1 0), so now SC(1 0) points to the
+                        \ character block we need to draw into
+
+ BCC P%+4               \ If the C flag is clear then skip the next instruction
+
+ INC SC+1               \ The C flag is set, which means bit 7 of X1 was set
+                        \ before the ASL above, so the x-coordinate is in the
+                        \ right half of the screen (i.e. in the range 128-255).
+                        \ Each row takes up two pages in memory, so the right
+                        \ half is in the second page but SC+1 contains the value
+                        \ we looked up from ylookup, which is the page number of
+                        \ the first memory page for the row... so we need to
+                        \ increment SC+1 to point to the correct page
+
+ TYA                    \ Set Y to just bits 0-2 of the y-coordinate, which will
+ AND #%00000111         \ be the number of the pixel row we need to draw into
+ TAY                    \ within the character block
+
+ TXA                    \ Copy bits 0-1 of the x-coordinate to bits 0-1 of X,
+ AND #%00000011         \ which will now be in the range 0-3, and will contain
+ TAX                    \ the two pixels to show in the character row
+
+ LDA P                  \ Fetch the pixel's distance into P
+
+ CMP #80                \ If the pixel's ZZ distance is >= 80, then the dot is
+ BCS PX6                \ a medium distance away, so jump to PX6 to to draw a
+                        \ single pixel
+
+ LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
+ AND #WHITE             \ X, and AND with #WHITE to make it white (i.e. cyan/red)
+
+ EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+ STA (SC),Y             \ remove it later without ruining the background that's
+                        \ already on-screen
+
+ DEY                    \ Reduce Y by 1 to point to the pixel row above the one
+ BPL P%+4               \ we just plotted, and if it is still positive, skip the
+                        \ next instruction
+
+ LDY #1                 \ Reducing Y by 1 made it negative, which means Y was
+                        \ 0 before we did the DEY above, so set Y to 1 to point
+                        \ to the pixel row after the one we just plotted
+
+                        \ We now draw our second dash
 
 .PX6
 
- LDA TWOS2,X
- AND #WHITE
- EOR (SC),Y
- STA (SC),Y
- LDY T1
- INY
- CPY Q
- BEQ P%+5
- JMP PXLO
- RTS
+ LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
+ AND #WHITE             \ X, and AND with #WHITE to make it white (i.e. cyan/red)
+
+ EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+ STA (SC),Y             \ remove it later without ruining the background that's
+                        \ already on-screen
+
+ LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
+                        \ in the command block, which we stored in T1 above
+
+ INY                    \ Increment Y, so it now points to the first byte of
+                        \ the next pixel in the command block
+
+ CPY Q                  \ If the index has reached the value in Q (which
+ BEQ P%+5               \ contains the size of the pixel buffer), skip the next
+                        \ instruction
+
+ JMP PXLO               \ We haven't reached the end of the buffer, so loop back
+                        \ to PXLO to draw the next pixel in the buffer
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
 \       Name: PXCL
 \       Type: Variable
 \   Category: Drawing pixels
-\    Summary: 
+\    Summary: A four-colour mode 1 pixel byte that represents a dot's distance
+\
+\ ------------------------------------------------------------------------------
+\
+\ The following table contains colour bytes for 2-pixel mode 1 pixels, with the
+\ index into the table representing distance. Closer pixels are at the top, so
+\ the closest pixels are cyan/red, then yellow, then red, then red/yellow, then
+\ yellow.
+\
+\ That said, this table is only used with odd distance values, as set in the
+\ parasite's PIXEL3 routine, so in practice the four distances are yellow, red,
+\ red/yellow, yellow.
 \
 \ ******************************************************************************
 
 .PXCL
 
- EQUB WHITE
- EQUB &F
- EQUB &F
- EQUB &F0
- EQUB &F0
- EQUB &A5
- EQUB &A5
- EQUB &F
+ EQUB WHITE             \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+ EQUB %00001111         \ Four mode 1 pixels of colour 1 (yellow)
+ EQUB %00001111         \ Four mode 1 pixels of colour 1 (yellow)
+ EQUB %11110000         \ Four mode 1 pixels of colour 2 (red)
+ EQUB %11110000         \ Four mode 1 pixels of colour 2 (red)
+ EQUB %10100101         \ Four mode 1 pixels of colour 2, 1, 2, 1 (red/yellow)
+ EQUB %10100101         \ Four mode 1 pixels of colour 2, 1, 2, 1 (red/yellow)
+ EQUB %00001111         \ Four mode 1 pixels of colour 1, 1, 1, 1 (yellow)
 
 \ ******************************************************************************
 \
@@ -4531,11 +4744,11 @@ ENDMACRO
 .OSWVECS
 
  EQUW KEYBOARD          \            240 (&F0)     0 = Scan the keyboard
- EQUW PIXEL             \            241 (&F1)     1 = Draw a pixel
+ EQUW PIXEL             \            241 (&F1)     1 = Draw space view pixels
  EQUW MSBAR             \ #DOmsbar = 242 (&F2)     2 = Update missile indicators
  EQUW WSCAN             \ #wscn    = 243 (&F3)     3 = Wait for vertical sync
  EQUW SC48              \ #onescan = 244 (&F4)     4 = Draw ship on 3D scanner
- EQUW DOT               \ #DOdot   = 245 (&F5)     5 = Draw a dot
+ EQUW DOT               \ #DOdot   = 245 (&F5)     5 = Draw a dot on the compass
  EQUW DODKS4            \ #DODKS4  = 246 (&F6)     6 = Scan for a specific key
  EQUW HLOIN             \            247 (&F7)     7 = Draw a horizontal line
  EQUW HANGER            \            248 (&F8)     8 = Display the hanger
