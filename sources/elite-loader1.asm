@@ -14,33 +14,46 @@
 \ The terminology and notations used in this commentary are explained at
 \ https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html
 \
+\ ------------------------------------------------------------------------------
+\
+\ This source file produces the following binary file:
+\
+\   * output/ELITE.bin
+\
 \ ******************************************************************************
 
 INCLUDE "sources/elite-header.h.asm"
 
-C% = &2000
-L% = C%
-D% = &D000
-LC% = &8000-C%
-svn = &7FFD
-N% = 77
+\ ******************************************************************************
+\
+\ Configuration variables
+\
+\ ******************************************************************************
 
-OSWRCH = &FFEE
-OSBYTE = &FFF4
-OSWORD = &FFF1
-SCLI = &FFF7
-IRQ1V = &204
-ZP = &90
-P = &92
-Q = &93
-YY = &94
-T = &95
-Z1 = ZP
-Z2 = P
+N% = 77                 \ N% is set to the number of bytes in the VDU table, so
+                        \ we can loop through them in the loader below
+
+OSWRCH = &FFEE          \ The address for the OSWRCH routine
+OSBYTE = &FFF4          \ The address for the OSBYTE routine
+OSWORD = &FFF1          \ The address for the OSWORD routine
+SCLI = &FFF7            \ The address for the OSCLI routine
 
 VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
                         \ known as SHEILA)
+
+IRQ1V = &204            \ The IRQ1V vector that we intercept to implement the
+                        \ split-sceen mode
+
+ZP = &90                \ Temporary storage, used all over the place
+
+P = &92                 \ Temporary storage, used all over the place
+
+Q = &93                 \ Temporary storage, used all over the place
+
+YY = &94                \ Temporary storage, used when drawing Saturn
+
+T = &95                 \ Temporary storage, used all over the place
 
 CODE% = &2000
 LOAD% = &2000
@@ -390,7 +403,7 @@ ENDMACRO
  STA ZP+1
 
  LDY #0                 \ We are now going to send the 67 VDU bytes in the table
-                        \ at B% to OSWRCH to set up the special mode 4 screen
+                        \ at B% to OSWRCH to set up the special mode 1 screen
                         \ that forms the basis for the split-screen mode
 
 .LOOP
@@ -956,11 +969,11 @@ ENDMACRO
 \       Name: TWOS
 \       Type: Variable
 \   Category: Drawing pixels
-\    Summary: Ready-made single-pixel character row bytes for mode 4
+\    Summary: Ready-made single-pixel character row bytes for mode 1
 \
 \ ------------------------------------------------------------------------------
 \
-\ Ready-made bytes for plotting one-pixel points in mode 4 (the top part of the
+\ Ready-made bytes for plotting one-pixel points in mode 1 (the top part of the
 \ split screen). See the PIX routine for details.
 \
 \ ******************************************************************************

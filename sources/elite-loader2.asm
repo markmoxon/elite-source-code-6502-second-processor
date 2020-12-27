@@ -14,23 +14,41 @@
 \ The terminology and notations used in this commentary are explained at
 \ https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html
 \
+\ ------------------------------------------------------------------------------
+\
+\ This source file produces the following binary file:
+\
+\   * output/ELITEa.bin
+\
+\ after reading in the following files:
+\
+\   * binaries/P.DIALS2P.bin
+\   * binaries/P.DATE2P.bin
+\   * binaries/Z.ACSOFT.bin
+\   * binaries/Z.ELITE.bin
+\   * binaries/Z.(C)ASFT.bin
+\
 \ ******************************************************************************
 
-C% = &2000
-L% = C%
-D% = &D000
-LC% = &8000-C%
-OSWRCH = &FFEE
-OSBYTE = &FFF4
-OSWORD = &FFF1
-SCLI = &FFF7
-ZP = &90
-P = &92
-Q = &93
-YY = &94
-T = &95
-Z1 = ZP
-Z2 = P
+INCLUDE "sources/elite-header.h.asm"
+
+\ ******************************************************************************
+\
+\ Configuration variables
+\
+\ ******************************************************************************
+
+D% = &D000              \ The address where the ship blueprints get moved to
+                        \ after loading, so they go from &D000 to &F200
+
+OSWRCH = &FFEE          \ The address for the OSWRCH routine
+OSBYTE = &FFF4          \ The address for the OSBYTE routine
+OSWORD = &FFF1          \ The address for the OSWORD routine
+SCLI = &FFF7            \ The address for the OSCLI routine
+
+Z1 = &90                \ Temporary storage, used when moving code
+
+Z2 = &92                \ Temporary storage, used when moving code
 
 CODE% = &2000
 LOAD% = &2000

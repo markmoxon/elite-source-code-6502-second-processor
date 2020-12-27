@@ -14,10 +14,49 @@
 \ The terminology and notations used in this commentary are explained at
 \ https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html
 \
+\ ------------------------------------------------------------------------------
+\
+\ This source file produces the following binary files:
+\
+\   * output/CODE.unprot.bin
+\
+\ after reading in the following files:
+\
+\   * output/ELTA.bin
+\   * output/ELTB.bin
+\   * output/ELTC.bin
+\   * output/ELTD.bin
+\   * output/ELTE.bin
+\   * output/ELTF.bin
+\   * output/ELTG.bin
+\   * output/ELTH.bin
+\   * output/ELTI.bin
+\   * output/ELTJ.bin
+\   * output/SHIPS.bin
+\   * output/WORDS.bin
+\
 \ ******************************************************************************
 
-CODE% = &1000
-LOAD% = &1000
+INCLUDE "sources/elite-header.h.asm"
+
+\ ******************************************************************************
+\
+\ Configuration variables
+\
+\ ******************************************************************************
+
+CODE% = &1000           \ The address where the the main game code file (P.CODE)
+                        \ is run in the parasite
+
+LOAD% = &1000           \ The load address of the main game code file, which is
+                        \ the same as the load address as it doesn't get moved
+                        \ after loading
+
+\ ******************************************************************************
+\
+\ Load the compiled binaries to create the Big Code File
+\
+\ ******************************************************************************
 
 ORG CODE%
 

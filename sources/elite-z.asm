@@ -14,57 +14,64 @@
 \ The terminology and notations used in this commentary are explained at
 \ https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html
 \
+\ ------------------------------------------------------------------------------
+\
+\ This source file produces the following binary file:
+\
+\   * output/I.CODE.bin
+\
 \ ******************************************************************************
 
 INCLUDE "sources/elite-header.h.asm"
 
-CPU 1
+\ ******************************************************************************
+\
+\ Configuration variables
+\
+\ ******************************************************************************
 
-CODE% = &2400
-LOAD% = &2400
+CODE% = &2400           \ The assembly address of the main I/O processor code
+LOAD% = &2400           \ The load address of the main I/O processor code
 
-C% = &2400
-L% = C%
-D% = &D000
+D% = &D000              \ The address where the ship blueprints get moved to
+                        \ after loading, so they go from &D000 to &F200
 
-Z = 0
-XX15 = &90
-X1 = XX15
-Y1 = XX15+1
-X2 = XX15+2
-Y2 = XX15+3
-SC = XX15+6
-SCH = SC+1
-OSTP = SC
-OSWRCH = &FFEE
-OSBYTE = &FFF4
-OSWORD = &FFF1
-OSFILE = &FFDD
-SCLI = &FFF7
+OSWRCH = &FFEE          \ The address for the OSWRCH routine
+OSBYTE = &FFF4          \ The address for the OSBYTE routine
+OSWORD = &FFF1          \ The address for the OSWORD routine
+OSFILE = &FFDD          \ The address for the OSFILE routine
+SCLI = &FFF7            \ The address for the OSCLI routine
+NVOSWRCH = &FFCB        \ The address for the non-vectored OSWRCH routine
 
 VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
                         \ known as SHEILA)
 
-IRQ1V = &204
-VSCAN = 57
-XX21 = D%
-WRCHV = &20E
-WORDV = &20C
-RDCHV = &210
-NVOSWRCH = &FFCB
-Tina = &B00
-Y = 96
-\protlen = 0
-PARMAX = 15
+IRQ1V = &204            \ The IRQ1V vector that we intercept to implement the
+                        \ split-sceen mode
+
+WRCHV = &20E            \ The WRCHV vector that we intercept to implement our
+                        \ own custom OSWRCH commands for communicating over the
+                        \ Tube
+
+WORDV = &20C            \ The WORDV vector that we intercept to implement our
+                        \ own custom OSWORD commands for communicating over the
+                        \ Tube
+
+RDCHV = &210            \ The RDCHV vector that we intercept to add validation
+                        \ when reading characters using OSRDCH
+
+VSCAN = 57              \ Defines the split position in the split-screen mode
+
+Y = 96                  \ The centre y-coordinate of the 256 x 192 space view
 
 YELLOW  = %00001111     \ Four mode 1 pixels of colour 1 (yellow)
 RED     = %11110000     \ Four mode 1 pixels of colour 2 (red, magenta or white)
 CYAN    = %11111111     \ Four mode 1 pixels of colour 3 (cyan or white)
 GREEN   = %10101111     \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
 WHITE   = %11111010     \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
-MAGENTA = RED
-DUST    = WHITE
+MAGENTA = RED           \ Four mode 1 pixels of colour 2 (red, magenta or white)
+DUST    = WHITE         \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
 
 RED2    = %00000011     \ Two mode 2 pixels of colour 1    (red)
 GREEN2  = %00001100     \ Two mode 2 pixels of colour 2    (green)
@@ -74,6 +81,14 @@ MAG2    = %00110011     \ Two mode 2 pixels of colour 5    (magenta)
 CYAN2   = %00111100     \ Two mode 2 pixels of colour 6    (cyan)
 WHITE2  = %00111111     \ Two mode 2 pixels of colour 7    (white)
 STRIPE  = %00100011     \ Two mode 2 pixels of colour 5, 1 (magenta/red)
+
+Tina = &0B00            \ The address of the code block for the TINA command,
+                        \ which should start with "TINA" and then be followed by
+                        \ code that executes on the I/O processor before the
+                        \ main game code terminates
+
+PARMAX = 15             \ The number of dashboard parameters transmitted with
+                        \ the #RDPARAMS and OSWRCH 137 <param> commands
 
 \ ******************************************************************************
 \
@@ -136,6 +151,61 @@ ORG &0080
                         \ called with OSSC(1 0) pointing to the OSWORD parameter
                         \ block (i.e. OSSC(1 0) = (Y X) from the original call
                         \ in the I/O processor)
+
+ORG &0090
+
+.XX15
+
+ SKIP 0                 \ Temporary storage, typically used for storing screen
+                        \ coordinates in line-drawing routines
+                        \
+                        \ There are six bytes of storage, from XX15 TO XX15+5.
+                        \ The first four bytes have the following aliases:
+                        \
+                        \   X1 = XX15
+                        \   Y1 = XX15+1
+                        \   X2 = XX15+2
+                        \   Y2 = XX15+3
+                        \
+                        \ These are typically used for describing lines in terms
+                        \ of screen coordinates, i.e. (X1, Y1) to (X2, Y2)
+                        \
+                        \ The last two bytes of XX15 do not have aliases
+
+.X1
+
+ SKIP 1                 \ Temporary storage, typically used for x-coordinates in
+                        \ line-drawing routines
+
+.Y1
+
+ SKIP 1                 \ Temporary storage, typically used for y-coordinates in
+                        \ line-drawing routines
+
+.X2
+
+ SKIP 1                 \ Temporary storage, typically used for x-coordinates in
+                        \ line-drawing routines
+
+.Y2
+
+ SKIP 1                 \ Temporary storage, typically used for y-coordinates in
+                        \ line-drawing routines
+
+ SKIP 2                 \ The last 2 bytes of the XX15 block
+
+.SC
+
+ SKIP 1                 \ Screen address (low byte)
+                        \
+                        \ Elite draws on-screen by poking bytes directly into
+                        \ screen memory, and SC(1 0) is typically set to the
+                        \ address of the character block containing the pixel
+                        \ we want to draw
+
+.SCH
+
+ SKIP 1                 \ Screen address (high byte)
 
 \ ******************************************************************************
 \
@@ -722,7 +792,7 @@ NEXT
 \
 \       Name: JMPTAB
 \       Type: Variable
-\   Category: Text
+\   Category: Tube
 \    Summary: The lookup table for OSWRCH jump commands (128-147)
 \
 \ ------------------------------------------------------------------------------
@@ -1195,6 +1265,11 @@ NEXT
 \
 \   A                   The character to print on the printer and screen
 \
+\ Other entry points:
+\
+\   sent                Turn the printer off and restore the USOSWRCH handler,
+\                       returning from the subroutine using a tail call   
+\
 \ ******************************************************************************
 
 .printer
@@ -1643,7 +1718,6 @@ NEXT
 \       Type: Subroutine
 \   Category: Drawing pixels
 \    Summary: Draw a single-height dot on the dashboard
-\  Deep dive: Drawing colour pixels in mode 5
 \
 \ ------------------------------------------------------------------------------
 \
@@ -3387,6 +3461,12 @@ NEXT
 \   Category: Drawing lines
 \    Summary: Implement the OSWORD 247 command (draw a horizontal line)
 \
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   HLOIN3              
+\
 \ ******************************************************************************
 
 .HLOIN
@@ -3548,26 +3628,48 @@ NEXT
 \       Name: TWFL
 \       Type: Variable
 \   Category: Drawing pixels
-\    Summary: 
+\    Summary: Ready-made character rows for the left end of a horizontal line
+\
+\ ------------------------------------------------------------------------------
+\
+\ Ready-made bytes for plotting horizontal line end caps in mode 1 (the top part
+\ of the split screen). This table provides a byte with pixels at the left end,
+\ which is used for the right end of the line.
+\
+\ See the HLOIN routine for details.
 \
 \ ******************************************************************************
 
 .TWFL
 
- EQUD &FFEECC88
+ EQUB %10001000
+ EQUB %11001100
+ EQUB %11101110
+ EQUB %11111111
 
 \ ******************************************************************************
 \
 \       Name: TWFR
 \       Type: Variable
 \   Category: Drawing pixels
-\    Summary: 
+\    Summary: Ready-made character rows for the right end of a horizontal line
+\
+\ ------------------------------------------------------------------------------
+\
+\ Ready-made bytes for plotting horizontal line end caps in mode 1 (the top part
+\ of the split screen). This table provides a byte with pixels at the left end,
+\ which is used for the right end of the line.
+\
+\ See the HLOIN routine for details.
 \
 \ ******************************************************************************
 
 .TWFR
 
- EQUD &113377FF
+ EQUB %11111111
+ EQUB %01110111
+ EQUB %00110011
+ EQUB %00010001
 
 \ ******************************************************************************
 \
@@ -4729,7 +4831,7 @@ ENDMACRO
 \
 \       Name: OSWVECS
 \       Type: Variable
-\   Category: Text
+\   Category: Tube
 \    Summary: The lookup table for OSWORD jump commands (240-255)
 \
 \ ------------------------------------------------------------------------------
@@ -4785,6 +4887,10 @@ ENDMACRO
 \                         * All others: Call the standard OSWORD routine
 \
 \  (Y X)                The address of the associated OSWORD parameter block
+\
+\ Other entry points:
+\
+\   SAFE                Contains an RTS   
 \
 \ ******************************************************************************
 
@@ -5124,6 +5230,10 @@ ENDMACRO
 \   X                   X is preserved
 \
 \   Y                   Y is preserved
+\
+\ Other entry points:
+\
+\   RR4                 Restore the registers and return from the subroutine
 \
 \ ******************************************************************************
 
@@ -6272,18 +6382,16 @@ ENDMACRO
 \
 \ Set A and X to the colours we should use for indicators showing dangerous and
 \ safe values respectively. This enables us to implement flashing indicators,
-\ which is one of the game's configurable options. If flashing is enabled, the
-\ colour returned in A (dangerous values) will be red for 8 iterations of the
-\ main loop, and yellow/white for the next 8, before going back to red. If we
-\ always use PZW to decide which colours we should use when updating indicators,
-\ flashing colours will be automatically taken care of for us.
+\ which is one of the game's configurable options.
 \
-\ The values returned are &F0 for yellow/white and &0F for red. These are mode 5
-\ bytes that contain 4 pixels, with the colour of each pixel given in two bits,
-\ the high bit from the first nibble (bits 4-7) and the low bit from the second
-\ nibble (bits 0-3). So in &F0 each pixel is %10, or colour 2 (yellow or white,
-\ depending on the dashboard palette), while in &0F each pixel is %01, or colour
-\ 1 (red).
+\ If flashing is enabled, the colour returned in A (dangerous values) will be
+\ red for 8 iterations of the main loop, and green for the next 8, before
+\ going back to red. If we always use PZW to decide which colours we should use
+\ when updating indicators, flashing colours will be automatically taken care of
+\ for us.
+\
+\ The values returned are #GREEN2 for green and #RED2 for red. These are mode 2
+\ bytes that contain 2 pixels, with the colour of each pixel given in four bits.
 \
 \ Returns:
 \
@@ -6339,11 +6447,11 @@ ENDMACRO
 \                       threshold is in pixels, so it should have a value from
 \                       0-16, as each bar indicator is 16 pixels wide
 \
-\   K                   The colour to use when A is a high value, as a 4-pixel
-\                       mode 5 character row byte
+\   K                   The colour to use when A is a high value, as a 2-pixel
+\                       mode 2 character row byte
 \
-\   K+1                 The colour to use when A is a low value, as a 4-pixel
-\                       mode 5 character row byte
+\   K+1                 The colour to use when A is a low value, as a 2-pixel
+\                       mode 2 character row byte
 \
 \   SC(1 0)             The screen address of the first character block in the
 \                       indicator
@@ -6425,7 +6533,7 @@ ENDMACRO
 
 .DL5
 
- AND COL                \ Fetch the 4-pixel mode 5 colour byte from COL, and
+ AND COL                \ Fetch the 2-pixel mode 2 colour byte from COL, and
                         \ only keep pixels that have their equivalent bits set
                         \ in the mask byte in A
 
@@ -6574,10 +6682,10 @@ ENDMACRO
                         \ drawing blank characters after this one until we reach
                         \ the end of the indicator row
 
- LDA CTWOS,X            \ CTWOS is a table of ready-made 1-pixel mode 5 bytes,
-                        \ just like the TWOS and TWOS2 tables for mode 4 (see
+ LDA CTWOS,X            \ CTWOS is a table of ready-made 1-pixel mode 2 bytes,
+                        \ just like the TWOS and TWOS2 tables for mode 1 (see
                         \ the PIXEL routine for details of how they work). This
-                        \ fetches a mode 5 1-pixel byte with the pixel position
+                        \ fetches a mode 2 1-pixel byte with the pixel position
                         \ at X, so the pixel is at the offset that we want for
                         \ our vertical bar
 
@@ -6689,6 +6797,12 @@ ENDMACRO
 \
 \ ******************************************************************************
 
+CPU 1                   \ Switch to 65C02 assembly, because although this
+                        \ routine forms part of the code that runs on the 6502
+                        \ CPU of the BBC Micro I/O processor, the do65C02
+                        \ routine gets transmitted across the Tube to the
+                        \ parasite, and it contains some 65C02 code
+
 .do65C02
 
 .whiz
@@ -6769,6 +6883,8 @@ ENDMACRO
 
 protlen = end65C02 - do65C02
 
+CPU 0                   \ Switch back to normal 6502 asembly
+
 \ ******************************************************************************
 \
 \       Name: IRQ1
@@ -6783,6 +6899,12 @@ protlen = end65C02 - do65C02
 \ the deep dive on "The split-screen mode" for details).
 \
 \ IRQ1V is set to point to IRQ1 by elite-loader.asm.
+\
+\ Other entry points:
+\
+\   VNT3+1              Changing this byte modifies the palette-loading
+\                       instruction at VNT3, to support the #SETVDU19 <offset>
+\                       command for changing the mode 1 palette
 \
 \ ******************************************************************************
 

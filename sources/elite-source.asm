@@ -14,26 +14,45 @@
 \ The terminology and notations used in this commentary are explained at
 \ https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html
 \
+\ ------------------------------------------------------------------------------
+\
+\ This source file produces the following binary files:
+\
+\   * output/ELTA.bin
+\   * output/ELTB.bin
+\   * output/ELTC.bin
+\   * output/ELTD.bin
+\   * output/ELTE.bin
+\   * output/ELTF.bin
+\   * output/ELTG.bin
+\   * output/ELTH.bin
+\   * output/ELTI.bin
+\   * output/ELTJ.bin
+\   * output/SHIPS.bin
+\   * output/WORDS.bin
+\
 \ ******************************************************************************
 
 INCLUDE "sources/elite-header.h.asm"
 
-CPU 1
+CPU 1                   \ Switch to 65C02 assembly, as this code runs on the
+                        \ 6502 Second Processor
 
 _ENABLE_MAX_COMMANDER   = TRUE AND _REMOVE_CHECKSUMS
 
-C% = &1000
-W% = &9200
-L% = C%
-Z = 0
-NTY = 34
-D% = &D000
-\E% = D%+2*NTY
-LS% = D%-1
-BRKV = &202
-VEC = &7FFE
+\ ******************************************************************************
+\
+\ Configuration variables
+\
+\ ******************************************************************************
 
-Q% = _ENABLE_MAX_COMMANDER
+D% = &D000              \ The address where the ship blueprints get moved to
+                        \ after loading, so they go from &D000 to &F200
+
+LS% = D%-1              \ The start of the descending ship line heap
+
+BRKV = &202             \ The break vector that we intercept to enable us to
+                        \ handle and display system errors
 
 NOST = 18               \ The number of stardust particles in normal space (this
                         \ goes down to 3 in witchspace)
@@ -41,6 +60,8 @@ NOST = 18               \ The number of stardust particles in normal space (this
 NOSH = 20               \ The maximum number of ships in our local bubble of
                         \ universe (counting from 0, so there are actually 21
                         \ ship slots)
+
+NTY = 34                \ The number of different ship types
 
 MSL = 1                 \ Ship type for a missile
 SST = 2                 \ Ship type for a Coriolis space station
@@ -75,24 +96,69 @@ JH = SHU+2              \ Junk is defined as ending before the Cobra Mk III
                         \ alloy plate, cargo canister, asteroid, splinter,
                         \ shuttle, transporter
 
-PACK = SH3
+PACK = SH3              \ The first of the eight pack-hunter ships, which tend
+                        \ to spawn in groups. With the default value of PACK the
+                        \ pack-hunters are the Sidewinder, Mamba, Krait, Adder,
+                        \ Gecko, Cobra Mk I, Worm and Cobra Mk III (pirate)
 
-NI% = 37
-POW = 15
-B = &30
-Armlas = INT(128.5+1.5*POW)
-Mlas = 50               \ Mining laser
-NRU% = 0
-VE = &57
-LL = 30
+POW = 15                \ Pulse laser power
+
+Mlas = 50               \ Mining laser power
+
+Armlas = INT(128.5+1.5*POW) \ Military laser power
+
+NI% = 37                \ The number of bytes in each ship's data block (as
+                        \ stored in INWK and K%)
+
+OSWRCH = &FFEE          \ The address for the OSWRCH routine
+OSBYTE = &FFF4          \ The address for the OSBYTE routine
+OSWORD = &FFF1          \ The address for the OSWORD routine
+OSFILE = &FFDD          \ The address for the OSFILE routine
+SCLI = &FFF7            \ The address for the OSCLI routine
+
+DOFE21 = 131            \ The OSBYTE number for the #DOFE21 command
+DOhfx = 132             \ The OSBYTE number for the #DOhfx command
+SETXC = 133             \ The OSBYTE number for the #SETXC command
+SETYC = 134             \ The OSBYTE number for the #SETYC command
+clyns = 135             \ The OSBYTE number for the #clyns command
+RDPARAMS = 136          \ The OSBYTE number for the #RDPARAMS command
+DODIALS = 138           \ The OSBYTE number for the #DODIALS command
+VIAE = 139              \ The OSBYTE number for the #VIAE command
+DOBULB = 140            \ The OSBYTE number for the #DOBULB command
+DOCATF = 141            \ The OSBYTE number for the #DOCATF command
+SETCOL = 142            \ The OSBYTE number for the #SETCOL command
+SETVDU19 = 143          \ The OSBYTE number for the #SETVDU19 command
+DOsvn = 144             \ The OSBYTE number for the #DOsvn command
+printcode = 146         \ The OSBYTE number for the #printcode command
+prilf = 147             \ The OSBYTE number for the #prilf command
+
+DOmsbar = 242           \ The OSWORD number for the #DOmsbar command
+wscn = 243              \ The OSWORD number for the #wscn command
+onescan = 244           \ The OSWORD number for the #onescan command
+DOdot = 245             \ The OSWORD number for the #DOdot command
+DODKS4 = 246            \ The OSWORD number for the #DODKS4 command
+
+X = 128                 \ The centre x-coordinate of the 256 x 192 space view
+Y = 96                  \ The centre y-coordinate of the 256 x 192 space view
+
+f0 = &20                \ Internal key number for red key f0 (Launch, Front)
+f1 = &71                \ Internal key number for red key f1 (Buy Cargo, Rear)
+f2 = &72                \ Internal key number for red key f2 (Sell Cargo, Left)
+f3 = &73                \ Internal key number for red key f3 (Equip Ship, Right)
+f4 = &14                \ Internal key number for red key f4 (Long-range Chart)
+f5 = &74                \ Internal key number for red key f5 (Short-range Chart)
+f6 = &75                \ Internal key number for red key f6 (Data on System)
+f7 = &16                \ Internal key number for red key f7 (Market Price)
+f8 = &76                \ Internal key number for red key f8 (Status Mode)
+f9 = &77                \ Internal key number for red key f9 (Inventory)
 
 YELLOW  = %00001111     \ Four mode 1 pixels of colour 1 (yellow)
 RED     = %11110000     \ Four mode 1 pixels of colour 2 (red, magenta or white)
 CYAN    = %11111111     \ Four mode 1 pixels of colour 3 (cyan or white)
 GREEN   = %10101111     \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
 WHITE   = %11111010     \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
-MAGENTA = RED
-DUST    = WHITE
+MAGENTA = RED           \ Four mode 1 pixels of colour 2 (red, magenta or white)
+DUST    = WHITE         \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
 
 RED2    = %00000011     \ Two mode 2 pixels of colour 1    (red)
 GREEN2  = %00001100     \ Two mode 2 pixels of colour 2    (green)
@@ -103,49 +169,18 @@ CYAN2   = %00111100     \ Two mode 2 pixels of colour 6    (cyan)
 WHITE2  = %00111111     \ Two mode 2 pixels of colour 7    (white)
 STRIPE  = %00100011     \ Two mode 2 pixels of colour 5, 1 (magenta/red)
 
-OSWRCH = &FFEE
-OSBYTE = &FFF4
-OSWORD = &FFF1
-OSFILE = &FFDD
-SCLI = &FFF7
+NRU% = 0                \ The number of planetary systems with special extended
+                        \ descriptions in the RUTOK table. The value of this
+                        \ variable is 0 in the original source, but this appears
+                        \ to be a bug, as it should be 26
 
-DOFE21 = &83
-DOhfx = &84
-SETXC = &85
-SETYC = &86
-clyns = &87
-RDPARAMS = &88
-DODIALS = &8A
-VIAE = &8B
-DOBULB = &8C
-DOCATF = &8D
-SETCOL = &8E
-SETVDU19 = &8F
-DOsvn = &90
-printcode = &92
-prilf = &93
+VE = &57                \ The obfuscation byte used to hide the extended tokens
+                        \ table from crackers viewing the binary code
 
-DOmsbar = 242
-wscn = 243
-onescan = 244
-DOdot = 245
-DODKS4 = 246
+LL = 30                 \ The length of lines (in characters) of justified text
+                        \ in the extended tokens system
 
-X = 128
-Y = 96
-
-f0 = &20
-f1 = &71
-f2 = &72
-f3 = &73
-f4 = &14
-f5 = &74
-f6 = &75
-f7 = &16
-f8 = &76
-f9 = &77
-
-W = 5
+W = 5                   \ Configuration variables for the demo
 W2 = 16
 WY = 12
 W2Y = 2.5*WY
@@ -185,9 +220,7 @@ ORG &0000
                         \ Elite draws on-screen by poking bytes directly into
                         \ screen memory, and SC(1 0) is typically set to the
                         \ address of the character block containing the pixel
-                        \ we want to draw (see the deep dives on "Drawing
-                        \ monochrome pixels in mode 4" and "Drawing colour
-                        \ pixels in mode 5" for more details)
+                        \ we want to draw
 
 .SCH
 
@@ -2192,7 +2225,7 @@ NEXT
 
 \ ******************************************************************************
 \
-\ Save output/WORDS9.bin
+\ Save output/WORDS.bin
 \
 \ ******************************************************************************
 
@@ -3488,6 +3521,8 @@ LOAD_A% = LOAD%
 \ also shown.
 \
 \ ******************************************************************************
+
+Q% = _ENABLE_MAX_COMMANDER
 
 .NA%
 
@@ -5656,6 +5691,8 @@ ENDIF
 \
 \ Other entry points:
 \
+\   oh                  Contains an RTS
+\
 \   SPIN2               Remove any randomness: spawn cargo of a specific type
 \                       (given in X), and always spawn the number given in A
 \
@@ -7478,15 +7515,15 @@ ENDIF
 \       Name: TWFL
 \       Type: Variable
 \   Category: Drawing lines
-\    Summary: Ready-made character rows for left end of horizontal line
+\    Summary: Ready-made character rows for the left end of a horizontal line in
+\             mode 4
 \
 \ ------------------------------------------------------------------------------
 \
-\ Ready-made bytes for plotting horizontal line end caps in mode 4 (the top part
-\ of the split screen). This table provides a byte with pixels at the left end,
-\ which is used for the right end of the line.
-\
-\ See the HLOIN routine for details.
+\ This table is not used by the 6502 Second Processor version of Elite. Instead,
+\ the TWFL table in the I/O processor code is used, which contains ready-made
+\ bytes for plotting horizontal line end caps in mode 1 (the top part of the
+\ split screen).
 \
 \ ******************************************************************************
 
@@ -7505,15 +7542,15 @@ ENDIF
 \       Name: TWFR
 \       Type: Variable
 \   Category: Drawing lines
-\    Summary: Ready-made character rows for right end of horizontal line
+\    Summary: Ready-made character rows for the right end of a horizontal line
+\             in mode 4
 \
 \ ------------------------------------------------------------------------------
 \
-\ Ready-made bytes for plotting horizontal line end caps in mode 4 (the top part
-\ of the split screen). This table provides a byte with pixels at the right end,
-\ which is used for the left end of the line.
-\
-\ See the HLOIN routine for details.
+\ This table is not used by the 6502 Second Processor version of Elite. Instead,
+\ the TWFR table in the I/O processor code is used, which contains ready-made
+\ bytes for plotting horizontal line end caps in mode 1 (the top part of the
+\ split screen).
 \
 \ ******************************************************************************
 
@@ -11233,6 +11270,12 @@ LOAD_C% = LOAD% +P% - CODE%
 \   Category: Ship hanger
 \    Summary: 
 \
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   UNWISE              
+\
 \ ******************************************************************************
 
 .HAS1
@@ -12075,6 +12118,10 @@ LOAD_C% = LOAD% +P% - CODE%
 \   * Set the pitch and roll counters to head in that direction
 \
 \   * Speed up or slow down, depending on where the ship is in relation to us
+\
+\ Other entry points:
+\
+\   TA151               Make the ship head towards the planet
 \
 \ ******************************************************************************
 
@@ -16257,7 +16304,6 @@ LOAD_C% = LOAD% +P% - CODE%
 \ they appear to flicker and dance. Also heat up the laser temperature and drain
 \ some energy.
 \
-\
 \ Other entry points:
 \
 \   LASLI2              Just draw the current laser lines without moving the
@@ -16589,6 +16635,13 @@ LOAD_C% = LOAD% +P% - CODE%
 \   Category: Missions
 \    Summary: Finish mission 1
 \
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   BRPS                Print the extended token in A, show the Status Mode
+\                       screen and return from the subroutine
+\
 \ ******************************************************************************
 
 .DEBRIEF
@@ -16599,7 +16652,7 @@ LOAD_C% = LOAD% +P% - CODE%
  INC TALLY+1            \ Award 256 kill points for completing the mission
 
  LDX #LO(50000)         \ Increase our cash reserves by the generous mission
- LDY #HI(50000)         \ reward of 50,000 CR
+ LDY #HI(50000)         \ reward of 5,000 CR
  JSR MCASH
 
  LDA #15                \ Set A = 15 so the call to BRP prints extended token 15
@@ -16608,7 +16661,7 @@ LOAD_C% = LOAD% +P% - CODE%
 .BRPS
 
  BNE BRP                \ Jump to BRP to print the extended token in A and show
-                        \ the Status Mode screen), returning from the subroutine
+                        \ the Status Mode screen, returning from the subroutine
                         \ using a tail call (this BNE is effectively a JMP as A
                         \ is never zero)
 
@@ -18192,6 +18245,7 @@ LOAD_D% = LOAD% + P% - CODE%
 \ Other entry points:
 \
 \   TT15b               Draw the crosshairs in the current colour
+\
 \ ******************************************************************************
 
 .TT15
@@ -18870,6 +18924,10 @@ LOAD_D% = LOAD% + P% - CODE%
 \                           * 4 = Sell Cargo
 \
 \                           * 8 = Inventory
+\
+\ Other entry points:
+\
+\   NWDAVxx             Used to rejoin this routine from the call to NWDAV4
 \
 \ ******************************************************************************
 
@@ -21946,6 +22004,8 @@ LOAD_D% = LOAD% + P% - CODE%
 \
 \   prx-3               Return the price of the item with number A - 1
 \
+\   c                   Contains an RTS
+\
 \ ******************************************************************************
 
  SEC                    \ Decrement A (for when this routine is called via
@@ -21994,8 +22054,9 @@ LOAD_D% = LOAD% + P% - CODE%
 .qv
 
  LDA tek                \ If the current system's tech level is less than 8,
- CMP #8                 \ skip the next two instructions
- BCC P%+7
+ CMP #8                 \ skip the next two instructions, otherwise we clear the
+ BCC P%+7               \ screen to prevent the view menu from clashing with the
+                        \ longer equipment menu available in higher tech systems
 
  LDA #32                \ Clear the top part of the screen, draw a white border,
  JSR TT66               \ and set the current view type in QQ11 to 32 (Equip
@@ -26549,6 +26610,10 @@ LOAD_E% = LOAD% + P% - CODE%
 \ duplicated as the first coordinate of the second batch, so the two lines join
 \ up to make a complete circle.
 \
+\ Other entry points:
+\
+\   WP1                 Contains an RTS
+\
 \ ******************************************************************************
 
 .LS2FL
@@ -29902,6 +29967,13 @@ LOAD_F% = LOAD% + P% - CODE%
 \   Category: Start and end
 \    Summary: Restart the game
 \
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   QU5                 Restart the game using the last saved commander without
+\                       asking whether to load a new commander file
+\
 \ ******************************************************************************
 
 .BR1
@@ -32767,6 +32839,11 @@ ENDIF
 \ Both options end up at DK4 to scan for other keys, beyond the seven primary
 \ flight controls.
 \
+\ Other entry points:
+\
+\   auton               Get the docking computer to "press" the flight keys to
+\                       dock the ship
+\
 \ ******************************************************************************
 
 .DOKEY
@@ -33002,6 +33079,10 @@ ENDIF
 \
 \   * If this is a space view, scan for secondary flight keys and update the
 \     relevant bytes in the key logger
+\
+\ Other entry points:
+\
+\   FREEZE              Rejoin the pause routine after processing a screen save
 \
 \ ******************************************************************************
 
@@ -38795,6 +38876,11 @@ LOAD_H% = LOAD% + P% - CODE%
 \ MVEIT routine is about moving the other ships rather than us (even though we
 \ are the one doing the moving).
 \
+\ Other entry points:
+\
+\   MV45                Rejoin the MVEIT routine after the rotation, tactics and
+\                       scanner code
+\
 \ ******************************************************************************
 
 .MV45
@@ -40172,6 +40258,10 @@ ENDIF
 \   A                   A is set to 0
 \
 \   Y                   Y is set to 0
+\
+\ Other entry points:
+\
+\   SC5                 Contains an RTS
 \
 \ ******************************************************************************
 

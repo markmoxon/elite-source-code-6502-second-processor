@@ -14,6 +14,14 @@
 \ The terminology and notations used in this commentary are explained at
 \ https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html
 \
+\ ------------------------------------------------------------------------------
+\
+\ This source file produces the following SSD disc image:
+\
+\   * elite-6502sp.ssd
+\
+\ This can be loaded into an emulator or a real BBC Micro.
+\
 \ ******************************************************************************
 
 INCLUDE "sources/elite-header.h.asm"
