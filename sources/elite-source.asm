@@ -9522,6 +9522,12 @@ ENDIF
 \
 \                         * If X = 19, rotate roofv_z
 \
+\                         * If X = 21, rotate sidev_x
+\
+\                         * If X = 23, rotate sidev_y
+\
+\                         * If X = 25, rotate sidev_z
+\
 \   Y                   The second vector to rotate:
 \
 \                         * If Y = 9,  rotate nosev_x
@@ -11130,48 +11136,77 @@ LOAD_C% = LOAD% +P% - CODE%
 \       Name: HATB
 \       Type: Variable
 \   Category: Ship hanger
-\    Summary: 
+\    Summary: Ship hanger group table
+\
+\ ------------------------------------------------------------------------------
+\
+\   Byte #0             Non-zero = Ship type to draw
+\                       0        = don't draw anything
+\
+\   Byte #1             Bits 0-7 = Ship's x_hi
+\                       Bit 0    = Ship's z_hi (1 if clear, or 2 if set)
+\
+\   Byte #2             Bits 0-6 = Ship's z_lo
+\                       Bit 7    = Ship's x_sign
 \
 \ ******************************************************************************
 
-\ Ship,X,Z(low bit = sgn X)
-
 .HATB
 
- EQUB 9
- EQUB &54
- EQUB &3B
- EQUB 10
- EQUB &82
- EQUB &B0
+                        \ Hanger group for X = 0: Shuttle and Transporter
+
+ EQUB 9                 \ Ship type = 9 = Shuttle
+ EQUB %01010100         \ x_hi = %01010100 = 84, z_hi   = 1     -> x = +84
+ EQUB %00111011         \ z_lo =  %0111011 = 59, x_sign = 0        z = +315
+
+ EQUB 10                \ Ship type = 10 = Transporter
+ EQUB %10000010         \ x_hi = %10000010 = 130, z_hi   = 1    -> x = -130
+ EQUB %10110000         \ z_lo =  %0110000 =  48, x_sign = 1       z = +304
+
+ EQUB 0                 \ No ship
  EQUB 0
  EQUB 0
+
+                        \ Hanger group for X = 9: Three cargo canisters
+
+ EQUB OIL               \ Ship type = OIL = Cargo canister
+ EQUB %01010000         \ x_hi = %01010000 = 80, z_hi   = 1     -> x = +80
+ EQUB %00010001         \ z_lo =  %0010001 = 17, x_sign = 0        z = +273
+
+ EQUB OIL               \ Ship type = OIL = Cargo canister
+ EQUB %11010001         \ x_hi = %11010001 = 209, z_hi = 2      -> x = +209
+ EQUB %00101000         \ z_lo =  %0101000 =  40, x_sign = 0       z = +552
+
+ EQUB OIL               \ Ship type = OIL = Cargo canister
+ EQUB %01000000         \ x_hi = %01000000 = 64, z_hi   = 1     -> x = +64
+ EQUB %00000110         \ z_lo =  %0000110 = 6,  x_sign = 0        z = +262
+
+                        \ Hanger group for X = 18: Viper, Krait
+                        \ (Transporter and Cobra Mk III in the disc version)
+
+ EQUB COPS              \ Ship type = COPS = Viper
+ EQUB %01100000         \ x_hi = %01100000 = 96, z_hi   = 1     -> x = -96
+ EQUB %10010000         \ z_lo =  %0010000 = 16, x_sign = 1        z = +272
+
+ EQUB KRA               \ Ship type = KRA = Krait
+ EQUB %00010000         \ x_hi = %00010000 = 16, z_hi   = 1     -> x = -16
+ EQUB %11010001         \ z_lo =  %1010001 = 81, x_sign = 1        z = +337
+
+ EQUB 0                 \ No ship
  EQUB 0
- EQUB OIL
- EQUB &50
- EQUB &11
- EQUB OIL
- EQUB &D1
- EQUB &28
- EQUB OIL
- EQUB &40
- EQUB &06
- EQUB COPS
- EQUB &60
- EQUB &90
- EQUB KRA
- EQUB &10
- EQUB &D1
  EQUB 0
- EQUB 0
- EQUB 0
- EQUB 16
- EQUB &51
- EQUB &F8
- EQUB 19
- EQUB &60
- EQUB &75
- EQUB 0
+
+                        \ Hanger group for X = 27: Viper, Krait
+
+ EQUB 16                \ Ship type = 16 = Viper
+ EQUB %01010001         \ x_hi = %01010001 =  81, z_hi  = 2     -> x = -81
+ EQUB %11111000         \ z_lo =  %1111000 = 120, x_sign = 1       z = +632
+
+ EQUB 19                \ Ship type = 19 = Krait
+ EQUB %01100000         \ x_hi = %01100000 = 96,  z_hi   = 1    -> x = +96
+ EQUB %01110101         \ z_lo =  %1110101 = 117, x_sign = 0       z = +373
+
+ EQUB 0                 \ No ship
  EQUB 0
  EQUB 0
 
@@ -11180,168 +11215,300 @@ LOAD_C% = LOAD% +P% - CODE%
 \       Name: HALL
 \       Type: Subroutine
 \   Category: Ship hanger
-\    Summary: Draw the ship hanger by sending an OSWORD 248 command to the I/O
-\             processor
+\    Summary: Draw the ships in the ship hanger, them draw the hanger by sending
+\             an OSWORD 248 command to the I/O processor
 \
 \ ******************************************************************************
 
 .HALL
 
- LDA #0
- JSR DOVDU19
- JSR UNWISE
- LDA #0
- JSR TT66
- JSR DORND
- BPL HA7
- AND #3
- STA T
- ASL A
- ASL A
- ASL A
+ LDA #0                 \ Send a #SETVDU19 0 command to the I/O processor to
+ JSR DOVDU19            \ switch to the mode 1 palette for the space view,
+                        \ which is yellow (colour 1), red (colour 2) and cyan
+                        \ (colour 3)
+
+ JSR UNWISE             \ Call UNWISE, which does nothing in the 6502 Second
+                        \ Processor version of Elite (this routine does have a
+                        \ function in the disc version but isn't required here,
+                        \ so the authors presumably just cleared out the UNWISE
+                        \ routine rather than unplumbing it from the code)
+
+ LDA #0                 \ Clear the top part of the screen, draw a white border,
+ JSR TT66               \ and set the current view type in QQ11 to 0 (space
+                        \ view)
+
+ JSR DORND              \ Set A and X to random numbers
+
+ BPL HA7                \ Jump to HA7 if A is positive (50% chance)
+ 
+ AND #3                 \ Reduce A to a random number in the range 0-3
+
+ STA T                  \ Set X = A * 8 + A
+ ASL A                  \       = 9 * A
+ ASL A                  \
+ ASL A                  \ so X is a random number, either 0, 9, 18 or 27
  ADC T
  TAX
- LDY #3
- STY CNT2
+
+                        \ The following double loop calls the HAS1 routine three
+                        \ times to display three ships on screen. For each call,
+                        \ the values passed to HAS1 in XX15+2 to XX15 are taken
+                        \ from the HATB table, depending on the value in X, as
+                        \ follows:
+                        \
+                        \   * If X = 0,  pass bytes #0 to #2 of HATB to HAS1
+                        \                then bytes #3 to #5
+                        \                then bytes #6 to #8
+                        \
+                        \   * If X = 9,  pass bytes  #9 to #11 of HATB to HAS1
+                        \                then bytes #12 to #14
+                        \                then bytes #15 to #17
+                        \
+                        \   * If X = 18, pass bytes #18 to #20 of HATB to HAS1
+                        \                then bytes #21 to #23
+                        \                then bytes #24 to #26
+                        \
+                        \   * If X = 27, pass bytes #27 to #29 of HATB to HAS1
+                        \                then bytes #30 to #32
+                        \                then bytes #33 to #35
+                        \
+                        \ Note that the values are passed in reverse, so for the
+                        \ first call, for example, where we pass bytes #0 to #2
+                        \ of HATB to HAS1, we call HAS1 with:
+                        \
+                        \   XX15   = HATB+2
+                        \   XX15+1 = HATB+1
+                        \   XX15+2 = HATB
+
+ LDY #3                 \ Set CNT2 = 3 to act as an outer loop counter going
+ STY CNT2               \ from 3 to 1, so the HAL8 loop is run 3 times
 
 .HAL8
 
- LDY #2
+ LDY #2                 \ Set Y = 2 to act as an inner loop counter going from
+                        \ 2 to 0
 
 .HAL9
 
- LDA HATB,X
- STA XX15,Y
- INX
- DEY
- BPL HAL9
- TXA
- PHA
- JSR HAS1
- PLA
- TAX
- DEC CNT2
- BNE HAL8
- LDY #128
- BNE HA9
+ LDA HATB,X             \ Copy the X-th byte of HATB to the Y-th byte of XX15,
+ STA XX15,Y             \ as described above
+
+ INX                    \ Increment X to point to the next byte in HATB
+
+ DEY                    \ Decrement Y to point to the previous byte in XX15
+
+ BPL HAL9               \ Loop back to copy the next byte until we have copied
+                        \ three of them (i.e. Y was 3 before the DEY)
+
+ TXA                    \ Store X on the stack so we can retrieve it after the
+ PHA                    \ call to HAS1 (as it contains the index of the next
+                        \ byte in HATB
+
+ JSR HAS1               \ Call HAS1 to draw this ship in the hanger
+
+ PLA                    \ Restore the value of X, so X points to the next byte
+ TAX                    \ in HATB after the three bytes we copied into XX15
+
+ DEC CNT2               \ Decrement the outer loop counter in CNT2
+
+ BNE HAL8               \ Loop back to HAL8 to do it 3 times
+
+ LDY #128               \ Set Y = 128 to send as byte #2 of the parameter block
+                        \ to the OSWORD 248 command below
+
+ BNE HA9                \ Jump to HA9 to display the ship hanger (this BNE is
+                        \ effectively a JMP as Y is never zero)
 
 .HA7
 
- LSR A
+                        \ If we get here, A is a positive random number in the
+                        \ range 0-127
+
+ LSR A                  \ Set XX15+1 = A / 2 (random number 0-63)
  STA XX15+1
- JSR DORND
+
+ JSR DORND              \ Set XX15 = random number 0-255
  STA XX15
- JSR DORND
- AND #3
- ADC #SH3
- STA XX15+2
- JSR HAS1
- LDY #0
+
+ JSR DORND              \ Set XX15+2 = #SH3 + random number 0-3
+ AND #3                 \
+ ADC #SH3               \ which is the ship type of a Sidewinder, Mamba, Krait
+ STA XX15+2             \ or Adder
+
+ JSR HAS1               \ Call HAS1 to draw this ship in the hanger
+
+ LDY #0                 \ Set Y = 0 to send as byte #2 of the parameter block to
+                        \ the OSWORD 248 command below
 
 .HA9
 
- STY HANG+2
+ STY HANG+2             \ Store Y in byte #2 of the parameter block below
+
  JSR UNWISE
- LDA #248
+
+ LDA #248               \ Set A in preparation for sending an OSWORD 248 command
 
  LDX #LO(HANG)          \ Set (Y X) to point to the HANG parameter block
  LDY #HI(HANG)
- JMP OSWORD
 
-\ ******************************************************************************
-\
-\       Name: HANG
-\       Type: Variable
-\   Category: Ship hanger
-\    Summary: 
-\
-\ ******************************************************************************
+ JMP OSWORD             \ Send an OSWORD 248 command to the I/O processor to
+                        \ draw the ship hanger, returning from the subroutine
+                        \ using a tail call
 
 .HANG
 
- EQUB 3
- EQUB 0
- EQUB 0
+ EQUB 3                 \ The number of bytes to transmit with this command
+
+ EQUB 0                 \ The number of bytes to receive with this command
+
+ EQUB 0                 \ The ????
 
 \ ******************************************************************************
 \
 \       Name: HAS1
 \       Type: Subroutine
 \   Category: Ship hanger
-\    Summary: 
+\    Summary: Draw a ship in the ship hanger
 \
 \ ------------------------------------------------------------------------------
 \
+\ The ship's position within the hanger is determined by the arguments and the
+\ size of the ship's targetable area, as follows:
+\
+\   * The x-coordinate is (x_sign x_hi 0) from the arguments, so the ship can be
+\     left of centre or right of centre
+\
+\   * The y-coordinate is negative and is lower down the screen for smaller
+\     ships, so smaller ships are drawn closer to the ground (because they are)
+\
+\   * The z-coordinate is positive, with both z_hi (which is 1 or 2) and z_lo
+\     coming from the arguments
+\
+\ Arguments:
+\
+\   XX15                Bits 0-6 = Ship's z_lo
+\                       Bit 7    = Ship's x_sign
+\
+\   XX15+1              Bits 0-7 = Ship's x_hi
+\                       Bit 0    = Ship's z_hi (1 if clear, or 2 if set)
+\
+\   XX15+2              Non-zero = Ship type to draw
+\                       0        = don't draw anything
+\
 \ Other entry points:
 \
-\   UNWISE              
+\   UNWISE              Contains an RTS
 \
 \ ******************************************************************************
 
 .HAS1
 
- JSR ZINF               \ Call ZINF to reset the INWK ship workspace
+ JSR ZINF               \ Call ZINF to reset the INWK ship workspace and reset
+                        \ the orientation vectors, with nosev pointing out of
+                        \ the screen, so this puts the ship flat on the
+                        \ horizontal deck (the y = 0 plane) with its nose
+                        \ pointing towards us
 
- LDA XX15
+ LDA XX15               \ Set z_lo = XX15
  STA INWK+6
- LSR A
+
+ LSR A                  \ Set the sign bit of x_sign to bit 0 of A
  ROR INWK+2
- LDA XX15+1
+
+ LDA XX15+1             \ Set x_hi = XX15+1
  STA INWK
- LSR A
+
+ LSR A                  \ Set z_hi = 1 + bit 0 of XX15+1
  LDA #1
  ADC #0
  STA INWK+7
- LDA #128
+
+ LDA #%10000000         \ Set bit 7 of y_sign, so y is negative
  STA INWK+5
- STA RAT2
- LDA #&B
- STA INWK+34
- JSR DORND
- STA XSAV
+
+ STA RAT2               \ Set RAT2 = %10000000, so the yaw calls in HAL5 below
+                        \ are negative
+
+ LDA #&B                \ Set the ship line heap pointer in INWK(35 34) to point
+ STA INWK+34            \ to &0B00
+
+ JSR DORND              \ We now perform a random number of small angle (3.6
+ STA XSAV               \ degree) rotations to spin the ship on the deck while
+                        \ keeping it flat on the deck (a bit like spinning a
+                        \ bottle), so we set XSAV to a random number between 0
+                        \ and 255 for the number of small yaw rotations to
+                        \ peform, so the ship could be pointing in any direction
 
 .HAL5
 
- LDX #21
+ LDX #21                \ Rotate (sidev_x, nosev_x) by a small angle (yaw)
  LDY #9
  JSR MVS5
- LDX #23
+
+ LDX #23                \ Rotate (sidev_y, nosev_y) by a small angle (yaw)
  LDY #11
  JSR MVS5
- LDX #25
+
+ LDX #25                \ Rotate (sidev_z, nosev_z) by a small angle (yaw)
  LDY #13
  JSR MVS5
- DEC XSAV
- BNE HAL5
- LDY XX15+2
- BEQ HA1
- TYA
+
+ DEC XSAV               \ Decrement the yaw counter in XSAV
+
+ BNE HAL5               \ Loop back to yaw a little more until we have yawed
+                        \ by the number of times in XSAV
+
+ LDY XX15+2             \ Set Y = XX15+2, the ship type of the ship we need to
+                        \ draw
+
+ BEQ HA1                \ If Y = 0, return from the subroutine (as HA1 contains
+                        \ an RTS)
+
+ TYA                    \ Set X = 2 * Y
  ASL A
  TAX
- LDA XX21-2,X
- STA XX0
- LDA XX21-1,X
+
+ LDA XX21-2,X           \ Set XX0(1 0) to the X-th address in the ship blueprint
+ STA XX0                \ address lookup table at XX21, so XX0(1 0) now points
+ LDA XX21-1,X           \ to the blueprint for the ship we need to draw
  STA XX0+1
- BEQ HA1
- LDY #1
+
+ BEQ HA1                \ If the high byte of the blueprint address is 0, then
+                        \ this is not a valid blueprint address, so return from
+                        \ the subroutine (as HA1 contains an RTS)
+
+ LDY #1                 \ Set Q = ship byte #1
  LDA (XX0),Y
  STA Q
- INY
- LDA (XX0),Y
- STA R
- JSR LL5
- LDA #100
- SBC Q
- LSR A
- STA INWK+3
- JSR TIDY
- JMP LL9
+
+ INY                    \ Set R = ship byte #2
+ LDA (XX0),Y            \
+ STA R                  \ so (R Q) contains the ship's targetable area, which is
+                        \ a square number
+
+ JSR LL5                \ Set Q = SQRT(R Q)
+
+ LDA #100               \ Set y_lo = (100 - Q) / 2
+ SBC Q                  \
+ LSR A                  \ so the bigger the ship's targetable area, the smaller
+ STA INWK+3             \ the magnitude of the y-coordinate, so because we set
+                        \ y_sign to be negative above, this means smaller ships
+                        \ are drawn lower down, i.e. closer to the ground, while
+                        \ larger ships are drawn higher up, as you would expect
+
+ JSR TIDY               \ Call TIDY to tidy up the orientation vectors, to
+                        \ prevent the ship from getting elongated and out of
+                        \ shape due to the imprecise nature of trigonometry
+                        \ in assembly language
+
+ JMP LL9                \ Jump to LL9 to display the ship and return from the
+                        \ subroutine using a tail call
 
 .UNWISE
 
 .HA1
 
- RTS \tell LL30 swap EOR/ORA
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -28330,7 +28497,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \ ------------------------------------------------------------------------------
 \
 \ Zero-fill the INWK ship workspace and reset the orientation vectors, with
-\ nosev pointing into the screen.
+\ nosev pointing out of the screen, towards us.
 \
 \ Returns:
 \
@@ -28365,7 +28532,8 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ vectors, while -96 * 256 (&E000) represents -1. We
                         \ already set the vectors to zero above, so we just
                         \ need to set up the high bytes of the diagonal values
-                        \ and we're done
+                        \ and we're done. The negative nosev makes the ship
+                        \ point towards us, as the z-axis points into the screen
 
  LDA #96                \ Set A to represent a 1 (in vector terms)
 
