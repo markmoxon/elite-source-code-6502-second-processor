@@ -1679,7 +1679,9 @@ NEXT
 
                         \ Otherwise the dot is white, which is in front of us,
                         \ so fall through into CPIX4 to draw a double-height
-                        \ dot in the compass\ ******************************************************************************
+                        \ dot in the compass
+
+\ ******************************************************************************
 \
 \       Name: CPIX4
 \       Type: Subroutine
@@ -2294,73 +2296,138 @@ NEXT
 \       Name: LOIN (Part 1 of 7)
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: Draw a line: Calculate the line gradient in the form of deltas
+\  Deep dive: Bresenham's line algorithm
 \
 \ ------------------------------------------------------------------------------
 \
 \ This routine draws a line from (X1, Y1) to (X2, Y2). It has multiple stages.
+\ This stage calculates the line deltas.
+\
+\ Arguments:
+\
+\   X1                  The screen x-coordinate of the start of the line
+\
+\   Y1                  The screen y-coordinate of the start of the line
+\
+\   X2                  The screen x-coordinate of the end of the line
+\
+\   Y2                  The screen y-coordinate of the end of the line
+\
+\ Returns:
+\
+\   Y                   Y is preserved
+\
+\ Other entry points:
+\
+\   LL30                LL30 is a synonym for LOIN and draws a line from
+\                       (X1, Y1) to (X2, Y2)
+\
+\   HL6                 Contains an RTS
 \
 \ ******************************************************************************
 
 .LOIN
 
- LDA #128
- STA S
- ASL A
+ LDA #128               \ Set S = 128, which is the starting point for the
+ STA S                  \ slope error (representing half a pixel)
+
+ ASL A                  \ Set SWAP = 0, as %10000000 << 1 = 0
  STA SWAP
- LDA X2
- SBC X1
- BCS LI1
- EOR #&FF
- ADC #1
- SEC
+
+ LDA X2                 \ Set A = X2 - X1
+ SBC X1                 \       = delta_x
+                        \
+                        \ This subtraction works as the ASL A above sets the C
+                        \ flag
+
+ BCS LI1                \ If X2 > X1 then A is already positive and we can skip
+                        \ the next three instructions
+
+ EOR #%11111111         \ Negate the result in A by flipping all the bits and
+ ADC #1                 \ adding 1, i.e. using two's complement to make it
+                        \ positive
+
+ SEC                    \ Set the C flag, ready for the subtraction below
 
 .LI1
 
- STA P
- LDA Y2
- SBC Y1
+ STA P                  \ Store A in P, so P = |X2 - X1|, or |delta_x|
+
+ LDA Y2                 \ Set A = Y2 - Y1
+ SBC Y1                 \       = delta_y
+                        \
+                        \ This subtraction works as we either set the C flag
+                        \ above, or we skipped that SEC instruction with a BCS
+
  BEQ HLOIN2
- BCS LI2
- EOR #&FF
- ADC #1
+
+ BCS LI2                \ If Y2 > Y1 then A is already positive and we can skip
+                        \ the next two instructions
+
+ EOR #%11111111         \ Negate the result in A by flipping all the bits and
+ ADC #1                 \ adding 1, i.e. using two's complement to make it
+                        \ positive
 
 .LI2
 
- STA Q
- CMP P
- BCC STPX
- JMP STPY
+ STA Q                  \ Store A in Q, so Q = |Y2 - Y1|, or |delta_y|
+
+ CMP P                  \ If Q < P, jump to STPX to step along the x-axis, as
+ BCC STPX               \ the line is closer to being horizontal than vertical
+
+ JMP STPY               \ Otherwise Q >= P so jump to STPY to step along the
+                        \ y-axis, as the line is closer to being vertical than
+                        \ horizontal
 
 \ ******************************************************************************
 \
 \       Name: LOIN (Part 2 of 7)
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: Draw a line: Line has a shallow gradient, step right along x-axis
 \
 \ ------------------------------------------------------------------------------
 \
 \ This routine draws a line from (X1, Y1) to (X2, Y2). It has multiple stages.
+\ If we get here, then:
+\
+\   * |delta_y| < |delta_x|
+\
+\   * The line is closer to being horizontal than vertical
+\
+\   * We are going to step right along the x-axis
+\
+\   * We potentially swap coordinates to make sure X1 < X2
 \
 \ ******************************************************************************
 
 .STPX
 
- LDX X1
- CPX X2
- BCC LI3
- DEC SWAP
- LDA X2
+ LDX X1                 \ Set X = X1
+
+ CPX X2                 \ If X1 < X2, jump down to LI3, as the coordinates are
+ BCC LI3                \ already in the order that we want
+
+ DEC SWAP               \ Otherwise decrement SWAP from 0 to &FF, to denote that
+                        \ we are swapping the coordinates around
+
+ LDA X2                 \ Swap the values of X1 and X2
  STA X1
  STX X2
- TAX
- LDA Y2
+
+ TAX                    \ Set X = X1
+
+ LDA Y2                 \ Swap the values of Y1 and Y2
  LDY Y1
  STA Y1
  STY Y2
 
 .LI3
+
+                        \ By this point we know the line is horizontal-ish and
+                        \ X1 < X2, so we're going from left to right as we go
+                        \ from X1 to X2
 
  LDY Y1
 
@@ -2368,15 +2435,22 @@ NEXT
  STA SC+1               \ contains the pixel with the y-coordinate in Y, and
                         \ store it in the high byte of SC(1 0) at SC+1
 
- LDA Y1
- AND #7
- TAY
+ LDA Y1                 \ Set Y = Y1 mod 8, which is the pixel row within the
+ AND #7                 \ character block at which we want to draw the start of
+ TAY                    \ our line (as each character block has 8 rows)
+
  TXA
  AND #&FC
  ASL A
- STA SC
+
+ STA SC                 \ Store this value in SC, so SC(1 0) now contains the
+                        \ screen address of the far left end (x-coordinate = 0)
+                        \ of the horizontal pixel row that we want to draw the
+                        \ start of our line on
+
  BCC P%+4
  INC SC+1
+
  TXA
  AND #3
  STA R
@@ -2432,11 +2506,18 @@ NEXT
 \       Name: LOIN (Part 3 of 7)
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: Draw a shallow line going right and up or left and down
 \
 \ ------------------------------------------------------------------------------
 \
 \ This routine draws a line from (X1, Y1) to (X2, Y2). It has multiple stages.
+\ If we get here, then:
+\
+\   * The line is going right and up (no swap) or left and down (swap)
+\
+\   * X1 < X2 and Y1-1 > Y2
+\
+\   * Draw from (X1, Y1) at bottom left to (X2, Y2) at top right
 \
 \ ******************************************************************************
 
@@ -2452,6 +2533,7 @@ NEXT
  LDA #&11
  AND COL
  STA LI130+1
+
  LDA SWAP
  BEQ LI190
  LDA R
@@ -2576,18 +2658,25 @@ NEXT
 
 .LIEX
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
 \       Name: LOIN (Part 4 of 7)
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: Draw a shallow line going right and down or left and up
 \
 \ ------------------------------------------------------------------------------
 \
 \ This routine draws a line from (X1, Y1) to (X2, Y2). It has multiple stages.
+\ If we get here, then:
+\
+\   * The line is going right and down (no swap) or left and up (swap)
+\
+\   * X1 < X2 and Y1-1 <= Y2
+\
+\   * Draw from (X1, Y1) at top left to (X2, Y2) at bottom right
 \
 \ ******************************************************************************
 
@@ -2614,6 +2703,7 @@ NEXT
  TYA
  EOR #&F8
  TAY
+
  LDA SWAP
  BEQ LI191
  LDA R
@@ -2735,39 +2825,60 @@ NEXT
 
 .LIEX2
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
 \       Name: LOIN (Part 5 of 7)
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: Draw a line: Line has a steep gradient, step up along y-axis
 \
 \ ------------------------------------------------------------------------------
 \
 \ This routine draws a line from (X1, Y1) to (X2, Y2). It has multiple stages.
+\ If we get here, then:
+\
+\   * |delta_y| >= |delta_x|
+\
+\   * The line is closer to being vertical than horizontal
+\
+\   * We are going to step up along the y-axis
+\
+\   * We potentially swap coordinates to make sure Y1 >= Y2
 \
 \ ******************************************************************************
 
 .STPY
 
- LDY Y1
+ LDY Y1                 \ Set A = Y = Y1
  TYA
- LDX X1
- CPY Y2
- BCS LI15
- DEC SWAP
- LDA X2
+
+ LDX X1                 \ Set X = X1
+
+ CPY Y2                 \ If Y1 >= Y2, jump down to LI15, as the coordinates are
+ BCS LI15               \ already in the order that we want
+
+ DEC SWAP               \ Otherwise decrement SWAP from 0 to &FF, to denote that
+                        \ we are swapping the coordinates around
+
+ LDA X2                 \ Swap the values of X1 and X2
  STA X1
  STX X2
- TAX
- LDA Y2
+
+ TAX                    \ Set X = X1
+
+ LDA Y2                 \ Swap the values of Y1 and Y2
  STA Y1
  STY Y2
- TAY
+
+ TAY                    \ Set Y = A = Y1
 
 .LI15
+
+                        \ By this point we know the line is vertical-ish and
+                        \ Y1 >= Y2, so we're going from top to bottom as we go
+                        \ from Y1 to Y2
 
  LDA ylookup,Y          \ Look up the page number of the character row that
  STA SC+1               \ contains the pixel with the y-coordinate in Y, and
@@ -2776,14 +2887,22 @@ NEXT
  TXA
  AND #&FC
  ASL A
- STA SC
+
+ STA SC                 \ Store this value in SC, so SC(1 0) now contains the
+                        \ screen address of the far left end (x-coordinate = 0)
+                        \ of the horizontal pixel row that we want to draw the
+                        \ start of our line on
+
  BCC P%+4
  INC SC+1
+
  TXA
  AND #3
  TAX
- LDA TWOS,X
- STA R
+
+ LDA TWOS,X             \ Fetch a 1-pixel byte from TWOS where pixel X is set,
+ STA R                  \ and store it in R
+
  LDX P
  BEQ LIfudge
  LDA logL,X
@@ -2835,11 +2954,18 @@ NEXT
 \       Name: LOIN (Part 6 of 7)
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: Draw a steep line going up and left or down and right
 \
 \ ------------------------------------------------------------------------------
 \
 \ This routine draws a line from (X1, Y1) to (X2, Y2). It has multiple stages.
+\ If we get here, then:
+\
+\   * The line is going up and left (no swap) or down and right (swap)
+\
+\   * X1 < X2 and Y1 >= Y2
+\
+\   * Draw from (X1, Y1) at top left to (X2, Y2) at bottom right
 \
 \ ******************************************************************************
 
@@ -3148,11 +3274,18 @@ NEXT
 \       Name: LOIN (Part 7 of 7)
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: Draw a steep line going up and right or down and left
 \
 \ ------------------------------------------------------------------------------
 \
 \ This routine draws a line from (X1, Y1) to (X2, Y2). It has multiple stages.
+\ If we get here, then:
+\
+\   * The line is going up and right (no swap) or down and left (swap)
+\
+\   * X1 >= X2 and Y1 >= Y2
+\
+\   * Draw from (X1, Y1) at bottom left to (X2, Y2) at top right
 \
 \ ******************************************************************************
 
@@ -3459,13 +3592,14 @@ NEXT
 \       Name: HLOIN
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: Implement the OSWORD 247 command (draw a horizontal line)
+\    Summary: Draw a horizontal line from (X1, Y1) to (X2, Y1)
 \
 \ ------------------------------------------------------------------------------
 \
-\ Other entry points:
+\ We do not draw a pixel at the end point (X2, X1).
 \
-\   HLOIN3              
+\ To understand how this routine works, you might find it helpful to read the
+\ deep dive on "Drawing monochrome pixels in mode 4".
 \
 \ ******************************************************************************
 
@@ -3496,17 +3630,23 @@ NEXT
 .HLOIN3
 
  STA S
- CPX X2
- BEQ HL6
- BCC HL5
- LDA X2
- STA X1
+
+ CPX X2                 \ If X1 = X2 then the start and end points are the same,
+ BEQ HL6                \ so return from the subroutine (as HL6 contains an RTS)
+
+ BCC HL5                \ If X1 < X2, jump to HL5 to skip the following code, as
+                        \ (X1, Y1) is already the left point
+
+ LDA X2                 \ Swap the values of X1 and X2, so we know that (X1, Y1)
+ STA X1                 \ is on the left and (X2, Y1) is on the right
  STX X2
- TAX
+
+ TAX                    \ Set X = X1
 
 .HL5
 
- DEC X2
+ DEC X2                 \ Decrement X2
+
  LDY Y1
 
  LDA ylookup,Y          \ Look up the page number of the character row that
@@ -3515,7 +3655,12 @@ NEXT
 
  TYA
  AND #7
- STA SC
+
+ STA SC                 \ Store this value in SC, so SC(1 0) now contains the
+                        \ screen address of the far left end (x-coordinate = 0)
+                        \ of the horizontal pixel row that we want to draw our
+                        \ horizontal line on
+
  TXA
  AND #&FC
  ASL A
@@ -3530,55 +3675,92 @@ NEXT
  STA T
  LDA X2
  AND #&FC
- SEC
- SBC T
- BEQ HL2
+
+ SEC                    \ Set A = A - T, which will contain the number of
+ SBC T                  \ character blocks we need to fill - 1 * 8
+
+ BEQ HL2                \ If A = 0 then the start and end character blocks are
+                        \ the same, so the whole line fits within one block, so
+                        \ jump down to HL2 to draw the line
+
+                        \ Otherwise the line spans multiple characters, so we
+                        \ start with the left character, then do any characters
+                        \ in the middle, and finish with the right character
+
  LSR A
  LSR A
  STA R
  LDA X1
  AND #3
  TAX
- LDA TWFR,X
+
+ LDA TWFR,X             \ Fetch a ready-made byte with X pixels filled in at the
+                        \ right end of the byte (so the filled pixels start at
+                        \ point X and go all the way to the end of the byte),
+                        \ which is the shape we want for the left end of the
+                        \ line
+
  AND S
- EOR (SC),Y
- STA (SC),Y
- TYA
- ADC #8
+
+ EOR (SC),Y             \ Store this into screen memory at SC(1 0), using EOR
+ STA (SC),Y             \ logic so it merges with whatever is already on-screen,
+                        \ so we have now drawn the line's left cap
+
+ TYA                    \ Set Y = Y + 8 so (SC),Y points to the next character
+ ADC #8                 \ block along, on the same pixel row as before
  TAY
+
  BCS HL7
 
 .HL8
 
- LDX R
- DEX
- BEQ HL3
- CLC
+ LDX R                  \ Fetch the number of character blocks we need to fill
+                        \ from R
+
+ DEX                    \ Decrement the number of character blocks in X
+
+ BEQ HL3                \ If X = 0 then we only have the last block to do (i.e.
+                        \ the right cap), so jump down to HL3 to draw it
+
+ CLC                    \ Otherwise clear the C flag so we can do some additions
+                        \ while we draw the character blocks with full-width
+                        \ lines in them
 
 .HLL1
 
  LDA S
  EOR (SC),Y
  STA (SC),Y
- TYA
- ADC #8
+
+ TYA                    \ Set Y = Y + 8 so (SC),Y points to the next character
+ ADC #8                 \ block along, on the same pixel row as before
  TAY
+
  BCS HL9
 
 .HL10
 
- DEX
- BNE HLL1
+ DEX                    \ Decrement the number of character blocks in X
+
+ BNE HLL1               \ Loop back to draw more full-width lines, if we have
+                        \ any more to draw
 
 .HL3
 
  LDA X2
  AND #3
  TAX
- LDA TWFL,X
+
+ LDA TWFL,X             \ Fetch a ready-made byte with X pixels filled in at the
+                        \ left end of the byte (so the filled pixels start at
+                        \ the left edge and go up to point X), which is the
+                        \ shape we want for the right end of the line
+
  AND S
- EOR (SC),Y
- STA (SC),Y
+
+ EOR (SC),Y             \ Store this into screen memory at SC(1 0), using EOR
+ STA (SC),Y             \ logic so it merges with whatever is already on-screen,
+                        \ so we have now drawn the line's right cap
 
 .HL6
 
@@ -3587,29 +3769,57 @@ NEXT
  CPY Q
  BEQ P%+5
  JMP HLLO
- RTS
+
+ RTS                    \ Return from the subroutine
 
 .HL2
+
+                        \ If we get here then the entire horizontal line fits
+                        \ into one character block
 
  LDA X1
  AND #3
  TAX
- LDA TWFR,X
- STA T
+
+ LDA TWFR,X             \ Fetch a ready-made byte with X pixels filled in at the
+ STA T                  \ right end of the byte (so the filled pixels start at
+                        \ point X and go all the way to the end of the byte)
+
  LDA X2
  AND #3
  TAX
- LDA TWFL,X
- AND T
+
+ LDA TWFL,X             \ Fetch a ready-made byte with X pixels filled in at the
+                        \ left end of the byte (so the filled pixels start at
+                        \ the left edge and go up to point X)
+
+ AND T                  \ We now have two bytes, one (T) containing pixels from
+                        \ the starting point X1 onwards, and the other (A)
+                        \ containing pixels up to the end point at X2, so we can
+                        \ get the actual line we want to draw by AND'ing them
+                        \ together. For example, if we want to draw a line from
+                        \ point 2 to point 5, we would have this:
+                        \
+                        \   T       = %00111111
+                        \   A       = %11111100
+                        \   T AND A = %00111100
+                        \
+                        \ so if we stick T AND A in screen memory, that's what
+                        \ we do here, setting A = A AND T
+
  AND S
- EOR (SC),Y
- STA (SC),Y
+
+ EOR (SC),Y             \ Store our horizontal line byte into screen memory at
+ STA (SC),Y             \ SC(1 0), using EOR logic so it merges with whatever is
+                        \ already on-screen
+
  LDY Y2
  INY
  CPY Q
  BEQ P%+5
  JMP HLLO
- RTS
+
+ RTS                    \ Return from the subroutine
 
 .HL7
 
@@ -3676,16 +3886,39 @@ NEXT
 \       Name: orange
 \       Type: Variable
 \   Category: Drawing pixels
-\    Summary: 
+\    Summary: Lookup table for 2-pixel mode 1 orange pixels
+\
+\ ------------------------------------------------------------------------------
+\
+\ Blocks of orange (as used when drawing the sun) have alternate red and yellow
+\ pixels in a cross-hatch pattern. The cross-hatch pattern is made up of offset
+\ rows that are 2 pixels high, and it is made up of red and yellow rectangles,
+\ each of which is 2 pixels high and 1 pixel wide. The result looks like this:
+\
+\   ...ryryryryryryryry...
+\   ...ryryryryryryryry...
+\   ...yryryryryryryryr...
+\   ...yryryryryryryryr...
+\   ...ryryryryryryryry...
+\   ...ryryryryryryryry...
+\
+\ and so on, repeating every four pixel rows.
+\
+\ This is implemented with the following lookup table, where bits 0-1 of the
+\ pixel y-coordinate are used as the index, to fetch the correct pattern to use.
+\
+\ Rows with y-coordinates ending in %00 or %01 fetch the red/yellow pattern from
+\ the table, while rows with y-coordinates ending in %10 or %11 fetch the
+\ yellow/red pattern, so the pattern repeats every four pixel rows.
 \
 \ ******************************************************************************
 
 .orange
 
- EQUB &A5
- EQUB &A5
- EQUB &5A
- EQUB &5A
+ EQUB %10100101         \ Four mode 1 pixels of colour 2, 1, 2, 1 (red/yellow)
+ EQUB %10100101
+ EQUB %01011010         \ Four mode 1 pixels of colour 1, 2, 1, 2 (yellow/red)
+ EQUB %01011010
 
 \ ******************************************************************************
 \
