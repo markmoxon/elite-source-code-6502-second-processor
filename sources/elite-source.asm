@@ -11140,73 +11140,93 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \ ------------------------------------------------------------------------------
 \
+\ This table contains groups of ships to show in the ship hanger. A group of
+\ ships is shown half the time (the other half shows a solo ship), and each of
+\ the four groups is equally likely.
+\
+\ The the bytes for each ship in the group contain the following information:
+\
 \   Byte #0             Non-zero = Ship type to draw
 \                       0        = don't draw anything
 \
 \   Byte #1             Bits 0-7 = Ship's x_hi
 \                       Bit 0    = Ship's z_hi (1 if clear, or 2 if set)
 \
-\   Byte #2             Bits 0-6 = Ship's z_lo
-\                       Bit 7    = Ship's x_sign
+\   Byte #2             Bits 0-7 = Ship's z_lo
+\                       Bit 0    = Ship's x_sign
+\
+\ Ths ship's y-coordinate is calculated in the has1 routine from the size of
+\ its targetable area. Ships of type 0 are not shown.
 \
 \ ******************************************************************************
 
 .HATB
 
-                        \ Hanger group for X = 0: Shuttle and Transporter
+                        \ Hanger group for X = 0
+                        \
+                        \ Shuttle (left) and Transporter (right)
 
  EQUB 9                 \ Ship type = 9 = Shuttle
- EQUB %01010100         \ x_hi = %01010100 = 84, z_hi   = 1     -> x = +84
- EQUB %00111011         \ z_lo =  %0111011 = 59, x_sign = 0        z = +315
+ EQUB %01010100         \ x_hi = %01010100 = 84, z_hi   = 1     -> x = -84
+ EQUB %00111011         \ z_lo = %00111011 = 59, x_sign = 1        z = +315
 
  EQUB 10                \ Ship type = 10 = Transporter
- EQUB %10000010         \ x_hi = %10000010 = 130, z_hi   = 1    -> x = -130
- EQUB %10110000         \ z_lo =  %0110000 =  48, x_sign = 1       z = +304
+ EQUB %10000010         \ x_hi = %10000010 = 130, z_hi   = 1    -> x = +130
+ EQUB %10110000         \ z_lo = %10110000 = 176, x_sign = 0       z = +432
 
- EQUB 0                 \ No ship
+ EQUB 0                 \ No third ship
  EQUB 0
  EQUB 0
 
-                        \ Hanger group for X = 9: Three cargo canisters
+                        \ Hanger group for X = 9
+                        \
+                        \ Three cargo canisters (left, far right and forward,
+                        \ right)
 
  EQUB OIL               \ Ship type = OIL = Cargo canister
- EQUB %01010000         \ x_hi = %01010000 = 80, z_hi   = 1     -> x = +80
- EQUB %00010001         \ z_lo =  %0010001 = 17, x_sign = 0        z = +273
+ EQUB %01010000         \ x_hi = %01010000 = 80, z_hi   = 1     -> x = -80
+ EQUB %00010001         \ z_lo = %00010001 = 17, x_sign = 1        z = +273
 
  EQUB OIL               \ Ship type = OIL = Cargo canister
  EQUB %11010001         \ x_hi = %11010001 = 209, z_hi = 2      -> x = +209
- EQUB %00101000         \ z_lo =  %0101000 =  40, x_sign = 0       z = +552
+ EQUB %00101000         \ z_lo = %00101000 =  40, x_sign = 0       z = +552
 
  EQUB OIL               \ Ship type = OIL = Cargo canister
  EQUB %01000000         \ x_hi = %01000000 = 64, z_hi   = 1     -> x = +64
- EQUB %00000110         \ z_lo =  %0000110 = 6,  x_sign = 0        z = +262
+ EQUB %00000110         \ z_lo = %00000110 = 6,  x_sign = 0        z = +262
 
-                        \ Hanger group for X = 18: Viper, Krait
-                        \ (Transporter and Cobra Mk III in the disc version)
+                        \ Hanger group for X = 18
+                        \
+                        \ Viper (right) and Krait (left)
+                        \
+                        \ (This group consists of a Transporter and Cobra Mk III
+                        \ in the disc version)
 
  EQUB COPS              \ Ship type = COPS = Viper
- EQUB %01100000         \ x_hi = %01100000 = 96, z_hi   = 1     -> x = -96
- EQUB %10010000         \ z_lo =  %0010000 = 16, x_sign = 1        z = +272
+ EQUB %01100000         \ x_hi = %01100000 =  96, z_hi   = 1    -> x = +96
+ EQUB %10010000         \ z_lo = %10010000 = 144, x_sign = 0       z = +400
 
  EQUB KRA               \ Ship type = KRA = Krait
- EQUB %00010000         \ x_hi = %00010000 = 16, z_hi   = 1     -> x = -16
- EQUB %11010001         \ z_lo =  %1010001 = 81, x_sign = 1        z = +337
+ EQUB %00010000         \ x_hi = %00010000 =  16, z_hi   = 1    -> x = -16
+ EQUB %11010001         \ z_lo = %11010001 = 209, x_sign = 1       z = +465
 
- EQUB 0                 \ No ship
+ EQUB 0                 \ No third ship
  EQUB 0
  EQUB 0
 
-                        \ Hanger group for X = 27: Viper, Krait
+                        \ Hanger group for X = 27
+                        \
+                        \ Viper (right and forward) and Krait (left)
 
  EQUB 16                \ Ship type = 16 = Viper
- EQUB %01010001         \ x_hi = %01010001 =  81, z_hi  = 2     -> x = -81
- EQUB %11111000         \ z_lo =  %1111000 = 120, x_sign = 1       z = +632
+ EQUB %01010001         \ x_hi = %01010001 =  81, z_hi  = 2     -> x = +81
+ EQUB %11111000         \ z_lo = %11111000 = 248, x_sign = 0       z = +760
 
  EQUB 19                \ Ship type = 19 = Krait
- EQUB %01100000         \ x_hi = %01100000 = 96,  z_hi   = 1    -> x = +96
- EQUB %01110101         \ z_lo =  %1110101 = 117, x_sign = 0       z = +373
+ EQUB %01100000         \ x_hi = %01100000 = 96,  z_hi   = 1    -> x = -96
+ EQUB %01110101         \ z_lo = %01110101 = 117, x_sign = 1       z = +373
 
- EQUB 0                 \ No ship
+ EQUB 0                 \ No third ship
  EQUB 0
  EQUB 0
 
@@ -11217,6 +11237,18 @@ LOAD_C% = LOAD% +P% - CODE%
 \   Category: Ship hanger
 \    Summary: Draw the ships in the ship hanger, them draw the hanger by sending
 \             an OSWORD 248 command to the I/O processor
+\
+\ ------------------------------------------------------------------------------
+\
+\ Half the time this will draw one of the four pre-defined ship hanger groups in
+\ HATB, and half the time this will draw a solitary Sidewinder, Mamba, Krait or
+\ Adder on a random position. In all cases, the ships will be randomly spun
+\ around on the ground so they can face in any dirction, and larger ships are
+\ drawn higher up off the ground than smaller ships.
+\
+\ The ships are drawn by the HAS1 routine, which uses the normal ship-drawing
+\ routine in LL9, and then the hanger background is drawn by sending an OSWORD
+\ 248 command to the I/O processor.
 \
 \ ******************************************************************************
 
@@ -11311,10 +11343,12 @@ LOAD_C% = LOAD% +P% - CODE%
 
  DEC CNT2               \ Decrement the outer loop counter in CNT2
 
- BNE HAL8               \ Loop back to HAL8 to do it 3 times
+ BNE HAL8               \ Loop back to HAL8 to do it 3 times, once for each ship
+                        \ in the HATB table
 
  LDY #128               \ Set Y = 128 to send as byte #2 of the parameter block
-                        \ to the OSWORD 248 command below
+                        \ to the OSWORD 248 command below, to tell the I/O
+                        \ processor that there are multiple ships in the hanger
 
  BNE HA9                \ Jump to HA9 to display the ship hanger (this BNE is
                         \ effectively a JMP as Y is never zero)
@@ -11335,16 +11369,25 @@ LOAD_C% = LOAD% +P% - CODE%
  ADC #SH3               \ which is the ship type of a Sidewinder, Mamba, Krait
  STA XX15+2             \ or Adder
 
- JSR HAS1               \ Call HAS1 to draw this ship in the hanger
+ JSR HAS1               \ Call HAS1 to draw this ship in the hanger, with the
+                        \ the following properties:
+                        \
+                        \   * Random x-coordinate from -63 to +63
+                        \
+                        \   * Randomly chosen Sidewinder, Mamba, Krait or Adder
+                        \
+                        \   * Random z-coordinate from +256 to +639
 
  LDY #0                 \ Set Y = 0 to send as byte #2 of the parameter block to
-                        \ the OSWORD 248 command below
+                        \ the OSWORD 248 command below, to tell the I/O
+                        \ processor that there is just one ship in the hanger
 
 .HA9
 
  STY HANG+2             \ Store Y in byte #2 of the parameter block below
 
- JSR UNWISE
+ JSR UNWISE             \ Call UNWISE, which (as noted above) does nothing in
+                        \ the 6502 Second Processor version of Elite
 
  LDA #248               \ Set A in preparation for sending an OSWORD 248 command
 
@@ -11361,7 +11404,11 @@ LOAD_C% = LOAD% +P% - CODE%
 
  EQUB 0                 \ The number of bytes to receive with this command
 
- EQUB 0                 \ The ????
+ EQUB 0                 \ Multiple ship flag:
+                        \
+                        \   * 0 = there is just one ship in the hanger
+                        \
+                        \   * 128 = there are multiple ships in the hanger
 
 \ ******************************************************************************
 \
@@ -11386,14 +11433,14 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \ Arguments:
 \
-\   XX15                Bits 0-6 = Ship's z_lo
-\                       Bit 7    = Ship's x_sign
+\   XX15                Bits 0-7 = Ship's z_lo
+\                       Bit 0    = Ship's x_sign
 \
 \   XX15+1              Bits 0-7 = Ship's x_hi
 \                       Bit 0    = Ship's z_hi (1 if clear, or 2 if set)
 \
 \   XX15+2              Non-zero = Ship type to draw
-\                       0        = don't draw anything
+\                       0        = Don't draw anything
 \
 \ Other entry points:
 \
@@ -11437,7 +11484,8 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ keeping it flat on the deck (a bit like spinning a
                         \ bottle), so we set XSAV to a random number between 0
                         \ and 255 for the number of small yaw rotations to
-                        \ peform, so the ship could be pointing in any direction
+                        \ perform, so the ship could be pointing in any
+                        \ direction by the time we're done
 
 .HAL5
 
