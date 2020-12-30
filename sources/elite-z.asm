@@ -2278,18 +2278,35 @@ NEXT
 \       Name: HLOIN2
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: 
+\    Summary: Draw a horizontal line in a specific colour
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   X1                  The screen x-coordinate of the start of the line
+\
+\   X2                  The screen x-coordinate of the end of the line
+\
+\   Y1                  The screen y-coordinate of the line
+\
+\   COL                 The line colour
 \
 \ ******************************************************************************
 
 .HLOIN2
 
- LDX X1
- STY Y2
- INY
- STY Q
- LDA COL
- JMP HLOIN3 \any colour
+ LDX X1                 \ Set X = X1
+
+ STY Y2                 \ Set Y2 = Y, the offset within the line buffer of the
+
+ INY                    \ Set Q = Y + 1, so the call to HLOIN3 only draws one
+ STY Q                  \ line
+
+ LDA COL                \ Set A to the line colour
+
+ JMP HLOIN3             \ Jump to HLOIN3 to draw a line from (X, Y1) to (X2, Y1)
+                        \ in the colour given in A
 
 \ ******************************************************************************
 \
@@ -2314,18 +2331,23 @@ NEXT
 \
 \   Y2                  The screen y-coordinate of the end of the line
 \
-\ Returns:
-\
-\   Y                   Y is preserved
-\
-\ Other entry points:
-\
-\   LL30                LL30 is a synonym for LOIN and draws a line from
-\                       (X1, Y1) to (X2, Y2)
-\
-\   HL6                 Contains an RTS
-\
 \ ******************************************************************************
+
+                        \ In the cassette and disc versions of Elite, LL30 and
+                        \ LOIN are synonyms for the same routine, presumably
+                        \ because the two developers each had their own line
+                        \ routines to start with, and then chose one of them for
+                        \ the final game
+                        \
+                        \ In the 6502 Second Processor version, there are three
+                        \ different routines. In the parasite, LL30 draws a
+                        \ one-segment line, while LOIN draws multi-segment
+                        \ lines. Both of these ask the I/O processor to do the
+                        \ actual drawing, and it uses a routine called... wait
+                        \ for it... LOIN
+                        \
+                        \ This, then, is the I/O processor's LOIN routine, which
+                        \ is not the same as LL30, or the other LOIN. Got that?
 
 .LOIN
 
@@ -2360,7 +2382,9 @@ NEXT
                         \ This subtraction works as we either set the C flag
                         \ above, or we skipped that SEC instruction with a BCS
 
- BEQ HLOIN2
+ BEQ HLOIN2             \ If A = 0 then Y1 = Y2, which means the line is
+                        \ horizontal, so jump to HLOIN2 to draw a horizontal
+                        \ line instead of applying Bresenham's line algorithm
 
  BCS LI2                \ If Y2 > Y1 then A is already positive and we can skip
                         \ the next two instructions
@@ -2429,77 +2453,128 @@ NEXT
                         \ X1 < X2, so we're going from left to right as we go
                         \ from X1 to X2
 
- LDY Y1
-
- LDA ylookup,Y          \ Look up the page number of the character row that
- STA SC+1               \ contains the pixel with the y-coordinate in Y, and
-                        \ store it in the high byte of SC(1 0) at SC+1
+ LDY Y1                 \ Look up the page number of the character row that
+ LDA ylookup,Y          \ contains the pixel with the y-coordinate in Y1, and
+ STA SC+1               \ store it in SC+1, so the high byte of SC is set
+                        \ correctly for drawing our line
 
  LDA Y1                 \ Set Y = Y1 mod 8, which is the pixel row within the
  AND #7                 \ character block at which we want to draw the start of
  TAY                    \ our line (as each character block has 8 rows)
 
- TXA
- AND #&FC
- ASL A
+ TXA                    \ Set A = 2 * bits 2-6 of X1
+ AND #%11111100         \
+ ASL A                  \ and shift bit 7 of X1 into the C flag
 
  STA SC                 \ Store this value in SC, so SC(1 0) now contains the
                         \ screen address of the far left end (x-coordinate = 0)
                         \ of the horizontal pixel row that we want to draw the
                         \ start of our line on
 
- BCC P%+4
- INC SC+1
+ BCC P%+4               \ If bit 7 of X1 was set, so X1 > 127, increment the
+ INC SC+1               \ high byte of SC(1 0) to point to the second page on
+                        \ this screen row, as this page contains the right half
+                        \ of the row
 
- TXA
- AND #3
- STA R
- LDX Q
- BEQ LIlog7
- LDA logL,X
- LDX P
- SEC
- SBC logL,X
- BMI LIlog4
- LDX Q
- LDA log,X
+ TXA                    \ Set R = X1 mod 4, which is the horizontal pixel number
+ AND #3                 \ within the character block where the line starts (as
+ STA R                  \ each pixel line in the character block is 4 pixels
+                        \ wide)
+
+ LDX Q                  \ Set X = |delta_y|
+
+                        \ The following calculates:
+                        \
+                        \   Q = Q / P
+                        \     = |delta_y| / |delta_x|
+                        \
+                        \ using the log tables at logL and log to calculate:
+                        \
+                        \   A = log(Q) - log(P)
+                        \     = log(|delta_y|) - log(|delta_x|)
+                        \
+                        \ by first subtracting the low bytes of the logarithms
+                        \ from the table at LogL, and then subtracting the high
+                        \ bytes from the table at log, before applying the
+                        \ antilog to get the result of the division and putting
+                        \ it in Q
+
+ BEQ LIlog7             \ If |delta_y| = 0, jump to LIlog7 to return 0 as the
+                        \ result of the division
+
+ LDA logL,X             \ Set A = log(Q) - log(P)
+ LDX P                  \       = log(|delta_y|) - log(|delta_x|)
+ SEC                    \
+ SBC logL,X             \ by first subtracting the low bytes of log(Q) - log(P)
+
+ BMI LIlog4             \ If A > 127, jump to LIlog4
+
+ LDX Q                  \ And then subtracting the high bytes of log(Q) - log(P)
+ LDA log,X              \ so now A contains the high byte of log(Q) - log(P)
  LDX P
  SBC log,X
- BCS LIlog5
- TAX
- LDA antilog,X
- JMP LIlog6
+
+ BCS LIlog5             \ If the subtraction fitted into one byte and didn't
+                        \ underflow, then Lq - Lp < 256, so we jump to LIlog5 to
+                        \ return a result of 255
+
+ TAX                    \ Otherwise we set A to the A-th entry from the antilog
+ LDA antilog,X          \ table so the result of the division is now in A
+
+ JMP LIlog6             \ Jump to LIlog6 to return the result
 
 .LIlog5
 
- LDA #&FF
- BNE LIlog6
-
+ LDA #255               \ The division is very close to 1, so set A to the
+ BNE LIlog6             \ closest possible answer to 256, i.e. 255, and jump to
+                        \ LIlog6 to return the result (this BNE is effectively a
+                        \ JMP as A is never zero)
+ 
 .LIlog7
 
- LDA #0
- BEQ LIlog6
+ LDA #0                 \ The numerator in the division is 0, so set A to 0 and
+ BEQ LIlog6             \ jump to LIlog6 to return the result (this BEQ is
+                        \ effectively a JMP as A is always zero)
 
 .LIlog4
 
- LDX Q
- LDA log,X
+ LDX Q                  \ Subtract the high bytes of log(Q) - log(P) so now A
+ LDA log,X              \ contains the high byte of log(Q) - log(P)
  LDX P
  SBC log,X
- BCS LIlog5
- TAX
- LDA antilogODD,X
+
+ BCS LIlog5             \ If the subtraction fitted into one byte and didn't
+                        \ underflow, then Lq - Lp < 256, so we jump to LIlog5 to
+                        \ return a result of 255
+
+ TAX                    \ Otherwise we set A to the A-th entry from the
+ LDA antilogODD,X       \ antilogODD so the result of the division is now in A
 
 .LIlog6
 
- STA Q
- LDX P
- BEQ LIEXS
- INX
- LDA Y2
+ STA Q                  \ Store the result of the division in Q, so we have:
+                        \
+                        \   Q = |delta_y| / |delta_x|
+
+ LDX P                  \ Set X = P
+                        \       = |delta_x|
+
+ BEQ LIEXS              \ If |delta_x| = 0, return from the subroutine, as LIEXS
+                        \ contains a BEQ LIEX instruction, and LIEX contains an
+                        \ RTS
+
+ INX                    \ Set X = P + 1
+                        \       = |delta_x| + 1
+                        \
+                        \ We add 1 so we can skip the first pixel plot if the
+                        \ line is being drawn with swapped coordinates
+
+ LDA Y2                 \ If Y2 < Y1 then skip the following instruction
  CMP Y1
  BCC P%+5
- JMP DOWN
+
+ JMP DOWN               \ Y2 >= Y1 - 1, so jump to DOWN, as we need to draw the
+                        \ line to the right and down
 
 \ ******************************************************************************
 \
@@ -3592,44 +3667,88 @@ NEXT
 \       Name: HLOIN
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: Draw a horizontal line from (X1, Y1) to (X2, Y1)
+\    Summary: Implement the OSWORD 247 command (draw the sun lines in the
+\             horizontal line buffer in orange)
 \
 \ ------------------------------------------------------------------------------
 \
+\ This routine is run when the parasite sends an OSWORD 247 command with
+\ parameters in the block at OSSC(1 0). It draws a horizontal orange line (or a
+\ collection of lines) in the space view.
+\
+\ The parameters match those put into the HBUF block in the parasite. Each line
+\ is drawn from (X1, Y1) to (X2, Y1), and lines are drawn in orange.
+\
 \ We do not draw a pixel at the end point (X2, X1).
 \
-\ To understand how this routine works, you might find it helpful to read the
-\ deep dive on "Drawing monochrome pixels in mode 4".
+\ Arguments:
+\
+\   OSSC(1 0)           A parameter block as follows:
+\
+\                         * Byte #0 = The size of the parameter block being sent
+\
+\                         * Byte #2 = The x-coordinate of the first line's
+\                                     starting point
+\
+\                         * Byte #3 = The x-coordinate of the first line's end
+\                                     point
+\
+\                         * Byte #4 = The y-coordinate of the first line
+\
+\                         * Byte #5 = The x-coordinate of the second line's
+\                                     starting point
+\
+\                         * Byte #6 = The x-coordinate of the second line's end
+\                                     point
+\
+\                         * Byte #7 = The y-coordinate of the second line
+\
+\                       and so on
+\
+\ Other entry points:
+\
+\   HLOIN3              Draw a line from (X, Y1) to (X2, Y1) in the colour given
+\                       in A (we need to set Q = Y2 + 1 before calling HLOIN3 so
+\                       only one line is drawn)
 \
 \ ******************************************************************************
 
 .HLOIN
 
- LDY #0
- LDA (OSSC),Y
+ LDY #0                 \ Fetch byte #0 from the parameter block (which gives
+ LDA (OSSC),Y           \ size of the parameter block) and store it in Q
  STA Q
- INY
- INY
+
+ INY                    \ Increment Y to point to byte #2, which is where the
+ INY                    \ line coordinates start
 
 .HLLO
 
- LDA (OSSC),Y
- STA X1
+ LDA (OSSC),Y           \ Fetch the Y-th byte from the parameter block (the
+ STA X1                 \ line's X1 coordinate) and store it in X1 and X
  TAX
- INY
- LDA (OSSC),Y
+
+ INY                    \ Fetch the Y+1-th byte from the parameter block (the
+ LDA (OSSC),Y           \ line's X2 coordinate) and store it in X2
  STA X2
- INY
- LDA (OSSC),Y
+
+ INY                    \ Fetch the Y+2-th byte from the parameter block (the
+ LDA (OSSC),Y           \ line's Y1 coordinate) and store it in Y1
  STA Y1
- STY Y2
- AND #3
- TAY
- LDA orange,Y
+
+ STY Y2                 \ Store the parameter block offset for this line's Y1
+                        \ coordinate in Y2, so we know where to fetch the next
+                        \ line from in the parameter block once we have drawn
+                        \ this one
+
+ AND #3                 \ Set A to the correct order of red/yellow pixels to
+ TAY                    \ make this line an orange colour (by using bits 0-1 of
+ LDA orange,Y           \ the pixel y-coordinate as the index into the orange
+                        \ lookup table)
 
 .HLOIN3
 
- STA S
+ STA S                  \ Store the line colour in S
 
  CPX X2                 \ If X1 = X2 then the start and end points are the same,
  BEQ HL6                \ so return from the subroutine (as HL6 contains an RTS)
@@ -3645,39 +3764,44 @@ NEXT
 
 .HL5
 
- DEC X2                 \ Decrement X2
+ DEC X2                 \ Decrement X2 so we do not draw a pixel at the end
+                        \ point
 
- LDY Y1
+ LDY Y1                 \ Look up the page number of the character row that
+ LDA ylookup,Y          \ contains the pixel with the y-coordinate in Y1, and
+ STA SC+1               \ store it in SC+1, so the high byte of SC is set
+                        \ correctly for drawing our line
 
- LDA ylookup,Y          \ Look up the page number of the character row that
- STA SC+1               \ contains the pixel with the y-coordinate in Y, and
-                        \ store it in the high byte of SC(1 0) at SC+1
-
- TYA
- AND #7
+ TYA                    \ Set A = Y1 mod 8, which is the pixel row within the
+ AND #7                 \ character block at which we want to draw our line (as
+                        \ each character block has 8 rows)
 
  STA SC                 \ Store this value in SC, so SC(1 0) now contains the
                         \ screen address of the far left end (x-coordinate = 0)
                         \ of the horizontal pixel row that we want to draw our
                         \ horizontal line on
 
- TXA
- AND #&FC
- ASL A
+ TXA                    \ Set Y = 2 * bits 2-6 of X1
+ AND #%11111100         \
+ ASL A                  \ and shift bit 7 of X1 into the C flag
  TAY
- BCC P%+4
- INC SC+1
+
+ BCC P%+4               \ If bit 7 of X1 was set, so X1 > 127, increment the
+ INC SC+1               \ high byte of SC(1 0) to point to the second page on
+                        \ this screen row, as this page contains the right half
+                        \ of the row
 
 .HL1
 
- TXA
- AND #&FC
+ TXA                    \ Set T = bits 2-7 of X1, which will contain the
+ AND #%11111100         \ the character number of the start of the line * 4
  STA T
- LDA X2
- AND #&FC
+
+ LDA X2                 \ Set A = bits 2-7 of X2, which will contain the
+ AND #%11111100         \ the character number of the end of the line * 4
 
  SEC                    \ Set A = A - T, which will contain the number of
- SBC T                  \ character blocks we need to fill - 1 * 8
+ SBC T                  \ character blocks we need to fill - 1 * 4
 
  BEQ HL2                \ If A = 0 then the start and end character blocks are
                         \ the same, so the whole line fits within one block, so
@@ -3687,12 +3811,14 @@ NEXT
                         \ start with the left character, then do any characters
                         \ in the middle, and finish with the right character
 
- LSR A
- LSR A
+ LSR A                  \ Set R = A / 4, so R now contains the number of
+ LSR A                  \ character blocks we need to fill - 1
  STA R
- LDA X1
- AND #3
- TAX
+
+ LDA X1                 \ Set X = X1 mod 4, which is the horizontal pixel number
+ AND #3                 \ within the character block where the line starts (as
+ TAX                    \ each pixel line in the character block is 4 pixels
+                        \ wide)
 
  LDA TWFR,X             \ Fetch a ready-made byte with X pixels filled in at the
                         \ right end of the byte (so the filled pixels start at
@@ -3700,7 +3826,10 @@ NEXT
                         \ which is the shape we want for the left end of the
                         \ line
 
- AND S
+ AND S                  \ Apply the pixel mask in A to the four-pixel block of
+                        \ coloured pixels in S, so we now know which bits to set
+                        \ in screen memory to paint the relevant pixels in the
+                        \ required colour
 
  EOR (SC),Y             \ Store this into screen memory at SC(1 0), using EOR
  STA (SC),Y             \ logic so it merges with whatever is already on-screen,
@@ -3710,7 +3839,13 @@ NEXT
  ADC #8                 \ block along, on the same pixel row as before
  TAY
 
- BCS HL7
+ BCS HL7                \ If the above addition overflowed, then we have just
+                        \ crossed over from the left half of the screen into the
+                        \ right half, so call HL7 to increment the high byte in
+                        \ SC+1 so that SC(1 0) points to the page in screen
+                        \ memory for the right half of the screen row. HL7 also
+                        \ clears the C flag and jumps back to HL8, so this acts
+                        \ like a conditional JSR instruction
 
 .HL8
 
@@ -3728,15 +3863,22 @@ NEXT
 
 .HLL1
 
- LDA S
- EOR (SC),Y
- STA (SC),Y
+ LDA S                  \ Store a full-width 4-pixel horizontal line of colour S
+ EOR (SC),Y             \ in SC(1 0) so that it draws the line on-screen, using
+ STA (SC),Y             \ EOR logic so it merges with whatever is already
+                        \ on-screen
 
  TYA                    \ Set Y = Y + 8 so (SC),Y points to the next character
  ADC #8                 \ block along, on the same pixel row as before
  TAY
 
- BCS HL9
+ BCS HL9                \ If the above addition overflowed, then we have just
+                        \ crossed over from the left half of the screen into the
+                        \ right half, so call HL9 to increment the high byte in
+                        \ SC+1 so that SC(1 0) points to the page in screen
+                        \ memory for the right half of the screen row. HL9 also
+                        \ clears the C flag and jumps back to HL10, so this acts
+                        \ like a conditional JSR instruction
 
 .HL10
 
@@ -3747,16 +3889,19 @@ NEXT
 
 .HL3
 
- LDA X2
- AND #3
- TAX
+ LDA X2                 \ Now to draw the last character block at the right end
+ AND #3                 \ of the line, so set X = X2 mod 3, which is the
+ TAX                    \ horizontal pixel number where the line ends
 
  LDA TWFL,X             \ Fetch a ready-made byte with X pixels filled in at the
                         \ left end of the byte (so the filled pixels start at
                         \ the left edge and go up to point X), which is the
                         \ shape we want for the right end of the line
 
- AND S
+ AND S                  \ Apply the pixel mask in A to the four-pixel block of
+                        \ coloured pixels in S, so we now know which bits to set
+                        \ in screen memory to paint the relevant pixels in the
+                        \ required colour
 
  EOR (SC),Y             \ Store this into screen memory at SC(1 0), using EOR
  STA (SC),Y             \ logic so it merges with whatever is already on-screen,
@@ -3764,11 +3909,20 @@ NEXT
 
 .HL6
 
- LDY Y2
- INY
- CPY Q
- BEQ P%+5
- JMP HLLO
+ LDY Y2                 \ Set Y to the parameter block offset for this line's Y1
+                        \ coordinate, which we stored in Y2 before we drew the
+                        \ line
+
+ INY                    \ Increment Y so that it points to the first parameter
+                        \ for the next line in the parameter block
+
+ CPY Q                  \ If Y = Q then we have drawn all the lines in the
+ BEQ P%+5               \ parameter block, so skip the next instruction to
+                        \ return from the subroutine
+
+ JMP HLLO               \ There is another line in the parameter block after the
+                        \ one we just drew, so jump to HLLO with Y pointing to
+                        \ the new line's coordinates, so we can draw it
 
  RTS                    \ Return from the subroutine
 
@@ -3777,16 +3931,17 @@ NEXT
                         \ If we get here then the entire horizontal line fits
                         \ into one character block
 
- LDA X1
- AND #3
- TAX
+ LDA X1                 \ Set X = X1 mod 4, which is the horizontal pixel number
+ AND #3                 \ within the character block where the line starts (as
+ TAX                    \ each pixel line in the character block is 4 pixels
+                        \ wide)
 
  LDA TWFR,X             \ Fetch a ready-made byte with X pixels filled in at the
  STA T                  \ right end of the byte (so the filled pixels start at
                         \ point X and go all the way to the end of the byte)
 
- LDA X2
- AND #3
+ LDA X2                 \ Set X = X2 mod 4, which is the horizontal pixel number
+ AND #3                 \ where the line ends
  TAX
 
  LDA TWFL,X             \ Fetch a ready-made byte with X pixels filled in at the
@@ -3798,7 +3953,8 @@ NEXT
                         \ containing pixels up to the end point at X2, so we can
                         \ get the actual line we want to draw by AND'ing them
                         \ together. For example, if we want to draw a line from
-                        \ point 2 to point 5, we would have this:
+                        \ point 1 to point 2 (within the row of 4 pixels
+                        \ numbered from 0 to 3), we would have this:
                         \
                         \   T       = %00111111
                         \   A       = %11111100
@@ -3807,31 +3963,57 @@ NEXT
                         \ so if we stick T AND A in screen memory, that's what
                         \ we do here, setting A = A AND T
 
- AND S
+ AND S                  \ Apply the pixel mask in A to the four-pixel block of
+                        \ coloured pixels in S, so we now know which bits to set
+                        \ in screen memory to paint the relevant pixels in the
+                        \ required colour
 
  EOR (SC),Y             \ Store our horizontal line byte into screen memory at
  STA (SC),Y             \ SC(1 0), using EOR logic so it merges with whatever is
                         \ already on-screen
 
- LDY Y2
- INY
- CPY Q
- BEQ P%+5
- JMP HLLO
+ LDY Y2                 \ Set Y to the parameter block offset for this line's Y1
+                        \ coordinate, which we stored in Y2 before we drew the
+                        \ line
+
+ INY                    \ Increment Y so that it points to the first parameter
+                        \ for the next line in the parameter block
+
+ CPY Q                  \ If Y = Q then we have drawn all the lines in the
+ BEQ P%+5               \ parameter block, so skip the next instruction to
+                        \ return from the subroutine
+
+ JMP HLLO               \ There is another line in the parameter block after the
+                        \ one we just drew, so jump to HLLO with Y pointing to
+                        \ the new line's coordinates, so we can draw it
 
  RTS                    \ Return from the subroutine
 
 .HL7
 
- INC SC+1
- CLC
- JMP HL8
+ INC SC+1               \ We have just crossed over from the left half of the
+                        \ screen into the right half, so increment the high byte
+                        \ in SC+1 so that SC(1 0) points to the page in screen
+                        \ memory for the right half of the screen row
+
+ CLC                    \ Clear the C flag (as HL7 is called with the C flag
+                        \ set, which this instruction reverts)
+ 
+ JMP HL8                \ Jump back to HL8, just after the instruction that
+                        \ called HL7
 
 .HL9
 
- INC SC+1
- CLC
- JMP HL10
+ INC SC+1               \ We have just crossed over from the left half of the
+                        \ screen into the right half, so increment the high byte
+                        \ in SC+1 so that SC(1 0) points to the page in screen
+                        \ memory for the right half of the screen row
+
+ CLC                    \ Clear the C flag (as HL9 is called with the C flag
+                        \ set, which this instruction reverts)
+ 
+ JMP HL10               \ Jump back to HL10, just after the instruction that
+                        \ called HL9
 
 \ ******************************************************************************
 \
@@ -3886,7 +4068,7 @@ NEXT
 \       Name: orange
 \       Type: Variable
 \   Category: Drawing pixels
-\    Summary: Lookup table for 2-pixel mode 1 orange pixels
+\    Summary: Lookup table for 2-pixel mode 1 orange pixels for the sun
 \
 \ ------------------------------------------------------------------------------
 \
@@ -3944,7 +4126,6 @@ NEXT
 \     a 2-pixel dash or 4-pixel square. The dot is always drawn in white (which
 \     is actually a cyan/red stripe). These kinds of dot are sent by the PIXEL
 \     routine in the parasite.
-\
 \
 \ The parameters match those put into the PBUF/pixbl block in the parasite.
 \
@@ -4543,7 +4724,7 @@ NEXT
 
  STA R                  \ Also store the page number in R
 
- LDA P                  \ Set the low byte of SC(1 0) to the y-coordinate MOD 7,
+ LDA P                  \ Set the low byte of SC(1 0) to the y-coordinate mod 7,
  AND #7                 \ which determines the pixel row in the character block
  STA SC                 \ we need to draw in (as each character row is 8 pixels
                         \ high), so SC(1 0) now points to the address of the
@@ -4656,7 +4837,7 @@ NEXT
 
  AND #%11111100         \ A contains the x-coordinate of the line to draw, and
  STA SC                 \ each character block is 4 pixels wide, so setting the
-                        \ low byte of SC(1 0) to A MOD 4 points SC(1 0) to the
+                        \ low byte of SC(1 0) to A mod 4 points SC(1 0) to the
                         \ correct character block on the top screen row for this
                         \ x-coordinate
 
@@ -4873,7 +5054,7 @@ NEXT
  SBC #8                 \ to the next character block to the left
  TAY
 
- LDA #%00010000         \ Set A to 
+ LDA #%00010000         \ Set a mask in A to the last pixel in the 4-pixel byte
 
  BCS HAS3               \ If the above subtraction didn't underflow, jump back
                         \ to HAS3 to keep drawing the line in the next character
@@ -5334,7 +5515,7 @@ ENDMACRO
  EQUW SC48              \ #onescan = 244 (&F4)     4 = Draw ship on 3D scanner
  EQUW DOT               \ #DOdot   = 245 (&F5)     5 = Draw a dot on the compass
  EQUW DODKS4            \ #DODKS4  = 246 (&F6)     6 = Scan for a specific key
- EQUW HLOIN             \            247 (&F7)     7 = Draw a horizontal line
+ EQUW HLOIN             \            247 (&F7)     7 = Draw orange sun lines
  EQUW HANGER            \            248 (&F8)     8 = Display the hanger
  EQUW SOMEPROT          \            249 (&F9)     9 = Copy protection
  EQUW SAFE              \            250 (&FA)    10 = Do nothing
