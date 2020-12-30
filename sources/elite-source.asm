@@ -35722,8 +35722,8 @@ ENDIF
                         \ number of faces in the cassette version, but this
                         \ allows us to force a vertex to always be visible by
                         \ associating it with face 15 (see the blueprints for
-                        \ the Cobra Mk III at SHIP5 and asteroid at SHIP10 for
-                        \ examples)
+                        \ the Cobra Mk III at SHIP_COBRA_MK_3 and asteroid at
+                        \ SHIP_ASTEROID for examples)
 
  LDY #12                \ Set Y = 12 to point to the ship blueprint byte #12,
 
