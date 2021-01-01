@@ -41427,7 +41427,7 @@ LOAD_I% = LOAD% + P% - CODE%
 \
 \ Arguments:
 \
-\   (Y X)               The contents of the first slide
+\   (Y X)               The contents of the scroll text to display
 \
 \ ******************************************************************************
 
@@ -41437,45 +41437,61 @@ LOAD_I% = LOAD% + P% - CODE%
 
  JSR ZEVB               \ Call ZEVB to zero-fill the Y1VB variable
 
- LDA #YELLOW
- JSR DOCOL
- LDA #254
- STA BALI
+ LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is yellow
+
+ LDA #254               \ Set BALI = 254 to act as a counter from 254 to 2,
+ STA BALI               \ decreasing by 2 each iteration
 
 .SLL2
 
- JSR GRID
+ JSR GRID               \ Call GRID
+
+ DEC BALI               \ Set BALI = BALI - 2
  DEC BALI
- DEC BALI
- BNE SLL2
+
+ BNE SLL2               \ Loop back to SLL2 until the loop counter is 0 (so GRID
+                        \ was last called with BALI = 2)
 
 .SL1
 
  JSR ZEVB               \ Call ZEVB to zero-fill the Y1VB variable
 
- LDA #2
+ LDA #2                 \ Set BALI = 2 and fall into GRID below
  STA BALI
 
 .GRID
 
- LDY #0
+ LDY #0                 \ Set UPO = 0
  STY UPO
- STY INWK+8
- STY INWK+1
- STY INWK+4
- DEY
+
+ STY INWK+8             \ Set z_sign = 0
+
+ STY INWK+1             \ Set x_hi = 0
+
+ STY INWK+4             \ Set y_hi = 0
+
+ DEY                    \ Decrement Y to 255, so the following loop starts with
+                        \ the first byte from Y1TB
 
 .GRIDL
 
- INY
- STZ INWK+7 \++
- LDA Y1TB,Y
- BNE P%+5
+ INY                    \ Increment Y
+
+ STZ INWK+7             \ Set z_hi = 0
+
+ LDA Y1TB,Y             \ Set A = the Y-th byte from Y1TB
+
+ BNE P%+5               \ If A = 0, jump to GREX
  JMP GREX
+
  SEC
  SBC BALI
+
  BCC GRIDL
+
  STA R
+
  ASL A
  ROL INWK+7
  ASL A
@@ -41485,17 +41501,21 @@ LOAD_I% = LOAD% + P% - CODE%
  LDA INWK+7
  ADC #0
  STA INWK+7
- STZ S
+
+ STZ S                  \ Set S = 0
+
  LDA #128
  STA P
- JSR ADD
+
+ JSR ADD                \ Set (A X) = (A P) + (S R)
+
  STA INWK+5
  STX INWK+3
  LDA X1TB,Y
  EOR #128
  BPL GR2
  EOR #&FF
- INA \++
+ INA
 
 .GR2
 
@@ -41652,97 +41672,191 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: GRIDSET
 \       Type: Subroutine
 \   Category: Demo
-\    Summary: 
+\    Summary: Generate the line coordinates for the scroll text
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine populates the X1TB/Y1TB/X2TB/Y2TB tables with the coordinates of
+\ up to five lines for each character in the scroll text that we want to
+\ display.
+\
+\ Arguments:
+\
+\   (Y X)               The contents of the scroll text to display
 \
 \ ******************************************************************************
 
 .GRIDSET
 
- STX GSL1+1
- STY GSL1+2
- LDA #254
+ STX GSL1+1             \ Modify the LDA instruction at GSL1 below to point to
+ STY GSL1+2             \ (Y X) instead of P%, i.e. to the Y-th character of the
+                        \ text we want to display
+
+ LDA #254               \ Set YP = 254
  STA YP
- LDY #0
- LDX #0
- STX XP
+
+ LDY #0                 \ Set Y = 0, to act as an index into the text we want
+                        \ to display, pointing to the character we are currently
+                        \ processing
+
+ LDX #0                 \ Set X = 0, to act as a pointer when populating the
+                        \ X1TB/Y1TB/X2TB/Y2TB tables with one byte per character
+
+ STX XP                 \ Set XP = 0
 
 .GSL1
 
- LDA P%,Y
- BEQ GRSEX
- STY T
- SEC
- SBC #44
+ LDA P%,Y               \ This instruction was modified above to load the Y-th
+                        \ character from the text we want to display into A, so
+                        \ A now contains the ASCII code of the character we want
+                        \ to process
+
+ BEQ GRSEX              \ If A = 0, which means we have reached the end of the
+                        \ text to display, then jump down to GRSEX
+
+ STY T                  \ Store the character index in T so we can retrieve it
+                        \ later
+
+ SEC                    \ Set S = A - ASCII ",", as the table at LTDEF starts
+ SBC #','               \ with the lines needed for a comma
  STA S
- ASL A
- ASL A
- ADC S
- TAY
- LDA LTDEF,Y
- JSR GRS1
- LDA LTDEF+1,Y
- JSR GRS1
- LDA LTDEF+2,Y
- JSR GRS1
- LDA LTDEF+3,Y
- JSR GRS1
- LDA LTDEF+4,Y
- JSR GRS1
- LDY T
- INY
- LDA XP
- CLC
- ADC #W2
+
+ ASL A                  \ Set Y = S + 4 * A
+ ASL A                  \       = A + 4 * A
+ ADC S                  \       = 5 * A
+ TAY                    \
+                        \ so Y now points to the offset of the definition in the
+                        \ LTDEF table for the character in A, where the first
+                        \ character in the table is a comma and each definition
+                        \ in LTDEF consists of five bytes
+
+ LDA LTDEF,Y            \ Call GRS1 to copy the coordinates of the character's
+ JSR GRS1               \ first line from LTDEF into the coordinate tables at
+                        \ X1TB/Y1TB/X2TB/Y2TB
+
+ LDA LTDEF+1,Y          \ Call GRS1 to copy the coordinates of the character's
+ JSR GRS1               \ second line from LTDEF into the coordinate tables at
+                        \ X1TB/Y1TB/X2TB/Y2TB
+
+ LDA LTDEF+2,Y          \ Call GRS1 to copy the coordinates of the character's
+ JSR GRS1               \ third line from LTDEF into the coordinate tables at
+                        \ X1TB/Y1TB/X2TB/Y2TB
+
+ LDA LTDEF+3,Y          \ Call GRS1 to copy the coordinates of the character's
+ JSR GRS1               \ fourth line from LTDEF into the coordinate tables at
+                        \ X1TB/Y1TB/X2TB/Y2TB
+
+ LDA LTDEF+4,Y          \ Call GRS1 to copy the coordinates of the character's
+ JSR GRS1               \ fifth line from LTDEF into the coordinate tables at
+                        \ X1TB/Y1TB/X2TB/Y2TB
+
+ LDY T                  \ Retrieve the original character index from T into Y
+
+ INY                    \ Increment the character index to point to the next
+                        \ character in the text we want to display
+
+ LDA XP                 \ Set XP = XP + #W2
+ CLC                    \
+ ADC #W2                \ to move the x-coordinate along by #WP
  STA XP
- BCC GSL1
- LDA #0
+
+ BCC GSL1               \ If the addition didn't overflow (i.e. XP < 256) loop
+                        \ back to GSL1
+
+ LDA #0                 \ Set XP = 0
  STA XP
- LDA YP
- SBC #W2Y
- STA YP
- JMP GSL1
+
+ LDA YP                 \ Set YP = YP - #W2Y
+ SBC #W2Y               \
+ STA YP                 \ to move the y-coordinate down by one line
+
+ JMP GSL1               \ Loop back to GSL1
 
 .GRSEX
 
- LDA #0
+ LDA #0                 \ Set the X-th byte of Y1TB = 0
  STA Y1TB,X
- RTS
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: GRS1
+\       Type: Subroutine
+\   Category: Demo
+\    Summary: Populate the coordinate tables for a scroll text letter
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine populates the X-th byte in the X1TB/Y1TB/X2TB/Y2TB tables with a
+\ line segment.
+\
+\ Arguments:
+\
+\   A                   The value from the LTDEF table to add
+\
+\   (XP, YP)            The origin coordinate for this character
+\
+\
+\ Returns:
+\
+\   X                   X gets incremented to point to the next byte to populate
+\                       in X1TB/Y1TB/X2TB/Y2TB
+\
+\   Y                   Y is preserved
+\
+\ ******************************************************************************
 
 .GRS1
 
- BEQ GRR1
- STA R
- AND #15
- STY P
+ BEQ GRR1               \ If A = 0, jump to GRR1 to return from the subroutine
+                        \ as 0 denotes no line segment
+
+ STA R                  \ Store the value from the LTDEF table in R
+
+ AND #%00001111         \ Set A to bits 0-3 of the LTDEF table value, i.e the
+                        \ bottom nibble
+
+ STY P                  \ Store the offset in P, so we can preserve it through
+                        \ calls to GRS1
+
+ TAY                    \ Set Y = A
+
+ LDA NOFX,Y             \ Set X1TB+X = XP + NOFX+Y
+ CLC                    \
+ ADC XP                 \ so the X1 coordinate is XP + the NOFX entry given by
+ STA X1TB,X             \ the bottom nibble of the LTDEF table value
+
+ LDA YP                 \ Set Y1TB+X = YP - NOFY+Y
+ SEC                    \
+ SBC NOFY,Y             \ so the Y1 coordinate is YP - the NOFY entry given by
+ STA Y1TB,X             \ the bottom nibble of the LTDEF table value
+
+ LDA R                  \ Set Y to bits 4-7 of the LTDEF table value, i.e. the
+ LSR A                  \ top nibble
+ LSR A
+ LSR A
+ LSR A
  TAY
- LDA NOFX,Y
- CLC
- ADC XP
- STA X1TB,X
- LDA YP
- SEC
- SBC NOFY,Y
- STA Y1TB,X
- LDA R
- LSR A
- LSR A
- LSR A
- LSR A
- TAY
- LDA NOFX,Y
- CLC
- ADC XP
- STA X2TB,X
- LDA YP
- SEC
- SBC NOFY,Y
- STA Y2TB,X
- INX
- LDY P
+
+ LDA NOFX,Y             \ Set X2TB+X = XP + NOFX+Y
+ CLC                    \
+ ADC XP                 \ so the X2 coordinate is XP + the NOFX entry given by
+ STA X2TB,X             \ the top nibble of the LTDEF table value
+
+ LDA YP                 \ Set Y2TB+X = YP - NOFY+Y
+ SEC                    \
+ SBC NOFY,Y             \ so the Y2 coordinate is YP - the NOFY entry given by
+ STA Y2TB,X             \ the top nibble of the LTDEF table value
+
+ INX                    \ Increment the byte pointer in X
+
+ LDY P                  \ Restore Y from P so it gets preserved through calls to
+                        \ GRS1
 
 .GRR1
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -41777,59 +41891,59 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: LTDEF
 \       Type: Variable
 \   Category: Demo
-\    Summary: 
+\    Summary: Letter definitions for the Star Wars scroll text
 \
 \ ******************************************************************************
 
 .LTDEF
 
- EQUB &63, &34, &47, &76, &97
- EQUB &35, &00, &00, &00, &00
- EQUB &63, &34, &47, &76, &00
- EQUB &61, &00, &00, &00, &00
- EQUB &73, &31, &15, &57, &00
- EQUB &31, &17, &00, &00, &00
- EQUB &02, &25, &53, &36, &68
- EQUB &02, &28, &86, &35, &00
- EQUB &82, &23, &35, &00, &00
- EQUB &20, &03, &35, &58, &86
- EQUB &20, &06, &68, &85, &53
- EQUB &02, &28, &00, &00, &00
- EQUB &60, &02, &28, &86, &35
- EQUB &82, &20, &03, &35, &00
- EQUB &00, &00, &00, &00, &00
- EQUB &00, &00, &00, &00, &00
- EQUB &00, &00, &00, &00, &00
- EQUB &00, &00, &00, &00, &00
- EQUB &00, &00, &00, &00, &00
- EQUB &00, &00, &00, &00, &00
- EQUB &00, &00, &00, &00, &00
- EQUB &60, &02, &28, &35, &00
- EQUB &60, &02, &28, &86, &35
- EQUB &86, &60, &02, &00, &00
- EQUB &60, &05, &56, &00, &00
- EQUB &86, &60, &02, &35, &00
- EQUB &60, &02, &35, &00, &00
- EQUB &45, &58, &86, &60, &02
- EQUB &60, &28, &35, &00, &00
- EQUB &17, &00, &00, &00, &00
- EQUB &28, &86, &63, &00, &00
- EQUB &60, &23, &83, &00, &00
- EQUB &86, &60, &00, &00, &00
- EQUB &60, &04, &42, &28, &00
- EQUB &60, &08, &82, &00, &00
- EQUB &60, &02, &28, &86, &00
- EQUB &60, &02, &25, &53, &00
- EQUB &60, &02, &28, &86, &48
- EQUB &60, &02, &25, &53, &48
- EQUB &20, &03, &35, &58, &86
- EQUB &02, &17, &00, &00, &00
- EQUB &28, &86, &60, &00, &00
- EQUB &27, &70, &00, &00, &00
- EQUB &28, &84, &46, &60, &00
- EQUB &26, &08, &00, &00, &00
- EQUB &74, &04, &24, &00, &00
- EQUB &02, &26, &68, &00, &00
+ EQUB &63, &34, &47, &76, &97   \ Letter definition for ","
+ EQUB &35, &00, &00, &00, &00   \ Letter definition for "-"
+ EQUB &63, &34, &47, &76, &00   \ Letter definition for "."
+ EQUB &61, &00, &00, &00, &00   \ Letter definition for "/"
+ EQUB &73, &31, &15, &57, &00   \ Letter definition for "0"
+ EQUB &31, &17, &00, &00, &00   \ Letter definition for "1"
+ EQUB &02, &25, &53, &36, &68   \ Letter definition for "2"
+ EQUB &02, &28, &86, &35, &00   \ Letter definition for "3"
+ EQUB &82, &23, &35, &00, &00   \ Letter definition for "4"
+ EQUB &20, &03, &35, &58, &86   \ Letter definition for "5"
+ EQUB &20, &06, &68, &85, &53   \ Letter definition for "6"
+ EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
+ EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
+ EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
+ EQUB &00, &00, &00, &00, &00   \ No letter definition for ":"
+ EQUB &00, &00, &00, &00, &00   \ No letter definition for ";"
+ EQUB &00, &00, &00, &00, &00   \ No letter definition for "<"
+ EQUB &00, &00, &00, &00, &00   \ No letter definition for "="
+ EQUB &00, &00, &00, &00, &00   \ No letter definition for ">"
+ EQUB &00, &00, &00, &00, &00   \ No letter definition for "?"
+ EQUB &00, &00, &00, &00, &00   \ No letter definition for "@"
+ EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
+ EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
+ EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
+ EQUB &60, &05, &56, &00, &00   \ Letter definition for "D"
+ EQUB &86, &60, &02, &35, &00   \ Letter definition for "E"
+ EQUB &60, &02, &35, &00, &00   \ Letter definition for "F"
+ EQUB &45, &58, &86, &60, &02   \ Letter definition for "G"
+ EQUB &60, &28, &35, &00, &00   \ Letter definition for "H"
+ EQUB &17, &00, &00, &00, &00   \ Letter definition for "I"
+ EQUB &28, &86, &63, &00, &00   \ Letter definition for "J"
+ EQUB &60, &23, &83, &00, &00   \ Letter definition for "K"
+ EQUB &86, &60, &00, &00, &00   \ Letter definition for "L"
+ EQUB &60, &04, &42, &28, &00   \ Letter definition for "M"
+ EQUB &60, &08, &82, &00, &00   \ Letter definition for "N"
+ EQUB &60, &02, &28, &86, &00   \ Letter definition for "O"
+ EQUB &60, &02, &25, &53, &00   \ Letter definition for "P"
+ EQUB &60, &02, &28, &86, &48   \ Letter definition for "Q"
+ EQUB &60, &02, &25, &53, &48   \ Letter definition for "R"
+ EQUB &20, &03, &35, &58, &86   \ Letter definition for "S"
+ EQUB &02, &17, &00, &00, &00   \ Letter definition for "T"
+ EQUB &28, &86, &60, &00, &00   \ Letter definition for "U"
+ EQUB &27, &70, &00, &00, &00   \ Letter definition for "V"
+ EQUB &28, &84, &46, &60, &00   \ Letter definition for "W"
+ EQUB &26, &08, &00, &00, &00   \ Letter definition for "X"
+ EQUB &74, &04, &24, &00, &00   \ Letter definition for "Y"
+ EQUB &02, &26, &68, &00, &00   \ Letter definition for "Z"
 
 \ ******************************************************************************
 \
