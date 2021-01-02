@@ -32,7 +32,6 @@ My hope is that this repository and the [accompanying website](https://www.bbcel
 * [Notes on the original source files](#notes-on-the-original-source-files)
 
   * [Fixing the original build process](#fixing-the-original-build-process)
-
   * [Producing byte-accurate binaries](#producing-byte-accurate-binaries)
 
 
