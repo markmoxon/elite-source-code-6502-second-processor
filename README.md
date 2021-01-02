@@ -1,4 +1,4 @@
-# Source code for Elite on the BBC Micro with a 6502 Second Processor
+# Fully documented source code for Elite on the BBC Micro with a 6502 Second Processor
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
 
