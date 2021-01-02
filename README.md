@@ -1,18 +1,40 @@
 # Source code for Elite on the BBC Micro with a 6502 Second Processor
 
-This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor (also known as "6502SP Elite" or "Tube Elite").
+This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
 
-It is a companion to the repository containing the [cassette version of Elite](https://github.com/markmoxon/elite-beebasm) and its [accompanying website](https://www.bbcelite.com).
+It is a companion to the [bbcelite.com website](https://www.bbcelite.com), which contains all the code from this repository, but laid out in a much more human-friendly fashion. There is also a sister repository for the [cassette version of Elite](https://github.com/markmoxon/elite-beebasm).
+
+* If you want to browse the source and read about how Elite works under the hood, you will probably find [the website](https://www.bbcelite.com) is a better place to start than this repository.
+
+* If you would rather explore the source code in your favourite IDE, then the [annotated source](sources/elite-source.asm) is what you're looking for. It contains the exact same content as the website, so you won't be missing out (the website is generated from the source files, so they are guaranteed to be identical). You might also like to read the section on [Browsing the source in an IDE](#browsing-the-source-in-an-ide) for some tips.
+
+* If you want to build Elite from the source on a modern computer, to produce a working game disc that can be loaded into a BBC Micro or an emulator, then you want the section on [Building 6502 Second Processor Elite from the source](#building-6502-second-processor-elite-from-the-source).
+
+My hope is that this repository and the [accompanying website](https://www.bbcelite.com) will be useful for those who want to learn more about Elite and what makes it tick. It is provided on an educational and non-profit basis, with the aim of helping people appreciate one of the most iconic games of the 8-bit era.
 
 ## Contents
 
 * [Acknowledgements](#acknowledgements)
 
+  * [A note on licences, copyright etc.](#user-content-a-note-on-licences-copyright-etc)
+
+* [Browsing the source in an IDE](#browsing-the-source-in-an-ide)
+
 * [Building 6502 Second Processor Elite from the source](#building-6502-second-processor-elite-from-the-source)
+
+  * [Requirements](#requirements)
+  * [Build targets](#build-targets)
+  * [Windows](#windows)
+  * [Mac and Linux](#mac-and-linux)
+  * [Verifying the output](#verifying-the-output)
+  * [Log files](#log-files)
 
 * [Notes on the original source files](#notes-on-the-original-source-files)
 
-* [Next steps](#next-steps)
+  * [Fixing the original build process](#fixing-the-original-build-process)
+
+  * [Producing byte-accurate binaries](#producing-byte-accurate-binaries)
+
 
 ## Acknowledgements
 
@@ -21,6 +43,8 @@ It is a companion to the repository containing the [cassette version of Elite](h
 The code on this site is identical to the version released on [Ian Bell's personal website](http://www.elitehomepage.org/) (it's just been reformatted to be more readable).
 
 The commentary is copyright &copy; Mark Moxon. Any misunderstandings or mistakes in the documentation are entirely my fault.
+
+Huge thanks are due to the original authors for not only creating such an important piece of my childhood, but also for releasing the source code for us to play with; to Paul Brink for his annotated disassembly; and to Kieran Connell for his [BeebAsm version](https://github.com/kieranhj/elite-beebasm), which I forked as the original basis for this project. You can find more information about this project in the [accompanying website's project page](https://www.bbcelite.com/about_site/about_this_project.html).
 
 The following archive from Ian Bell's site forms the basis for this project:
 
@@ -38,6 +62,31 @@ Under GitHub's rules, you have the right to read and fork this repository... but
 
 My hope is that the educational and non-profit intentions of this repository will enable it to stay hosted and available, but the original copyright holders do have the right to ask for it to be taken down, in which case I will comply without hesitation. I do hope, though, that along with the various other disassemblies and commentaries of this source, it will remain viable.
 
+## Browsing the source in an IDE
+
+If you want to browse the source in an IDE, you might find the following useful.
+
+* The most interesting files are in the [sources](sources) folder:
+
+  * The main game's source code is in the [elite-source.asm](sources/elite-source.asm) file (for the parasite, i.e. the second processor) and [elite-z.asm](sources/elite-z.asm) (for the I/O processor, i.e. the BBC Micro) - this is the motherlode and probably contains all the stuff you're interested in.
+
+  * The game's loader is in the [elite-loader1.asm](sources/elite-loader1.asm) and [elite-loader2.asm](sources/elite-loader2.asm) files - these are mainly concerned with setup and copy protection.
+
+* It's probably worth skimming through the [notes on terminology and notations](https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html) on the accompanying website, as this explains a number of terms used in the commentary, without which it might be a bit tricky to follow at times (in particular, you should understand the terminology I use for multi-byte numbers).
+
+* The accompamying website contains [a number of "deep dive" articles](https://www.bbcelite.com/deep_dives/), each of which goes into an aspect of the game in detail. Routines that are explained further in these articles are tagged with the label `Deep dive:` and the relevant article name.
+
+* There are loads of routines and variables in Elite - literally hundreds. You can find them in the source files by searching for the following: `Type: Subroutine`, `Type: Variable`, `Type: Workspace` and `Type: Macro`.
+
+* If you know the name of a routine, you can find it by searching for `Name: <name>`, as in `Name: SCAN` (for the 3D scanner routine) or `Name: LL9` (for the ship-drawing routine).
+
+* The entry point for the [main game code](sources/elite-source.asm) is routine `TT170`, which you can find by searching for `Name: TT170` (though there are some decryption and setup routines at `S%` and `BEGIN` that you may also find useful). If you want to follow the program flow all the way from the title screen around the main game loop, then you can find a number of [deep dives on program flow](https://www.bbcelite.com/deep_dives/) on the accompanying website.
+
+* The source code is designed to be read at an 80-column width and with a monospaced font, just like in the good old days.
+
+I hope you enjoy exploring the inner-workings of BBC Elite as much as I have.
+
+
 ## Building 6502 Second Processor Elite from the source
 
 ### Requirements
@@ -45,7 +94,9 @@ My hope is that the educational and non-profit intentions of this repository wil
 You will need the following to build 6502 Second Processor Elite from the source:
 
 * BeebAsm, which can be downloaded from the [BeebAsm repository](https://github.com/stardot/beebasm). Mac and Linux users will have to build their own executable with `make code`, while Windows users can just download the `beebasm.exe` file.
+
 * Python. Both versions 2.7 and 3.x should work.
+
 * Mac and Linux users may need to install `make` if it isn't already present (for Windows users, `make.exe` is included in this repository).
 
 Let's look at how to build 6502 Second Processor Elite from the source.
@@ -148,8 +199,8 @@ a949f485   1427  a949f485   1427   Yes   ELTH.bin
 62e09fa4   3619  62e09fa4   3619   Yes   ELTJ.bin
 a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
 5908b6d5  38832  5908b6d5  38832   Yes   P.CODE.bin
-2580d019   8460  -             -    -    SHIPS.bin
-57406380   1024  -             -    -    WORDS.bin
+2580d019   8460  2580d019   8460   Yes   SHIPS.bin
+57406380   1024  57406380   1024   Yes   WORDS.bin
 ```
 
 All the compiled binaries match the extracts, so we know we are producing the same final game as the release version.
@@ -160,7 +211,11 @@ During compilation, details of every step are output in a file called `compile.t
 
 ## Notes on the original source files
 
+### Fixing the original build process
+
 The source files on the source disc do not build as they are; some massaging is required, as described in [this thread on Stardot](https://stardot.org.uk/forums/viewtopic.php?t=14607). Note also that the `P.DIALS2P` file on the source disc has some erroneous dots in the right-hand side of the dashboard; a fixed version is available in the `images` folder in this repository, and this fixed version was used to build the reference binaries in the `extracted` folder.
+
+### Producing byte-accurate binaries 
 
 The `extracted/workspaces` folder contains binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either intialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `extracted/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
 
@@ -177,10 +232,6 @@ ENDIF
 ```
 
 Note that the log tables in both the `ELTG` and `I.CODE` sections of the source are also included in the `workspaces` folder. This is because BBC BASIC calculates slightly different values for these tables compared to those calculated by BeebAsm. The `encrypt` target therefore loads the original BBC Micro versions of these log tables using the same approach as above, to ensure the output matches the originals, while the `build` target sticks with BeebAsm's built-in `LOG()` function and generates the tables as part of the build process.
-
-## Next steps
-
-I'm planning to document the 6502 Second Processor version of Elite in the same way that I [documented the tape version](https://www.bbcelite.com), though this is a long-term plan.
 
 ---
 
