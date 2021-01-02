@@ -180,11 +180,20 @@ VE = &57                \ The obfuscation byte used to hide the extended tokens
 LL = 30                 \ The length of lines (in characters) of justified text
                         \ in the extended tokens system
 
-W = 5                   \ Configuration variables for the demo
-W2 = 16
-WY = 12
-W2Y = 2.5*WY
-D = 80
+W2 = 16                 \ The horizontal character spacing in the scroll text
+                        \ (i.e. the difference in x-coordinate between the
+                        \ left edges of adjacent characters in words)
+
+WY = 12                 \ The vertical spacing between points in the scroll text
+                        \ grid for each character
+
+W2Y = 2.5*WY            \ The vertical line spacing in the scroll text (i.e. the
+                        \ difference in y-coordinate between the tops of the
+                        \ characters in adjacent lines)
+
+D = 80                  \ The distance from the camera (z-coordinate) of the
+                        \ bottom of the visible part of the Star Wars scroll
+                        \ text
 
 \ ******************************************************************************
 \
@@ -2773,7 +2782,8 @@ ORG &0800
                         \     * Bits 0-6 contain the laser's power
                         \
                         \     * Bit 7 determines whether or not the laser pulses
-                        \       (pulse laser) or is always on (beam laser)
+                        \       (0 = pulse or mining laser) or is always on
+                        \       (1 = beam or military laser)
 
  SKIP 2                 \ These bytes are unused (they were originally used for
                         \ up/down lasers, but they were dropped)
@@ -3032,7 +3042,7 @@ NT% = SVC + 2 - TP      \ This sets the variable NT% to the size of the current
  SKIP 2                 \ The address of the bottom of the ship line heap
                         \
                         \ The ship line heap is a descending block of memory
-                        \ that starts at WP and descends down to SLSP. It can be
+                        \ that starts at D% and descends down to SLSP. It can be
                         \ extended downwards by the NWSHP routine when adding
                         \ new ships (and their associated ship line heaps), in
                         \ which case SLSP is lowered to provide more heap space,
@@ -3223,23 +3233,32 @@ ORG &0D00
 
 .XP
 
- SKIP 1
+ SKIP 1                 \ The x-coordinate of the current character as we
+                        \ construct the lines for the Star Wars scroll text
 
 .YP
 
- SKIP 1
+ SKIP 1                 \ The y-coordinate of the current character as we
+                        \ construct the lines for the Star Wars scroll text
 
 .YS
 
- SKIP 1
+ SKIP 1                 \ Temporary storage for saving the index into the TB
+                        \ tables in the SLIDE routine
 
 .BALI
 
- SKIP 1
+ SKIP 1                 \ The progress of the Star Wars scroll text as it
+                        \ scrolls, from 254 (off the bottom of the screen) to 2
+                        \ (fully scrolled). Can also be thought of as a measure
+                        \ of how much of the scroll text has yet to appear
+                        \ on-screen
 
 .UPO
 
- SKIP 1
+ SKIP 1                 \ Used as an index into the UB tables when projecting
+                        \ the scroll text lines onto the Star Wars perspective
+                        \ view and then onto the screen
 
 PRINT "WP workspace from  ", ~WP," to ", ~P%
 
@@ -3249,18 +3268,17 @@ PRINT "WP workspace from  ", ~WP," to ", ~P%
 \       Type: Workspace
 \    Address: &8200 to &85FF
 \   Category: Workspaces
-\    Summary: Ship data blocks and ship line heaps
+\    Summary: Ship data blocks
 \  Deep dive: Ship data blocks
 \
 \ ------------------------------------------------------------------------------
 \
 \ Contains ship data for all the ships, planets, suns and space stations in our
-\ local bubble of universe, along with their corresponding ship line heaps.
+\ local bubble of universe.
 \
 \ The blocks are pointed to by the lookup table at location UNIV. The first 468
 \ bytes of the K% workspace hold ship data on up to 13 ships, with 36 (NI%)
-\ bytes per ship, and the ship line heap grows downwards from WP at the end of
-\ the K% workspace.
+\ bytes per ship.
 \
 \ See the deep dive on "Ship data blocks" for details on ship data blocks, and
 \ the deep dive on "The local bubble of universe" for details of how Elite
@@ -3292,51 +3310,71 @@ ORG &8600
 
 .X1TB
 
- SKIP &100
+ SKIP &100              \ The x-coordinates of the start points for character
+                        \ lines in the scroll text (as space coordinates)
 
 .Y1TB
 
- SKIP &100
+ SKIP &100              \ The y-coordinates of the start points for character
+                        \ lines in the scroll text
 
 .X2TB
 
- SKIP &100
+ SKIP &100              \ The x-coordinates of the end points for character
+                        \ lines in the scroll text
 
 .Y2TB
 
- SKIP &100
+ SKIP &100              \ The y-coordinates of the end points for character
+                        \ lines in the scroll text
 
 .X1UB
 
- SKIP &100
+ SKIP &100              \ The x-coordinates of the start points for character
+                        \ lines in the scroll text (as projected screen
+                        \ coordinates)
 
 .Y1UB
 
- SKIP &100
+ SKIP &100              \ The y-coordinates of the start points for character
+                        \ lines in the scroll text (as projected screen
+                        \ coordinates)
 
 .X2UB
 
- SKIP &100
+ SKIP &100              \ The x-coordinates of the end points for character
+                        \ lines in the scroll text (as projected screen
+                        \ coordinates)
 
 .Y2UB
 
- SKIP &100
+ SKIP &100              \ The y-coordinates of the end points for character
+                        \ lines in the scroll text (as projected screen
+                        \ coordinates)
 
 .X1VB
 
- SKIP &100
+ SKIP &100              \ The x-coordinates of the start points for the previous
+                        \ set of character lines in the scroll text (as
+                        \ projected screen coordinates) so they can be erased
 
 .Y1VB
 
- SKIP &100
+ SKIP &100              \ The y-coordinates of the start points for the previous
+                        \ set of character lines in the scroll text (as
+                        \ projected screen coordinates) so they can be erased
 
 .X2VB
 
- SKIP &100
+ SKIP &100              \ The x-coordinates of the end points for the previous
+                        \ set of character lines in the scroll text (as
+                        \ projected screen coordinates) so they can be erased
 
 .Y2VB
 
- SKIP &100
+ SKIP &100              \ The y-coordinates of the end points for the previous
+                        \ set of character lines in the scroll text (as
+                        \ projected screen coordinates) so they can be erased
 
 \ ******************************************************************************
 \
@@ -24840,8 +24878,8 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ can easily be erased from the screen again). SLSP
                         \ points to the start of the current heap space, and we
                         \ can extend it downwards with the heap for our new ship
-                        \ (as the heap space always ends just before the WP
-                        \ workspace)
+                        \ (as the heap space always ends just before the ship
+                        \ blueprints at D%)
 
  LDY #5                 \ Fetch ship blueprint byte #5, which contains the
  LDA (XX0),Y            \ maximum heap size required for plotting the new ship,
@@ -24860,12 +24898,12 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ for our ship. In memory, this is the layout of the
                         \ ship data blocks and ship line heaps:
                         \
-                        \   +-----------------------------------+   &0F34
+                        \   +-----------------------------------+
                         \   |                                   |
-                        \   | WP workspace                      |
+                        \   | Ship blueprints                   |
                         \   |                                   |
-                        \   +-----------------------------------+   &0D40 = WP
-                        \   |                                   |
+                        \   +-----------------------------------+   &D000 = D%
+                        \   |                                   |   
                         \   | Current ship line heap            |
                         \   |                                   |
                         \   +-----------------------------------+   SLSP
@@ -24888,7 +24926,7 @@ LOAD_E% = LOAD% + P% - CODE%
                         \   |                                   |
                         \   | Existing ship data blocks         |
                         \   |                                   |
-                        \   +-----------------------------------+   &0900 = K%
+                        \   +-----------------------------------+   &8200 = K%
                         \
                         \ So, to work out if we have enough space, we have to
                         \ make sure there is room between the end of our new
@@ -28529,8 +28567,8 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ flight and ship status variables
 
  LDA #LO(LS%)           \ We have reset the ship line heap, so we now point
- STA SLSP               \ SLSP to LS% to indicate that the heap is empty
- LDA #HI(LS%)
+ STA SLSP               \ SLSP to LS% (the byte below the ship blueprints at D%)
+ LDA #HI(LS%)           \ to indicate that the heap is empty
  STA SLSP+1
 
  JSR DIALS              \ Update the dashboard
@@ -41425,6 +41463,90 @@ LOAD_I% = LOAD% + P% - CODE%
 \
 \ ------------------------------------------------------------------------------
 \
+\ The first step is to write the scroll text onto a 2D canvas, laid out like
+\ this, starting with the first words in the top-left, as you would expect when
+\ writing on a piece of paper:
+\
+\   (0, 254)              (256, 254)
+\           +------------+
+\           |            |      ^
+\           | On-screen  |      |
+\           |            |      |  scroll direction
+\           |............|      |
+\    ^      :            :
+\    |      :            :
+\   BALI    : Off-screen :
+\    |      :            :
+\    V      :            :
+\           +------------+
+\     (0, 0)              (256, 0)
+\
+\ Note that the y-axis is in the same direction as in the 3D space view, so the
+\ (0, 0) origin is in the bottom left, and y-coordinates get larger as you move
+\ up the canvas (and x increases towards the right, as you would expect).
+\
+\ BALI is a counter that goes from 254 to 2, and can be thought of as the
+\ y-coordinate of our eyes as we read through the scroll text from top to
+\ bottom, or, alternatively, how much of the canvas has yet to appear on-screen
+\ as the canvas scrolls into view.
+\
+\ Now take a point (X1, Y1) in the 2D scroll text canvas, like this:
+\
+\             X1
+\           <--->
+\
+\           +------------+
+\           |            |
+\           |    x       |
+\           |            |      ^       ^
+\           |            |      |       |
+\           |            |      |       | Y1 - BALI
+\           |            |      |       |
+\           |............|      |       v
+\    ^      :            :      |
+\    |      :            :      | Y1
+\   BALI    : Off-screen :      |
+\    |      :            :      |
+\    |      :            :      |
+\    v      +------------+      v
+\
+\ If Y1 < BALI, the point is off the bottom of the screen, so let's assume that
+\ Y1 >= BALI. This means that the value of Y1 - BALI is 0 for points at the
+\ bottom of the visible section, and higher for points near the top.
+\
+\ We can project the point (X1, Y1) onto the Star Wars perspective scroll text
+\ to get a 3D space coordinate (x, y, z) like this:
+\
+\   x = (x_sign x_hi x_lo) = X1 - 128
+\
+\   y = (y_sign y_hi y_lo) = (Y1 - BALI) - 128
+\
+\   z = (z_sign z_hi z_lo) = ((Y1 - BALI) * 4 div 256) + #D
+\
+\ The x calculation moves the point (X1, Y1) to the left so the scroll text is
+\ in the centre, right in front of the camera (i.e. it shifts the x-coordinate
+\ range from 0-255 to -128 to +127).
+\
+\ The y calculation moves the point (X1, Y1) down so that points at the bottom
+\ of the visible part of the canvas (those just appearing) will be at a space
+\ y-coordinate of -128, so the scroll text appears to come in from just below
+\ the bottom of the screen.
+\
+\ The z calculation tips the top of the 2D canvas away from the viewer by giving
+\ points higher up the canvas (i.e. those with higher y-coordinates) a higher
+\ z-coordinate, so the top of the canvas is further away (as the z-coordinate is
+\ into the screen). The #D configuration variable is the z-distance of the
+\ bottom of the visible part of the canvas as it scrolls into view. The scroll
+\ text appears as a disappearing flat canvas because the z-coordinate is in a
+\ linear relationship with the y-coordinate (i.e. z = ky + d where k and d are
+\ constants).
+\
+\ We then project this space coordinate onto the screen for drawing, using the
+\ same process as when we draw ships. Couple this with a couple of tables for
+\ storing the projected lines so they can be erased again, then we can scroll
+\ the text in a Star Wars style by simply counting BALI from 254 down to 2,
+\ reprojecting the canvas and redrawing the scroll text with each new value.
+\
 \ Arguments:
 \
 \   (Y X)               The contents of the scroll text to display
@@ -41433,37 +41555,77 @@ LOAD_I% = LOAD% + P% - CODE%
 
 .SLIDE
 
- JSR GRIDSET
+ JSR GRIDSET            \ Call GRIDSET to populate the line coordinate tables at
+                        \ X1TB, Y1TB, X2TB and Y2TB (the TB tables) with the
+                        \ lines for the scroll text in (Y X)
 
- JSR ZEVB               \ Call ZEVB to zero-fill the Y1VB variable
+                        \ The following section does the following:
+                        \
+                        \   * Clear the VB tables (X1VB, Y1VB, X2VB and Y2VB)
+                        \
+                        \   * Call GRID with values of BALI dropping by 2 each
+                        \     time, from 254 to 252 to 250 ... to 6 to 4 to 2,
+                        \     to display the scroll text moving up the screen
+                        \     and into the distance
+                        \
+                        \   * Clear the VB tables
+                        \
+                        \   * Call GRID with BALI = 2 to erase the final set of
+                        \     lines from the screen
+
+ JSR ZEVB               \ Call ZEVB to zero-fill the Y1VB variable, which
+                        \ effectively clears all the VB tables as we only check
+                        \ the Y1VB table for zero values
 
  LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
  JSR DOCOL              \ switch to colour 2, which is yellow
 
  LDA #254               \ Set BALI = 254 to act as a counter from 254 to 2,
- STA BALI               \ decreasing by 2 each iteration
+ STA BALI               \ decreasing by 2 each iteration, which represents the
+                        \ scrolling of the Star Wars scroll text up the screen
+                        \ and into the distance
 
 .SLL2
 
- JSR GRID               \ Call GRID
+ JSR GRID               \ Call GRID to draw the Star Wars scroll text at the
+                        \ scroll position in BALI
 
- DEC BALI               \ Set BALI = BALI - 2
- DEC BALI
+ DEC BALI               \ Set BALI = BALI - 2 to move the scroll text up the
+ DEC BALI               \ screen and into the distance
 
  BNE SLL2               \ Loop back to SLL2 until the loop counter is 0 (so GRID
                         \ was last called with BALI = 2)
 
 .SL1
 
- JSR ZEVB               \ Call ZEVB to zero-fill the Y1VB variable
+ JSR ZEVB               \ Call ZEVB to zero-fill the Y1VB variable, which
+                        \ effectively clears all the VB tables as we only check
+                        \ the Y1VB table for zero values
 
- LDA #2                 \ Set BALI = 2 and fall into GRID below
- STA BALI
+ LDA #2                 \ Set BALI = 2 and fall into GRID below to redraw the
+ STA BALI               \ last set of scroll text, which erases it from the
+                        \ screen
 
 .GRID
 
- LDY #0                 \ Set UPO = 0
- STY UPO
+                        \ The GRID routine draws the Star Wars scroll text, with
+                        \ the value in BALI determining the scroll position of
+                        \ the perspective view, starting from 254 (not yet
+                        \ on-screen) and going down to 2 (the scroll has almost
+                        \ faded into the distance)
+                        \
+                        \ The routine loops through the lines we just put in the
+                        \ TB tables, projects them into a Star Wars-like
+                        \ perspective scroll view in 3D space, then projects
+                        \ them onto the 2D screen, saving the resulting screen
+                        \ coordinates into the VB table. It then calls the
+                        \ GRIDEX routine to erase the lines from the previous
+                        \ call to GRID, and draw the new ones
+
+ LDY #0                 \ Set Y = 0, to act as an index into the TB tables,
+                        \ where we put the line coordinates above
+
+ STY UPO                \ Set UPO = 0, to act as an index into the UB tables
 
  STY INWK+8             \ Set z_sign = 0
 
@@ -41472,74 +41634,142 @@ LOAD_I% = LOAD% + P% - CODE%
  STY INWK+4             \ Set y_hi = 0
 
  DEY                    \ Decrement Y to 255, so the following loop starts with
-                        \ the first byte from Y1TB
+                        \ Y pointing to the first byte from the TB tables
 
 .GRIDL
 
- INY                    \ Increment Y
+ INY                    \ Increment Y to point to the next pair of line
+                        \ coordinates in the TB tables
+
+                        \ We now fetch the line's start point as 3D space
+                        \ coordinates, project it onto the Star Wars perspective
+                        \ scroll text, and project it again onto the 2D screen
 
  STZ INWK+7             \ Set z_hi = 0
 
- LDA Y1TB,Y             \ Set A = the Y-th byte from Y1TB
+ LDA Y1TB,Y             \ Set A to the y-coordinate of the line's start point,
+                        \ let's call it Y1
 
- BNE P%+5               \ If A = 0, jump to GREX
- JMP GREX
+ BNE P%+5               \ If A = 0, jump to GREX to draw the projected lines
+ JMP GREX               \ as we have now processed all of them
 
- SEC
- SBC BALI
+ SEC                    \ Set A = A - BALI
+ SBC BALI               \       = Y1 - BALI
 
- BCC GRIDL
+ BCC GRIDL              \ If Y1 < BALI, jump back to GRIDL to process the next
+                        \ line, as this one is not yet on-screen
 
- STA R
+ STA R                  \ Set R = Y1 - BALI
 
- ASL A
- ROL INWK+7
- ASL A
- ROL INWK+7
- ADC #D
- STA INWK+6
- LDA INWK+7
- ADC #0
- STA INWK+7
+ ASL A                  \ Shift bits 6-7 of A into bits 0-1 of z_hi, so the C
+ ROL INWK+7             \ flag is clear (as we set z_hi to 0 above) and z_hi is
+ ASL A                  \ the high byte if A * 4 = (Y1 - BALI) * 4 is expressed
+ ROL INWK+7             \ as a 16-bit value, i.e. ((Y1 - BALI) * 4) div 256
+
+ ADC #D                 \ Set (z_hi z_lo) = (z_hi z_lo) + #D
+ STA INWK+6             \
+                        \ first adding the low bytes
+
+ LDA INWK+7             \ And then adding the high bytes, so we now have:
+ ADC #0                 \
+ STA INWK+7             \   (z_hi z_lo) = ((Y1 - BALI) * 4 div 256) + #D
+                        \
+                        \ so because we set z_sign to 0 above, we have:
+                        \
+                        \   (z_sign z_hi z_lo) = ((Y1 - BALI) * 4 div 256) + #D
 
  STZ S                  \ Set S = 0
 
- LDA #128
- STA P
+ LDA #%10000000         \ Set A to a negative sign byte
+
+ STA P                  \ Set P = 128
 
  JSR ADD                \ Set (A X) = (A P) + (S R)
+                        \           = -128 + (0 R)
+                        \           = -128 + R
+                        \           = -128 + (Y1 - BALI)
+                        \           = Y1 - BALI - 128
 
- STA INWK+5
- STX INWK+3
- LDA X1TB,Y
- EOR #128
- BPL GR2
- EOR #&FF
- INA
+ STA INWK+5             \ Set (y_sign y_lo) = (A X)
+ STX INWK+3             \                   = Y1 - BALI - 128
+                        \
+                        \ so because we set y_hi to 0 above, we have:
+                        \
+                        \   (y_sign y_hi y_lo) = Y1 - BALI - 128
+
+ LDA X1TB,Y             \ Set A to the x-coordinate of the line's start point,
+                        \ let's call it X1. A is in the range 0 to 255, and we
+                        \ now need to move the coordinate to the left so it's in
+                        \ the range -128 to +128, but we need to put the result
+                        \ into (x_sign x_hi x_lo) which is a sign-magnitude
+                        \ number, so we can't just subtract 128, as that would
+                        \ give us a two's complement number
+
+ EOR #%10000000         \ Flip the sign bit of A
+
+ BPL GR2                \ If bit 7 is now clear, meaning it was previously set,
+                        \ then jump to GR2 as the original A was in the range
+                        \ 128 to 255, and we now have the correct result for
+                        \ A = A - 128, which is also |A - 128| as A was positive
+
+                        \ Otherwise bit 7 was previously clear, so A was in the
+                        \ range 0 to 127 and the EOR has shifted that up to 128
+                        \ to 255, so we need to negate the number so that 128
+                        \ becomes 0, 129 becomes 1 and so on
+
+ EOR #%11111111         \ Negate the result in A by flipping all the bits and
+ INA                    \ adding 1, i.e. using two's complement to negate it to
+                        \ set A to the magnitude part of the sign-magnitude
+                        \ number A - 128, i.e. |A - 128|
 
 .GR2
 
- STA INWK
- LDA X1TB,Y
- EOR #128
- AND #128
- STA INWK+2
- STY YS
- JSR PROJ
- LDY YS
- LDA K3
+ STA INWK               \ Set x_lo = |A - 128|
+                        \          = |X1 - 128|
+
+ LDA X1TB,Y             \ Set x_sign to the opposite of bit 7 in X1, so it will
+ EOR #%10000000         \ be positive if X1 > 127 and negative if X1 <= 127, so
+ AND #%10000000         \ x_sign has the correct sign for X1 - 128:
+ STA INWK+2             \
+                        \   (x_sign x_lo) = X1 - 128
+                        \
+                        \ and because we set x_hi to 0 above, we have:
+                        \
+                        \   (x_sign x_hi x_lo) = X1 - 128
+
+ STY YS                 \ Store Y, the index into the TB tables, in YS
+
+ JSR PROJ               \ Project the line's start coordinate onto the screen,
+                        \ returning:
+                        \
+                        \   * K3(1 0) = the screen x-coordinate
+                        \   * K4(1 0) = the screen y-coordinate
+
+ LDY YS                 \ Retrieve the value of Y from YS, so it once again
+                        \ contains the index into the TB tables
+
+ LDA K3                 \ Set XX15(1 0) = K3(1 0)
  STA XX15
  LDA K3+1
  STA XX15+1
- LDA K4
+
+ LDA K4                 \ Set XX15(3 2) = K4(1 0)
  STA XX15+2
  LDA K4+1
  STA XX15+3
- STZ INWK+7 \++
- LDA Y2TB,Y
+
+                        \ We now fetch the line's end point as 3D space
+                        \ coordinates, project it onto the Star Wars perspective
+                        \ scroll text, and project it again onto the 2D screen
+
+ STZ INWK+7             \ Set x_hi = 0
+
+ LDA Y2TB,Y             \ Set A to Y2, the end point's y-coordinate from Y1TB
+ 
  SEC
  SBC BALI
  BCC GR6
+
  STA R
  ASL A
  ROL INWK+7
@@ -41551,40 +41781,68 @@ LOAD_I% = LOAD% + P% - CODE%
  ADC #0
  STA INWK+7
  STZ S
- LDA #128
+ LDA #%10000000
  STA P
- JSR ADD
+
+ JSR ADD                \ Set (A X) = (A P) + (S R)
+
  STA INWK+5
  STX INWK+3
+
  LDA X2TB,Y
- EOR #128
+ EOR #%10000000
  BPL GR3
- EOR #&FF
- INA \++
+ EOR #%11111111
+ INA
 
 .GR3
 
  STA INWK
  LDA X2TB,Y
- EOR #128
- AND #128
+ EOR #%10000000
+ AND #%10000000
  STA INWK+2
- JSR PROJ
- LDA K3
+
+ JSR PROJ               \ Project the line's end coordinate onto the screen,
+                        \ returning:
+                        \
+                        \   * K3(1 0) = the screen x-coordinate
+                        \   * K4(1 0) = the screen y-coordinate
+
+ LDA K3                 \ Set XX15(5 4) = K3(1 0)
  STA XX15+4
  LDA K3+1
  STA XX15+5
- LDA K4
+
+ LDA K4                 \ Set XX12(1 0) = K4(1 0)
  STA XX12
  LDA K4+1
  STA XX12+1
- JSR LL145
- LDY YS
- BCS GR6
- INC UPO
- LDX UPO
- LDA X1
- STA X1UB,X
+
+                        \ We now have our line, projected onto the Star Wars
+                        \ perspective scroll text and then onto the screen, so
+                        \ we can clip it and store it in the UB tables for
+                        \ drawing later, once we have processed all the lines in
+                        \ the scroll text in the same way
+
+ JSR LL145              \ Call LL145 to see if the new line segment needs to be
+                        \ clipped to fit on-screen, returning the clipped line's
+                        \ end-points in (X1, Y1) and (X2, Y2)
+
+ LDY YS                 \ Retrieve the value of Y from YS, so it once again
+                        \ contains the index into the TB tables
+
+ BCS GR6                \ If the C flag is set then the line is not visible on
+                        \ screen, so loop back to GRIDL via GR6 to process the
+                        \ next line to draw in the scroll text
+
+ INC UPO                \ Increment the table pointer in UPO to point to the
+                        \ next free slot in the UB tables
+
+ LDX UPO                \ Load the UPO table pointer into X
+
+ LDA X1                 \ Store the line coordinates (X1, Y1) and (X2, Y2) in
+ STA X1UB,X             \ the next free slot in the UB tables
  LDA Y1
  STA Y1UB,X
  LDA X2
@@ -41594,38 +41852,67 @@ LOAD_I% = LOAD% + P% - CODE%
 
 .GR6
 
- JMP GRIDL
+ JMP GRIDL              \ Loop back to GRIDL to process the next line to draw
+                        \ in the scroll text
 
 .GREX
 
- LDY UPO
- BEQ GREX2
+                        \ If we get here then it's time to draw the lines we
+                        \ just projected, and remove any lines that are already
+                        \ on-screen
+                        \
+                        \ The VB table holds the new lines to draw, while UB
+                        \ holds all their previous coordinates, i.e. the current
+                        \ lines on-screen, so drawing the VB lines draws the
+                        \ lines in their new positions, while drawing the UB
+                        \ lines erases the old lines from the screen
+
+ LDY UPO                \ Set Y to the the UPO table pointer, which contains the
+                        \ number of coordinates in the X1UB, Y1UB, X2UB and Y2UB
+                        \ tables (i.e. the number of lines we projected)
+
+ BEQ GREX2              \ If UPO = 0 then there are no projected lines to draw,
+                        \ so jump to GREX2 to return from the subroutine
+
+                        \ We now loop through the projected lines, using Y as a
+                        \ loop counter that doubles as an index into the line
+                        \ coordinate tables
+                        \
+                        \ First we draw the Y-th line from the VB table, if
+                        \ there is one, and then we draw the Y-th line from the
+                        \ UB table, before copying the Y-th VB line coordinates
+                        \ into the UB table (so the UB table contains the lines
+                        \ that are now on-screen)
 
 .GRL2
 
- LDA Y1VB,Y
+ LDA Y1VB,Y             \ If there is no Y-th line in the VB table, jump to GR4
  BEQ GR4
- STA Y1
- LDA X1VB,Y
+
+ STA Y1                 \ Otherwise copy the Y-th line's coordinates from the VB
+ LDA X1VB,Y             \ table into (X1, Y1) and (X2, Y2)
  STA X1
  LDA X2VB,Y
  STA X2
  LDA Y2VB,Y
  STA Y2
 
- JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
+ JSR LOIN               \ Draw the line from (X1, Y1) to (X2, Y2)
 
 .GR4
 
- LDA X1UB,Y
- STA X1
+ LDA X1UB,Y             \ Copy the Y-th line's coordinates from the UB table
+ STA X1                 \ into both the VB table and into (X1, Y1) and (X2, Y2)
  STA X1VB,Y
+
  LDA Y1UB,Y
  STA Y1
  STA Y1VB,Y
+
  LDA X2UB,Y
  STA X2
  STA X2VB,Y
+
  LDA Y2UB,Y
  STA Y2
  STA Y2VB,Y
@@ -41638,7 +41925,7 @@ LOAD_I% = LOAD% + P% - CODE%
 
 .GREX2
 
- RTS
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -41672,13 +41959,14 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: GRIDSET
 \       Type: Subroutine
 \   Category: Demo
-\    Summary: Generate the line coordinates for the scroll text
+\    Summary: Populate the line coordinate tables with the lines for the scroll
+\             text
 \
 \ ------------------------------------------------------------------------------
 \
-\ This routine populates the X1TB/Y1TB/X2TB/Y2TB tables with the coordinates of
-\ up to five lines for each character in the scroll text that we want to
-\ display.
+\ This routine populates the X1TB, Y1TB, X2TB and Y2TB tables (the TB tables)
+\ with the line coordinates that make up each character in the scroll text that
+\ we want to display.
 \
 \ Arguments:
 \
@@ -41699,10 +41987,16 @@ LOAD_I% = LOAD% + P% - CODE%
                         \ to display, pointing to the character we are currently
                         \ processing
 
- LDX #0                 \ Set X = 0, to act as a pointer when populating the
-                        \ X1TB/Y1TB/X2TB/Y2TB tables with one byte per character
+ LDX #0                 \ Set X = 0, to act as a pointer when populating the TB
+                        \ tables with one byte per character
 
- STX XP                 \ Set XP = 0
+ STX XP                 \ Set XP = 0, so we now have (XP, YP) = (0, 254)
+                        \
+                        \ (XP, YP) is the coordinate in space where we start
+                        \ drawing the lines that make up the scroll text, so
+                        \ this effectively moves the scroll text cursor to the
+                        \ top-left corner (as these are space coordinates where
+                        \ higher y-coordinates are further up the screen)
 
 .GSL1
 
@@ -41711,15 +42005,15 @@ LOAD_I% = LOAD% + P% - CODE%
                         \ A now contains the ASCII code of the character we want
                         \ to process
 
- BEQ GRSEX              \ If A = 0, which means we have reached the end of the
-                        \ text to display, then jump down to GRSEX
+ BEQ GRSEX              \ If A = 0 then we have reached the end of the text to
+                        \ display, so jump down to GRSEX
 
  STY T                  \ Store the character index in T so we can retrieve it
                         \ later
 
  SEC                    \ Set S = A - ASCII ",", as the table at LTDEF starts
- SBC #','               \ with the lines needed for a comma
- STA S
+ SBC #','               \ with the lines needed for a comma, so A now contains
+ STA S                  \ the number of the entry in LTDEF for this character
 
  ASL A                  \ Set Y = S + 4 * A
  ASL A                  \       = A + 4 * A
@@ -41730,25 +42024,20 @@ LOAD_I% = LOAD% + P% - CODE%
                         \ character in the table is a comma and each definition
                         \ in LTDEF consists of five bytes
 
- LDA LTDEF,Y            \ Call GRS1 to copy the coordinates of the character's
- JSR GRS1               \ first line from LTDEF into the coordinate tables at
-                        \ X1TB/Y1TB/X2TB/Y2TB
+ LDA LTDEF,Y            \ Call GRS1 to put the coordinates of the character's
+ JSR GRS1               \ first line into the TB tables
 
- LDA LTDEF+1,Y          \ Call GRS1 to copy the coordinates of the character's
- JSR GRS1               \ second line from LTDEF into the coordinate tables at
-                        \ X1TB/Y1TB/X2TB/Y2TB
+ LDA LTDEF+1,Y          \ Call GRS1 to put the coordinates of the character's
+ JSR GRS1               \ second line into the TB tables
 
- LDA LTDEF+2,Y          \ Call GRS1 to copy the coordinates of the character's
- JSR GRS1               \ third line from LTDEF into the coordinate tables at
-                        \ X1TB/Y1TB/X2TB/Y2TB
+ LDA LTDEF+2,Y          \ Call GRS1 to put the coordinates of the character's
+ JSR GRS1               \ third line into the TB tables
 
- LDA LTDEF+3,Y          \ Call GRS1 to copy the coordinates of the character's
- JSR GRS1               \ fourth line from LTDEF into the coordinate tables at
-                        \ X1TB/Y1TB/X2TB/Y2TB
+ LDA LTDEF+3,Y          \ Call GRS1 to put the coordinates of the character's
+ JSR GRS1               \ fourth line into the TB tables
 
- LDA LTDEF+4,Y          \ Call GRS1 to copy the coordinates of the character's
- JSR GRS1               \ fifth line from LTDEF into the coordinate tables at
-                        \ X1TB/Y1TB/X2TB/Y2TB
+ LDA LTDEF+4,Y          \ Call GRS1 to put the coordinates of the character's
+ JSR GRS1               \ fifth line into the TB tables
 
  LDY T                  \ Retrieve the original character index from T into Y
 
@@ -41757,25 +42046,27 @@ LOAD_I% = LOAD% + P% - CODE%
 
  LDA XP                 \ Set XP = XP + #W2
  CLC                    \
- ADC #W2                \ to move the x-coordinate along by #WP
- STA XP
+ ADC #W2                \ to move the x-coordinate along by #WP (the horizontal
+ STA XP                 \ character spacing for the scroll text)
 
  BCC GSL1               \ If the addition didn't overflow (i.e. XP < 256) loop
                         \ back to GSL1
 
- LDA #0                 \ Set XP = 0
- STA XP
+ LDA #0                 \ Otherwise we just reached the end of a line in the
+ STA XP                 \ scroll text, so set XP = 0 to move the scroll text
+                        \ cursor to the start of the line
 
- LDA YP                 \ Set YP = YP - #W2Y
- SBC #W2Y               \
- STA YP                 \ to move the y-coordinate down by one line
+ LDA YP                 \ And set YP = YP - #W2Y to move the scroll text cursor
+ SBC #W2Y               \ down by one line (as #W2Y is the scroll text's
+ STA YP                 \ vertical line spacing)
 
- JMP GSL1               \ Loop back to GSL1
+ JMP GSL1               \ Loop back to GSL1 to process the next character in the
+                        \ scroll text
 
 .GRSEX
 
- LDA #0                 \ Set the X-th byte of Y1TB = 0
- STA Y1TB,X
+ LDA #0                 \ Set the X-th byte of Y1TB to 0 to indicate that we
+ STA Y1TB,X             \ have reached the end of the scroll text
 
  RTS                    \ Return from the subroutine
 
@@ -41784,24 +42075,26 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: GRS1
 \       Type: Subroutine
 \   Category: Demo
-\    Summary: Populate the coordinate tables for a scroll text letter
+\    Summary: Populate the line coordinate tables with the lines for a single
+\             scroll text character
 \
 \ ------------------------------------------------------------------------------
 \
-\ This routine populates the X-th byte in the X1TB/Y1TB/X2TB/Y2TB tables with a
-\ line segment.
+\ This routine populates the X-th byte in the X1TB, Y1TB, X2TB and Y2TB tables
+\ (the TB tables) with the coordinates for the lines that make up the character
+\ whose definition is given in A.
 \
 \ Arguments:
 \
-\   A                   The value from the LTDEF table to add
+\   A                   The value from the LTDEF table for the character
 \
-\   (XP, YP)            The origin coordinate for this character
+\   (XP, YP)            The coordinate where we should draw this character
 \
+\   X                   The index of the character within the scroll text
 \
 \ Returns:
 \
-\   X                   X gets incremented to point to the next byte to populate
-\                       in X1TB/Y1TB/X2TB/Y2TB
+\   X                   X gets incremented to point to the next character
 \
 \   Y                   Y is preserved
 \
@@ -41891,7 +42184,130 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: LTDEF
 \       Type: Variable
 \   Category: Demo
-\    Summary: Letter definitions for the Star Wars scroll text
+\    Summary: Line definitions for characters in the Star Wars scroll text
+\
+\ ------------------------------------------------------------------------------
+\
+\ Characters in the scroll text are drawn using lines on a 3x6 grid like this:
+\
+\   .   .   .
+\   .   .   .
+\   .   .   .
+\   .   .   .
+\   .   .   .
+\   .   .   .
+\
+\ The spacing of the grid points is configured like this (in terms of space
+\ coordinates):
+\
+\   0           .   .   .
+\   0.5 * WY    .   .   .
+\   1.0 * WY    .   .   .
+\   1.5 * WY    .   .   .
+\   2.0 * WY    .   .   .
+\   2.5 * WY    .   .   .
+\
+\               4   8   12
+\
+\ so the vertical spacing is controlled by configuration variable WY. The
+\ default value of WY is 12, so the vertical grid spacing is 6, while the
+\ horizontal grid spacing is 4.
+\
+\ When drawing letters, only 12 of the 18 points can be used. They are numbered
+\ as follows:
+\
+\   0   1   2
+\   .   .   .
+\   3   4   5
+\   .   .   .
+\   6   7   8
+\   9   A   B
+\
+\ The x-coordinate of point n within the grid (relative to the top-left corner)
+\ is given by the n-th entry in the NOFX table, while the y-coordinate is given
+\ by the n-th entry in NOFY. So point 0 is at (NOFX+0, NOFX+0) = (4, 0), and
+\ point 8 is at (NOFX+8, NOFX+8) = (12, 2 * WY).
+\
+\ The LTDEF table contains definitions for all the letters and some punctuation
+\ characters. Each definition consists of 5 bytes, with each byte describing one
+\ line in the character's shape (bytes with value 0 are ignored, so each
+\ character consists of up to five lines but can contain fewer lines).
+\
+\ The bottom nibble of each byte is the starting point for that line segment,
+\ and the top nibble is the end point, so a value of &28, for example, means
+\ "draw a line from point 8 to point 2".
+\
+\ Let's look at a few examples to make this clearer.
+\
+\ The definition in LTDEF for "A" is:
+\
+\   &60, &02, &28, &35, &00
+\
+\ This translates to the following:
+\
+\   &60 = line from point 0 to point 6
+\   &02 = line from point 2 to point 0
+\   &28 = line from point 8 to point 2
+\   &35 = line from point 5 to point 3
+\   &00 = ignore
+\
+\ which looks like this on the grid:
+\
+\   +-------+
+\   |   .   |
+\   +-------+
+\   |   .   |
+\   |   .   |
+\   .   .   .
+\
+\ The definition in LTDEF for "S" is:
+\
+\   &20, &03, &35, &58, &86
+\
+\ This translates to the following:
+\
+\   &20 = line from point 0 to point 2
+\   &03 = line from point 3 to point 0
+\   &35 = line from point 5 to point 3
+\   &58 = line from point 8 to point 5
+\   &86 = line from point 6 to point 8
+\
+\ which looks like this on the grid:
+\
+\   +-------+
+\   |   .   .
+\   +-------+
+\   .   .   |
+\   +-------+
+\   .   .   .
+\
+\ The definition in LTDEF for "," is:
+\
+\   &63, &34, &47, &76, &97
+\
+\ This translates to the following:
+\
+\   &63 = line from point 3 to point 6
+\   &34 = line from point 4 to point 3
+\   &47 = line from point 7 to point 4
+\   &76 = line from point 6 to point 7
+\   &97 = line from point 7 to point 9
+\
+\ which looks like this on the grid:
+\
+\   .   .   .
+\   .   .   .
+\   +---+   .
+\   |   |   .
+\   +---/   .
+\   _.-´.   .
+\
+\ Colons and semi-colons are shown as spaces (as their LTDEF definitions are
+\ all zeroes), so when a string like "TURMOIL,THE:NAVY" is displayed, the comma
+\ is shown as a comma, but the colon is shown as a space.
+\
+\ The scroll text has 16 characters per line, as the character width in #W2 is
+\ set to 16 by default, and the width of the whole scroll text is 256.
 \
 \ ******************************************************************************
 
@@ -41911,13 +42327,13 @@ LOAD_I% = LOAD% + P% - CODE%
  EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
  EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
  EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
- EQUB &00, &00, &00, &00, &00   \ No letter definition for ":"
- EQUB &00, &00, &00, &00, &00   \ No letter definition for ";"
- EQUB &00, &00, &00, &00, &00   \ No letter definition for "<"
- EQUB &00, &00, &00, &00, &00   \ No letter definition for "="
- EQUB &00, &00, &00, &00, &00   \ No letter definition for ">"
- EQUB &00, &00, &00, &00, &00   \ No letter definition for "?"
- EQUB &00, &00, &00, &00, &00   \ No letter definition for "@"
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ":" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ";" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "<" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "=" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ">" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "?" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "@" (blank)
  EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
  EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
  EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
@@ -41950,22 +42366,25 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: NOFX
 \       Type: Variable
 \   Category: Demo
-\    Summary: 
+\    Summary: The x-coordinates of the scroll text letter grid
 \
 \ ******************************************************************************
 
 .NOFX
 
- EQUB 4
+ EQUB 4                 \ Grid points 0-2
  EQUB 8
  EQUB 12
- EQUB 4
+
+ EQUB 4                 \ Grid points 3-5
  EQUB 8
  EQUB 12
- EQUB 4
+
+ EQUB 4                 \ Grid points 6-8
  EQUB 8
  EQUB 12
- EQUB 4
+
+ EQUB 4                 \ Grid points 9-B
  EQUB 8
  EQUB 12
 
@@ -41974,22 +42393,25 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: NOFY
 \       Type: Variable
 \   Category: Demo
-\    Summary: 
+\    Summary: The y-coordinates of the scroll text letter grid
 \
 \ ******************************************************************************
 
 .NOFY
 
+ EQUB 0                 \ Grid points 0-2
  EQUB 0
  EQUB 0
- EQUB 0
+
+ EQUB WY                \ Grid points 3-5
  EQUB WY
  EQUB WY
- EQUB WY
+
+ EQUB 2*WY              \ Grid points 6-8
  EQUB 2*WY
  EQUB 2*WY
- EQUB 2*WY
- EQUB 2.5*WY
+
+ EQUB 2.5*WY            \ Grid points 9-B
  EQUB 2.5*WY
  EQUB 2.5*WY
 
@@ -41998,13 +42420,15 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: acorn
 \       Type: Variable
 \   Category: Demo
-\    Summary: 
+\    Summary: The text for the demo's first scroll text
 \
 \ ******************************************************************************
 
 .acorn
 
- EQUS ":::ACORNSOFT::::;;;;;;;;;;;;;;;;::::PRESENTS"
+ EQUS ":::ACORNSOFT::::"
+ EQUS ";;;;;;;;;;;;;;;;"
+ EQUS "::::PRESENTS"
  EQUB 0
 
 \ ******************************************************************************
@@ -42012,13 +42436,16 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: byian
 \       Type: Variable
 \   Category: Demo
-\    Summary: 
+\    Summary: The text for the demo's second scroll text
 \
 \ ******************************************************************************
 
 .byian
 
- EQUS "::::::BY:;::::::;;;;IAN;BELL;;;;::::::AND:::::::;;DAVID;BRABEN"
+ EQUS "::::::BY:;::::::"
+ EQUS ";;;;IAN;BELL;;;;"
+ EQUS "::::::AND:::::::"
+ EQUS ";;DAVID;BRABEN"
  EQUB 0
 
 \ ******************************************************************************
@@ -42026,13 +42453,16 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: true3
 \       Type: Variable
 \   Category: Demo
-\    Summary: 
+\    Summary: The text for the demo's third scroll text
 \
 \ ******************************************************************************
 
 .true3
 
- EQUS "THE:GALAXY:IS:INTURMOIL,THE:NAVYFAR:AWAY:AS::THEEMPIRE:CRUMBLES."
+ EQUS "THE:GALAXY:IS:IN"
+ EQUS "TURMOIL,THE:NAVY"
+ EQUS "FAR:AWAY:AS::THE"
+ EQUS "EMPIRE:CRUMBLES."
  EQUB 0
 
 \ ******************************************************************************
