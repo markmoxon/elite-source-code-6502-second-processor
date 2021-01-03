@@ -418,7 +418,9 @@ ENDMACRO
 
  LDA #20                \ Call OSBYTE with A = 20, X = 0 and Y = 0 to implode
  LDX #0                 \ the soft character definitions, so they don't take up
- JSR OSB                \ extra memory
+ JSR OSB                \ extra memory (by default, having a Second Processor
+                        \ present explodes the soft character definitions, so
+                        \ this reclaims 6 pages of memory)
 
  LDA #4                 \ Call OSBYTE with A = 4, X = 1 and Y = 0 to disable
  LDX #1                 \ cursor editing, so the cursor keys return ASCII values

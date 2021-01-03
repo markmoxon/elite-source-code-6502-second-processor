@@ -67,7 +67,7 @@ If you want to browse the source in an IDE, you might find the following useful.
 
 * The most interesting files are in the [sources](sources) folder:
 
-  * The main game's source code is in the [elite-source.asm](sources/elite-source.asm) file (for the parasite, i.e. the second processor) and [elite-z.asm](sources/elite-z.asm) (for the I/O processor, i.e. the BBC Micro) - this is the motherlode and probably contains all the stuff you're interested in.
+  * The main game's source code is in the [elite-source.asm](sources/elite-source.asm) file (for the parasite, i.e. the Second Processor) and [elite-z.asm](sources/elite-z.asm) (for the I/O processor, i.e. the BBC Micro) - this is the motherlode and probably contains all the stuff you're interested in.
 
   * The game's loader is in the [elite-loader1.asm](sources/elite-loader1.asm) and [elite-loader2.asm](sources/elite-loader2.asm) files - these are mainly concerned with setup and copy protection.
 

@@ -11274,7 +11274,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \       Name: HALL
 \       Type: Subroutine
 \   Category: Ship hanger
-\    Summary: Draw the ships in the ship hanger, them draw the hanger by sending
+\    Summary: Draw the ships in the ship hanger, then draw the hanger by sending
 \             an OSWORD 248 command to the I/O processor
 \
 \ ------------------------------------------------------------------------------
