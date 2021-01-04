@@ -2417,7 +2417,14 @@ ORG &0800
 
 .FRIN
 
- SKIP NOSH + 1          \ Slots for the 21 ships in the local bubble of universe
+ SKIP NOSH + 1          \ Slots for the ships in the local bubble of universe
+                        \
+                        \ There are #NOSH + 1 slots, but the ship-spawning
+                        \ routine at NWSHP only populates #NOSH of them, so
+                        \ there are 21 slots but only 20 are used for ships
+                        \ (the last slot is effectively used as a null
+                        \ terminator when shuffling the slots down in the
+                        \ KILLSHP routine)
                         \
                         \ See the deep dive on "The local bubble of universe"
                         \ for details of how Elite stores the local universe in
@@ -3276,8 +3283,8 @@ PRINT "WP workspace from  ", ~WP," to ", ~P%
 \ Contains ship data for all the ships, planets, suns and space stations in our
 \ local bubble of universe.
 \
-\ The blocks are pointed to by the lookup table at location UNIV. The first 468
-\ bytes of the K% workspace hold ship data on up to 13 ships, with 36 (NI%)
+\ The blocks are pointed to by the lookup table at location UNIV. The first 720
+\ bytes of the K% workspace hold ship data on up to 20 ships, with 36 (NI%)
 \ bytes per ship.
 \
 \ See the deep dive on "Ship data blocks" for details on ship data blocks, and
@@ -24815,7 +24822,11 @@ LOAD_E% = LOAD% + P% - CODE%
  INX                    \ Otherwise increment X to point to the next slot
 
  CPX #NOSH              \ If we haven't reached the last slot yet, loop back up
- BCC NWL1               \ to NWL1 to check the next slot
+ BCC NWL1               \ to NWL1 to check the next slot (note that this means
+                        \ only slots from 0 to #NOSH - 1 are populated by this
+                        \ routine, but there is one more slot reserved in FRIN,
+                        \ which is used to identify the end of the slot list
+                        \ when shuffling the slots down in the KILLSHP routine)
 
 .NW3
 
