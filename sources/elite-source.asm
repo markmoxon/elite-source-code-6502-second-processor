@@ -10855,7 +10855,7 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 \
 \       Name: DIALS
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Dashboard
 \    Summary: Update the dashboard indicators and flight variables by sending a
 \             #RDPARAMS command to the I/O processor
 \
@@ -28707,7 +28707,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \       Name: Ze
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Universe
 \    Summary: Initialise the INWK workspace to a hostile ship
 \
 \ ------------------------------------------------------------------------------
@@ -40990,7 +40990,7 @@ LOAD_I% = LOAD% + P% - CODE%
 \
 \       Name: STORE
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Universe
 \    Summary: Copy the ship data block at INWK back to the K% workspace
 \
 \ ------------------------------------------------------------------------------

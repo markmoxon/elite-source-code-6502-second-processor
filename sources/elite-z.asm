@@ -1389,7 +1389,7 @@ NEXT
 \
 \       Name: prilf
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Text
 \    Summary: Implement the #prilf command (print a blank line on the printer)
 \
 \ ------------------------------------------------------------------------------
