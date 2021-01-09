@@ -215,10 +215,11 @@ During compilation, details of every step are output in a file called `compile.t
 
 ## Building different release versions of Elite
 
-The source code in this repository contains the source code for two different versions of 6502 Second Processor Elite:
+This repository contains the source code for two different versions of 6502 Second Processor Elite:
 
-* The official version from the SNG45 Acornsoft release (which contains the version for the 6502 Second Processor only)
-* The version produced by the the source disc from Ian Bell's site
+* The version from the SNG45 Acornsoft release (the first official release of 6502 Second Processor Elite)
+
+* The version produced by the source disc from Ian Bell's site (which was never released)
 
 By default the build process builds the SNG45 version, but you can build the source disc version by appending `release=source-disc` to the `make` command, like this on Windows:
 
@@ -232,13 +233,15 @@ or this on a Mac or Linux:
 make encrypt verify release=source-disc
 ```
 
+You can also add `release=sng45`, though that's the default value so it isn't necessary.
+
 You can see the differences between the versions by searching the source code for `_SNG45` (for features in the SNG45 version) or `_SOURCE_DISC` (for features in the source disc). There are only a few differences, if you ignore [workspace noise](#producing-byte-accurate-binaries):
 
 * In the source disc version, the extended description of Lave is replaced by the rather cryptic "Bits'n Pieces - End Of Part 1". You can see this by pressing F6 just after starting the game (you have to be docked at Lave).
 
-* In the SNG45 version, the top laser line is slightly higher than in the source disc version (see the LASLI.
+* In the SNG45 version, the top laser line aims slightly higher than in the source disc version (see the `LASLI` routine for details).
 
-* The loader contains an extra copyright string inserted at the start of the file ("Copyright (c) Acornsoft Limited 1985"), and the Tube-detection code in the source disc version is commented out with `NOP`s and is replaced by a single call to OSBYTE 234.
+* The loader contains an extra copyright string inserted at the start of the file ("Copyright (c) Acornsoft Limited 1985"), and most of the Tube-detection code in the source disc version is commented out.
 
 
 ## Notes on the original source files
