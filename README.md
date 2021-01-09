@@ -12,6 +12,7 @@ It is a companion to the [bbcelite.com website](https://www.bbcelite.com), which
 
 My hope is that this repository and the [accompanying website](https://www.bbcelite.com) will be useful for those who want to learn more about Elite and what makes it tick. It is provided on an educational and non-profit basis, with the aim of helping people appreciate one of the most iconic games of the 8-bit era.
 
+
 ## Contents
 
 * [Acknowledgements](#acknowledgements)
@@ -28,6 +29,8 @@ My hope is that this repository and the [accompanying website](https://www.bbcel
   * [Mac and Linux](#mac-and-linux)
   * [Verifying the output](#verifying-the-output)
   * [Log files](#log-files)
+
+* [Building different release versions of Elite](#building-different-release-versions-of-elite)
 
 * [Notes on the original source files](#notes-on-the-original-source-files)
 
@@ -60,6 +63,7 @@ The reason for this is that my commentary is intertwined with the original Elite
 Under GitHub's rules, you have the right to read and fork this repository... but that's it. No other use is permitted, I'm afraid.
 
 My hope is that the educational and non-profit intentions of this repository will enable it to stay hosted and available, but the original copyright holders do have the right to ask for it to be taken down, in which case I will comply without hesitation. I do hope, though, that along with the various other disassemblies and commentaries of this source, it will remain viable.
+
 
 ## Browsing the source in an IDE
 
@@ -208,6 +212,35 @@ All the compiled binaries match the extracts, so we know we are producing the sa
 
 During compilation, details of every step are output in a file called `compile.txt` in the `output` folder. If you have problems, it might come in handy, and it's a great reference if you need to know the addresses of labels and variables for debugging (or just snooping around).
 
+
+## Building different release versions of Elite
+
+The source code in this repository contains the source code for two different versions of 6502 Second Processor Elite:
+
+* The official version from the SNG45 Acornsoft release (which contains the version for the 6502 Second Processor only)
+* The version produced by the the source disc from Ian Bell's site
+
+By default the build process builds the SNG45 version, but you can build the source disc version by appending `release=source-disc` to the `make` command, like this on Windows:
+
+```
+make.bat encrypt verify release=source-disc
+```
+
+or this on a Mac or Linux:
+
+```
+make encrypt verify release=source-disc
+```
+
+You can see the differences between the versions by searching the source code for `_SNG45` (for features in the SNG45 version) or `_SOURCE_DISC` (for features in the source disc). There are only a few differences, if you ignore [workspace noise](#producing-byte-accurate-binaries):
+
+* In the source disc version, the extended description of Lave is replaced by the rather cryptic "Bits'n Pieces - End Of Part 1". You can see this by pressing F6 just after starting the game (you have to be docked at Lave).
+
+* In the SNG45 version, the top laser line is slightly higher than in the source disc version (see the LASLI.
+
+* The loader contains an extra copyright string inserted at the start of the file ("Copyright (c) Acornsoft Limited 1985"), and the Tube-detection code in the source disc version is commented out with `NOP`s and is replaced by a single call to OSBYTE 234.
+
+
 ## Notes on the original source files
 
 ### Fixing the original build process
@@ -216,7 +249,7 @@ The source files on the source disc do not build as they are; some massaging is 
 
 ### Producing byte-accurate binaries 
 
-The `extracted/workspaces` folder contains binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either intialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `extracted/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
+The `extracted/<release>/workspaces` folders (where `<release>` is the release version) contain binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either intialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `extracted/<release>/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
 
 Here's an example of how these binaries are included, in this case for the `LBUF` workspace in the `ELTB` section:
 
@@ -224,9 +257,17 @@ Here's an example of how these binaries are included, in this case for the `LBUF
 .LBUF
 
 IF _MATCH_EXTRACTED_BINARIES
- INCBIN "extracted/workspaces/ELTB-LBUF.bin"
+
+ IF _SNG45
+  INCBIN "versions/6502sp/extracted/sng45/workspaces/ELTB-LBUF.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "versions/6502sp/extracted/source-disc/workspaces/ELTB-LBUF.bin"
+ ENDIF
+
 ELSE
+
  SKIP &100
+
 ENDIF
 ```
 

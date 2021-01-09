@@ -32,6 +32,9 @@
 
 INCLUDE "sources/elite-header.h.asm"
 
+_SOURCE_DISC            = (_RELEASE = 1)
+_SNG45                  = (_RELEASE = 2)
+
 \ ******************************************************************************
 \
 \ Configuration variables

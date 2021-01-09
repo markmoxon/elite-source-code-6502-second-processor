@@ -24,6 +24,9 @@
 
 INCLUDE "sources/elite-header.h.asm"
 
+_SOURCE_DISC            = (_RELEASE = 1)
+_SNG45                  = (_RELEASE = 2)
+
 \ ******************************************************************************
 \
 \ Configuration variables
@@ -55,10 +58,25 @@ YY = &94                \ Temporary storage, used when drawing Saturn
 
 T = &95                 \ Temporary storage, used all over the place
 
-CODE% = &2000
-LOAD% = &2000
+IF _SNG45
+
+ CODE% = &1FDC
+ LOAD% = &1FDC
+
+ELIF _SOURCE_DISC
+
+ CODE% = &2000
+ LOAD% = &2000
+
+ENDIF
 
 ORG CODE%
+
+IF _SNG45
+
+ EQUS "Copyright (c) Acornsoft Limited 1985"
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -242,6 +260,40 @@ ENDMACRO
 
  CLD                    \ Clear the decimal flag, so we're not in decimal mode
 
+IF _SNG45
+
+ NOP                    \ In SNG45, the release version of 6502 Second Processor
+ NOP                    \ Elite, the detection code from the original source is
+ NOP                    \ disabled and replaced by NOPs
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+ NOP
+
+ LDA #234               \ Call OSBYTE with A = 234, X = 0 and Y = &FF, which
+ LDX #0                 \ detects whether Tube hardware is present, returning
+ LDY #&FF               \ X = 0 (not present) or X = &FF (present)
+ JSR OSBYTE
+
+ELIF _SOURCE_DISC
+
  LDA #129               \ Call OSBYTE with A = 129, X = 0 and Y = &FF to detect
  LDX #0                 \ the machine type. This call is undocumented and is not
  LDY #&FF               \ the recommended way to determine the machine type
@@ -302,6 +354,8 @@ ENDMACRO
  DEY                    \ detects whether Tube hardware is present, returning
  JSR OSBYTE             \ X = 0 (not present) or X = &FF (present)
 
+ENDIF
+
  TXA                    \ If X is non-zero (Tube is present) then jump to happy
  BNE happy              \ to continue the loading process
 
@@ -312,8 +366,23 @@ ENDMACRO
                         \ system error, and stop everything
 
  BRK
+
+IF _SNG45
+
+ EQUB &0A               \ Print a line feed
+
+ EQUB &16, &07          \ VDU 22, 7 (change to mode 7)
+
+ EQUS "This program needs a 6502 2nd Processor"
+
+ELIF _SOURCE_DISC
+
  EQUS "This program needs a 6502 Second Processor"
- EQUW &0D0A
+
+ENDIF
+
+ EQUW &0D0A             \ Print a line feed and a carriage return
+
  BRK
 
 .ZZZAP

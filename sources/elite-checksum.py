@@ -18,11 +18,16 @@ from __future__ import print_function
 import sys
 
 argv = sys.argv
-argc = len(argv)
 Encrypt = True
+release = 2
 
-if argc > 1 and argv[1] == '-u':
-    Encrypt = False
+for arg in argv[1:]:
+    if arg == '-u':
+        Encrypt = False
+    if arg == '-rel1':
+        release = 1
+    if arg == '-rel2':
+        release = 2
 
 print("Elite Big Code File")
 print("Encryption = ", Encrypt)
@@ -100,8 +105,14 @@ if Encrypt:
 # The values of G% and F% are hardcoded, which is not ideal - they should
 # really come from the build process. Maybe later!
 
-g = 0x10D1
-f = 0x81B0 - 1
+if release == 1:
+    # Source disc
+    g = 0x10D1
+    f = 0x81B0 - 1
+elif release == 2:
+    # SNG45
+    g = 0x10D1
+    f = 0x818F - 1
 
 if Encrypt:
     while g < f:

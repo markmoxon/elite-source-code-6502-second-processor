@@ -26,7 +26,14 @@
 
 INCLUDE "sources/elite-header.h.asm"
 
-PUTFILE "output/ELITE.bin", "ELITE", &FF2000, &FF2085
+_SOURCE_DISC            = (_RELEASE = 1)
+_SNG45                  = (_RELEASE = 2)
+
+IF _SNG45
+ PUTFILE "output/ELITE.bin", "ELITE", &FF1FDC, &FF2085
+ELIF _SOURCE_DISC
+ PUTFILE "output/ELITE.bin", "ELITE", &FF2000, &FF2085
+ENDIF
 
 PUTFILE "output/ELITEa.bin", "I.ELITEa", &FF2000, &FF2000
 

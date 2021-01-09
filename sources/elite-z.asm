@@ -24,6 +24,9 @@
 
 INCLUDE "sources/elite-header.h.asm"
 
+_SOURCE_DISC            = (_RELEASE = 1)
+_SNG45                  = (_RELEASE = 2)
+
 \ ******************************************************************************
 \
 \ Configuration variables
@@ -290,13 +293,22 @@ INCBIN "binaries/P.FONT.bin"
 .log
 
 IF _MATCH_EXTRACTED_BINARIES
- INCBIN "extracted/workspaces/ICODE-log.bin"
+
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ICODE-log.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ICODE-log.bin"
+ ENDIF
+
 ELSE
+
  SKIP 1
+
  FOR I%, 1, 255
    B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
    EQUB B% DIV 256
  NEXT
+
 ENDIF
 
 \ ******************************************************************************
@@ -325,13 +337,22 @@ ENDIF
 .logL
 
 IF _MATCH_EXTRACTED_BINARIES
- INCBIN "extracted/workspaces/ICODE-logL.bin"
+
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ICODE-logL.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ICODE-logL.bin"
+ ENDIF
+
 ELSE
+
  SKIP 1
+
  FOR I%, 1, 255
    B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
    EQUB B% MOD 256
  NEXT
+
 ENDIF
 
 \ ******************************************************************************
@@ -356,8 +377,15 @@ ENDIF
 .antilog
 
 IF _MATCH_EXTRACTED_BINARIES
- INCBIN "extracted/workspaces/ICODE-antilog.bin"
+
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ICODE-antilog.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ICODE-antilog.bin"
+ ENDIF
+
 ELSE
+
  FOR I%, 0, 255
    B% = INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
    IF B% = 256
@@ -366,6 +394,7 @@ ELSE
      EQUB B%
    ENDIF
  NEXT
+
 ENDIF
 
 \ ******************************************************************************
@@ -391,8 +420,15 @@ ENDIF
 .antilogODD
 
 IF _MATCH_EXTRACTED_BINARIES
- INCBIN "extracted/workspaces/ICODE-antilogODD.bin"
+
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ICODE-antilogODD.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ICODE-antilogODD.bin"
+ ENDIF
+
 ELSE
+
  FOR I%, 0, 255
    B% = INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
    IF B% = 256
@@ -401,6 +437,7 @@ ELSE
      EQUB B%
    ENDIF
  NEXT
+
 ENDIF
 
 \ ******************************************************************************

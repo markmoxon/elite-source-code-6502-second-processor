@@ -39,6 +39,9 @@
 
 INCLUDE "sources/elite-header.h.asm"
 
+_SOURCE_DISC            = (_RELEASE = 1)
+_SNG45                  = (_RELEASE = 2)
+
 \ ******************************************************************************
 \
 \ Configuration variables
@@ -60,7 +63,11 @@ LOAD% = &1000           \ The load address of the main game code file, which is
 
 ORG CODE%
 
-INCBIN "extracted/workspaces/BCFS-MOS.bin"
+IF _SNG45
+ INCBIN "extracted/sng45/workspaces/BCFS-MOS.bin"
+ELIF _SOURCE_DISC
+ INCBIN "extracted/source-disc/workspaces/BCFS-MOS.bin"
+ENDIF
 
 .elitea
 
@@ -129,7 +136,12 @@ ORG F% + &400
 
 PRINT "ships = ", ~P%
 INCBIN "output/SHIPS.bin"
-INCBIN "extracted/workspaces/BCFS-SHIPS.bin"
+
+IF _SNG45
+ INCBIN "extracted/sng45/workspaces/BCFS-SHIPS.bin"
+ELIF _SOURCE_DISC
+ INCBIN "extracted/source-disc/workspaces/BCFS-SHIPS.bin"
+ENDIF
 
 .end
 

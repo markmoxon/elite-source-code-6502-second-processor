@@ -38,13 +38,18 @@ INCLUDE "sources/elite-header.h.asm"
 CPU 1                   \ Switch to 65C02 assembly, as this code runs on the
                         \ 6502 Second Processor
 
-_ENABLE_MAX_COMMANDER   = TRUE AND _REMOVE_CHECKSUMS
+_SOURCE_DISC            = (_RELEASE = 1)
+_SNG45                  = (_RELEASE = 2)
 
 \ ******************************************************************************
 \
 \ Configuration variables
 \
 \ ******************************************************************************
+
+Q% = _REMOVE_CHECKSUMS  \ Set Q% to TRUE to max out the default commander, FALSE
+                        \ for the standard default commander (this is set to
+                        \ TRUE if checksums are disabled, just for convenience)
 
 D% = &D000              \ The address where the ship blueprints get moved to
                         \ after loading, so they go from &D000 to &F200
@@ -1886,10 +1891,20 @@ ENDMACRO
  CHAR 'B'
  EQUB 0
 
+IF _SNG45
+
+ RTOK 121               \ Token 114:    "ENERGY UNIT"
+ RTOK 14                \
+ EQUB 0                 \ Encoded as:   "[121][14]"
+
+ELIF _SOURCE_DISC
+
  RTOK 102               \ Token 114:    "EXTRA ENERGY UNIT"
  RTOK 121               \
  RTOK 14                \ Encoded as:   "[102][121][14]"
  EQUB 0
+
+ENDIF
 
  CHAR 'D'               \ Token 115:    "DOCKING COMPUTERS"
  CHAR 'O'               \
@@ -2151,7 +2166,16 @@ ENDMACRO
  CHAR 'R'
  EQUB 0
 
+IF _SNG45
+
+ EQUB 0, 0              \ These bytes are unused and just contain noise
+ EQUB &E4, &63, &A5
+
+ELIF _SOURCE_DISC
+
  SKIP 4                 \ These bytes are unused
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -3566,8 +3590,6 @@ LOAD_A% = LOAD%
 \ also shown.
 \
 \ ******************************************************************************
-
-Q% = _ENABLE_MAX_COMMANDER
 
 .NA%
 
@@ -6930,7 +6952,11 @@ ENDIF
 
 IF _MATCH_EXTRACTED_BINARIES
 
- INCBIN "extracted/workspaces/ELTA-LSX2.bin"
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ELTA-LSX2.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ELTA-LSX2.bin"
+ ENDIF
 
 ELSE
 
@@ -6952,7 +6978,11 @@ ENDIF
 
 IF _MATCH_EXTRACTED_BINARIES
 
- INCBIN "extracted/workspaces/ELTA-LSY2.bin"
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ELTA-LSY2.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ELTA-LSY2.bin"
+ ENDIF
 
 ELSE
 
@@ -7250,7 +7280,11 @@ NEXT
 
 IF _MATCH_EXTRACTED_BINARIES
 
- INCBIN "extracted/workspaces/ELTB-LBUF.bin"
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ELTB-LBUF.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ELTB-LBUF.bin"
+ ENDIF
 
 ELSE
 
@@ -7547,7 +7581,11 @@ ENDIF
 
 IF _MATCH_EXTRACTED_BINARIES
 
- INCBIN "extracted/workspaces/ELTB-HBUF.bin"
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ELTB-HBUF.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ELTB-HBUF.bin"
+ ENDIF
 
 ELSE
 
@@ -7924,7 +7962,11 @@ ENDIF
 
 IF _MATCH_EXTRACTED_BINARIES
 
- INCBIN "extracted/workspaces/ELTB-PBUF.bin"
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ELTB-PBUF.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ELTB-PBUF.bin"
+ ENDIF
 
 ELSE
 
@@ -16607,12 +16649,29 @@ LOAD_C% = LOAD% +P% - CODE%
  LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
  JSR DOCOL              \ switch to colour 2, which is red in the space view
 
- LDA #32                \ Call las with A = 32 and Y = 224 to draw one set of
- LDY #224               \ laser lines
- JSR las
+ LDA #32                \ Set A = 32 and Y = 224 for the first set of laser
+ LDY #224               \ lines (the wider pair of lines)
+
+IF _SNG45
+
+ DEC LASY               \ Decrement the y-coordinate of the centre point to move
+                        \ it up the screen by a line for the first set of lines,
+                        \ so the wider set of lines aim slightly higher than the
+                        \ narrower set
+
+ENDIF
+
+ JSR las                \ Call las below to draw the first set of laser lines
+
+IF _SNG45
+
+ INC LASY               \ Increment the y-coordinate of the centre point to put
+                        \ it back to the original position
+
+ENDIF
 
  LDA #48                \ Fall through into las with A = 48 and Y = 208 to draw
- LDY #208               \ a second set of lines
+ LDY #208               \ a second set of lines (the narrower pair)
 
                         \ The following routine draws two laser lines, one from
                         \ the centre point down to point A on the bottom row,
@@ -31503,6 +31562,13 @@ ENDIF
  JSR QUS1               \ file with the filename we copied to INWK at the start
                         \ of this routine
 
+IF _SNG45
+
+ JSR DFAULT             \ Call DFAULT to reset the current commander data block
+                        \ to the last saved commander
+
+ENDIF
+
 .SVEX
 
  CLC                    \ Clear the C flag to indicate we didn't just load a new
@@ -34666,7 +34732,13 @@ CODE_G% = P%
 LOAD_G% = LOAD% + P% - CODE%
 
 IF _MATCH_EXTRACTED_BINARIES
- INCBIN "extracted/workspaces/ELTG-align.bin"
+
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ELTG-align.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ELTG-align.bin"
+ ENDIF
+
 ELSE
  ALIGN &100
 ENDIF
@@ -34697,7 +34769,13 @@ ENDIF
 .log
 
 IF _MATCH_EXTRACTED_BINARIES
- INCBIN "extracted/workspaces/ELTG-log.bin"
+
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ELTG-log.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ELTG-log.bin"
+ ENDIF
+
 ELSE
  SKIP 1
  FOR I%, 1, 255
@@ -34724,7 +34802,13 @@ ENDIF
 .logL
 
 IF _MATCH_EXTRACTED_BINARIES
- INCBIN "extracted/workspaces/ELTG-logL.bin"
+
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ELTG-logL.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ELTG-logL.bin"
+ ENDIF
+
 ELSE
  SKIP 1
  FOR I%, 1, 255
@@ -34755,8 +34839,15 @@ ENDIF
 .antilog
 
 IF _MATCH_EXTRACTED_BINARIES
- INCBIN "extracted/workspaces/ELTG-antilog.bin"
+
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ELTG-antilog.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ELTG-antilog.bin"
+ ENDIF
+
 ELSE
+
  FOR I%, 0, 255
    B% = INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
    IF B% = 256
@@ -34765,6 +34856,7 @@ ELSE
      EQUB B%
    ENDIF
  NEXT
+
 ENDIF
 
 \ ******************************************************************************
@@ -34790,8 +34882,15 @@ ENDIF
 .antilogODD
 
 IF _MATCH_EXTRACTED_BINARIES
- INCBIN "extracted/workspaces/ELTG-antilogODD.bin"
+
+ IF _SNG45
+  INCBIN "extracted/sng45/workspaces/ELTG-antilogODD.bin"
+ ELIF _SOURCE_DISC
+  INCBIN "extracted/source-disc/workspaces/ELTG-antilogODD.bin"
+ ENDIF
+
 ELSE
+
  FOR I%, 0, 255
    B% = INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
    IF B% = 256
@@ -34800,6 +34899,7 @@ ELSE
      EQUB B%
    ENDIF
  NEXT
+
 ENDIF
 
 \ ******************************************************************************
@@ -45969,7 +46069,12 @@ ENDMACRO
  EQUB 101                \ System 101, Galaxy 2, Mission 1     Xeveon = Token 23
  EQUB 193                \ System 193, Galaxy 1, Mission 1     Orarra = Token 24
  EQUB 41                 \ System  41, Galaxy 2                Anreer = Token 25
+
+IF _SOURCE_DISC
+
  EQUB 7                  \ System   7, Galaxy 0                  Lave = Token 26
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -46030,7 +46135,12 @@ ENDMACRO
  EQUB &02                \ System 101, Galaxy 2, Mission 1     Xeveon = Token 23
  EQUB &01                \ System 193, Galaxy 1, Mission 1     Orarra = Token 24
  EQUB &82                \ System  41, Galaxy 2                Anreer = Token 25
+
+IF _SOURCE_DISC
+
  EQUB &80                \ System   7, Galaxy 0                  Lave = Token 26
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -46689,6 +46799,8 @@ ENDMACRO
  ECHR 'D'
  EQUB VE
 
+IF _SOURCE_DISC
+
  EJMP 2                 \ Token 26:     "{sentence case}BITS'N PIECES - END OF
  ECHR 'B'               \                PART 1"
  ECHR 'I'               \
@@ -46720,6 +46832,8 @@ ENDMACRO
  ECHR ' '
  ECHR '1'
  EQUB VE
+
+ENDIF
 
 \ ******************************************************************************
 \
