@@ -3156,7 +3156,7 @@ NT% = SVC + 2 - TP      \ This sets the variable NT% to the size of the current
 
 .BUF
 
- SKIP 100               \ The line buffer used by DASC to print justify text
+ SKIP 100               \ The line buffer used by DASC to print justified text
 
 \ ******************************************************************************
 \
@@ -3308,7 +3308,7 @@ PRINT "WP workspace from  ", ~WP," to ", ~P%
 \ local bubble of universe.
 \
 \ The blocks are pointed to by the lookup table at location UNIV. The first 720
-\ bytes of the K% workspace hold ship data on up to 20 ships, with 36 (NI%)
+\ bytes of the K% workspace hold ship data on up to 20 ships, with 37 (NI%)
 \ bytes per ship.
 \
 \ See the deep dive on "Ship data blocks" for details on ship data blocks, and
@@ -4070,8 +4070,8 @@ ENDIF
 .BRKBK
 
  LDA #LO(BRBR)          \ Set BRKV to point to the BRBR routine, disabling
- SEI                    \ while we make the change and re-enabling them once we
- STA BRKV               \ are done
+ SEI                    \ interrupts while we make the change and re-enabling
+ STA BRKV               \ them once we are done
  LDA #HI(BRBR)
  STA BRKV+1
  CLI
@@ -4834,7 +4834,7 @@ ENDIF
                         \ computers, while escape pods contain slaves, and
                         \ Thargons become alien items when scooped
 
- JSR tnpr1              \ Call tnpr1 to with the scooped cargo type stored in A
+ JSR tnpr1              \ Call tnpr1 with the scooped cargo type stored in A
                         \ to work out whether we have room in the hold for one
                         \ tonne of this cargo (A is set to 1 by this call, and
                         \ the C flag contains the result)
@@ -14104,6 +14104,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \   HFS1                Don't clear the screen, and draw 8 concentric rings
 \                       with the step size in STP
+\
 \ ******************************************************************************
 
 .HFS2
@@ -19309,7 +19310,8 @@ LOAD_D% = LOAD% + P% - CODE%
  CMP #4                 \ screen), jump to TT212 to skip the option to sell
  BNE TT212              \ items
 
-\JSRTT162
+\JSRTT162               \ This instruction is commented out in the original
+                        \ source
 
  LDA #205               \ Print recursive token 45 ("SELL")
  JSR TT27
@@ -20661,7 +20663,7 @@ LOAD_D% = LOAD% + P% - CODE%
 \
 \ ------------------------------------------------------------------------------
 \
-\ Print the 8-bit number in X at text location (0, 1). Print the number to
+\ Print the 8-bit number in X at text location (1, 1). Print the number to
 \ 5 digits, left-padding with spaces for numbers with fewer than 3 digits (so
 \ numbers < 10000 are right-aligned), with no decimal point.
 \
@@ -38799,9 +38801,10 @@ LOAD_H% = LOAD% + P% - CODE%
 
 .MVEIT
 
- LDA INWK+31            \ If bits 5 or 7 are set, jump to MV30 as the ship is
- AND #%10100000         \ either exploding or has been killed, so we don't need
- BNE MV30               \ to tidy its orientation vectors or apply tactics
+ LDA INWK+31            \ If bits 5 or 7 of ship byte #31 are set, jump to MV30
+ AND #%10100000         \ as the ship is either exploding or has been killed, so
+ BNE MV30               \ we don't need to tidy its orientation vectors or apply
+                        \ tactics
 
  LDA MCNT               \ Fetch the main loop counter
 
