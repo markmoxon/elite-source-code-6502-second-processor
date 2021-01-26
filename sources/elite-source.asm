@@ -47592,6 +47592,8 @@ ENDMACRO
  VERTEX   -7,   14,  -12,     1,      0,    3,     3,         31    \ Vertex 2
  VERTEX   21,    0,    0,     1,      0,    2,     2,         31    \ Vertex 3
 
+.SHIP_ESCAPE_POD_EDGES
+
 \EDGE vertex1, vertex2, face1, face2, visibility
  EDGE       0,       1,     3,     2,         31    \ Edge 0
  EDGE       1,       2,     3,     0,         31    \ Edge 1
@@ -47695,6 +47697,8 @@ ENDMACRO
  VERTEX  -24,  -13,   -9,     3,      4,    6,     6,         31    \ Vertex 8
  VERTEX  -24,    5,  -15,     4,      5,    6,     6,         31    \ Vertex 9
 
+.SHIP_CANISTER_EDGES
+
 \EDGE vertex1, vertex2, face1, face2, visibility
  EDGE       0,       1,     0,     1,         31    \ Edge 0
  EDGE       1,       2,     0,     2,         31    \ Edge 1
@@ -47734,8 +47738,8 @@ ENDMACRO
 
  EQUB 0                 \ Max. canisters on demise = 0
  EQUW 30 * 30           \ Targetable area          = 30 * 30
- EQUB &3E               \ Edges data offset (low)  = &
- EQUB &7A               \ Faces data offset (low)  = &
+ EQUB &3E               \ Edges data offset (low)  = &003E
+ EQUB &7A               \ Faces data offset (low)  = &007A
  EQUB 49                \ Max. edge count          = (49 - 1) / 4 = 12
  EQUB 0                 \ Gun vertex               = 0
  EQUB 14                \ Explosion count          = 2, as (4 * n) + 6 = 14
@@ -47746,8 +47750,8 @@ ENDMACRO
  EQUB 20                \ Visibility distance      = 20
  EQUB 20                \ Max. energy              = 20
  EQUB 30                \ Max. speed               = 30
- EQUB &00               \ Edges data offset (high) = &00
- EQUB &00               \ Faces data offset (high) = &00
+ EQUB &00               \ Edges data offset (high) = &003E
+ EQUB &00               \ Faces data offset (high) = &007A
  EQUB 2                 \ Normals are scaled by    = 2^2 = 4
  EQUB %00000000         \ Laser power              = 0
                         \ Missiles                 = 0
@@ -47888,7 +47892,7 @@ ENDMACRO
  EQUB 0 + (11 << 4)     \ Max. canisters on demise = 0
                         \ Market item when scooped = 11 + 1 = 12 (Minerals)
  EQUW 16 * 16           \ Targetable area          = 16 * 16
- EQUB &78               \ Edges data offset (low)  = &FD78 = -648 (Escape pod)
+ EQUB LO(SHIP_ESCAPE_POD_EDGES - SHIP_SPLINTER)   \ Edges data = escape pod
  EQUB &44               \ Faces data offset (low)  = &0044
  EQUB 29                \ Max. edge count          = (29 - 1) / 4 = 7
  EQUB 0                 \ Gun vertex               = 0
@@ -47900,7 +47904,7 @@ ENDMACRO
  EQUB 8                 \ Visibility distance      = 8
  EQUB 20                \ Max. energy              = 20
  EQUB 10                \ Max. speed               = 10
- EQUB &FD               \ Edges data offset (high) = &FD78 = -648 (Escape pod)
+ EQUB HI(SHIP_ESCAPE_POD_EDGES - SHIP_SPLINTER)   \ Edges data = escape pod
  EQUB &00               \ Faces data offset (high) = &0044
  EQUB 5                 \ Normals are scaled by    = 2^5 = 32
  EQUB %00000000         \ Laser power              = 0
@@ -49842,7 +49846,7 @@ ENDMACRO
  EQUB 0 + (15 << 4)     \ Max. canisters on demise = 0
                         \ Market item when scooped = 15 + 1 = 16 (Alien items)
  EQUW 40 * 40           \ Targetable area          = 40 * 40
- EQUB &E6               \ Edges data offset (low)  = &E7E6 = -6170 (canister)
+ EQUB LO(SHIP_CANISTER_EDGES - SHIP_THARGON)    \ Edges data = canister
  EQUB &50               \ Faces data offset (low)  = &0050
  EQUB 69                \ Max. edge count          = (69 - 1) / 4 = 17
  EQUB 0                 \ Gun vertex               = 0
@@ -49854,7 +49858,7 @@ ENDMACRO
  EQUB 20                \ Visibility distance      = 20
  EQUB 20                \ Max. energy              = 20
  EQUB 30                \ Max. speed               = 30
- EQUB &E7               \ Edges data offset (high) = &E7E6 = -6170 (canister)
+ EQUB HI(SHIP_CANISTER_EDGES - SHIP_THARGON)    \ Edges data = canister
  EQUB &00               \ Faces data offset (high) = &0050
  EQUB 2                 \ Normals are scaled by    = 2^2 = 4
  EQUB %00010000         \ Laser power              = 2
