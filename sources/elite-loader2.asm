@@ -47,7 +47,7 @@ D% = &D000              \ The address where the ship blueprints get moved to
 OSWRCH = &FFEE          \ The address for the OSWRCH routine
 OSBYTE = &FFF4          \ The address for the OSBYTE routine
 OSWORD = &FFF1          \ The address for the OSWORD routine
-SCLI = &FFF7            \ The address for the OSCLI routine
+OSCLI = &FFF7           \ The address for the OSCLI routine
 
 Z1 = &90                \ Temporary storage, used when moving code
 
@@ -137,13 +137,13 @@ ENDMACRO
  LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("R.I.CODE")
  LDY #HI(MESS2)
 
- JSR SCLI               \ Call SCLI to run the OS command in MESS2, which *RUNs
+ JSR OSCLI              \ Call OSCLI to run the OS command in MESS2, which *RUNs
                         \ the main I/O processor game code in I.CODE
 
  LDX #LO(MESS3)         \ Set (Y X) to point to MESS3 ("R.P.CODE")
  LDY #HI(MESS3)
 
- JMP SCLI               \ Call SCLI to run the OS command in MESS3, which *RUNs
+ JMP OSCLI              \ Call OSCLI to run the OS command in MESS3, which *RUNs
                         \ the main parasite game code in P.CODE, returning from
                         \ the subroutine using a tail call
 

@@ -119,7 +119,7 @@ OSWRCH = &FFEE          \ The address for the OSWRCH routine
 OSBYTE = &FFF4          \ The address for the OSBYTE routine
 OSWORD = &FFF1          \ The address for the OSWORD routine
 OSFILE = &FFDD          \ The address for the OSFILE routine
-SCLI = &FFF7            \ The address for the OSCLI routine
+OSCLI = &FFF7           \ The address for the OSCLI routine
 
 DOFE21 = 131            \ The OSWRCH number for the #DOFE21 command
 DOhfx = 132             \ The OSWRCH number for the #DOhfx command
@@ -11531,10 +11531,6 @@ LOAD_C% = LOAD% +P% - CODE%
 \   XX15+2              Non-zero = Ship type to draw
 \                       0        = Don't draw anything
 \
-\ Other entry points:
-\
-\   UNWISE              Contains an RTS
-\
 \ ******************************************************************************
 
 .HAS1
@@ -11640,6 +11636,26 @@ LOAD_C% = LOAD% +P% - CODE%
 
  JMP LL9                \ Jump to LL9 to display the ship and return from the
                         \ subroutine using a tail call
+
+\ ******************************************************************************
+\
+\       Name: UNWISE
+\       Type: Subroutine
+\   Category: Ship hanger
+\    Summary: 
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine does nothing in the 6502 Second Processor version of Elite. It
+\ does have a function in the disc version, so the authors presumably just
+\ cleared out the UNWISE routine for the Second Processor version, rather than
+\ unplumbing it from the code.
+\
+\ Other entry points:
+\
+\   HA1                 Contains an RTS
+\
+\ ******************************************************************************
 
 .UNWISE
 
@@ -18855,11 +18871,6 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case, with the
  STA QQ17               \ next letter in capitals
 
-\JSR FLKB               \ This instruction is commented out in the original
-                        \ source. It calls a routine to flush the keyboard
-                        \ buffer (FLKB) that isn't present in the cassette
-                        \ version but is in other versions
-
  LDA #0                 \ We're going to loop through all the available market
  STA QQ29               \ items, so we set up a counter in QQ29 to denote the
                         \ current item and start it at 0
@@ -20479,13 +20490,6 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ left corner of the screen, and return from the
                         \ subroutine using a tail call
 
-\hy5                    \ This instruction and the hy5 label are commented out
-\RTS                    \ in the original - they can actually be found at the
-                        \ end of the jmp routine below, so perhaps this is where
-                        \ they were originally, but the authors realised they
-                        \ could save a byte by using a tail call instead of an
-                        \ RTS?
-
 \ ******************************************************************************
 \
 \       Name: TTX110
@@ -20538,15 +20542,9 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .Ghy
 
-\JSR TT111              \ This instruction is commented out in the original
-                        \ source, and appears in the text cassette code source
-                        \ (ELITED.TXT) but not in the BASIC source file on the
-                        \ source disc (ELITED). It finds the closest system to
-                        \ coordinates (QQ9, QQ10)
-
  LDX GHYP               \ Fetch GHYP, which tells us whether we own a galactic
  BEQ zZ+1               \ hyperdrive, and if it is zero, which means we don't,
-                        \ return from the subroutine (as hy5 contains an RTS)
+                        \ return from the subroutine (as zZ+1 contains an RTS)
 
  INX                    \ We own a galactic hyperdrive, so X is &FF, so this
                         \ instruction sets X = 0
@@ -27732,7 +27730,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
  LDA #0                 \ Set the result, A = 0
 
- CPY #&10               \ If Y >= &10 set the C flag, so A = A - 1
+ CPY #16                \ If Y >= 16 set the C flag, so A = A - 1
  SBC #0
 
 \CPY #&20               \ These instructions are commented out in the original
@@ -30317,18 +30315,10 @@ LOAD_F% = LOAD% + P% - CODE%
  LDX #3                 \ Disable the ESCAPE key and clear memory if the BREAK
  JSR FX200              \ key is pressed (*FX 200,3)
 
- LDX #CYL               \ Call the TITLE subroutine to show the rotating ship
- LDA #6                 \ and load prompt. The arguments sent to TITLE are:
- JSR TITLE              \
-                        \   X = type of ship to show, #CYL is a Cobra Mk III
-                        \
-                        \   A = text token to show below the rotating ship, 6
-                        \       is "LOAD NEW {single cap}COMMANDER {all caps}
-                        \       (Y/N)?{sentence case}{cr}{cr}"
-                        \
-                        \ The TITLE subroutine returns with the internal number
-                        \ of the key pressed in A (see p.142 of the Advanced
-                        \ User Guide for a list of internal key number)
+ LDX #CYL               \ Call TITLE to show a rotating Cobra Mk III (#CYL) and
+ LDA #6                 \ token 6 ("LOAD NEW {single cap}COMMANDER {all caps}
+ JSR TITLE              \ (Y/N)?{sentence case}{cr}{cr}"), returning with the
+                        \ internal number of the key pressed in A
 
  CMP #&60               \ Did we press TAB? If not, skip the following
  BNE P%+5               \ instruction
@@ -30354,14 +30344,10 @@ LOAD_F% = LOAD% + P% - CODE%
  JSR msblob             \ Reset the dashboard's missile indicators so none of
                         \ them are targeted
 
- LDA #7                 \ Call the TITLE subroutine to show the rotating ship
- LDX #ASP               \ and load prompt. The arguments sent to TITLE are:
- JSR TITLE              \
-                        \   X = type of ship to show, #ASP is an Asp Mk II
-                        \
-                        \   A = text token to show below the rotating ship, 6
-                        \       is "LOAD NEW {single cap}COMMANDER {all caps}
-                        \       (Y/N)?{sentence case}{cr}{cr}"
+ LDA #7                 \ Call TITLE to show a rotating Asp Mk II (#ASP) and
+ LDX #ASP               \ token 7 ("LOAD NEW {single cap}COMMANDER {all caps}
+ JSR TITLE              \ (Y/N)?{sentence case}{cr}{cr}""), returning with the
+                        \ internal number of the key pressed in A
 
  JSR ping               \ Set the target system coordinates (QQ9, QQ10) to the
                         \ current system coordinates (QQ0, QQ1) we just loaded
@@ -30508,7 +30494,7 @@ ENDIF
 
 .tZ
 
- ORA #4                 \ Set bit 2 of A to denote this is the 6502 second
+ ORA #4                 \ Set bit 2 of A to denote that this is the 6502 second
                         \ processor version (which is the same bit as for the
                         \ disc version)
 
@@ -31724,7 +31710,7 @@ ENDIF
 
 \LDX #LO(MINI)          \ These instructions are commented out in the original
 \LDY #HI(MINI)          \ source, but they would load a commander file called
-\JSR SCLI               \ "E.MINING" and continue below, so presumably this is
+\JSR OSCLI              \ "E.MINING" and continue below, so presumably this is
 \JMP LOL1-2             \ code for loading a test commander file
 
 \LDX #2                 \ These instructions are commented out in the original
@@ -31864,7 +31850,7 @@ ENDIF
  LDA #255               \ Set the SVN flag to 255
  JSR DODOSVN
 
- JSR SCLI               \ Call OSCLI to execute the OS command at (Y X)
+ JSR OSCLI              \ Call OSCLI to execute the OS command at (Y X)
 
  LDA #0                 \ Set A = 0 for the new value of the SVN flag
 
@@ -33827,7 +33813,7 @@ ENDIF
 
  JSR TT27               \ Call TT27 to print the text token in A
 
- LSR de                 \ If bit 1 of variable de is clear, return from the
+ LSR de                 \ If bit 0 of variable de is clear, return from the
  BCC out                \ subroutine (as out contains an RTS)
 
  LDA #253               \ Print recursive token 93 (" DESTROYED") and return
@@ -40373,12 +40359,24 @@ ENDIF
 
                         \ And fall through into SIGHT to draw the laser
                         \ crosshairs
+
+\ ******************************************************************************
+\
+\       Name: SIGHT
+\       Type: Subroutine
+\   Category: Flight
+\    Summary: Draw the laser crosshairs
+\
+\ ******************************************************************************
+
 .SIGHT
 
- LDY VIEW               \ Fetch the laser power for our new view, and if it is
- LDA LASER,Y            \ zero (i.e. there is no laser fitted to this view),
- BEQ LO2                \ jump to LO2 to return from the subroutine (as LO2
-                        \ contains an RTS)
+ LDY VIEW               \ Fetch the laser power for our new view
+ LDA LASER,Y
+
+ BEQ LO2                \ If it is zero (i.e. there is no laser fitted to this
+                        \ view), jump to LO2 to return from the subroutine (as
+                        \ LO2 contains an RTS)
 
  LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
  JSR DOCOL              \ switch to colour 1, which is yellow in the space view

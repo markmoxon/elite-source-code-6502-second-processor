@@ -39,7 +39,7 @@ N% = 77                 \ N% is set to the number of bytes in the VDU table, so
 OSWRCH = &FFEE          \ The address for the OSWRCH routine
 OSBYTE = &FFF4          \ The address for the OSBYTE routine
 OSWORD = &FFF1          \ The address for the OSWORD routine
-SCLI = &FFF7            \ The address for the OSCLI routine
+OSCLI = &FFF7           \ The address for the OSCLI routine
 
 VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
@@ -506,16 +506,16 @@ ENDIF
  FNE 2
  FNE 3
 
- LDX #LO(MESS1)         \ Set (Y X) to point to MESS2 ("DIR E")
+ LDX #LO(MESS1)         \ Set (Y X) to point to MESS1 ("DIR E")
  LDY #HI(MESS1)
 
- JSR SCLI               \ Call SCLI to run the OS command in MESS1, which
+ JSR OSCLI              \ Call OSCLI to run the OS command in MESS1, which
                         \ changes the disc directory to E
 
  LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("R.I.ELITEa")
  LDY #HI(MESS2)
 
- JMP SCLI               \ Call SCLI to run the OS command in MESS2, which *RUNs
+ JMP OSCLI              \ Call OSCLI to run the OS command in MESS2, which *RUNs
                         \ the second loader in I.ELITEa, returning from the
                         \ subroutine using a tail call
 

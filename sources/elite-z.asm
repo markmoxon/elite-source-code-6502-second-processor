@@ -43,7 +43,7 @@ OSWRCH = &FFEE          \ The address for the OSWRCH routine
 OSBYTE = &FFF4          \ The address for the OSBYTE routine
 OSWORD = &FFF1          \ The address for the OSWORD routine
 OSFILE = &FFDD          \ The address for the OSFILE routine
-SCLI = &FFF7            \ The address for the OSCLI routine
+OSCLI = &FFF7           \ The address for the OSCLI routine
 NVOSWRCH = &FFCB        \ The address for the non-vectored OSWRCH routine
 
 VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
@@ -5530,6 +5530,10 @@ NEXT
 \ the hanger, this also means drawing lines between the ships, as well as in
 \ from each side.
 \
+\ Other entry points:
+\
+\   HA3                 Contains an RTS
+\
 \ ******************************************************************************
 
 .HANGER
@@ -5754,15 +5758,24 @@ NEXT
 
  RTS                    \ Return from the subroutine
 
-.HAS2
+\ ******************************************************************************
+\
+\       Name: HAS2
+\       Type: Subroutine
+\   Category: Ship hanger
+\    Summary: Draw a hanger background line from left to right
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine draws a line to the right, starting with the third pixel of the
+\ pixel row at screen address SC(1 0), and aborting if we bump into something
+\ that's already on-screen. HAL2 draws from the left edge of the screen to the
+\ halfway point, and then HAL3 takes over to draw from the halfway point across
+\ the right half of the screen.
+\
+\ ******************************************************************************
 
-                        \ This routine draws a line to the right, starting with
-                        \ the third pixel of the pixel row at screen address
-                        \ SC(1 0), and aborting if we bump into something that's
-                        \ already on-screen. HAL2 draws from the left edge of
-                        \ the screen to the halfway point, and then HAL3 takes
-                        \ over to draw from the halfway point across the right
-                        \ half of the screen
+.HAS2
 
  LDA #%00100010         \ Set A to the pixel pattern for a mode 1 character row
                         \ byte with the third pixel set, so we start drawing the
@@ -5782,7 +5795,7 @@ NEXT
 
  TXA                    \ Retrieve the value of A we stored above, so A now
                         \ contains the pixel mask again
- 
+
  AND #RED               \ Apply the pixel mask in A to a four-pixel block of
                         \ red pixels, so we now know which bits to set in screen
                         \ memory
@@ -5867,12 +5880,22 @@ NEXT
                         \ character block in this page of memory, which is the
                         \ end of the line, so we return from the subroutine
 
-.HAS3
+\ ******************************************************************************
+\
+\       Name: HAS3
+\       Type: Subroutine
+\   Category: Ship hanger
+\    Summary: Draw a hanger background line from right to left
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine draws a line to the left, starting with the pixel mask in A at
+\ screen address SC(1 0) and character block offset Y, and aborting if we bump
+\ into something that's already on-screen.
+\
+\ ******************************************************************************
 
-                        \ This routine draws a line to the left, starting with
-                        \ the pixel mask in A at screen address SC(1 0) and
-                        \ character block offset Y, and aborting if we bump into
-                        \ something that's already on-screen
+.HAS3
 
  TAX                    \ Store A in X so we can retrieve it after the following
                         \ check and again after updating screen memory
