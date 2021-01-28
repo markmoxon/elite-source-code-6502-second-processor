@@ -13735,10 +13735,10 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .AN2
 
- LDA K%+NI%+36          \ Set bit 2 of the NEWB flags in byte #36 of the second ship in the ship
- ORA #%00000100         \ data workspace at K%, which is reserved for the sun or
- STA K%+NI%+36          \ the space station (in this case it's the latter), to
-                        \ make it hostile
+ LDA K%+NI%+36          \ Set bit 2 of the NEWB flags in byte #36 of the second
+ ORA #%00000100         \ ship in the ship data workspace at K%, which is
+ STA K%+NI%+36          \ reserved for the sun or the space station (in this
+                        \ case it's the latter), to make it hostile
 
  RTS                    \ Return from the subroutine
 
@@ -33304,10 +33304,11 @@ ENDIF
 .DK14
 
  STA KY3,X              \ Store A in either KY3 or KY4, depending on whether
-                        \ the updated roll rate is increasing (KY3) or decreasing
-                        \ (KY4)
+                        \ the updated roll rate is increasing (KY3) or
+                        \ decreasing (KY4)
 
- LDA JSTX               \ Fetch A from JSTX so the next instruction has no effect
+ LDA JSTX               \ Fetch A from JSTX so the next instruction has no
+                        \ effect
 
 .DK12
 
@@ -33317,7 +33318,8 @@ ENDIF
                         \ the results from DOCKIT
 
  LDA #128               \ Set A = 128, which indicates no change in pitch when
-                        \ stored in JSTX (i.e. the centre of the pitch indicator)
+                        \ stored in JSTX (i.e. the centre of the pitch
+                        \ indicator)
 
  LDX #0                 \ Set X = 0, so we "press" KY5 below ("X", decrease
                         \ pitch)
@@ -33342,7 +33344,8 @@ ENDIF
                         \ decrease the pitch) or positive (in which case we
                         \ "press" KY6, "S", to increase the pitch)
 
- LDA JSTY               \ Fetch A from JSTY so the next instruction has no effect
+ LDA JSTY               \ Fetch A from JSTY so the next instruction has no
+                        \ effect
 
 .DK13
 
@@ -44609,10 +44612,10 @@ ENDMACRO
  ERND 10
  EQUB VE
 
- ETOK 140               \ Token 141:    "[21-25] [16-21] FOR [61-65] AND [61-65]"
- ETOK 178               \
- ERND 10                \ Encoded as:   "[140][178][10?]"
- EQUB VE
+ ETOK 140               \ Token 141:    "[21-25] [16-21] FOR [61-65] AND
+ ETOK 178               \                [61-65]"
+ ERND 10                \
+ EQUB VE                \ Encoded as:   "[140][178][10?]"
 
  ERND 11                \ Token 142:    "[51-55] BY [56-60]"
  ECHR ' '               \
