@@ -5939,7 +5939,7 @@ ENDIF
 \
 \ Arguments:
 \
-\   A                   The recursive token to be printed, in the range 1-???
+\   A                   The recursive token to be printed, in the range 1-255
 \
 \ Returns:
 \
@@ -11642,7 +11642,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \       Name: UNWISE
 \       Type: Subroutine
 \   Category: Ship hanger
-\    Summary: 
+\    Summary: Switch the main line-drawing routine between EOR and OR logic
 \
 \ ------------------------------------------------------------------------------
 \
@@ -14081,10 +14081,10 @@ LOAD_C% = LOAD% +P% - CODE%
  LDA #48                \ Call the NOISE routine with A = 48 to make the sound
  JSR NOISE              \ of the ship launching from the station
 
- LDA #8                 \ Set the step size for the hyperspace rings to 8, so
+ LDA #8                 \ Set the step size for the launch tunnel rings to 8, so
                         \ there are fewer sections in the rings and they are
                         \ quite polygonal (compared to the step size of 4 used
-                        \ in the much rounder launch rings)
+                        \ in the much rounder hyperspace rings)
 
                         \ Fall through into HFS2 to draw the launch tunnel rings
 
@@ -21554,7 +21554,7 @@ LOAD_D% = LOAD% + P% - CODE%
 .TT110
 
  LDX QQ12               \ If we are not docked (QQ12 = 0) then jump to NLUNCH
- BEQ NLUNCH
+ BEQ NLUNCH             \ to skip the launch tunnel and setup process
 
  JSR LAUN               \ Show the space station launch tunnel
 
@@ -21792,9 +21792,9 @@ LOAD_D% = LOAD% + P% - CODE%
 \
 \       Name: RDLI
 \       Type: Variable
-\   Category: Utility routines
-\    Summary: The OS command string for loading the docked code in the disc
-\             version of Elite
+\   Category: Loader
+\    Summary: The OS command string for loading the flight code file D.CODE
+\             in the disc version of Elite
 \
 \ ------------------------------------------------------------------------------
 \
@@ -22498,9 +22498,11 @@ LOAD_D% = LOAD% + P% - CODE%
 \ ******************************************************************************
 
 \.ref2                  \ These instructions are commented out in the original
-\LDY #18                \ source, but they would jump to pres in the EQSHP
-\JMP pres               \ routine with Y = 18, which would show the error:
-                        \ "{cr}all caps}EQUIPMENT: {sentence case} PRESENT"
+\LDY #187               \ source, but they would jump to pres in the EQSHP
+\JMP pres               \ routine with Y = 187, which would show the error:
+                        \ "LASER PRESENT" (this code was part of the refund
+                        \ bug in the disc version of Elite, which is why it is
+                        \ commented out)
 
 .refund
 
@@ -22509,9 +22511,11 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA LASER,X            \ If there is no laser in view X (i.e. the laser power
  BEQ ref3               \ is zero), jump to ref3 to skip the refund code
 
- \CMP T1                \ These instructions are commented out in the original
- \BEQ ref2              \ source, but they would jump to ref2 above if we were
+\CMP T1                 \ These instructions are commented out in the original
+\BEQ ref2               \ source, but they would jump to ref2 above if we were
                         \ trying to replace a laser with one of the same type
+                        \ (this code was part of the refund bug in the disc
+                        \ version of Elite, which is why it is commented out)
 
  LDY #4                 \ If the current laser has power #POW (pulse laser),
  CMP #POW               \ jump to ref1 with Y = 4 (the item number of a pulse
@@ -27718,7 +27722,7 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ (i.e. SHIFT moves the cursor at double the speed
                         \ when using the joystick)
 
- TAX                    \ Copy A to X
+ TAX                    \ Copy A to X, so X contains the joystick roll value
 
  LDA JSTY               \ Fetch the joystick pitch, ranging from 1 to 255 with
                         \ 128 as the centre point, and fall through into TJS1 to
@@ -47605,6 +47609,7 @@ ENDMACRO
  EDGE       0,       2,     3,     1,         31    \ Edge 4
  EDGE       3,       1,     2,     0,         31    \ Edge 5
 
+\FACE normal_x, normal_y, normal_z, visibility
  FACE       52,        0,     -122,         31    \ Face 0
  FACE       39,      103,       30,         31    \ Face 1
  FACE       39,     -103,       30,         31    \ Face 2

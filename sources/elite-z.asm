@@ -5620,6 +5620,7 @@ NEXT
 
  BEQ HA2                \ If byte #2 is zero, jump to HA2 to skip the following
                         \ as there is only one ship in the hanger
+
                         
                         \ If we get here then there are multiple ships in the
                         \ hanger, so we also need to draw the horizontal line in
@@ -5646,7 +5647,7 @@ NEXT
  LDY #248               \ We now draw the line from the centre of the screen
                         \ to the left. SC(1 0) points to the start address of
                         \ the first half of the screen row, so we set Y to 248
-                        \ so the call to HAL3 starts drawing from the last
+                        \ so the call to HAS3 starts drawing from the last
                         \ character in that first half
 
  LDA #%00010000         \ We want to start drawing from the last pixel, so we
@@ -8236,9 +8237,9 @@ ENDMACRO
                         \ vertical bar (i.e. A is acting as a mask on the
                         \ 2-pixel colour byte)
 
- BNE DLL12              \ If A is non-zero then we have something to draw, so
-                        \ jump to DLL12 to skip the following and move on to the
-                        \ drawing
+ BNE DLL12              \ Jump to DLL12 to skip the code for drawing a blank,
+                        \ and move on to drawing the indicator (this BNE is
+                        \ effectively a JMP as A is always non-zero)
 
 .DLL11
 
