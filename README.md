@@ -221,19 +221,19 @@ This repository contains the source code for two different versions of 6502 Seco
 
 * The version produced by the source disc from Ian Bell's site (which was never released)
 
-By default the build process builds the SNG45 version, but you can build the source disc version by appending `release=source-disc` to the `make` command, like this on Windows:
+By default the build process builds the SNG45 version, but you can build the source disc version by appending `release-6502sp=source-disc` to the `make` command, like this on Windows:
 
 ```
-make.bat encrypt verify release=source-disc
+make.bat encrypt verify release-6502sp=source-disc
 ```
 
 or this on a Mac or Linux:
 
 ```
-make encrypt verify release=source-disc
+make encrypt verify release-6502sp=source-disc
 ```
 
-You can also add `release=sng45`, though that's the default value so it isn't necessary.
+You can also add `release-6502sp=sng45`, though that's the default value so it isn't necessary.
 
 You can see the differences between the versions by searching the source code for `_SNG45` (for features in the SNG45 version) or `_SOURCE_DISC` (for features in the source disc). There are only a few differences, if you ignore [workspace noise](#producing-byte-accurate-binaries):
 

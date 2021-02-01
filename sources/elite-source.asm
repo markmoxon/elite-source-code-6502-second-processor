@@ -2266,11 +2266,11 @@ PRINT "WORDS"
 PRINT "Assembled at ", ~CODE_WORDS%
 PRINT "Ends at ", ~P%
 PRINT "Code size is ", ~(P% - CODE_WORDS%)
-PRINT "Execute at ", ~LOAD%
+PRINT "Execute at ", ~LOAD_WORDS%
 PRINT "Reload at ", ~LOAD_WORDS%
 
-PRINT "S.WORDS ",~CODE%," ",~P%," ",~LOAD%," ",~LOAD_WORDS%
-SAVE "output/WORDS.bin", CODE_WORDS%, P%, LOAD%
+PRINT "S.WORDS ",~CODE_WORDS%," ",~P%," ",~LOAD_WORDS%," ",~LOAD_WORDS%
+SAVE "output/WORDS.bin", CODE_WORDS%, P%, LOAD_WORDS%
 
 \ ******************************************************************************
 \
@@ -3554,7 +3554,7 @@ LOAD_A% = LOAD%
 
 .ZIP
 
- SKIP 0                \ This label is not used but is in the original source
+ SKIP 0                 \ This label is not used but is in the original source
 
 .S1%
 
@@ -30498,9 +30498,10 @@ ENDIF
 
 .tZ
 
- ORA #4                 \ Set bit 2 of A to denote that this is the 6502 second
+ ORA #%00000100         \ Set bit 2 of A to denote that this is the 6502 second
                         \ processor version (which is the same bit as for the
-                        \ disc version)
+                        \ original disc version, before the refund bug was
+                        \ fixed)
 
  STA COK                \ Store the updated competition flags in COK
 
@@ -30626,9 +30627,8 @@ ENDIF
                         \ pointed to by the MOS error message pointer
 
  BNE P%-6               \ If the fetched character is non-zero, loop back to the
-                        \ JSR OSWRCH above to print the it, and keep looping
-                        \ until we fetch a zero (which marks the end of the
-                        \ message)
+                        \ JSR OSWRCH above to print it, and keep looping until
+                        \ we fetch a zero (which marks the end of the message)
 
 .BRBR2
 

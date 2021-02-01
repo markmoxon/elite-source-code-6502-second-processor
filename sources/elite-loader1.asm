@@ -172,7 +172,7 @@ ENDIF
  EQUB 23, 0, 10, 32     \ Set 6845 register R10 = 32
  EQUB 0, 0, 0           \
  EQUB 0, 0, 0           \ This is the "cursor start" register, which sets the
-                        \ cursor start line at 0 with a fast blink rate
+                        \ cursor start line at 0, so it turns the cursor off
 
  EQUB 23, 0, &87, 34    \ Set 6845 register R7 = 34
  EQUB 0, 0, 0           \
@@ -454,7 +454,7 @@ ENDIF
  JSR OSB                \ pressed
 
 \LDA #144               \ These instructions are commented out in the original
-\LDX #255               \ source, but they would Call OSBYTE with A = 144 and
+\LDX #255               \ source, but they would call OSBYTE with A = 144 and
 \JSR OSB                \ Y = 255 to turn the screen interlace off (equivalent
                         \ to a *TV 255, 255 command)
 
@@ -463,7 +463,7 @@ ENDIF
  JSR OSB                \ keys (i.e. add 128)
 
  LDA #13                \ Call OSBYTE with A = 13, X = 2 and Y = 0 to disable
- LDX #2                 \ the "character entering u=buffer" event
+ LDX #2                 \ the "character entering buffer" event
  JSR OSB
 
  LDA #LO(B%)            \ Set ZP(1 0) to point to the VDU code table at B%
