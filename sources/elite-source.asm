@@ -63,8 +63,7 @@ NOST = 18               \ The number of stardust particles in normal space (this
                         \ goes down to 3 in witchspace)
 
 NOSH = 20               \ The maximum number of ships in our local bubble of
-                        \ universe (counting from 0, so there are actually 21
-                        \ ship slots)
+                        \ universe
 
 NTY = 34                \ The number of different ship types
 
@@ -4270,8 +4269,6 @@ ENDIF
                         \ keyboard (so Bitstik users can still use the keyboard
                         \ for speed adjustments if they twist the stick to zero)
 
-.BS2
-
 \ ******************************************************************************
 \
 \       Name: Main flight loop (Part 3 of 16)
@@ -4302,6 +4299,8 @@ ENDIF
 \   * "A" to fire lasers
 \
 \ ******************************************************************************
+
+.BS2
 
  LDA KY2                \ If Space is being pressed, keep going, otherwise jump
  BEQ MA17               \ down to MA17 to skip the following
