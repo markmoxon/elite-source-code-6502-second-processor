@@ -30473,11 +30473,10 @@ IF _REMOVE_CHECKSUMS
 
 ELSE
 
- BNE P%-6               \ If commander check is enabled and the calculated
-                        \ checksum does not match CHK, then loop back to repeat
-                        \ the check - in other words, we enter an infinite loop
-                        \ here, as the checksum routine will keep returning the
-                        \ same incorrect value
+ BNE P%-6               \ If the calculated checksum does not match CHK, then
+                        \ loop back to repeat the check - in other words, we
+                        \ enter an infinite loop here, as the checksum routine
+                        \ will keep returning the same incorrect value
 
 ENDIF
 
@@ -30616,7 +30615,7 @@ ENDIF
  LDY #0                 \ Set Y = 0 to act as a character counter
 
  JSR OSWRCH             \ Print the character in A (which contains a line feed
-                        \ on the first loop iteration, and then any non-zero
+                        \ on the first loop iteration), and then any non-zero
                         \ characters we fetch from the error message
 
  INY                    \ Increment the loop counter
@@ -31331,8 +31330,8 @@ ENDIF
 
 .MEBRKL
 
- JSR OSWRCH             \ Print the character in A (which contains a line feed
-                        \ on the first loop iteration, and then any non-zero
+ JSR OSWRCH             \ Print the character in A (which contains a beep on the
+                        \ first loop iteration), and then any non-zero
                         \ characters we fetch from the error message
 
  INY                    \ Increment the loop counter
