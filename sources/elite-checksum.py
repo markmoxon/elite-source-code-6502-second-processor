@@ -8,9 +8,9 @@
 # cassette version of Elite
 #
 # This script applies encryption and checksums to the compiled binary for the
-# main parasite game code. It reads the unencrypted "CODE.unprot.bin" binary and
-# generates an encrypted version as "P.CODE", based on the code in the original
-# "S.PCODES" BASIC source program
+# main parasite game code. It reads the unencrypted "P.CODE.unprot.bin" binary
+# and generates an encrypted version as "P.CODE", based on the code in the
+# original "S.PCODES" BASIC source program
 #
 # ******************************************************************************
 
@@ -22,11 +22,11 @@ Encrypt = True
 release = 2
 
 for arg in argv[1:]:
-    if arg == '-u':
+    if arg == "-u":
         Encrypt = False
-    if arg == '-rel1':
+    if arg == "-rel1":
         release = 1
-    if arg == '-rel2':
+    if arg == "-rel2":
         release = 2
 
 print("Elite Big Code File")
@@ -36,7 +36,7 @@ data_block = bytearray()
 
 # Load assembled code file
 
-elite_file = open('output/CODE.unprot.bin', 'rb')
+elite_file = open("output/P.CODE.unprot.bin", "rb")
 data_block.extend(elite_file.read())
 elite_file.close()
 
@@ -122,8 +122,10 @@ if Encrypt:
         g += 1
         f -= 1
 
-# Write output file for 'ELTcode'
+# Write output file for P.CODE
 
-output_file = open('output/P.CODE.bin', 'wb')
+output_file = open("output/P.CODE.bin", "wb")
 output_file.write(data_block)
 output_file.close()
+
+print("output/P.CODE.bin file saved")

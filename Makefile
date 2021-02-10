@@ -1,15 +1,18 @@
 BEEBASM?=beebasm
 PYTHON?=python
 
-# Change the release by adding 'release-6502sp=source-disc' to the make command, e.g.
+# You can set the release that gets built by adding 'release-6502sp=<rel>' to
+# the make command, where <rel> is one of:
 #
-#   make encrypt verify
+#   source-disc
+#   sng45
 #
-# will build the SNG45 version of 6502SP Elite, while:
+# So, for example:
 #
 #   make encrypt verify release-6502sp=source-disc
 #
-# will build the version from the source disc
+# will build the version from the source disc. If you omit the release-6502sp
+# parameter, it will build the SNG45 version.
 
 ifeq ($(release-6502sp), source-disc)
   rel-6502sp=1

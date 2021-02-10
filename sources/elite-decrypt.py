@@ -4,27 +4,45 @@
 #
 # 6502 SECOND PROCESSOR ELITE DECRYPTION SCRIPT
 #
-# Written by Mark Moxon, and inspired by Kieran Connell's version for the
-# cassette version of Elite
+# Written by Mark Moxon
 #
-# This script applies encryption and checksums to the compiled binary for the
-# main parasite game code. It reads the unencrypted "CODE.unprot.bin" binary and
-# generates an encrypted version as "P.CODE", based on the code in the original
-# "S.PCODES" BASIC source program
+# This script removes encryption and checksums from the compiled binary for
+# the main game code. It reads the encrypted "P.CODE.bin" binary and generates a
+# decrypted version as "P.CODE.decrypt.bin"
+#
+# Files are saved using the decrypt.bin suffix so they don't overwrite any
+# existing unprot.bin files, so they can be compared if required
+#
+# Run this script by changing directory to the repository's root folder and
+# running the script with "python sources/elite-decrypt.py"
+#
+# You can decrypt specific versions by adding the following arguments, as in
+# "python sources/elite-decrypt.py -rel1" for example:
+#
+#   -rel1   Decrypt the source disc version from Ian Bell's site
+#   -rel2   Decrypt the SNG45 release version
+#
+# If unspecified, the default is rel2
 #
 # ******************************************************************************
 
 from __future__ import print_function
 import sys
 
+print()
+print("BBC 6502 Second Processor Elite decryption")
+
 argv = sys.argv
 release = 2
+folder = "sng45"
 
 for arg in argv[1:]:
-    if arg == '-rel1':
+    if arg == "-rel1":
         release = 1
-    if arg == '-rel2':
+        folder = "source-disc"
+    if arg == "-rel2":
         release = 2
+        folder = "sng45"
 
 print("Elite Decryption")
 
@@ -32,9 +50,14 @@ data_block = bytearray()
 
 # Load assembled code file
 
-elite_file = open('binaries/P.CODE', 'rb')
+elite_file = open("extracted/" + folder + "/P.CODE.bin", "rb")
 data_block.extend(elite_file.read())
 elite_file.close()
+
+print()
+print("[ Read    ] extracted/" + folder + "/P.CODE.bin")
+
+# Do decryption
 
 # Third part: V, which reverses the order of bytes between G% and F%-1
 # Can be reversed by simply repeating the reversal
@@ -67,8 +90,13 @@ for n in range(0x1300, 0xA000):
 s = 0x106A
 data_block[s - 0x1000 - 1] = 0x60
 
-# Write output file for 'CODE.decrypt.bin'
+print("[ Decrypt ] extracted/" + folder + "/P.CODE.bin")
 
-output_file = open('binaries/CODE.decrypt.bin', 'wb')
+# Write output file for P.CODE.decrypt
+
+output_file = open("extracted/" + folder + "/P.CODE.decrypt.bin", "wb")
 output_file.write(data_block)
 output_file.close()
+
+print("[ Save    ] extracted/" + folder + "/P.CODE.decrypt.bin")
+print()
