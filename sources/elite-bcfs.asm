@@ -18,7 +18,7 @@
 \
 \ This source file produces the following binary files:
 \
-\   * output/CODE.unprot.bin
+\   * output/P.CODE.unprot.bin
 \
 \ after reading in the following files:
 \
@@ -147,10 +147,10 @@ ENDIF
 
 \ ******************************************************************************
 \
-\ Save 6502sp/output/CODE.unprot.bin
+\ Save 6502sp/output/P.CODE.unprot.bin
 \
 \ ******************************************************************************
 
 PRINT "P% = ", ~P%
 PRINT "S.P.CODE ", ~LOAD%, ~(F% + &400 + &2200), " ", ~LOAD%, ~LOAD%
-SAVE "output/CODE.unprot.bin", CODE%, (F% + &400 + &2200), LOAD%
+SAVE "output/P.CODE.unprot.bin", CODE%, (F% + &400 + &2200), LOAD%
