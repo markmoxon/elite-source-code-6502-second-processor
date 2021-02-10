@@ -187,23 +187,23 @@ The binaries in the `extracted` folder were taken straight from the [6502 Second
 [--extracted--]  [---output----]
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
-11ccbb59  38832  11ccbb59  38832   Yes   CODE.unprot.bin
-56520930    752  56520930    752   Yes   ELITE.bin
+ffdb229a    788  ffdb229a    788   Yes   ELITE.bin
 e78cb0cf   5769  e78cb0cf   5769   Yes   ELITEa.bin
-455ba962   2666  455ba962   2666   Yes   ELTA.bin
-ff84a532   3096  ff84a532   3096   Yes   ELTB.bin
-54e6f0e3   3284  54e6f0e3   3284   Yes   ELTC.bin
-cb34d904   3336  cb34d904   3336   Yes   ELTD.bin
-9c847981   2708  9c847981   2708   Yes   ELTE.bin
-dbb22442   3954  dbb22442   3954   Yes   ELTF.bin
-22b0e99e   3591  22b0e99e   3591   Yes   ELTG.bin
-a949f485   1427  a949f485   1427   Yes   ELTH.bin
-6379fa24   1411  6379fa24   1411   Yes   ELTI.bin
-62e09fa4   3619  62e09fa4   3619   Yes   ELTJ.bin
-a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
-5908b6d5  38832  5908b6d5  38832   Yes   P.CODE.bin
+a95bc864   2666  a95bc864   2666   Yes   ELTA.bin
+99c700a0   3096  99c700a0   3096   Yes   ELTB.bin
+681bae80   3290  681bae80   3290   Yes   ELTC.bin
+c395ca71   3336  c395ca71   3336   Yes   ELTD.bin
+a315bf38   2708  a315bf38   2708   Yes   ELTE.bin
+5fc1be4a   3957  5fc1be4a   3957   Yes   ELTF.bin
+6ced0040   3582  6ced0040   3582   Yes   ELTG.bin
+c34e877a   1427  c34e877a   1427   Yes   ELTH.bin
+6e59d3e2   1411  6e59d3e2   1411   Yes   ELTI.bin
+a5dfbfdd   3586  a5dfbfdd   3586   Yes   ELTJ.bin
+ee25ce2a   6454  ee25ce2a   6454   Yes   I.CODE.bin
+9b6480bb  38799  9b6480bb  38799   Yes   P.CODE.bin
+5cfd1851  38799  5cfd1851  38799   Yes   P.CODE.unprot.bin
 2580d019   8460  2580d019   8460   Yes   SHIPS.bin
-57406380   1024  57406380   1024   Yes   WORDS.bin
+fc481d3e   1024  fc481d3e   1024   Yes   WORDS.bin
 ```
 
 All the compiled binaries match the extracts, so we know we are producing the same final game as the release version.
