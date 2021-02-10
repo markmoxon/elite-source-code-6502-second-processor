@@ -454,9 +454,9 @@ ENDIF
  JSR OSB                \ pressed
 
 \LDA #144               \ These instructions are commented out in the original
-\LDX #255               \ source, but they would call OSBYTE with A = 144 and
-\JSR OSB                \ Y = 255 to turn the screen interlace off (equivalent
-                        \ to a *TV 255, 255 command)
+\LDX #255               \ source, but they would call OSBYTE with A = 144,
+\JSR OSB                \ X = 255 and Y = 0 to move the screen down one line and
+                        \ turn screen interlace on
 
  LDA #225               \ Call OSBYTE with A = 225, X = 128 and Y = 0 to set
  LDX #128               \ the function keys to return ASCII codes for SHIFT-fn
@@ -471,7 +471,7 @@ ENDIF
  LDA #HI(B%)
  STA ZP+1
 
- LDY #0                 \ We are now going to send the 67 VDU bytes in the table
+ LDY #0                 \ We are now going to send the N% VDU bytes in the table
                         \ at B% to OSWRCH to set up the special mode 1 screen
                         \ that forms the basis for the split-screen mode
 
@@ -495,8 +495,8 @@ ENDIF
  LDX #1                 \ cursor editing, so the cursor keys return ASCII values
  JSR OSB                \ and can therefore be used in-game
 
- LDA #9                 \ Disable flashing colours (via OSBYTE 9)
- LDX #0
+ LDA #9                 \ Call OSBYTE with A = 9, X = 0 and Y = 0 to disable
+ LDX #0                 \ flashing colours
  JSR OSB
 
  JSR PLL1               \ Call PLL1 to draw Saturn

@@ -12789,7 +12789,7 @@ LOAD_C% = LOAD% +P% - CODE%
  BCC PH1                \ the ideal docking position, some way in front of the
                         \ slot, as there is a large angle between the vector
                         \ from the station to the ship and the station's nosev,
-                        \ so the angle of approach is not very optimal.
+                        \ so the angle of approach is not very optimal
                         \
                         \ Specifically, as the unit vector length is 96 in our
                         \ vector system,
