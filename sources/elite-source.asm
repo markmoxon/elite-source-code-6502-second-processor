@@ -3424,6 +3424,16 @@ ORG CODE%
 
 LOAD_A% = LOAD%
 
+\ ******************************************************************************
+\
+\       Name: Parasite variables
+\       Type: Workspace
+\    Address: &1000 to &100B
+\   Category: Workspaces
+\    Summary: Various variables used by the parasite
+\
+\ ******************************************************************************
+
 .MOS
 
  SKIP 1                 \ This variable appears to be unused
@@ -3555,14 +3565,27 @@ LOAD_A% = LOAD%
 
  SKIP 0                 \ This label is not used but is in the original source
 
+\ ******************************************************************************
+\
+\       Name: S1%
+\       Type: Variable
+\   Category: Save and load
+\    Summary: The drive and directory number used when saving or loading a
+\             commander file
+\
+\ ------------------------------------------------------------------------------
+\
+\ The drive part of this string (the "0") is updated with the chosen drive in
+\ the QUS1 routine, but the directory part (the "E") is fixed. The variable is
+\ followed directly by the commander file at NA%, which starts with the
+\ commander name, so the full string at S1% is in the format ":0.E.JAMESON",
+\ which gives the full filename of the commander file.
+\
+\ ******************************************************************************
+
 .S1%
 
- EQUS ":0.E."           \ The drive and directory number used when saving or
-                        \ loading a commander file
-                        \
-                        \ The drive part of this string (the "0") is updated
-                        \ with the chosen drive in the QUS1 routine, but the
-                        \ directory part (the "E") is fixed
+ EQUS ":0.E."
 
 \ ******************************************************************************
 \
@@ -3617,8 +3640,8 @@ LOAD_A% = LOAD%
                         \ Note that this byte must not have bit 7 set, or
                         \ loading this commander will give an error
 
- EQUB 20                \ QQ0 = current system X-coordinate (Lave), #1
- EQUB 173               \ QQ1 = current system Y-coordinate (Lave), #2
+ EQUB 20                \ QQ0 = Current system X-coordinate (Lave), #1
+ EQUB 173               \ QQ1 = Current system Y-coordinate (Lave), #2
 
  EQUW &5A4A             \ QQ21 = Seed s0 for system 0, galaxy 0 (Tibedied), #3-4
  EQUW &0248             \ QQ21 = Seed s1 for system 0, galaxy 0 (Tibedied), #5-6
@@ -3649,11 +3672,23 @@ ENDIF
 
  EQUB 22+(15 AND Q%)    \ CRGO = Cargo capacity, #22
 
- EQUD 0                 \ QQ20 = Contents of cargo hold (17 bytes), #23-39
- EQUD 0
- EQUD 0
- EQUD 0
- EQUB 0
+ EQUB 0                 \ QQ20+0  = Amount of Food in cargo hold, #23
+ EQUB 0                 \ QQ20+1  = Amount of Textiles in cargo hold, #24
+ EQUB 0                 \ QQ20+2  = Amount of Radioactives in cargo hold, #25
+ EQUB 0                 \ QQ20+3  = Amount of Slaves in cargo hold, #26
+ EQUB 0                 \ QQ20+4  = Amount of Liquor/Wines in cargo hold, #27
+ EQUB 0                 \ QQ20+5  = Amount of Luxuries in cargo hold, #28
+ EQUB 0                 \ QQ20+6  = Amount of Narcotics in cargo hold, #29
+ EQUB 0                 \ QQ20+7  = Amount of Computers in cargo hold, #30
+ EQUB 0                 \ QQ20+8  = Amount of Machinery in cargo hold, #31
+ EQUB 0                 \ QQ20+9  = Amount of Alloys in cargo hold, #32
+ EQUB 0                 \ QQ20+10 = Amount of Firearms in cargo hold, #33
+ EQUB 0                 \ QQ20+11 = Amount of Furs in cargo hold, #34
+ EQUB 0                 \ QQ20+12 = Amount of Minerals in cargo hold, #35
+ EQUB 0                 \ QQ20+13 = Amount of Gold in cargo hold, #36
+ EQUB 0                 \ QQ20+14 = Amount of Platinum in cargo hold, #37
+ EQUB 0                 \ QQ20+15 = Amount of Gem-Stones in cargo hold, #38
+ EQUB 0                 \ QQ20+16 = Amount of Alien Items in cargo hold, #39
 
  EQUB Q%                \ ECM = E.C.M., #40
 
@@ -3669,29 +3704,29 @@ ENDIF
 
  EQUB Q%                \ ESCP = Escape pod, #46
 
- EQUD FALSE             \ These four bytes are unused, #47-50
+ EQUD 0                 \ These four bytes are unused, #47-50
 
  EQUB 3+(Q% AND 1)      \ NOMSL = Number of missiles, #51
 
- EQUB FALSE             \ FIST = Legal status ("fugitive/innocent status"), #52
+ EQUB 0                 \ FIST = Legal status ("fugitive/innocent status"), #52
 
- EQUB 16                \ AVL = Market availability (17 bytes), #53-69
- EQUB 15
- EQUB 17
- EQUB 0
- EQUB 3
- EQUB 28
- EQUB 14
- EQUB 0
- EQUB 0
- EQUB 10
- EQUB 0
- EQUB 17
- EQUB 58
- EQUB 7
- EQUB 9
- EQUB 8
- EQUB 0
+ EQUB 16                \ AVL+0  = Market availability of Food, #53
+ EQUB 15                \ AVL+1  = Market availability of Textiles, #54
+ EQUB 17                \ AVL+2  = Market availability of Radioactives, #55
+ EQUB 0                 \ AVL+3  = Market availability of Slaves, #56
+ EQUB 3                 \ AVL+4  = Market availability of Liquor/Wines, #57
+ EQUB 28                \ AVL+5  = Market availability of Luxuries, #58
+ EQUB 14                \ AVL+6  = Market availability of Narcotics, #59
+ EQUB 0                 \ AVL+7  = Market availability of Computers, #60
+ EQUB 0                 \ AVL+8  = Market availability of Machinery, #61
+ EQUB 10                \ AVL+9  = Market availability of Alloys, #62
+ EQUB 0                 \ AVL+10 = Market availability of Firearms, #63
+ EQUB 17                \ AVL+11 = Market availability of Furs, #64
+ EQUB 58                \ AVL+12 = Market availability of Minerals, #65
+ EQUB 7                 \ AVL+13 = Market availability of Gold, #66
+ EQUB 9                 \ AVL+14 = Market availability of Platinum, #67
+ EQUB 8                 \ AVL+15 = Market availability of Gem-Stones, #68
+ EQUB 0                 \ AVL+16 = Market availability of Alien Items, #69
 
  EQUB 0                 \ QQ26 = Random byte that changes for each visit to a
                         \ system, for randomising market prices, #70
@@ -3785,7 +3820,7 @@ ENDIF
  LDA #HI(G%)
  STA 1
  STA SC+1
- 
+
  LDA #LO(F%-1)          \ Set (3 2) = F% - 1
  STA 2
  LDA #HI(F%-1)
@@ -7146,7 +7181,7 @@ NEXT
  LDA #5                 \ Send 5 to the I/O processor as the argument to the
  JSR OSWRCH             \ OSWRCH 129 command, so the I/O processor should expect
                         \ 4 bytes (as we send the count plus 1)
- 
+
  LDA X1                 \ Send X1, Y1, X2 and Y2 to the I/O processor, so the
  JSR OSWRCH             \ I/O processor will draw a line from (X1, Y1) to
  LDA Y1                 \ (X2, Y2), returning from the subroutine using a tail
@@ -11360,7 +11395,7 @@ LOAD_C% = LOAD% +P% - CODE%
  JSR DORND              \ Set A and X to random numbers
 
  BPL HA7                \ Jump to HA7 if A is positive (50% chance)
- 
+
  AND #3                 \ Reduce A to a random number in the range 0-3
 
  STA T                  \ Set X = A * 8 + A
@@ -12683,7 +12718,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \       * Otherwise if this is us docking, refine our approach and we're done
 \
 \       * Otherwise this is an NPC, so turn away from station and we're done
-\ 
+\
 \ "Refine our approach" means:
 \
 \   * If this is us docking (rather than an NPC), apply pitch and roll to get
@@ -12930,7 +12965,7 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ the ship
 
  EOR XX15               \ A is negative, so this sets the sign of A to the same
- EOR XX15+1             \ as -XX15 * XX15+1, or -ship_x * ship_y 
+ EOR XX15+1             \ as -XX15 * XX15+1, or -ship_x * ship_y
 
  ASL A                  \ Shift the sign bit into the C flag, so the C flag has
                         \ the following sign:
@@ -13241,7 +13276,7 @@ LOAD_C% = LOAD% +P% - CODE%
 
  LDA XX15+2             \ Set A = XX15+2
 
- JMP MAD                \ Set: 
+ JMP MAD                \ Set:
                         \
                         \   (A X) = Q * A + (S R)
                         \           = vect_z * XX15+2 + vect_y * XX15+1 +
@@ -16807,7 +16842,7 @@ ENDIF
                         \ If we get here then mission 1 is in progress, so we
                         \ print out the corresponding token from RUTOK
 
- JSR MT14               \ Call MT14 to switch to justified text 
+ JSR MT14               \ Call MT14 to switch to justified text
 
  LDA #1                 \ Set A = 1 so that extended token 1 (an empty string)
                         \ gets printed below instead of token 176, followed by
@@ -16860,7 +16895,7 @@ ENDIF
 
  DEX                    \ Decrement the loop counter
 
- BPL PDL1               \ Loop back to PDL1 until we have copied all 
+ BPL PDL1               \ Loop back to PDL1 until we have copied all
 
  LDA #5                 \ Set A = 5, so we print extended token 5 in the next
                         \ instruction ("{lower case}{justify}{single cap}[86-90]
@@ -17078,7 +17113,7 @@ ENDIF
 .BRL2
 
  LSR INWK               \ Halve x_lo so the Constrictor moves towards the centre
- 
+
  INC INWK+6             \ Increment z_lo so the Constrictor moves away from us
 
  BEQ BR2                \ If z_lo = 0 (i.e. it just went past 255), jump to BR2
@@ -24977,7 +25012,7 @@ LOAD_E% = LOAD% + P% - CODE%
                         \   | Ship blueprints                   |
                         \   |                                   |
                         \   +-----------------------------------+   &D000 = D%
-                        \   |                                   |   
+                        \   |                                   |
                         \   | Current ship line heap            |
                         \   |                                   |
                         \   +-----------------------------------+   SLSP
@@ -41103,7 +41138,7 @@ LOAD_I% = LOAD% + P% - CODE%
 .TWIST
 
  LDA #0                 \ Set A = 0
- 
+
  STA RAT2               \ Set the pitch direction in RAT2 to A
 
  LDX #15                \ Rotate (roofv_x, nosev_x) by a small angle (pitch)
@@ -41196,7 +41231,7 @@ LOAD_I% = LOAD% + P% - CODE%
  JSR TT66               \ and set the current view type in QQ11 to 1
 
  JSR RESET              \ Call RESET to initialise most of the game variables
- 
+
  LDA #0                 \ Set ALPHA and ALP1 to 0, so our roll angle (i.e. that
  STA ALPHA              \ of the camera) is 0
  STA ALP1
@@ -41285,7 +41320,7 @@ LOAD_I% = LOAD% + P% - CODE%
 
  JSR LL9                \ Call LL9 to draw the logo on-screen
 
- LDA INWK+14            \ Loop back to FLYL2 to keep pitching, until nosev_z_hi 
+ LDA INWK+14            \ Loop back to FLYL2 to keep pitching, until nosev_z_hi
  BPL FLYL2              \ is negative (i.e. the logo has pitched forward through
                         \ 90 degrees, as nosev starts out by pointing into the
                         \ screen towards the camera, in a positive direction,
@@ -41376,7 +41411,7 @@ LOAD_I% = LOAD% + P% - CODE%
  TSB K%+31              \ block, which is the Elite logo, so this flags the logo
                         \ as having been killed (the TSB instruction applies the
                         \ accumulator to the memory location using an OR)
- 
+
  JSR EXNO3              \ Make an explosion sound
 
  JSR ZZAAP              \ Call ZZAAP to redraw the vertical laser line from the
@@ -41387,7 +41422,7 @@ LOAD_I% = LOAD% + P% - CODE%
                         \ We now want to draw the logo exploding, so we first
                         \ need to copy the logo's ship data block from K% to
                         \ INWK
- 
+
  LDX #NI%-1             \ Set a counter in X so we can loop through the NI%
                         \ bytes in the ship data block
 
@@ -41536,7 +41571,7 @@ LOAD_I% = LOAD% + P% - CODE%
  LDA #&E0               \ Set nosev_z_hi = -1 (as &E0 is a negative unit vector
  STA INWK+14            \ length), so the ship points out of the screen, towards
                         \ us
-                        
+
  STZ DELTA              \ Set DELTA to 0, so our current speed (i.e. that of the
                         \ camera) is 0
 
@@ -41897,7 +41932,7 @@ LOAD_I% = LOAD% + P% - CODE%
  STZ INWK+7             \ Set x_hi = 0
 
  LDA Y2TB,Y             \ Set A to Y2, the end point's y-coordinate from Y1TB
- 
+
  SEC
  SBC BALI
  BCC GR6
@@ -44005,7 +44040,7 @@ ENDMACRO
  EJMP 13                \ Encoded as:   "{2}[31?]{13}"
  EQUB VE
 
- ETOK 175               \ Token 65:     "ITS [76-80] [81-85]
+ ETOK 175               \ Token 65:     "ITS [76-80] [81-85]"
  ERND 16                \
  ECHR ' '               \ Encoded as:   "[175][16?] [17?]"
  ERND 17
@@ -44604,7 +44639,7 @@ ENDMACRO
  EQUB VE                \
                         \ Encoded as:   "[171]"
 
- ERND 1                 \ Token 140:    "[21-25] [16-21] FOR [61-65]"
+ ERND 1                 \ Token 140:    "[21-25] [16-20] FOR [61-65]"
  ECHR ' '               \
  ERND 0                 \ Encoded as:   "[1?] [0?] F<253> [10?]"
  ECHR ' '
@@ -44614,7 +44649,7 @@ ENDMACRO
  ERND 10
  EQUB VE
 
- ETOK 140               \ Token 141:    "[21-25] [16-21] FOR [61-65] AND
+ ETOK 140               \ Token 141:    "[21-25] [16-20] FOR [61-65] AND
  ETOK 178               \                [61-65]"
  ERND 10                \
  EQUB VE                \ Encoded as:   "[140][178][10?]"
@@ -44627,7 +44662,7 @@ ENDMACRO
  ERND 12
  EQUB VE
 
- ETOK 140               \ Token 143:    "[21-25] [16-21] FOR [61-65] BUT [51-55]
+ ETOK 140               \ Token 143:    "[21-25] [16-20] FOR [61-65] BUT [51-55]
  ECHR ' '               \                BY [56-60]"
  ECHR 'B'               \
  ECHR 'U'               \ Encoded as:   "[140] BUT [142]"
@@ -46877,7 +46912,7 @@ ENDIF
 
 .MTIN
 
- EQUB 16                \ Token  0: a random extended token between 16 and 21
+ EQUB 16                \ Token  0: a random extended token between 16 and 20
  EQUB 21                \ Token  1: a random extended token between 21 and 25
  EQUB 26                \ Token  2: a random extended token between 26 and 30
  EQUB 31                \ Token  3: a random extended token between 31 and 35

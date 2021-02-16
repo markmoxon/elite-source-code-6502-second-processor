@@ -116,7 +116,7 @@ ENDMACRO
 .ENTRY
 
  MVE DIALS, &7000, &E   \ Move the binary at DIALS (the dashboard background) to
-                        \ locations &7000-&7EFF in screen memory (14 pages)
+                        \ locations &7000-&7DFF in screen memory (14 pages)
 
 \MVE DATE, &6000, &1    \ This instruction is commented out in the original
                         \ course, but it would move the binary at DATE to

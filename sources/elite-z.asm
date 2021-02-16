@@ -568,7 +568,7 @@ NEXT
 
 \ ******************************************************************************
 \
-\       Name: I/O Variables
+\       Name: I/O variables
 \       Type: Workspace
 \    Address: &2C40 to &2C60
 \   Category: Workspaces
@@ -885,7 +885,7 @@ NEXT
  STA RDCHV              \ lets us implement all our custom OSRDCH commands
  LDA #HI(newosrdch)
  STA RDCHV+1
- 
+
  LDA #%00111001         \ Set 6522 System VIA interrupt enable register IER
  STA VIA+&4E            \ (SHEILA &4E) bits 0 and 3-5 (i.e. disable the Timer1,
                         \ CB1, CB2 and CA2 interrupts from the System VIA)
@@ -1305,7 +1305,7 @@ NEXT
 \ Other entry points:
 \
 \   sent                Turn the printer off and restore the USOSWRCH handler,
-\                       returning from the subroutine using a tail call   
+\                       returning from the subroutine using a tail call
 \
 \ ******************************************************************************
 
@@ -2566,7 +2566,7 @@ NEXT
  BNE LIlog6             \ closest possible answer to 256, i.e. 255, and jump to
                         \ LIlog6 to return the result (this BNE is effectively a
                         \ JMP as A is never zero)
- 
+
 .LIlog7
 
  LDA #0                 \ The numerator in the division is 0, so set A to 0 and
@@ -2686,7 +2686,7 @@ NEXT
                         \ pixels but plot the last one
 
  BNE LI130+6            \ If we get here then R must be 3, so jump to LI130+6 to
-                        \ skip plotting any of the pixels, but making sure we 
+                        \ skip plotting any of the pixels, but making sure we
                         \ join the routine just after the plotting instructions
 
 .LI190
@@ -2991,7 +2991,7 @@ NEXT
                         \ pixels but plot the last one
 
  BNE LI230+6            \ If we get here then R must be 3, so jump to LI230+6 to
-                        \ skip plotting any of the pixels, but making sure we 
+                        \ skip plotting any of the pixels, but making sure we
                         \ join the routine just after the plotting instructions
 
 .LI191
@@ -4850,7 +4850,7 @@ NEXT
 
  CLC                    \ Clear the C flag (as HL7 is called with the C flag
                         \ set, which this instruction reverts)
- 
+
  JMP HL8                \ Jump back to HL8, just after the instruction that
                         \ called HL7
 
@@ -4863,7 +4863,7 @@ NEXT
 
  CLC                    \ Clear the C flag (as HL9 is called with the C flag
                         \ set, which this instruction reverts)
- 
+
  JMP HL10               \ Jump back to HL10, just after the instruction that
                         \ called HL9
 
@@ -5621,7 +5621,6 @@ NEXT
  BEQ HA2                \ If byte #2 is zero, jump to HA2 to skip the following
                         \ as there is only one ship in the hanger
 
-                        
                         \ If we get here then there are multiple ships in the
                         \ hanger, so we also need to draw the horizontal line in
                         \ the gap between the ships
@@ -5848,7 +5847,7 @@ NEXT
 
  TXA                    \ Retrieve the value of A we stored above, so A now
                         \ contains the pixel mask again
- 
+
  AND #RED               \ Apply the pixel mask in A to a four-pixel block of
                         \ red pixels, so we now know which bits to set in screen
                         \ memory
@@ -6431,7 +6430,7 @@ ENDMACRO
 \
 \ Other entry points:
 \
-\   SAFE                Contains an RTS   
+\   SAFE                Contains an RTS
 \
 \ ******************************************************************************
 
