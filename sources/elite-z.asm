@@ -831,6 +831,7 @@ NEXT
 \       Type: Variable
 \   Category: Tube
 \    Summary: The lookup table for OSWRCH jump commands (128-147)
+\  Deep dive: 6502 Second Processor Tube communication
 \
 \ ------------------------------------------------------------------------------
 \
@@ -959,6 +960,7 @@ NEXT
 \       Type: Subroutine
 \   Category: Tube
 \    Summary: Reset the OSWRCH vector in WRCHV to point to USOSWRCH
+\  Deep dive: 6502 Second Processor Tube communication
 \
 \ ******************************************************************************
 
@@ -978,6 +980,7 @@ NEXT
 \   Category: Tube
 \    Summary: The custom OSWRCH routine for writing characters and implementing
 \             jump table commands
+\  Deep dive: 6502 Second Processor Tube communication
 \
 \ ------------------------------------------------------------------------------
 \
@@ -2447,6 +2450,7 @@ NEXT
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a line: Line has a shallow gradient, step right along x-axis
+\  Deep dive: Bresenham's line algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -2619,6 +2623,7 @@ NEXT
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a shallow line going right and up or left and down
+\  Deep dive: Bresenham's line algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -2898,6 +2903,7 @@ NEXT
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a shallow line going right and down or left and up
+\  Deep dive: Bresenham's line algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -3203,6 +3209,7 @@ NEXT
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a line: Line has a steep gradient, step up along y-axis
+\  Deep dive: Bresenham's line algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -3379,6 +3386,7 @@ NEXT
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a steep line going up and left or down and right
+\  Deep dive: Bresenham's line algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -3953,6 +3961,7 @@ NEXT
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a steep line going up and right or down and left
+\  Deep dive: Bresenham's line algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -5322,6 +5331,7 @@ NEXT
 \       Type: Subroutine
 \   Category: Tube
 \    Summary: The custom OSRDCH routine for reading characters
+\  Deep dive: 6502 Second Processor Tube communication
 \
 \ ------------------------------------------------------------------------------
 \
@@ -5945,6 +5955,7 @@ NEXT
 \       Type: Subroutine
 \   Category: Maths (Arithmetic)
 \    Summary: Calculate (P R) = 256 * A / Q
+\  Deep dive: Shift-and-subtract division
 \
 \ ------------------------------------------------------------------------------
 \
@@ -6060,6 +6071,7 @@ NEXT
 \       Type: Macro
 \   Category: Keyboard
 \    Summary: Scan the keyboard to see if a specific key is being pressed
+\  Deep dive: The key logger
 \
 \ ------------------------------------------------------------------------------
 \
@@ -6373,6 +6385,7 @@ ENDMACRO
 \       Type: Variable
 \   Category: Tube
 \    Summary: The lookup table for OSWORD jump commands (240-255)
+\  Deep dive: 6502 Second Processor Tube communication
 \
 \ ------------------------------------------------------------------------------
 \
@@ -6412,6 +6425,7 @@ ENDMACRO
 \       Type: Subroutine
 \   Category: Tube
 \    Summary: The custom OSWORD routine
+\  Deep dive: 6502 Second Processor Tube communication
 \
 \ ------------------------------------------------------------------------------
 \
@@ -6730,6 +6744,7 @@ ENDMACRO
 \       Type: Subroutine
 \   Category: Text
 \    Summary: Print a character at the text cursor by poking into screen memory
+\  Deep dive: Drawing text
 \
 \ ------------------------------------------------------------------------------
 \
@@ -7464,6 +7479,7 @@ ENDMACRO
 \       Type: Subroutine
 \   Category: Copy protection
 \    Summary: Implement the OSWORD 249 command (some copy protection)
+\  Deep dive: 6502 Second Processor Tube communication
 \
 \ ------------------------------------------------------------------------------
 \
@@ -7584,6 +7600,7 @@ ENDMACRO
 \       Type: Subroutine
 \   Category: Dashboard
 \    Summary: Update the dashboard: speed indicator
+\  Deep dive: The dashboard indicators
 \
 \ ------------------------------------------------------------------------------
 \
@@ -7637,6 +7654,7 @@ ENDMACRO
 \       Type: Subroutine
 \   Category: Dashboard
 \    Summary: Update the dashboard: pitch and roll indicators
+\  Deep dive: The dashboard indicators
 \
 \ ******************************************************************************
 
@@ -7701,6 +7719,7 @@ ENDMACRO
 \       Type: Subroutine
 \   Category: Dashboard
 \    Summary: Update the dashboard: four energy banks
+\  Deep dive: The dashboard indicators
 \
 \ ------------------------------------------------------------------------------
 \
@@ -7819,6 +7838,7 @@ ENDMACRO
 \       Type: Subroutine
 \   Category: Dashboard
 \    Summary: Update the dashboard: shields, fuel, laser & cabin temp, altitude
+\  Deep dive: The dashboard indicators
 \
 \ ******************************************************************************
 
@@ -8165,6 +8185,7 @@ ENDMACRO
 \       Type: Subroutine
 \   Category: Dashboard
 \    Summary: Update the roll or pitch indicator on the dashboard
+\  Deep dive: The dashboard indicators
 \
 \ ------------------------------------------------------------------------------
 \
