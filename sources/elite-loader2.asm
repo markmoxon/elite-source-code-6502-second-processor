@@ -49,9 +49,31 @@ OSBYTE = &FFF4          \ The address for the OSBYTE routine
 OSWORD = &FFF1          \ The address for the OSWORD routine
 OSCLI = &FFF7           \ The address for the OSCLI routine
 
-Z1 = &90                \ Temporary storage, used when moving code
+\ ******************************************************************************
+\
+\       Name: ZP
+\       Type: Workspace
+\    Address: &0090 to &0093
+\   Category: Workspaces
+\    Summary: Important variables used by the loader
+\
+\ ******************************************************************************
 
-Z2 = &92                \ Temporary storage, used when moving code
+ORG &0090
+
+.Z1
+
+ SKIP 2                 \ Temporary storage, used when moving code
+
+.Z2
+
+ SKIP 2                 \ Temporary storage, used when moving code
+
+\ ******************************************************************************
+\
+\ ELITE LOADER
+\
+\ ******************************************************************************
 
 CODE% = &2000
 LOAD% = &2000
