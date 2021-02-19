@@ -1474,7 +1474,7 @@ NEXT
 .DOBULB
 
  TAX                    \ If the parameter to the #DOBULB command is non-zero,
- BNE ECBLB              \ i.e. this is a #DOBULB 255 command, jump to EXBLB to
+ BNE ECBLB              \ i.e. this is a #DOBULB 255 command, jump to ECBLB to
                         \ draw the E.C.M. bulb instead
 
  LDA #16*8              \ The space station bulb is in character block number 48
@@ -1677,15 +1677,10 @@ NEXT
 \
 \       Name: DOT
 \       Type: Subroutine
-\   Category: Drawing pixels
+\   Category: Dashboard
 \    Summary: Implement the #DOdot command (draw a dot on the compass)
 \
 \ ------------------------------------------------------------------------------
-\
-\ This routine is run when the parasite sends a #DOdot command with parameters
-\ in the block at OSSC(1 0). It draws a dot on the compass.
-\
-\ The parameters match those put into the DOTpars block in the parasite.
 \
 \ Arguments:
 \
@@ -4969,6 +4964,7 @@ NEXT
 \       Type: Subroutine
 \   Category: Drawing pixels
 \    Summary: Implement the OSWORD 241 command (draw space view pixels)
+\  Deep dive: Drawing colour pixels in mode 5
 \
 \ ------------------------------------------------------------------------------
 \
@@ -6074,8 +6070,6 @@ NEXT
 \  Deep dive: The key logger
 \
 \ ------------------------------------------------------------------------------
-\
-\ Scan the keyboard to see if the key specified in A is currently being pressed.
 \
 \ Arguments:
 \
@@ -7520,8 +7514,8 @@ ENDMACRO
 
 .CLYNS
 
- LDA #20                \ Move the text cursor in YC to row 20
- STA YC
+ LDA #20                \ Move the text cursor to row 20, near the bottom of
+ STA YC                 \ the screen
 
  LDA #&6A               \ Set SC+1 = &6A, for the high byte of SC(1 0)
  STA SC+1

@@ -7399,7 +7399,8 @@ ENDIF
 
  LDA #15                \ Call OSBYTE with A = 15 and Y <> 0 to flush the input
  TAX                    \ buffers (i.e. flush the operating system's keyboard
- JMP OSBYTE             \ buffer)
+ JMP OSBYTE             \ buffer) and return from the subroutine using a tail
+                        \ call
 
 \ ******************************************************************************
 \
@@ -16044,6 +16045,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \       Type: Subroutine
 \   Category: Maths (Arithmetic)
 \    Summary: Calculate (P R) = 256 * A / Q
+\  Deep dive: Shift-and-subtract division
 \
 \ ------------------------------------------------------------------------------
 \
@@ -30577,6 +30579,9 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ boxed title at the top (i.e. we're going to use the
                         \ screen layout of a space view in the following)
 
+                        \ If the commander check below fails, we keep jumping
+                        \ back to here to crash the game with an infinite loop
+
  JSR CHECK              \ Call the CHECK subroutine to calculate the checksum
                         \ for the current commander block at NA%+8 and put it
                         \ in A
@@ -30600,6 +30605,12 @@ ENDIF
 \JSR BELL               \ This instruction is commented out in the original
                         \ source. It would make a standard system beep
 
+                        \ The checksum CHK is correct, so now we check whether
+                        \ CHK2 = CHK EOR A9, and if this check fails, bit 7 of
+                        \ the competition flags at COK gets set, to indicate
+                        \ to Acornsoft via the competition code that there has
+                        \ been some hacking going on with this competition entry
+
  EOR #&A9               \ X = checksum EOR &A9
  TAX
 
@@ -30620,7 +30631,7 @@ ENDIF
 
  STA COK                \ Store the updated competition flags in COK
 
- RTS                    \ Retirn from the subroutine
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -30969,10 +30980,17 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
+\ Get the commander's name for loading or saving a commander file. The name is
+\ stored in the INWK workspace and is terminated by a return character (13).
+\
+\ If ESCAPE is pressed or a blank name is entered, then the name stored is set
+\ to the name from the last saved commander block.
+\
 \ Returns:
 \
 \   INWK                The full filename, including drive and directory, in
-\                       the form ":0.E.JAMESON", for example
+\                       the form ":0.E.JAMESON", for example, terminated by a
+\                       return character (13)
 \
 \ ******************************************************************************
 
@@ -31015,10 +31033,12 @@ ENDIF
  LDA #9                 \ Reset the maximum length in RLINE+2 to the original
  STA RLINE+2            \ value of 9
 
- TYA                    \ Copy the length of the entered name into A
+ TYA                    \ The OSWORD call returns the length of the commander's
+                        \ name in Y, so transfer this to A
 
- BEQ TR1                \ If A = 0, no name was entered, so jump to TR1 to
-                        \ restore the original name from NA% to INWK+5
+ BEQ TR1                \ If A = 0, no name was entered, so jump to TR1 to copy
+                        \ the last saved commander's name from NA% to INWK
+                        \ and return from the subroutine there
 
  RTS                    \ Return from the subroutine
 
@@ -31092,7 +31112,8 @@ ENDIF
  EQUW INWK+5            \ The address to store the input, so the text entered
                         \ will be stored in INWK+5 as it is typed
 
- EQUB 9                 \ Maximum line length = 9
+ EQUB 9                 \ Maximum line length = 9, as that's the maximum size
+                        \ for a commander's name including a directory name
 
  EQUB '!'               \ Allow ASCII characters from "!" through to "{" in
  EQUB '{'               \ the input
