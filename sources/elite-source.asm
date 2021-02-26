@@ -847,10 +847,10 @@ ORG &0100
 \
 \ ELITE RECURSIVE TEXT TOKEN FILE
 \
-\ Produces the binary file WORDS.bin that gets loaded by elite-loader.asm.
+\ Produces the binary file WORDS.bin that gets loaded by elite-bcfs.asm.
 \
 \ The recursive token table is loaded at &81B0 and is moved down to &0400 as
-\ part of elite-loader2.asm. The table binary also includes the sine and arctan
+\ part of elite-source.asm. The table binary also includes the sine and arctan
 \ tables, so the three parts end up as follows:
 \
 \   * Recursive token table:    QQ18 = &0400 to &07C0
@@ -11341,7 +11341,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \ ships is shown half the time (the other half shows a solo ship), and each of
 \ the four groups is equally likely.
 \
-\ The the bytes for each ship in the group contain the following information:
+\ The bytes for each ship in the group contain the following information:
 \
 \   Byte #0             Non-zero = Ship type to draw
 \                       0        = don't draw anything
@@ -49330,7 +49330,7 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\       Name: SHIP_COBRA_MK1
+\       Name: SHIP_COBRA_MK_1
 \       Type: Variable
 \   Category: Drawing ships
 \    Summary: Ship blueprint for a Cobra Mk I
