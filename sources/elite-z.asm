@@ -238,7 +238,7 @@ ORG &2300
 \ ******************************************************************************
 \
 \       Name: FONT%
-\       Type: Variable
+\       Type: Workspace
 \   Category: Text
 \    Summary: A copy of the character definition bitmap table from the MOS ROM
 \

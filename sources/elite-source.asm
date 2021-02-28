@@ -3415,9 +3415,6 @@ ORG &8600
 \
 \ Produces the binary file ELTA.bin that gets loaded by elite-bcfs.asm.
 \
-\ The main game code (ELITE A through G, plus the ship data) is loaded at &1128
-\ and is moved down to &0F40 as part of elite-loader.asm.
-\
 \ ******************************************************************************
 
 CODE% = &1000
@@ -26874,7 +26871,7 @@ LOAD_E% = LOAD% + P% - CODE%
  STA STP                \ Set STP = A. STP is the step size for the circle, so
                         \ the above sets a smaller step size for bigger circles
 
-                        \ Fall through into CIRCLE2 to draw the circle with the
+                        \ Fall through into CIRCLE3 to draw the circle with the
                         \ correct step size
 
 \ ******************************************************************************
@@ -26904,6 +26901,11 @@ LOAD_E% = LOAD% + P% - CODE%
 \
 \   C flag              The C flag is cleared
 \
+\ Other entry points:
+\
+\   CIRCLE3             Just add the circle segments to the existing ball line
+\                       heap - do not send the send the ball line heap to the
+\                       I/O processor for drawing on-screen
 \ ******************************************************************************
 
 .CIRCLE3
@@ -30072,7 +30074,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \ ******************************************************************************
 \
 \       Name: brkd
-\       Type: Subroutine
+\       Type: Variable
 \   Category: Utility routines
 \    Summary: The brkd counter for error handling
 \
@@ -30304,15 +30306,14 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ have called it 127 times
 
  LDX #31                \ Set the screen to show all 31 text rows, which shows
- JSR DET1               \ the dashboard, and fall through into DEATH2 to reset
-                        \ and restart the game
+ JSR DET1               \ the dashboard
 
  JMP DEATH2             \ Jump to DEATH2 to reset and restart the game
 
 \ ******************************************************************************
 \
 \       Name: spasto
-\       Type: Subroutine
+\       Type: Variable
 \   Category: Universe
 \    Summary: Contains the address Coriolis space station's ship blueprint
 \
@@ -31413,7 +31414,7 @@ ENDIF
 \ ******************************************************************************
 \
 \       Name: stack
-\       Type: Subroutine
+\       Type: Variable
 \   Category: Save and load
 \    Summary: Temporary storage for the stack pointer when switching the BRKV
 \             handler between BRBR and MEBRK
