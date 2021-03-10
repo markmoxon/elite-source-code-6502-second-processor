@@ -74,7 +74,7 @@ PLT = 4                 \ Ship type for an alloy plate
 OIL = 5                 \ Ship type for a cargo canister
 AST = 7                 \ Ship type for an asteroid
 SPL = 8                 \ Ship type for a splinter
-SHU = 9                 \ Ship type for a shuttle
+SHU = 9                 \ Ship type for a Shuttle
 CYL = 11                \ Ship type for a Cobra Mk III
 ANA = 14                \ Ship type for an Anaconda
 HER = 15                \ Ship type for a rock hermit (asteroid)
@@ -98,7 +98,7 @@ JH = SHU+2              \ Junk is defined as ending before the Cobra Mk III
                         \
                         \ So junk is defined as the following: escape pod,
                         \ alloy plate, cargo canister, asteroid, splinter,
-                        \ shuttle, transporter
+                        \ Shuttle or Transporter
 
 PACK = SH3              \ The first of the eight pack-hunter ships, which tend
                         \ to spawn in groups. With the default value of PACK the
@@ -173,10 +173,10 @@ CYAN2   = %00111100     \ Two mode 2 pixels of colour 6    (cyan)
 WHITE2  = %00111111     \ Two mode 2 pixels of colour 7    (white)
 STRIPE  = %00100011     \ Two mode 2 pixels of colour 5, 1 (magenta/red)
 
-NRU% = 0                \ The number of planetary systems with special extended
-                        \ descriptions in the RUTOK table. The value of this
-                        \ variable is 0 in the original source, but this appears
-                        \ to be a bug, as it should be 26
+NRU% = 0                \ The number of planetary systems with extended system
+                        \ description overrides in the RUTOK table. The value of
+                        \ this variable is 0 in the original source, but this
+                        \ appears to be a bug, as it should really be 26
 
 VE = &57                \ The obfuscation byte used to hide the extended tokens
                         \ table from crackers viewing the binary code
@@ -3639,9 +3639,6 @@ LOAD_A% = LOAD%
                         \ commander lots of credits and equipment
 
  EQUB 0                 \ TP = Mission status, #0
-                        \
-                        \ Note that this byte must not have bit 7 set, or
-                        \ loading this commander will give an error
 
  EQUB 20                \ QQ0 = Current system X-coordinate (Lave), #1
  EQUB 173               \ QQ1 = Current system Y-coordinate (Lave), #2
@@ -6838,7 +6835,7 @@ ENDIF
  EQUW PAUSE2            \ Token 24: Wait for a key press
  EQUW BRIS              \ Token 25: Show incoming message screen, wait 2 seconds
  EQUW MT26              \ Token 26: Fetch line input from keyboard (filename)
- EQUW MT27              \ Token 27: Print mission 1 captain's name (217-219)
+ EQUW MT27              \ Token 27: Print mission captain's name (217-219)
  EQUW MT28              \ Token 28: Print mission 1 location hint (220-221)
  EQUW MT29              \ Token 29: Column 6, white text, lower case in words
  EQUW WHITETEXT         \ Token 30: White text
@@ -11455,7 +11452,7 @@ LOAD_C% = LOAD% +P% - CODE%
 
  JSR UNWISE             \ Call UNWISE, which does nothing in the 6502 Second
                         \ Processor version of Elite (this routine does have a
-                        \ function in the disc version but isn't required here,
+                        \ function in the disc version that isn't required here,
                         \ so the authors presumably just cleared out the UNWISE
                         \ routine rather than unplumbing it from the code)
 
@@ -11572,13 +11569,16 @@ LOAD_C% = LOAD% +P% - CODE%
                         \
                         \   * Random z-coordinate from +256 to +639
 
- LDY #0                 \ Set Y = 0 to send as byte #2 of the parameter block to
-                        \ the OSWORD 248 command below, to tell the I/O
-                        \ processor that there is just one ship in the hanger
+ LDY #0                 \ Set Y = 0 to use in the following instruction, to tell
+                        \ the hanger-drawing routine that there is just one ship
+                        \ in the hanger, so it knows not to draw between the
+                        \ ships
 
 .HA9
 
- STY HANG+2             \ Store Y in byte #2 of the parameter block below
+ STY HANG+2             \ Store Y in byte #2 of the parameter block to the
+                        \ OSWORD 248 command below, to specify whether there
+                        \ are multiple ships in the hanger
 
  JSR UNWISE             \ Call UNWISE, which (as noted above) does nothing in
                         \ the 6502 Second Processor version of Elite
@@ -11968,7 +11968,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \     (6.2% chance, up to a maximum of seven) and we're done
 \
 \   * If this is the space station and it is not hostile, consider spawning
-\     (0.8% chance if there are no transporters around) a transporter or shuttle
+\     (0.8% chance if there are no Transporters around) a Transporter or Shuttle
 \     (equal odds of each type) and we're done
 \
 \   * If this is a rock hermit, consider spawning (22% chance) a highly
@@ -12020,12 +12020,12 @@ LOAD_C% = LOAD% +P% - CODE%
  BNE TN5                \ station is hostile), jump to TN5 to spawn some cops
 
  LDA MANY+SHU+1         \ The station is not hostile, so check how many
- BNE TA1                \ transporters there are in the vicinity, and if we
+ BNE TA1                \ Transporters there are in the vicinity, and if we
                         \ already have one, return from the subroutine (as TA1
                         \ contains an RTS)
 
                         \ If we get here then the station is not hostile, so we
-                        \ can consider spawning a transporter or shuttle
+                        \ can consider spawning a Transporter or Shuttle
 
  JSR DORND              \ Set A and X to random numbers
 
@@ -12036,7 +12036,7 @@ LOAD_C% = LOAD% +P% - CODE%
 
  ADC #SHU-1             \ The C flag is set (as we didn't take the BCC above),
  TAX                    \ so this sets X to a value of either #SHU or #SHU + 1,
-                        \ which is the ship type for a shuttle or a transporter
+                        \ which is the ship type for a Shuttle or a Transporter
 
  BNE TN6                \ Jump to TN6 to spawn this ship type and return from
                         \ the subroutine using a tail call (this BNE is
@@ -12044,7 +12044,9 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .TN5
 
-                        \ If we get here then the station is hostile and we need
+                        \ We only call the tactics routine for the space station
+                        \ when it is hostile, so if we get here then this is the
+                        \ station, and we already know it's hostile, so we need
                         \ to spawn some cops
 
  JSR DORND              \ Set A and X to random numbers
@@ -13792,7 +13794,7 @@ LOAD_C% = LOAD% +P% - CODE%
 
  LDA TYPE               \ If the ship's type is < #CYL (i.e. a missile, Coriolis
  CMP #CYL               \ space station, escape pod, plate, cargo canister,
- BCC AN3                \ boulder, asteroid, splinter, shuttle or transporter),
+ BCC AN3                \ boulder, asteroid, splinter, Shuttle or Transporter),
                         \ then jump to AN3 to skip the following
 
  LDY #36                \ Set bit 2 of the ship's NEWB flags in byte #36 to
@@ -18383,6 +18385,11 @@ LOAD_D% = LOAD% + P% - CODE%
 
  JSR TTX69              \ Print a paragraph break and set Sentence Case
 
+                        \ By this point, ZZ contains the current system number
+                        \ which PDESC requires. It gets put there in the TT102
+                        \ routine, which calls TT111 to populate ZZ before
+                        \ calling TT25 (this routine)
+
  JMP PDESC              \ Jump to PDESC to print the system's extended
                         \ description, returning from the subroutine using a
                         \ tail call
@@ -20491,7 +20498,7 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ so return from the subroutine
 
  LDX #5                 \ We now want to copy those seeds into safehouse, so we
-                        \ so set a counter in Xto copy 6 bytes
+                        \ so set a counter in X to copy 6 bytes
 
 .sob
 
@@ -20517,7 +20524,9 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA QQ8+1              \ If the high byte of the distance to the selected
  BNE goTT147            \ system in QQ8 is > 0, then it is definitely too far to
                         \ jump (as our maximum range is 7.0 light years, or a
-                        \ value of 70 in QQ8(1 0)), so jump to goTT147 below
+                        \ value of 70 in QQ8(1 0)), so jump to TT147 via goTT147
+                        \ to print "RANGE?" and return from the subroutine using
+                        \ a tail call
 
  LDA QQ14               \ Fetch our current fuel level from Q114 into A
 
@@ -21342,12 +21351,15 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA QQ4                \ Set the current system's government in gov to the
  STA gov                \ selected system's government from QQ4
 
+                        \ Fall through into GVL to calculate the availability of
+                        \ market items in the new system
+
 \ ******************************************************************************
 \
 \       Name: GVL
 \       Type: Subroutine
 \   Category: Universe
-\    Summary: Calculate the availability of a market item
+\    Summary: Calculate the availability of market items
 \  Deep dive: Market item prices and availability
 \             Galaxy and system seeds
 \
@@ -22081,7 +22093,7 @@ LOAD_D% = LOAD% + P% - CODE%
  JSR msblob             \ Reset the dashboard's missile indicators so none of
                         \ them are targeted
 
- LDA #1                 \ Set A to 5 as the call to msblob will have overwritten
+ LDA #1                 \ Set A to 1 as the call to msblob will have overwritten
                         \ the original value, and we still need it set
                         \ correctly so we can continue through the conditional
                         \ statements for all the other equipment
@@ -24088,14 +24100,14 @@ LOAD_E% = LOAD% + P% - CODE%
  AND #%00000011         \ Extract bits 0-1 (which also help to determine the
                         \ economy), which will be between 0 and 3
 
- ADC #3                 \ Add 3 + C, to get a result between 3 and 7
+ ADC #3                 \ Add 3 + C, to get a result between 3 and 7, clearing
+                        \ the C flag in the process
 
  STA INWK+8             \ Store the result in z_sign in byte #6
 
- ROR A                  \ Halve A, rotating in the C flag, which was previously
- STA INWK+2             \ bit 0 of s0_hi + 6 + C, so when this is stored in both
- STA INWK+5             \ x_sign and y_sign, it moves the planet to the upper
-                        \ right or lower left
+ ROR A                  \ Halve A, rotating in the C flag (which is clear) and
+ STA INWK+2             \ store in both x_sign and y_sign, moving the planet to
+ STA INWK+5             \ the upper right
 
  JSR SOS1               \ Call SOS1 to set up the planet's data block and add it
                         \ to FRIN, where it will get put in the first slot as
@@ -24604,7 +24616,7 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ higher up on the compass, which has a smaller pixel
                         \ y-coordinate). So this calculation does this:
                         \
-                        \ COMY = 204 - X - (1 - 0) = 203 - X
+                        \   COMY = 204 - X - (1 - 0) = 203 - X
 
  LDA #WHITE2            \ Set A to white, the colour for when the planet or
                         \ station in the compass is in front of us
@@ -25174,13 +25186,12 @@ LOAD_E% = LOAD% + P% - CODE%
 
  CPX #JL                \ If JL <= X < JH, i.e. the type of ship we killed in X
  BCC NW7                \ is junk (escape pod, alloy plate, cargo canister,
- CPX #JH                \ asteroid, splinter, shuttle or transporter), then keep
+ CPX #JH                \ asteroid, splinter, Shuttle or Transporter), then keep
  BCS NW7                \ going, otherwise jump to NW7
 
 .gangbang
 
- INC JUNK               \ We're adding junk, or a rock hermit, so increase the
-                        \ junk counter
+ INC JUNK               \ We're adding junk, so increase the junk counter
 
 .NW7
 
@@ -25589,7 +25600,8 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ instructions
 
  JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
-                        \ processor for drawing on-screen
+                        \ processor for drawing on-screen, which redraws the
+                        \ planet and this removes it from the screen
 
  STZ LSP                \ Reset the ball line heap by setting the ball line heap
                         \ pointer to 0
@@ -28266,17 +28278,16 @@ LOAD_F% = LOAD% + P% - CODE%
 .lll
 
  CPX #HER               \ Did we just kill a rock hermit? If we did, jump to
- BEQ blacksuspenders    \ blacksuspenders to increase the junk count
+ BEQ blacksuspenders    \ blacksuspenders to decrease the junk count
 
  CPX #JL                \ If JL <= X < JH, i.e. the type of ship we killed in X
  BCC KS7                \ is junk (escape pod, alloy plate, cargo canister,
- CPX #JH                \ asteroid, splinter, shuttle or transporter), then keep
+ CPX #JH                \ asteroid, splinter, Shuttle or Transporter), then keep
  BCS KS7                \ going, otherwise jump to KS7
 
 .blacksuspenders
 
- DEC JUNK               \ We just killed junk, or a rock hermit, so decrease the
-                        \ junk counter
+ DEC JUNK               \ We just killed junk, so decrease the junk counter
 
 .KS7
 
@@ -29001,9 +29012,10 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \ This section covers the following:
 \
-\   * Spawn a trader, i.e. a Cobra Mk III, Python, Boa or Anaconda, with one
-\     missile, a 50% chance of having an E.C.M., a 50% chance of being hostile,
-\     a speed between 16 and 31, and a gentle clockwise roll
+\   * Spawn a trader, i.e. a Cobra Mk III, Python, Boa or Anaconda, with a 50%
+\     chance of it having a missile, a 50% chance of it having an E.C.M., a 50%
+\     chance of it docking and being aggressive if attacked, a speed between 16
+\     and 31, and a gentle clockwise roll
 \
 \ We call this from within the main loop.
 \
@@ -29013,7 +29025,8 @@ LOAD_F% = LOAD% + P% - CODE%
 
  JSR DORND              \ Set A and X to random numbers
 
- LSR A                  \ Clear bit 7 of our random number in A
+ LSR A                  \ Clear bit 7 of our random number in A and set the C
+                        \ flag to bit 0 of A, which os random
 
  STA INWK+32            \ Store this in the ship's AI flag, so this ship does
                         \ not have AI
@@ -29022,8 +29035,9 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ clockwise roll (as bit 7 is clear), and a 1 in 127
                         \ chance of it having no damping
 
- ROL INWK+31            \ Set bit 0 of missile count (as we know the C flag is
-                        \ set), giving the ship one missile
+ ROL INWK+31            \ Set bit 0 of the ship's missile count ramdomly (as the
+                        \ C flag was set), giving the ship either no missiles or
+                        \ one missile
 
  AND #31                \ Set the ship speed to our random number, set to a
  ORA #16                \ minimum of 16 and a maximum of 31
@@ -29534,7 +29548,7 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ hunters, namely a Sidewinder, Mamba, Krait, Adder,
                         \ Gecko, Cobra Mk I, Worm or Cobra Mk III (pirate)
 
- JSR NWSHP              \ Add a new ship of type A to the local bubble
+ JSR NWSHP              \ Try adding a new ship of type A to the local bubble
 
  DEC XX13               \ Decrement the pirate counter
 
@@ -29723,9 +29737,11 @@ LOAD_F% = LOAD% + P% - CODE%
 
  CMP #f6                \ If red key f6 was pressed, call TT111 to select the
  BNE TT92               \ system nearest to galactic coordinates (QQ9, QQ10)
- JSR TT111              \ (the location of the chart crosshairs) and jump to
- JMP TT25               \ TT25 to show the Data on System screen, returning
-                        \ from the subroutine using a tail call
+ JSR TT111              \ (the location of the chart crosshairs) and set ZZ to
+ JMP TT25               \ the system number, and then jump to TT25 to show the
+                        \ Data on System screen (along with an extended system
+                        \ description for the system in ZZ if we're docked),
+                        \ returning from the subroutine using a tail call
 
 .TT92
 
@@ -29758,7 +29774,8 @@ LOAD_F% = LOAD% + P% - CODE%
  CMP #&47               \ If "@" was not pressed, skip to nosave
  BNE nosave
 
- JSR SVE                \ "@" was pressed, so call SVE to show the disc menu
+ JSR SVE                \ "@" was pressed, so call SVE to show the disc access
+                        \ menu
 
  BCC P%+5               \ If the C flag was set by SVE, then we loaded a new
  JMP QU5                \ commander file, so jump to QU5 to restart the game
@@ -29836,8 +29853,8 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA T1                 \ Restore the original value of A (the key that's been
                         \ pressed) from T1
 
- CMP #&36               \ If "O" was pressed, do the following three JSRs,
- BNE ee2                \ otherwise jump to ee2 to skip the following
+ CMP #&36               \ If "O" was pressed, do the following three jumps,
+ BNE ee2                \ otherwise skip to ee2 to continue
 
  JSR TT103              \ Draw small crosshairs at coordinates (QQ9, QQ10),
                         \ which will erase the crosshairs currently there
@@ -30413,10 +30430,10 @@ LOAD_F% = LOAD% + P% - CODE%
 
 \ ******************************************************************************
 \
-\       Name: BR1
+\       Name: BR1 (Part 1 of 2)
 \       Type: Subroutine
 \   Category: Start and end
-\    Summary: Restart the game
+\    Summary: Start or restart the game
 \
 \ ------------------------------------------------------------------------------
 \
@@ -30435,8 +30452,10 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA #3                 \ Move the text cursor to column 3
  JSR DOXC
 
- LDX #3                 \ Disable the ESCAPE key and clear memory if the BREAK
- JSR FX200              \ key is pressed (*FX 200,3)
+ LDX #3                 \ Set X = 3 for the call to FX200
+
+ JSR FX200              \ Disable the ESCAPE key and clear memory if the BREAK
+                        \ key is pressed (*FX 200,3)
 
  LDX #CYL               \ Call TITLE to show a rotating Cobra Mk III (#CYL) and
  LDA #6                 \ token 6 ("LOAD NEW {single cap}COMMANDER {all caps}
@@ -30464,6 +30483,19 @@ LOAD_F% = LOAD% + P% - CODE%
  JSR DFAULT             \ Call DFAULT to reset the current commander data block
                         \ to the last saved commander
 
+\ ******************************************************************************
+\
+\       Name: BR1 (Part 2 of 2)
+\       Type: Subroutine
+\   Category: Start and end
+\    Summary: Show the "Load New Commander (Y/N)?" screen and start the game
+\
+\ ------------------------------------------------------------------------------
+\
+\ BRKV is set to point to BR1 by elite-loader.asm.
+\
+\ ******************************************************************************
+
  JSR msblob             \ Reset the dashboard's missile indicators so none of
                         \ them are targeted
 
@@ -30474,9 +30506,6 @@ LOAD_F% = LOAD% + P% - CODE%
 
  JSR ping               \ Set the target system coordinates (QQ9, QQ10) to the
                         \ current system coordinates (QQ0, QQ1) we just loaded
-
-                        \ The rest of this routine is almost identical to the
-                        \ hyp routine in the cassette version
 
  JSR TT111              \ Select the system closest to galactic coordinates
                         \ (QQ9, QQ10)
@@ -30489,8 +30518,8 @@ LOAD_F% = LOAD% + P% - CODE%
                         \ 6 bytes (for three 16-bit seeds)
 
                         \ The label below is called likeTT112 because this code
-                        \ is almost identical to the TT112 loop in the hyp
-                        \ routine in the cassette version
+                        \ is almost identical to the TT112 loop in the hyp1
+                        \ routine
 
 .likeTT112
 
@@ -30516,6 +30545,8 @@ LOAD_F% = LOAD% + P% - CODE%
 
  LDA QQ4                \ Set the current system's government in gov to the
  STA gov                \ selected system's government from QQ4
+
+                        \ Fall through into the docking bay routine below
 
 \ ******************************************************************************
 \
@@ -30831,9 +30862,12 @@ ENDIF
                         \ button is pressed, otherwise it is set, so AND'ing
                         \ the value of IRB with %10000 extracts this bit
 
- TAX                    \ Copy the joystick fire button state to X
+ TAX                    \ Copy the joystick fire button state to X, though this
+                        \ instruction has no effect, as the comparison flags are
+                        \ already set by the AND and the value of X is not used
+                        \ anywhere
 
- BEQ TL2                \ If the joystick fire button is pressed, jump to BL2
+ BEQ TL2                \ If the joystick fire button is pressed, jump to TL2
 
  LDA KTRAN              \ Fetch the internal key number of the current key
                         \ press from the key logger buffer
@@ -31069,8 +31103,7 @@ ENDIF
  LDA #VIAE              \ Send a #VIAE %10000001 command to the I/O processor to
  JSR OSWRCH             \ clear 6522 System VIA interrupt enable register IER
  LDA #%10000001         \ (SHEILA &4E) bit 1 (i.e. enable the CA2 interrupt,
-                        \ which comes from the keyboard)
- JSR OSWRCH
+ JSR OSWRCH             \ which comes from the keyboard)
 
  LDY #8                 \ Wait for 8/50 of a second (0.16 seconds)
  JSR DELAY
@@ -31464,7 +31497,7 @@ ENDIF
  JSR backtonormal       \ Disable the keyboard and set the SVN flag to 0
 
  TAY                    \ The call to backtonormal sets A to 0, so this sets Y
-                        \ to 0, which use as a loop counter below
+                        \ to 0, which we use as a loop counter below
 
  LDA #7                 \ Set A = 7 to generate a beep before we print the error
                         \ message
@@ -31477,8 +31510,8 @@ ENDIF
 
  INY                    \ Increment the loop counter
 
- BEQ retry              \ If A = 0 then we have reached the end of the error
-                        \ message, so jump to retry to wait for a key press and
+ BEQ retry              \ If Y = 0 then we have worked our way through a whole
+                        \ page, so jump to retry to wait for a key press and
                         \ display the disc access menu (this BEQ is effectively
                         \ a JMP, as we didn't take the BNE branch above)
 
@@ -32425,7 +32458,7 @@ ENDIF
 
  LDX JUNK               \ Set X to the total number of junk items in the
                         \ vicinity (e.g. asteroids, escape pods, cargo
-                        \ canisters, shuttles, transportes and so pn)
+                        \ canisters, Shuttles, Transporters and so pn)
 
  LDA FRIN+2,X           \ If the slot at FRIN+2+X is non-zero, then we have
                         \ something else in the vicinity besides asteroids,
@@ -32778,9 +32811,12 @@ ENDIF
 
                         \ So, by this point, if any of bits 0-6 of z_sign are
                         \ non-zero, which means the ship is a long way away,
-                        \ then A will be set to 0 rather than z_hi, and the
-                        \ SOUND amplitude below will be -15 (%11110001), or
-                        \ full volume... which seems a little odd
+                        \ then A will be set to 0 rather than z_hi and the next
+                        \ instruction gets skipped, so we end up with a volume
+                        \ of 0. This fixes a bug in the other versions which
+                        \ ignore the value of z_sign when calculating explosion
+                        \ volumne, which means very distant ships can still be
+                        \ heard
 
  LDA INWK+7             \ Fetch z_hi, the distance of the ship being hit in
  LSR A                  \ terms of the z-axis (in and out of the screen), and
@@ -33321,7 +33357,7 @@ ENDIF
 
 .DOKEY
 
- LDA NEEDKEY            \ If NEEDKEY is zero, skip the next insruction
+ LDA NEEDKEY            \ If NEEDKEY is zero, skip the next instruction
  BEQ P%+5
 
  JSR RDKEY              \ NEEDKEY is non-zero, so call RDKEY to ask the I/O
@@ -33669,7 +33705,7 @@ ENDIF
 
 .DKL1
 
- LDX KYTB,Y             \ Get the internal key value of the Y-th flight key
+ LDX KYTB,Y             \ Get the internal key number of the Y-th flight key
                         \ the KYTB keyboard table
 
  CPX KL                 \ We stored the key that's being pressed in KL above,
@@ -33802,7 +33838,7 @@ ENDIF
                         \ of the key pressed
 
  LDA TRANTABLE,Y        \ TRANTABLE points to the MOS key translation table,
-                        \ which is used to translate internal key values to
+                        \ which is used to translate internal key numbers to
                         \ ASCII, so this fetches the key's ASCII code into A
 
  LDY YSAV               \ Restore the original value of Y we stored above
@@ -35068,7 +35104,7 @@ ENDIF
  ORA K3+1               \ If either of the high bytes of the screen coordinates
  BNE nono               \ are non-zero, jump to nono as the ship is off-screen
 
- LDA K4                 \ Set A = y-coordinate of dot
+ LDA K4                 \ Set A = the y-coordinate of the dot
 
  CMP #Y*2-2             \ If the y-coordinate is bigger than the y-coordinate of
  BCS nono               \ the bottom of the screen, jump to nono as the ship's
@@ -35095,7 +35131,7 @@ ENDIF
  STA XX1+31
 
  LDA #9                 \ Set A = 9 so when we call LL18+2 next, byte #0 of the
-                        \ heap gets set to 9, to cover the 8 bytes we just stuck
+                        \ heap gets set to 9, to cover the 9 bytes we just stuck
                         \ on the heap
 
  JMP LL81+2             \ Call LL81+2 to draw the ship's dot, returning from the
@@ -43240,7 +43276,7 @@ ENDMACRO
  EJMP 2                 \                {sentence case}
  ECHR 'G'               \                GREETINGS {single cap}COMMANDER
  ETWO 'R', 'E'          \                {commander name}, I {lower case}AM
- ETWO 'E', 'T'          \                {sentence case} CAPTAIN {mission 1
+ ETWO 'E', 'T'          \                {sentence case} CAPTAIN {mission
  ETWO 'I', 'N'          \                captain's name} {lower case}OF{sentence
  ECHR 'G'               \                case} HER MAJESTY'S SPACE NAVY{lower
  ECHR 'S'               \                case} AND {single cap}I BEG A MOMENT OF
@@ -43594,7 +43630,7 @@ ENDMACRO
  EJMP 2                 \                {sentence case}
  ECHR ' '               \                  ATTENTION {single cap}COMMANDER
  ECHR ' '               \                {commander name}, I {lower case}AM
- ETWO 'A', 'T'          \                {sentence case} CAPTAIN {mission 1
+ ETWO 'A', 'T'          \                {sentence case} CAPTAIN {mission
  ECHR 'T'               \                captain's name} {lower case}OF{sentence
  ETWO 'E', 'N'          \                case} HER MAJESTY'S SPACE NAVY{lower
  ETWO 'T', 'I'          \                case}. {single cap}WE HAVE NEED OF YOUR
@@ -46221,7 +46257,7 @@ ENDMACRO
 \       Name: RUPLA
 \       Type: Variable
 \   Category: Text
-\    Summary: System numbers that have special extended decriptions
+\    Summary: System numbers that have extended decription overrides
 \  Deep dive: Extended system descriptions
 \             Extended text tokens
 \
@@ -46282,21 +46318,21 @@ ENDIF
 \       Name: RUGAL
 \       Type: Variable
 \   Category: Text
-\    Summary: The criteria for systems with special extended descriptions
+\    Summary: The criteria for systems with extended decription overrides
 \  Deep dive: Extended system descriptions
 \             Extended text tokens
 \
 \ ------------------------------------------------------------------------------
 \
-\ This table contains the criteria for printing a special extended description
+\ This table contains the criteria for printing an extended decription override
 \ for a system. The galaxy number is in bits 0-6, while bit 7 determines whether
 \ to show this token during mission 1 only (bit 7 is clear, i.e. a value of &0x
 \ in the table below), or all of the time (bit 7 is set, i.e. a value of &8x in
 \ the table below).
 \
-\ In other words, Teorge, Arredi, Anreer and Lave have special extended
-\ descriptions that are always shown, while the rest only appear when mission 1
-\ is in progress.
+\ In other words, Teorge, Arredi, Anreer and Lave have extended decription
+\ overrides descriptions that are always shown, while the rest only appear when
+\ mission 1 is in progress.
 \
 \ The three variables work as follows:
 \
@@ -46356,7 +46392,7 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ Contains the tokens for special extended descriptions of systems that match
+\ Contains the tokens for extended description overrides of systems that match
 \ the system number in RUPLA and the conditions in RUGAL.
 \
 \ The three variables work as follows:
@@ -47338,8 +47374,8 @@ ORG CODE_SHIPS%
 \
 \    * Bit 6: Cop flag (0 = not a cop, 1 = cop)
 \
-\             If we destroy a cop, then we instantly becoime a fugitive (the
-\             transporter isn't actually a cop, but it's clearly under police
+\             If we destroy a cop, then we instantly become a fugitive (the
+\             Transporter isn't actually a cop, but it's clearly under police
 \             protection)
 \
 \             Viper, Transporter
@@ -48130,7 +48166,7 @@ ENDMACRO
 \       Name: SHIP_SHUTTLE
 \       Type: Variable
 \   Category: Drawing ships
-\    Summary: Ship blueprint for a shuttle
+\    Summary: Ship blueprint for a Shuttle
 \  Deep dive: Ship blueprints
 \
 \ ******************************************************************************
@@ -48230,7 +48266,7 @@ ENDMACRO
 \       Name: SHIP_TRANSPORTER
 \       Type: Variable
 \   Category: Drawing ships
-\    Summary: Ship blueprint for a transporter
+\    Summary: Ship blueprint for a Transporter
 \  Deep dive: Ship blueprints
 \
 \ ******************************************************************************

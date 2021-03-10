@@ -1079,7 +1079,7 @@ NEXT
 \   A                   The number of text rows to display on the screen (24
 \                       will hide the dashboard, 31 will make it reappear)
 \
-\ Returns
+\ Returns:
 \
 \   A                   A is set to 6
 \
@@ -6798,12 +6798,12 @@ ENDMACRO
  TAY                    \ Set Y = the character to be printed
 
  BEQ RR4S               \ If the character is zero, which is typically a string
-                        \ terminator character jump down to RR4 (via the JMP in
+                        \ terminator character, jump down to RR4 (via the JMP in
                         \ RR4S) to restore the registers and return from the
                         \ subroutine using a tail call
 
  CMP #11                \ If this is control code 11 (clear screen), jump to cls
- BEQ cls                \ ro clear the top part of the screen, draw a white
+ BEQ cls                \ to clear the top part of the screen, draw a white
                         \ border and return from the subroutine via RR4
 
  CMP #7                 \ If this is not control code 7 (beep), skip the next
