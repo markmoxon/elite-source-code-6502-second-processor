@@ -16712,6 +16712,8 @@ LOAD_C% = LOAD% +P% - CODE%
 \                       centre point, draining energy or heating up. This has
 \                       the effect of removing the lines from the screen
 \
+\   LASLI-1             Contains an RTS
+\
 \ ******************************************************************************
 
 .LASLI
@@ -29270,6 +29272,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \     bad
 \
 \   * Very rarely, consider spawning a Thargoid, or vanishingly rarely, a Cougar
+\
 \ ******************************************************************************
 
 .MTT1
