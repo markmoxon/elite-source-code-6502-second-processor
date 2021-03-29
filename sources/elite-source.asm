@@ -429,7 +429,7 @@ ORG &0000
  SKIP 1                 \ Temporary storage, typically used for y-coordinates in
                         \ line-drawing routines
 
- SKIP 2                 \ The last 2 bytes of the XX15 block
+ SKIP 2                 \ The last two bytes of the XX15 block
 
 .XX12
 
@@ -762,7 +762,7 @@ ORG &0000
 
 .XX14
 
- SKIP 1                 \ This byte is unused
+ SKIP 1                 \ This byte appears to be unused
 
 .RAT
 
@@ -800,7 +800,7 @@ ORG &0000
                         \ of the in-flight message in MESS, so it can be erased
                         \ from the screen at the correct time
 
-ORG &D1
+ORG &00D1
 
 .T
 
@@ -2168,12 +2168,12 @@ ENDIF
 
 IF _SNG45
 
- EQUB 0, 0              \ These bytes are unused and just contain noise
+ EQUB 0, 0              \ These bytes appear to be unused and just contain noise
  EQUB &E4, &63, &A5
 
 ELIF _SOURCE_DISC
 
- SKIP 4                 \ These bytes are unused
+ SKIP 4                 \ These bytes appear to be unused
 
 ENDIF
 
@@ -2534,8 +2534,9 @@ ORG &0800
                         \
                         \ CABTMP shares a location with MANY, but that's OK as
                         \ MANY+0 would contain the number of ships of type 0,
-                        \ but as there is no ship type 0 (they start at 1), MANY
-                        \ is unused
+                        \ and as there is no ship type 0 (they start at 1), the
+                        \ byte at MANY+0 is not used for storing a ship type
+                        \ and can be used for the cabin temperature instead
 
 .LAS2
 
@@ -2699,11 +2700,11 @@ ORG &0800
                         \ movement
 .XSAV2
 
- SKIP 1                 \ This byte is unused in this version of Elite
+ SKIP 1                 \ This byte appears to be unused
 
 .YSAV2
 
- SKIP 1                 \ This byte is unused in this version of Elite
+ SKIP 1                 \ This byte appears to be unused
 
 .NAME
 
@@ -2817,8 +2818,8 @@ ORG &0800
                         \       (0 = pulse or mining laser) or is always on
                         \       (1 = beam or military laser)
 
- SKIP 2                 \ These bytes are unused (they were originally used for
-                        \ up/down lasers, but they were dropped)
+ SKIP 2                 \ These bytes appear to be unused (they were originally
+                        \ used for up/down lasers, but they were dropped)
 
 .CRGO
 
@@ -2901,7 +2902,7 @@ ORG &0800
                         \
                         \   * &FF = fitted
 
- SKIP 4                 \ These bytes are unused
+ SKIP 4                 \ These bytes appear to be unused
 
 .NOMSL
 
@@ -3183,7 +3184,7 @@ ORG &0D00
                         \   * &FF indicates the sun line heap is empty
                         \
                         \   * Otherwise the LSO heap contains the line data for
-                        \     the sun, starting with this byte
+                        \     the sun
 
 .LSO
 
@@ -3207,6 +3208,7 @@ ORG &0D00
 
  SKIP NOST + 1          \ This is where we store the x_lo coordinates for all
                         \ the stardust particles
+
 .SY
 
  SKIP NOST + 1          \ This is where we store the y_hi coordinates for all
@@ -3237,7 +3239,7 @@ ORG &0D00
 
 .XX24
 
- SKIP 1                 \ This byte is unused
+ SKIP 1                 \ This byte appears to be unused
 
 .ALTIT
 
@@ -3343,69 +3345,69 @@ ORG &8600
 
 .X1TB
 
- SKIP &100              \ The x-coordinates of the start points for character
+ SKIP 256               \ The x-coordinates of the start points for character
                         \ lines in the scroll text (as space coordinates)
 
 .Y1TB
 
- SKIP &100              \ The y-coordinates of the start points for character
+ SKIP 256               \ The y-coordinates of the start points for character
                         \ lines in the scroll text
 
 .X2TB
 
- SKIP &100              \ The x-coordinates of the end points for character
+ SKIP 256               \ The x-coordinates of the end points for character
                         \ lines in the scroll text
 
 .Y2TB
 
- SKIP &100              \ The y-coordinates of the end points for character
+ SKIP 256               \ The y-coordinates of the end points for character
                         \ lines in the scroll text
 
 .X1UB
 
- SKIP &100              \ The x-coordinates of the start points for character
+ SKIP 256               \ The x-coordinates of the start points for character
                         \ lines in the scroll text (as projected screen
                         \ coordinates)
 
 .Y1UB
 
- SKIP &100              \ The y-coordinates of the start points for character
+ SKIP 256               \ The y-coordinates of the start points for character
                         \ lines in the scroll text (as projected screen
                         \ coordinates)
 
 .X2UB
 
- SKIP &100              \ The x-coordinates of the end points for character
+ SKIP 256               \ The x-coordinates of the end points for character
                         \ lines in the scroll text (as projected screen
                         \ coordinates)
 
 .Y2UB
 
- SKIP &100              \ The y-coordinates of the end points for character
+ SKIP 256               \ The y-coordinates of the end points for character
                         \ lines in the scroll text (as projected screen
                         \ coordinates)
 
 .X1VB
 
- SKIP &100              \ The x-coordinates of the start points for the previous
+ SKIP 256               \ The x-coordinates of the start points for the previous
                         \ set of character lines in the scroll text (as
                         \ projected screen coordinates) so they can be erased
 
 .Y1VB
 
- SKIP &100              \ The y-coordinates of the start points for the previous
+ SKIP 256               \ The y-coordinates of the start points for the previous
                         \ set of character lines in the scroll text (as
                         \ projected screen coordinates) so they can be erased
 
 .X2VB
 
- SKIP &100              \ The x-coordinates of the end points for the previous
+ SKIP 256               \ The x-coordinates of the end points for the previous
                         \ set of character lines in the scroll text (as
                         \ projected screen coordinates) so they can be erased
 
 .Y2VB
 
- SKIP &100              \ The y-coordinates of the end points for the previous
+ SKIP 256               \ The y-coordinates of the end points for the previous
                         \ set of character lines in the scroll text (as
                         \ projected screen coordinates) so they can be erased
 
@@ -3454,7 +3456,7 @@ LOAD_A% = LOAD%
                         \
                         \   * 0 = sound is on (default)
                         \
-                        \   * &10 = sound is off
+                        \   * Non-zero = sound is off
                         \
                         \ Toggled by pressing "S" when paused, see the DK4
                         \ routine for details
@@ -3557,9 +3559,9 @@ LOAD_A% = LOAD%
 
 .CATF
 
- SKIP 1                 \ This byte is unused (the CATF variable in the I/O
-                        \ processor code is used to store the CATF flag, not
-                        \ this one)
+ SKIP 1                 \ This byte appears to be unused (the CATF variable in
+                        \ the I/O processor code is used to store the CATF flag,
+                        \ not this one)
 
 .ZIP
 
@@ -3667,8 +3669,9 @@ ENDIF
 
  EQUB 0                 \ LASER+3 = Right laser, #19
 
- EQUW 0                 \ These bytes are unused (they were originally used for
-                        \ up/down lasers, but they were dropped), #20-21
+ EQUW 0                 \ These bytes appear to be unused (they were originally
+                        \ used for up/down lasers, but they were dropped),
+                        \ #20-21
 
  EQUB 22+(15 AND Q%)    \ CRGO = Cargo capacity, #22
 
@@ -3704,7 +3707,7 @@ ENDIF
 
  EQUB Q%                \ ESCP = Escape pod, #46
 
- EQUD 0                 \ These four bytes are unused, #47-50
+ EQUD 0                 \ These four bytes appear to be unused, #47-50
 
  EQUB 3+(Q% AND 1)      \ NOMSL = Number of missiles, #51
 
@@ -7045,7 +7048,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP &100
+ SKIP 256               \ The ball line heap for storing x-coordinates (see the
+                        \ deep dive on "The ball line heap" for details)
 
 ENDIF
 
@@ -7071,7 +7075,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP &100
+ SKIP 256               \ The ball line heap for storing y-coordinates (see the
+                        \ deep dive on "The ball line heap" for details)
 
 ENDIF
 
@@ -7376,7 +7381,7 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP &100
+ SKIP 256
 
 ENDIF
 
@@ -7678,7 +7683,7 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP &100
+ SKIP 256
 
 ENDIF
 
@@ -8059,7 +8064,7 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP &100              \ The pixel buffer to send with this command
+ SKIP 256               \ The pixel buffer to send with this command
 
 ENDIF
 
@@ -8279,13 +8284,6 @@ ENDIF
 \ ******************************************************************************
 
 .STARS
-
-\LDA #&FF               \ These instructions are commented out in the original
-\STA COL                \ source, but they would set the stardust colour to
-                        \ white. That said, COL is only used when updating the
-                        \ dashboard, so this would have no effect - perhaps it's
-                        \ left over from experiments with a colour top part of
-                        \ the screen? Who knows...
 
  LDX VIEW               \ Load the current view into X:
                         \
@@ -9877,7 +9875,7 @@ ENDIF
 \   & 17 48 76 E8 00
 \
 \ The TENS variable contains the lowest four bytes in this number, with the
-\ least significant byte first, i.e. 00 E8 76 48. This value is used in the
+\ most significant byte first, i.e. 48 76 E8 00. This value is used in the
 \ BPRNT routine when working out which decimal digits to print when printing a
 \ number.
 \
@@ -11389,9 +11387,6 @@ LOAD_C% = LOAD% +P% - CODE%
                         \ Hanger group for X = 18
                         \
                         \ Viper (right) and Krait (left)
-                        \
-                        \ (This group consists of a Transporter and Cobra Mk III
-                        \ in the disc version)
 
  EQUB COPS              \ Ship type = COPS = Viper
  EQUB %01100000         \ x_hi = %01100000 =  96, z_hi   = 1    -> x = +96
@@ -16755,7 +16750,7 @@ LOAD_C% = LOAD% +P% - CODE%
 IF _SNG45
 
  DEC LASY               \ Decrement the y-coordinate of the centre point to move
-                        \ it up the screen by a line for the first set of lines,
+                        \ it up the screen by a pixel for the top set of lines,
                         \ so the wider set of lines aim slightly higher than the
                         \ narrower set
 
@@ -17141,8 +17136,8 @@ ENDIF
                         \ and set the current view type in QQ11 to 1
 
  LDA #64                \ Set the main loop counter to 64, so the ship rotates
-                        \ for 64 iterations through MVEIT
- STA MCNT
+ STA MCNT               \ for 64 iterations through MVEIT
+ 
 
 .BRL1
 
@@ -18601,13 +18596,12 @@ LOAD_D% = LOAD% + P% - CODE%
  LDX QQ15+3             \ Fetch the s1_hi seed into X, which gives us the
                         \ galactic x-coordinate of this system
 
- LDY QQ15+4             \ Fetch the s2_lo seed and clear all the bits apart
- TYA                    \ from bits 4 and 6, storing the result in ZZ to give a
- ORA #%01010000         \ random number out of 0, &10, &40 or &50 (but which
- STA ZZ                 \ will always be the same for this system). We use this
-                        \ value to determine the size of the point for this
-                        \ system on the chart by passing it as the distance
-                        \ argument to the PIXEL routine below
+ LDY QQ15+4             \ Fetch the s2_lo seed and set bits 4 and 6, storing the
+ TYA                    \ result in ZZ to give a random number between 80 and
+ ORA #%01010000         \ (but which will always be the same for this system).
+ STA ZZ                 \ We use this value to determine the size of the point
+                        \ for this system on the chart by passing it as the
+                        \ distance argument to the PIXEL routine below
 
  LDA QQ15+1             \ Fetch the s0_hi seed into A, which gives us the
                         \ galactic y-coordinate of this system
@@ -19772,12 +19766,12 @@ LOAD_D% = LOAD% + P% - CODE%
  SEC                    \ crosshairs (QQ9) and the current system (QQ0)
  SBC QQ0
 
- CMP #38                \ If the horizontal distance in A is < 38, then the
+ CMP #38                \ If the horizontal distance in A < 38, then the
  BCC TT179              \ crosshairs are close enough to the current system to
                         \ appear in the Short-range Chart, so jump to TT179 to
                         \ check the vertical distance
 
- CMP #230               \ If the horizontal distance in A is < -26, then the
+ CMP #230               \ If the horizontal distance in A < -26, then the
  BCC TT180              \ crosshairs are too far from the current system to
                         \ appear in the Short-range Chart, so jump to TT180 to
                         \ return from the subroutine (as TT180 contains an RTS)
@@ -20463,9 +20457,9 @@ LOAD_D% = LOAD% + P% - CODE%
 
  RTS                    \ The count is non-zero, so return from the subroutine
 
- LDA #CYAN              \ The count is zero, send a #SETCOL CYAN command to the
- JSR DOCOL              \ I/O processor to switch to colour 3, which is cyan in
-                        \ the space view
+ LDA #CYAN              \ The count is zero, so send a #SETCOL CYAN command to
+ JSR DOCOL              \ the I/O processor to switch to colour 3, which is cyan
+                        \ in the space view
 
  JSR CTRL               \ Scan the keyboard to see if CTRL is currently pressed
 
@@ -21134,7 +21128,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT16a
 
- LDA #&67               \ Load a "k" character into A
+ LDA #'g'               \ Load a "g" character into A
 
  JMP TT26               \ Print the character, using TT216 so that it doesn't
                         \ change the character case, and return from the
@@ -21535,8 +21529,8 @@ LOAD_D% = LOAD% + P% - CODE%
  JSR GTHG               \ Call GTHG to spawn a Thargoid ship
 
  LDA #3                 \ Fetch the number of Thargoid ships from MANY+THG, and
- CMP MANY+THG           \ if it is less than 3, loop back to MJP1 to spawn
- BCS MJP1               \ another one, until we have three Thargoids
+ CMP MANY+THG           \ if it is less than or equal to 3, loop back to MJP1 to
+ BCS MJP1               \ spawn another one, until we have four Thargoids
 
  STA NOSTM              \ Set NOSTM (the maximum number of stardust particles)
                         \ to 3, so there are fewer bits of stardust in
@@ -27847,7 +27841,8 @@ LOAD_E% = LOAD% + P% - CODE%
 
  LDA JSTY               \ Fetch the joystick pitch, ranging from 1 to 255 with
                         \ 128 as the centre point, and fall through into TJS1 to
-                        \ joystick pitch value (moving the stick up and down)
+                        \ set Y to the joystick pitch value (moving the stick up
+                        \ and down)
 
 .TJS1
 
@@ -28555,7 +28550,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \ which makes a sound with flush control 1 on channel 0, using envelope 2,
 \ and with pitch &60 (96) and duration &10 (16). The four sound envelopes (1-4)
-\ are set up in elite-loader.asm.
+\ are set up by the loading process.
 \
 \ ******************************************************************************
 
@@ -29807,7 +29802,7 @@ LOAD_F% = LOAD% + P% - CODE%
                         \
                         \ A will contain &71, &72 or &73 (for f1, f2 or f3), so
                         \ set X to the last digit (1, 2 or 3) and jump to LOOK1
-                        \ to switch to view X (back, left or right), returning
+                        \ to switch to view X (rear, left or right), returning
                         \ from the subroutine using a tail call
 
 .LABEL_3
@@ -30109,7 +30104,6 @@ LOAD_F% = LOAD% + P% - CODE%
 .brkd
 
  EQUB 0
-
 \ ******************************************************************************
 \
 \       Name: BRBR
@@ -30311,16 +30305,18 @@ LOAD_F% = LOAD% + P% - CODE%
 
  JSR U%                 \ Clear the key logger, which also sets A = 0
 
- STA DELTA              \ Set our speed in DELTA to 3, so all the cargo
-                        \ canisters we just added drift away from us
+ STA DELTA              \ Set our speed in DELTA to 0, as we aren't going
+                        \ anywhere any more
 
 .D2
 
  JSR M%                 \ Call the M% routine to do the main flight loop once,
                         \ which will display our exploding canister scene and
-                        \ move everything about
+                        \ move everything about, as well as decrementing the
+                        \ value in LASCT
 
- DEC LASCT              \ Decrement the counter in LASCT, which we set above
+ DEC LASCT              \ Decrement the counter in LASCT, which we set above,
+                        \ so for each loop around D2, we decrement LASCT twice
 
  BNE D2                 \ Loop back to call the main flight loop again, until we
                         \ have called it 127 times
@@ -30394,19 +30390,13 @@ LOAD_F% = LOAD% + P% - CODE%
 \ various setup, decryption and checksum routines in S%, G% and BEGIN have
 \ successfully completed.
 \
-\ It is also called following death, and when the game is quit by pressing
-\ ESCAPE when paused.
-\
 \ ******************************************************************************
 
 .TT170
 
  LDX #&FF               \ Set the stack pointer to &01FF, which is the standard
  TXS                    \ location for the 6502 stack, so this instruction
-                        \ effectively resets the stack. We need to do this
-                        \ because the loader code in elite-loader.asm pushes
-                        \ code onto the stack, and this effectively removes that
-                        \ code so we start afresh
+                        \ effectively resets the stack
 
  JSR RESET              \ Call RESET to initialise most of the game variables
 
@@ -30418,6 +30408,11 @@ LOAD_F% = LOAD% + P% - CODE%
 \       Type: Subroutine
 \   Category: Start and end
 \    Summary: Reset most of the game and restart from the title screen
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine is called following death, and when the game is quit by pressing
+\ ESCAPE when paused.
 \
 \ ******************************************************************************
 
@@ -30495,7 +30490,7 @@ LOAD_F% = LOAD% + P% - CODE%
 \
 \ ------------------------------------------------------------------------------
 \
-\ BRKV is set to point to BR1 by elite-loader.asm.
+\ BRKV is set to point to BR1 by the loading process.
 \
 \ ******************************************************************************
 
@@ -30800,7 +30795,7 @@ ENDIF
 
  STY DELTA              \ Set DELTA = 0 (i.e. ship speed = 0)
 
- STY JSTK               \ Set KSTK = 0 (i.e. keyboard, not joystick)
+ STY JSTK               \ Set JSTK = 0 (i.e. keyboard, not joystick)
 
  PLA                    \ Restore the recursive token number we stored on the
                         \ stack at the start of this subroutine
@@ -30836,7 +30831,7 @@ ENDIF
  JSR MVEIT              \ Move the ship in space according to the orientation
                         \ vectors and the new value in z_hi
 
- LDX #128               \ Set z_lo = 128 (so the closest the ship gets to us is
+ LDX #128               \ Set z_lo = 128, so the closest the ship gets to us is
  STX INWK+6             \ z_hi = 1, z_lo = 128, or 256 + 128 = 384
 
  LDA MCNT               \ This value will be zero on one out of every four
@@ -31095,9 +31090,12 @@ ENDIF
 \
 \ Returns:
 \
-\   Y                   The size of the entered text, or 0 if ESCAPE was pressed
+\   Y                   The size of the entered text, or 0 if none was entered
+\                       or if ESCAPE was pressed
 \
 \   INWK+5              The entered text, terminated by a carriage return
+\
+\   C flag              Set if ESCAPE was pressed
 \
 \ ******************************************************************************
 
@@ -31121,7 +31119,7 @@ ENDIF
 
  BCC P%+4               \ The C flag will be set if we pressed ESCAPE when
                         \ entering the name, otherwise it will be clear, so
-                        \ skip the next instruction is ESCAPE is not pressed
+                        \ skip the next instruction if ESCAPE is not pressed
 
  LDY #0                 \ ESCAPE was pressed, so set Y = 0 (as the OSWORD call
                         \ returns the length of the entered string in Y)
@@ -32134,7 +32132,8 @@ ENDIF
 
  RTS                    \ Return from the subroutine
 
- RTS                    \ This instruction has no effect
+ RTS                    \ This instruction has no effect as we already returned
+                        \ from the subroutine
 
 \ ******************************************************************************
 \
@@ -32688,9 +32687,10 @@ ENDIF
 
 .BEEP
 
- LDA #32                \ Call NOISE with A = 32 to make a short, high beep,
- BNE NOISE              \ returning from the subroutine using a tail call (this
-                        \ BNE is effectively a JMP as A will never be zero)
+ LDA #32                \ Call the NOISE routine with A = 32 to make a short,
+ BNE NOISE              \ high beep, returning from the subroutine using a tail
+                        \ call (this BNE is effectively a JMP as A will never be
+                        \ zero)
 
 \ ******************************************************************************
 \
@@ -33291,7 +33291,7 @@ ENDIF
 \       Name: U%
 \       Type: Subroutine
 \   Category: Keyboard
-\    Summary: Clear the key logger (from KY1 through KY19)
+\    Summary: Clear the key logger
 \
 \ ------------------------------------------------------------------------------
 \
@@ -33307,7 +33307,7 @@ ENDIF
                         \ key logger at KL
 
  LDY #16                \ We want to clear the 16 key logger locations from
-                        \ KY1 to KY19, so set a counter in Y
+                        \ KY1 to KY20, so set a counter in Y
 
 .DKL3
 
@@ -33626,10 +33626,10 @@ ENDIF
  JSR RDKEY              \ Scan the keyboard for a key press and return the
                         \ internal key number in X (or 0 for no key press)
 
- CPX #&51               \ If S is not being pressed, skip to DK6
+ CPX #&51               \ If "S" is not being pressed, skip to DK6
  BNE DK6
 
- LDA #0                 \ S is being pressed, so set DNOIZ to 0 to turn the
+ LDA #0                 \ "S" is being pressed, so set DNOIZ to 0 to turn the
  STA DNOIZ              \ sound on
 
 .DK6
@@ -34786,7 +34786,7 @@ ENDMACRO
 \ Valid internal key numbers are Binary Coded Decimal (BCD) numbers in the range
 \ &10 top &79, so they're in the ranges &10 to &19, then &20 to &29, then &30 to
 \ &39, and so on. This means that the other locations - i.e. &1A to &1F, &2A to
-\ &2F and so on - are unused by the lookup table, but the MOS doesn't let this
+\ &2F and so on - aren't used by the lookup table, but the MOS doesn't let this
 \ space go to waste; instead, those gaps contain MOS code, which is replicated
 \ below as TRANTABLE contains a copy of this entire block of the MOS, not just
 \ the table entries.
@@ -34922,7 +34922,9 @@ IF _MATCH_EXTRACTED_BINARIES
  ENDIF
 
 ELSE
+
  ALIGN &100
+
 ENDIF
 
 \ ******************************************************************************
@@ -34959,11 +34961,14 @@ IF _MATCH_EXTRACTED_BINARIES
  ENDIF
 
 ELSE
+
  SKIP 1
+
  FOR I%, 1, 255
    B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
    EQUB B% DIV 256
  NEXT
+
 ENDIF
 
 \ ******************************************************************************
@@ -34992,11 +34997,14 @@ IF _MATCH_EXTRACTED_BINARIES
  ENDIF
 
 ELSE
+
  SKIP 1
+
  FOR I%, 1, 255
    B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
    EQUB B% MOD 256
  NEXT
+
 ENDIF
 
 \ ******************************************************************************
@@ -35143,6 +35151,7 @@ ENDIF
  PLA                    \ Pull the return address from the stack, so the RTS
  PLA                    \ below actually returns from the subroutine that called
                         \ LL9 (as we called SHPPT from LL9 with a JMP)
+
 .nono
 
  LDA #%11110111         \ Clear bit 3 of the ship's byte #31 to record that
@@ -35648,8 +35657,10 @@ ENDIF
 \
 \ This routine draws the current ship on the screen. This part checks to see if
 \ the ship is exploding, or if it should start exploding, and if it does it sets
-\ things up accordingly. It also does some basic checks to see if we can see the
-\ ship, and if not it removes it from the screen.
+\ things up accordingly.
+\
+\ It also does some basic checks to see if we can see the ship, and if not it
+\ removes it from the screen.
 \
 \ In this code, XX1 is used to point to the current ship's data block at INWK
 \ (the two labels are interchangeable).
@@ -35678,11 +35689,6 @@ ENDIF
 \
 \   EE51                Remove the current ship from the screen, called from
 \                       SHPPT before drawing the ship as a point
-\
-\   LL81+2              Draw the contents of the ship lone heap, used to draw
-\                       the ship as a dot from SHPPT
-\
-\   LL10-1              Contains an RTS
 \
 \ ******************************************************************************
 
@@ -35831,6 +35837,10 @@ ENDIF
 \
 \ This part checks whether the ship is in our field of view, and whether it is
 \ close enough to be fully drawn (if not, we jump to SHPPT to draw it as a dot).
+\
+\ Other entry points:
+\
+\   LL10-1              Contains an RTS
 \
 \ ******************************************************************************
 
@@ -37726,7 +37736,7 @@ ENDIF
 
  INY                    \ Increment Y to point to byte #3
 
- LDA (V),Y              \ Fetch byte #3 for this edge into X, which contains
+ LDA (V),Y              \ Fetch byte #3 for this edge into Q, which contains
  STA Q                  \ the number of the vertex at the end of the edge
 
  LDA XX3+1,X            \ Fetch the x_hi coordinate of the edge's start vertex
@@ -37777,6 +37787,11 @@ ENDIF
 \ This part adds all the visible edges to the ship line heap, so we can draw
 \ them in part 12.
 \
+\ Other entry points:
+\
+\   LL81+2              Draw the contents of the ship line heap, used to draw
+\                       the ship as a dot from SHPPT
+\
 \ ******************************************************************************
 
 .LL80
@@ -37816,7 +37831,7 @@ ENDIF
 
  LDY XX17               \ If Y >= XX20, which contains the number of edges in
  CPY XX20               \ the blueprint, jump to LL81 as we have processed all
- BCS LL81               \ the edges
+ BCS LL81               \ the edges and don't need to loop back for the next one
 
  LDY #0                 \ Set Y to point to byte #0 again, ready for the next
                         \ edge
@@ -47431,7 +47446,7 @@ ORG CODE_SHIPS%
  EQUB %00000000         \ The Elite logo
  EQUB %00100000         \ Cougar                                        Innocent
 
- EQUB 0
+ EQUB 0                 \ This byte appears to be unused
 
 \ ******************************************************************************
 \
@@ -49731,7 +49746,7 @@ ENDMACRO
  FACE      -80,       46,       50,         31    \ Face 10
  FACE        0,        0,      -90,         31    \ Face 11
 
- EQUB &38, &E5          \ This data appears to be unused
+ EQUB &38, &E5          \ These bytes appear to be unused
  EQUB &2C, &C5
 
 \ ******************************************************************************
@@ -50556,7 +50571,7 @@ ENDMACRO
  FACE     -169,       55,      -89,         31    \ Face 10
  FACE        0,        0,     -196,         31    \ Face 11
 
- EQUB &A9, &80          \ This data appears to be unused
+ EQUB &A9, &80          \ These bytes appear to be unused
  EQUB &14, &2B
  EQUB &20, &FD
  EQUB &B8, &90

@@ -233,7 +233,7 @@ ORG &2300
 
 .TABLE
 
- SKIP &100
+ SKIP 256
 
 \ ******************************************************************************
 \
@@ -642,7 +642,8 @@ NEXT
 
  SKIP 2                 \ VEC = &7FFE
                         \
-                        \ Set to the original IRQ1 vector by elite-loader.asm
+                        \ This gets set to the value of the original IRQ1 vector
+                        \ by the loading process
 
 .HFX
 
@@ -803,8 +804,9 @@ NEXT
                         \
                         \ CABTMP shares a location with MANY, but that's OK as
                         \ MANY+0 would contain the number of ships of type 0,
-                        \ but as there is no ship type 0 (they start at 1), MANY
-                        \ is unused
+                        \ and as there is no ship type 0 (they start at 1), the
+                        \ byte at MANY+0 is not used for storing a ship type
+                        \ and can be used for the cabin temperature instead
 
 .FLH
 
@@ -1856,9 +1858,11 @@ NEXT
 
 .CP1
 
- AND COL                \ Draw the dash's right pixel according to the mask in
- EOR (SC),Y             \ A, with the colour in COL, using EOR logic, just as
- STA (SC),Y             \ above
+ AND COL                \ Apply the colour mask to the pixel byte, as above
+
+ EOR (SC),Y             \ Draw the dash's right pixel according to the mask in
+ STA (SC),Y             \ A, with the colour in COL, using EOR logic, just as
+                        \ above
 
  RTS                    \ Return from the subroutine
 
@@ -4563,9 +4567,9 @@ NEXT
 \
 \ Other entry points:
 \
-\   HLOIN3              Draw a line from (X, Y1) to (X2, Y1) in the colour given
-\                       in A (we need to set Q = Y2 + 1 before calling HLOIN3 so
-\                       only one line is drawn)
+\   HLOIN3              Draw a line from (X1, Y1) to (X2, Y1) in the current
+\                       colour (we need to set Q = Y2 + 1 before calling
+\                       HLOIN3 so only one line is drawn)
 \
 \ ******************************************************************************
 
@@ -7068,8 +7072,8 @@ ENDMACRO
  JSR TTX66              \ Otherwise we are off the bottom of the screen, so
                         \ clear the screen and draw a white border
 
- LDA #1                 \ Otherwise we are off the bottom of the screen, so move
- STA XC                 \ the text cursor to column 1, row 1
+ LDA #1                 \ Move the text cursor to column 1, row 1
+ STA XC
  STA YC
 
  PLA                    \ Retrieve A from the stack... only to overwrite it with
@@ -8453,7 +8457,7 @@ CPU 0                   \ Switch back to normal 6502 asembly
 \ The main interrupt handler, which implements Elite's split-screen mode (see
 \ the deep dive on "The split-screen mode" for details).
 \
-\ IRQ1V is set to point to IRQ1 by elite-loader.asm.
+\ IRQ1V is set to point to IRQ1 by the loading process.
 \
 \ Other entry points:
 \
@@ -8527,7 +8531,7 @@ CPU 0                   \ Switch back to normal 6502 asembly
  TAY
 
  JMP (VEC)              \ Jump to the address in VEC, which was set to the
-                        \ original IRQ1V vector by elite-loader.asm, so this
+                        \ original IRQ1V vector by the loading process, so this
                         \ instruction passes control to the next interrupt
                         \ handler
 
@@ -8603,10 +8607,12 @@ CPU 0                   \ Switch back to normal 6502 asembly
 \
 \ ------------------------------------------------------------------------------
 \
-\ This routine is run when the parasite sends a #SETVDU19 <offset> command. It
-\ updates the VNT+3 location in the IRQ1 handler to change the palette that's
-\ applied to the top part of the screen (the four-colour mode 1 part). The
-\ parameter is the offset within the TVT3 palette block of the desired palette.
+\ This routine is run when the parasite sends a #SETVDU19 <offset> command.
+\
+\ This routine updates the VNT3+1 location in the IRQ1 handler to change the
+\ palette that's applied to the top part of the screen (the four-colour mode 1
+\ part). The parameter is the offset within the TVT3 palette block of the
+\ desired palette.
 \
 \ Arguments:
 \
