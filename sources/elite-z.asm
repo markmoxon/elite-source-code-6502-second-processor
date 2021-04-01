@@ -238,7 +238,7 @@ ORG &2300
 \ ******************************************************************************
 \
 \       Name: FONT%
-\       Type: Workspace
+\       Type: Variable
 \   Category: Text
 \    Summary: A copy of the character definition bitmap table from the MOS ROM
 \
@@ -6916,6 +6916,7 @@ ENDMACRO
 
  JMP RR4                \ A >= 128, so jump to RR4 to restore the registers and
                         \ return from the subroutine using a tail call
+                        
 
  LDX #(FONT%-1)         \ Set X to point to the page before the first font page,
                         \ which is FONT% - 1
