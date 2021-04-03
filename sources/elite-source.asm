@@ -17369,6 +17369,12 @@ ENDIF
 \   Category: Keyboard
 \    Summary: Wait until a key is pressed, ignoring any existing key press
 \
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   X                   The internal key number of the key that was pressed
+\
 \ ******************************************************************************
 
 .PAUSE2
@@ -18882,7 +18888,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
                         \ Fall through into TT128 to draw a circle with the
                         \ centre at the same coordinates as the crosshairs,
-                        \ (QQ19, QQ19+1),  and radius K that reflects the
+                        \ (QQ19, QQ19+1), and radius K that reflects the
                         \ current fuel levels
 
 \ ******************************************************************************
@@ -20363,7 +20369,7 @@ LOAD_D% = LOAD% + P% - CODE%
 
                         \ We now store the distance to the selected system * 4
                         \ in the two-byte location QQ8, by taking (0 Q) and
-                        \ shifting it left twice, storing it in (QQ8+1 QQ8)
+                        \ shifting it left twice, storing it in QQ8(1 0)
 
  LDA Q                  \ First we shift the low byte left by setting
  ASL A                  \ A = Q * 2, with bit 7 of A going into the C flag
@@ -28649,10 +28655,8 @@ LOAD_F% = LOAD% + P% - CODE%
 
 .RESET
 
- JSR ZERO               \ Zero-fill pages &9, &A, &B, &C and &D, which clears
-                        \ the ship data blocks, the ship line heap, the ship
-                        \ slots for the local bubble of universe, and various
-                        \ flight and ship status variables
+ JSR ZERO               \ Reset the ship slots for the local bubble of universe,
+                        \ and various flight and ship status variables
 
  LDX #6                 \ Set up a counter for zeroing BETA through BETA+6
 
@@ -28753,10 +28757,8 @@ LOAD_F% = LOAD% + P% - CODE%
 
  JSR WPSHPS             \ Wipe all ships from the scanner
 
- JSR ZERO               \ Zero-fill pages &9, &A, &B, &C and &D, which clears
-                        \ the ship data blocks, the ship line heap, the ship
-                        \ slots for the local bubble of universe, and various
-                        \ flight and ship status variables
+ JSR ZERO               \ Reset the ship slots for the local bubble of universe,
+                        \ and various flight and ship status variables
 
  LDA #LO(LS%)           \ We have reset the ship line heap, so we now point
  STA SLSP               \ SLSP to LS% (the byte below the ship blueprints at D%)
@@ -30685,6 +30687,11 @@ ENDIF
 \
 \   X                   The type of the ship to show (see variable XX21 for a
 \                       list of ship types)
+\
+\ Returns:
+\
+\   X                   If a key is being pressed, X contains the internal key
+\                       number, otherwise it contains 0
 \
 \ ******************************************************************************
 
