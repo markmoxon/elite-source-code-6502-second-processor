@@ -653,7 +653,7 @@ NEXT
                         \
                         \   * Non-zero = hyperspace colour effect enabled
                         \
-                        \ When HFS is set to 1, the mode 1 screen that makes
+                        \ When HFX is set to 1, the mode 1 screen that makes
                         \ up the top part of the display is temporarily switched
                         \ to mode 2 (the same screen mode as the dashboard),
                         \ which has the effect of blurring and colouring the
@@ -7267,8 +7267,8 @@ ENDMACRO
 
 .BOL1
 
- JSR ZES1               \ Call ZES1 below to zero-fill the page in X, which will
-                        \ clear half a character row
+ JSR ZES1               \ Call ZES1 to zero-fill the page in X, which will clear
+                        \ half a character row
 
  INX                    \ Increment X to point to the next page in screen
                         \ memory

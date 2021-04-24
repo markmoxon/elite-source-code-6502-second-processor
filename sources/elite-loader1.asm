@@ -1061,8 +1061,8 @@ ENDIF
  AND #%00000111
  TAX
 
- LDA TWOS,X             \ Otherwise fetch a pixel from TWOS and poke it into
- STA (ZP),Y             \ ZP+Y
+ LDA TWOS,X             \ Fetch a pixel from TWOS and poke it into ZP+Y
+ STA (ZP),Y
 
  RTS                    \ Return from the subroutine
 
