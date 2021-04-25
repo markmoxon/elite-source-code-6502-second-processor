@@ -32445,7 +32445,7 @@ ENDIF
 
  LDX KTRAN              \ Set X to the first byte of the updated KTRAN, which
                         \ contains the internal key number of the key being
-                        \ pressed, or 0 if there is no keypress
+                        \ pressed, or 0 if there is no key press
 
  TXA                    \ Copy X into A
 
