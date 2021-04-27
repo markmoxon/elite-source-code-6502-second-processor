@@ -747,7 +747,7 @@ NEXT
                         \
                         \     where our ship is at the origin, the centre of the
                         \     planet/sun is at (x_hi, y_hi, z_hi), and the
-                        \     radius of the planet is 6
+                        \     radius of the planet/sun is 6
                         \
                         \   * 0 = we have crashed into the surface
 
@@ -6858,7 +6858,7 @@ ENDMACRO
                         \ definition for the character we want to draw on the
                         \ screen (i.e. we need the pixel shape of this
                         \ character). The MOS ROM contains bitmap definitions
-                        \ of the BBC's ASCII characters, starting from &C000
+                        \ of the system's ASCII characters, starting from &C000
                         \ for space (ASCII 32) and ending with the £ symbol
                         \ (ASCII 126)
                         \
