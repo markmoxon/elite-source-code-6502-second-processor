@@ -45,7 +45,7 @@ VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
                         \ known as SHEILA)
 
-IRQ1V = &204            \ The IRQ1V vector that we intercept to implement the
+IRQ1V = &0204           \ The IRQ1V vector that we intercept to implement the
                         \ split-sceen mode
 
 \ ******************************************************************************
@@ -556,45 +556,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing planets
 \    Summary: Draw Saturn on the loading screen
-\
-\ ------------------------------------------------------------------------------
-\
-\ Part 1 (PLL1) x 1280 - planet
-\
-\   * Draw pixels at (x, y) where:
-\
-\     r1 = random number from 0 to 255
-\     r2 = random number from 0 to 255
-\     (r1^2 + r1^2) < 128^2
-\
-\     y = r2, squished into 64 to 191 by negation
-\
-\     x = SQRT(128^2 - (r1^2 + r1^2)) / 2
-\
-\ Part 2 (PLL2) x 477 - stars
-\
-\   * Draw pixels at (x, y) where:
-\
-\     y = random number from 0 to 255
-\     y = random number from 0 to 255
-\     (x^2 + y^2) div 256 > 17
-\
-\ Part 3 (PLL3) x 1280 - rings
-\
-\   * Draw pixels at (x, y) where:
-\
-\     r5 = random number from 0 to 255
-\     r6 = random number from 0 to 255
-\     r7 = r5, squashed into -32 to 31
-\
-\     32 <= (r5^2 + r6^2 + r7^2) / 256 <= 79
-\     Draw 50% fewer pixels when (r6^2 + r7^2) / 256 <= 16
-\
-\     x = r5 + r7
-\     y = r5
-\
-\ Draws pixels within the diagonal band of horizontal width 64, from top-left to
-\ bottom-right of the screen.
+\  Deep dive: Drawing Saturn on the loading screen
 \
 \ ******************************************************************************
 

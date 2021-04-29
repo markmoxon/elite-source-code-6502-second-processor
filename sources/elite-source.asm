@@ -56,9 +56,6 @@ D% = &D000              \ The address where the ship blueprints get moved to
 
 LS% = D%-1              \ The start of the descending ship line heap
 
-BRKV = &202             \ The break vector that we intercept to enable us to
-                        \ handle and display system errors
-
 NOST = 18               \ The number of stardust particles in normal space (this
                         \ goes down to 3 in witchspace)
 
@@ -113,6 +110,9 @@ Armlas = INT(128.5+1.5*POW) \ Military laser power
 
 NI% = 37                \ The number of bytes in each ship's data block (as
                         \ stored in INWK and K%)
+
+BRKV = &0202            \ The break vector that we intercept to enable us to
+                        \ handle and display system errors
 
 OSWRCH = &FFEE          \ The address for the OSWRCH routine
 OSBYTE = &FFF4          \ The address for the OSBYTE routine
@@ -496,8 +496,9 @@ ORG &0000
                         \ hunter, a pirate, currently hostile, in the process of
                         \ docking, inside the hold having been scooped, and so
                         \ on. The default values for each ship type are taken
-                        \ from the table at E%, where the NEWB flags are
-                        \ described in more detail
+                        \ from the table at E%, and you can find out more detail
+                        \ in the deep dive on "Advanced tactics with the NEWB
+                        \ flags"
 
 .LSP
 
@@ -15196,6 +15197,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \       Type: Subroutine
 \   Category: Maths (Arithmetic)
 \    Summary: Calculate A = A * Q / 256
+\  Deep dive: Multiplication and division using logarithms
 \
 \ ------------------------------------------------------------------------------
 \
@@ -15208,64 +15210,9 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \   A = A * Q / 256
 \
-\ Let La be the a-th entry in the 16-bit log/logL table, so:
-\
-\   La = 32 * log(a) * 256
-\
-\ Let Ar be the r-th entry in the antilog table
-\
-\   Ar = 2^(r / 32 + 8) / 256
-\
-\ These are all logarithms to base 2, so this is true:
-\
-\   a * q = 2 ^ (log(a) + log(q))
-\
-\ Let's reduce this. First, we have the following:
-\
-\   log(a) + log(q) = (log(a) + log(q)) * 1
-\                   = (log(a) + log(q)) * (32 * 256) / (32 * 256)
-\                   = (32 * log(a) * 256 + 32 * log(q) * 256) / (32 * 256)
-\                   = (La + Lq) / (32 * 256)
-\
-\ Now we calculate La + Lq.
-\
-\ * If La + Lq < 256, then
-\
-\     log(a) + log(q) < 256 / (32 * 256)
-\                     = 1 / 32
-\
-\   So:
-\
-\     a * q = 2 ^ (log(a) + log(q))
-\           < 2 ^ (1 / 32)
-\           < 1
-\
-\   so, because this routine returns A = a * q / 256, we return A = 0
-\
-\ * If La + Lq >= 256, then
-\
-\     La + Lq >= 256
-\
-\   so:
-\
-\     La + Lq = r + 256
-\
-\   for some value of r > 0. Plugging this into the above gives:
-\
-\     log(a) + log(q) = (La + Lq) / (32 * 256)
-\                     = (r + 256) / (32 * 256)
-\                     = (r / 32 + 8) / 256
-\
-\   And plugging this into the above gives:
-\
-\     x * y = 2 ^ (log(a) + log(q))
-\           = 2 ^ ((r / 32 + 8) / 256)
-\           = Ar
-\
-\   so we return A = Ar
-\
-\ In summary, given two numbers A and Q, we can calculate A * Q / 256 by adding
-\ La and Lq, and then using the result to look up the correct result in Ar.
+\ The Master and 6502 Second Processor versions use logarithms to speed up the
+\ multiplication process. See the deep dive on "Multiplication using logarithms"
+\ for more details.
 \
 \ ******************************************************************************
 
@@ -31732,7 +31679,7 @@ ENDIF
  EOR #&A9               \ Store the checksum EOR &A9 in CHK2, the penultimate
  STA CHK2               \ byte of the last saved commander block
 
- STA &AFF+NT%           \ Store the checksum EOR &A9 in the penultimate byte of
+ STA &0AFF+NT%          \ Store the checksum EOR &A9 in the penultimate byte of
                         \ the save file at &0B00 (the equivalent of CHK2 in the
                         \ last saved block)
 
@@ -31945,7 +31892,7 @@ ENDIF
 
 .LOL1
 
- LDA &B00,X             \ Copy the X-th byte of &0B00 to the X-th byte of NA%+8
+ LDA &0B00,X            \ Copy the X-th byte of &0B00 to the X-th byte of NA%+8
  STA NA%+8,X
 
  DEX                    \ Decrement the loop counter
@@ -34923,7 +34870,7 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- ALIGN &100
+ ALIGN 256
 
 ENDIF
 
@@ -35288,7 +35235,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Maths (Arithmetic)
 \    Summary: Calculate R = 256 * A / Q
-\  Deep dive: Shift-and-subtract division
+\  Deep dive: Multiplication and division using logarithms
 \
 \ ------------------------------------------------------------------------------
 \
@@ -41386,37 +41333,12 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Type: Subroutine
 \   Category: Demo
 \    Summary: Show the demo
+\  Deep dive: The 6502 Second Processor demo mode
 \
 \ ------------------------------------------------------------------------------
 \
-\ The demo shows automatically if you leave the game idling at the title screen,
-\ or you can trigger it by pressing TAB. It has the following stages:
-\
-\   * "ACORNSOFT PRESENTS" scrolls up the screen like the opening of Star Wars
-\
-\   * The Elite logo appears from behind the camera, moving fowards into view,
-\     tilted back so it appears on-edge, with the bottom of the logo pointing
-\     towards the camera
-\
-\   * It then tilts forwards until it's fully vertical in front of the camera
-\
-\   * A Cobra Mk III flies in slowly from behind the camera at the top of the
-\     screen
-\
-\   * The Cobra fires its lasers at the logo, which explodes, and the Cobra
-\     flies on, in a clockwise roll, before pausing at the top of the screen
-\
-\   * "BY IAN BELL AND DAVID BRABEN" scrolls up the screen
-\
-\   * The camera speeds forward, the Cobra starts to fly again, pitching
-\     upwards as the camera overtakes it while it flies off the top of the
-\     screen
-\
-\   * "THE GALAXY IS IN TURMOIL, THE NAVY FAR AWAY AS THE EMPIRE CRUMBLES"
-\     scrolls up the screen
-\
-\   * An Adder appears in the middle of the screen and flies towards and past
-\     the camera, diving down and rolling clockwise just before it hits
+\ See the deep dive on "The 6502 Second Processor demo mode" for details of how
+\ the demo is implemented.
 \
 \ ******************************************************************************
 
@@ -41822,92 +41744,12 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Type: Subroutine
 \   Category: Demo
 \    Summary: Display a Star Wars scroll text
+\  Deep dive: The 6502 Second Processor demo mode
 \
 \ ------------------------------------------------------------------------------
 \
-\ The first step is to write the scroll text onto a 2D canvas, laid out like
-\ this, starting with the first words in the top-left, as you would expect when
-\ writing on a piece of paper:
-\
-\   (0, 254)              (256, 254)
-\           +------------+
-\           |            |      ^
-\           | On-screen  |      |
-\           |            |      |  scroll direction
-\           |............|      |
-\    ^      :            :
-\    |      :            :
-\   BALI    : Off-screen :
-\    |      :            :
-\    V      :            :
-\           +------------+
-\     (0, 0)              (256, 0)
-\
-\ Note that the y-axis is in the same direction as in the 3D space view, so the
-\ (0, 0) origin is in the bottom left, and y-coordinates get larger as you move
-\ up the canvas (and x increases towards the right, as you would expect).
-\
-\ BALI is a counter that goes from 254 to 2, and can be thought of as the
-\ y-coordinate of our eyes as we read through the scroll text from top to
-\ bottom, or, alternatively, how much of the canvas has yet to appear on-screen
-\ as the canvas scrolls into view.
-\
-\ Now take a point (X1, Y1) in the 2D scroll text canvas, like this:
-\
-\             X1
-\           <--->
-\
-\           +------------+
-\           |            |
-\           |    x       |
-\           |            |      ^       ^
-\           |            |      |       |
-\           |            |      |       | Y1 - BALI
-\           |            |      |       |
-\           |............|      |       v
-\    ^      :            :      |
-\    |      :            :      | Y1
-\   BALI    : Off-screen :      |
-\    |      :            :      |
-\    |      :            :      |
-\    v      +------------+      v
-\
-\ If Y1 < BALI, the point is off the bottom of the screen, so let's assume that
-\ Y1 >= BALI. This means that the value of Y1 - BALI is 0 for points at the
-\ bottom of the visible section, and higher for points near the top.
-\
-\ We can project the point (X1, Y1) onto the Star Wars perspective scroll text
-\ to get a 3D space coordinate (x, y, z) like this:
-\
-\   x = (x_sign x_hi x_lo) = X1 - 128
-\
-\   y = (y_sign y_hi y_lo) = (Y1 - BALI) - 128
-\
-\   z = (z_sign z_hi z_lo) = ((Y1 - BALI) * 4 div 256) + #D
-\
-\ The x calculation moves the point (X1, Y1) to the left so the scroll text is
-\ in the centre, right in front of the camera (i.e. it shifts the x-coordinate
-\ range from 0-255 to -128 to +127).
-\
-\ The y calculation moves the point (X1, Y1) down so that points at the bottom
-\ of the visible part of the canvas (those just appearing) will be at a space
-\ y-coordinate of -128, so the scroll text appears to come in from just below
-\ the bottom of the screen.
-\
-\ The z calculation tips the top of the 2D canvas away from the viewer by giving
-\ points higher up the canvas (i.e. those with higher y-coordinates) a higher
-\ z-coordinate, so the top of the canvas is further away (as the z-coordinate is
-\ into the screen). The #D configuration variable is the z-distance of the
-\ bottom of the visible part of the canvas as it scrolls into view. The scroll
-\ text appears as a disappearing flat canvas because the z-coordinate is in a
-\ linear relationship with the y-coordinate (i.e. z = ky + d where k and d are
-\ constants).
-\
-\ We then project this space coordinate onto the screen for drawing, using the
-\ same process as when we draw ships. Couple this with a couple of tables for
-\ storing the projected lines so they can be erased again, then we can scroll
-\ the text in a Star Wars style by simply counting BALI from 254 down to 2,
-\ reprojecting the canvas and redrawing the scroll text with each new value.
+\ See the deep dive on "The 6502 Second Processor demo mode" for details of how
+\ the scroll text works.
 \
 \ Arguments:
 \
@@ -47322,89 +47164,30 @@ ORG CODE_SHIPS%
 \   Category: Drawing ships
 \    Summary: Ship blueprints default NEWB flags
 \  Deep dive: Ship blueprints
+\             Advanced tactics with the NEWB flags
 \
 \ ------------------------------------------------------------------------------
 \
-\ When spawning a new ship, bits 0-3 and 5-6 from the relevant byte in this
-\ table are applied to the new ship's NEWB flags in byte #36 (i.e. a set bit in
-\ this table will set that bit in the NEWB flags). In other words, if a ship
-\ blueprint is one of the following, then all spawned ships of that type will be
-\ too: trader, bounty hunter, hostile, pirate, innocent, cop.
+\ When spawning a new ship, the bits from this table are applied to the new
+\ ship's NEWB flags in byte #36 (i.e. a set bit in this table will set that bit
+\ in the NEWB flags). In other words, if a ship blueprint is set to one of the
+\ following, then all spawned ships of that type will be too: trader, bounty
+\ hunter, hostile, pirate, innocent, cop.
 \
-\ Bit 4 (docking) is set randomly on spawning for traders only, so 50% of
-\ traders are trying to dock, while the other 50% fly towards the planet.
-\
-\ Bit 7 (has been scooped/has docked) is set when the ship docks or is scooped.
-\
-\ Bit 7 in the blueprint (as opposed to the spawned ship) is looked up during
-\ tactics, for when the ship is about to die, to see if that ship type has an
-\ escape pod. If it does, then the ship can launch an escape pod before dying.
-\
-\ Here's a breakdown of the NEWB flags:
+\ The NEWB flags are as follows:
 \
 \    * Bit 0: Trader flag (0 = not a trader, 1 = trader)
-\
-\             80% of traders are peaceful and mind their own business plying
-\             their trade between the planet and space station, but 20% of them
-\             moonlight as bounty hunters
-\
-\             Escape pod, Shuttle, Transporter, Anaconda, Rock hermit, Worm
-\
 \    * Bit 1: Bounty hunter flag (0 = not a bounty hunter, 1 = bounty hunter)
-\
-\             If we are a fugitive or a serious offender and we bump into a
-\             bounty hunter, they will become hostile and attack us
-\
-\             Viper, Fer-de-lance
-\
 \    * Bit 2: Hostile flag (0 = not hostile, 1 = hostile)
-\
-\             Hostile ships will attack us on sight
-\
-\             Sidewinder, Mamba, Krait, Adder, Gecko, Cobra Mk I, Worm,
-\             Cobra Mk III, Asp Mk II, Python (pirate), Moray, Thargoid,
-\             Thargon, Constrictor
-\
 \    * Bit 3: Pirate flag (0 = not a pirate, 1 = pirate)
-\
-\             Hostile pirates will attack us on sight, but once we get inside
-\             the space station safe zone, they will stop
-\
-\             Sidewinder, Mamba, Krait, Adder, Gecko, Cobra Mk I, Cobra Mk III,
-\             Asp Mk II, Python (pirate), Moray, Thargoid
-\
 \    * Bit 4: Docking flag (0 = not docking, 1 = docking)
-\
-\             Traders with their docking flag set fly towards the space station
-\             to try to dock, otherwise they aim for the planet
-\
-\             This flag is randomly set for traders when they are spawned
-\
 \    * Bit 5: Innocent bystander (0 = normal, 1 = innocent bystander)
-\
-\             If we attack an innocent ship within the space station safe zone,
-\             then the station will get angry with us and start spawning cops
-\
-\             Shuttle, Transporter, Cobra Mk III, Python, Boa, Anaconda,
-\             Rock hermit, Cougar
-\
 \    * Bit 6: Cop flag (0 = not a cop, 1 = cop)
+\    * Bit 7: For spawned ships: ship been scooped or has docked
+\             For blueprints: this ship type has an escape pod fitted
 \
-\             If we destroy a cop, then we instantly become a fugitive (the
-\             Transporter isn't actually a cop, but it's clearly under police
-\             protection)
-\
-\             Viper, Transporter
-\
-\    * Bit 7: For spawned ships, this flag indicates that the ship been scooped
-\             or has docked (bit 7 is always clear on spawning)
-\
-\             For blueprints, this flag indicates whether the ship type has an
-\             escape pod fitted, so it can launch it when in dire straits
-\
-\             Cobra Mk III, Python, Boa, Anaconda, Rock hermit, Viper, Mamba,
-\             Krait, Adder, Cobra Mk I, Cobra Mk III (pirate), Asp Mk II,
-\             Python (pirate), Fer-de-lance
+\ See the deep dive on "Advanced tactics with the NEWB flags" for details of
+\ how this works.
 \
 \ ******************************************************************************
 
@@ -50380,6 +50163,7 @@ ENDMACRO
 \   Category: Drawing ships
 \    Summary: Ship blueprint for a Cougar
 \  Deep dive: Ship blueprints
+\             The elusive Cougar
 \
 \ ******************************************************************************
 

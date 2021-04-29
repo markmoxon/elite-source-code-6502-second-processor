@@ -148,5 +148,5 @@ ENDIF
 \ ******************************************************************************
 
 PRINT "P% = ", ~P%
-PRINT "S.P.CODE ", ~LOAD%, ~(F% + &400 + &2200), " ", ~LOAD%, ~LOAD%
-SAVE "output/P.CODE.unprot.bin", CODE%, (F% + &400 + &2200), LOAD%
+PRINT "S.P.CODE ", ~LOAD%, ~(F% + &0400 + &2200), " ", ~LOAD%, ~LOAD%
+SAVE "output/P.CODE.unprot.bin", CODE%, (F% + &0400 + &2200), LOAD%
