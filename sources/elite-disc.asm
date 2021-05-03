@@ -19,9 +19,12 @@
 \
 \ ------------------------------------------------------------------------------
 \
-\ This source file produces the following SSD disc image:
+\ This source file produces one of the following SSD disc images, depending on
+\ which release is being built:
 \
-\   * elite-6502sp.ssd
+\   * elite-6502sp-sng45.ssd
+\   * elite-6502sp-from-source-disc.ssd
+\   * elite-6502sp-executive.ssd
 \
 \ This can be loaded into an emulator or a real BBC Micro.
 \
@@ -31,8 +34,9 @@ INCLUDE "sources/elite-header.h.asm"
 
 _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
+_EXECUTIVE              = (_RELEASE = 3)
 
-IF _SNG45
+IF _SNG45 OR _EXECUTIVE
  PUTFILE "output/ELITE.bin", "ELITE", &FF1FDC, &FF2085
 ELIF _SOURCE_DISC
  PUTFILE "output/ELITE.bin", "ELITE", &FF2000, &FF2085
@@ -40,10 +44,22 @@ ENDIF
 
 PUTFILE "output/ELITEa.bin", "I.ELITEa", &FF2000, &FF2000
 
-PUTFILE "output/I.CODE.bin", "I.CODE", &FF2400, &FF2C89
+IF _SNG45 OR _SOURCE_DISC
+ PUTFILE "output/I.CODE.bin", "I.CODE", &FF2400, &FF2C89
+ELIF _EXECUTIVE
+ PUTFILE "output/I.CODE.bin", "I.CODE", &032400, &032C89
+ENDIF
 
 IF _REMOVE_CHECKSUMS
- PUTFILE "output/P.CODE.bin", "P.CODE", &1000, &10D1
+ IF _SNG45 OR _SOURCE_DISC
+  PUTFILE "output/P.CODE.bin", "P.CODE", &1000, &10D1
+ ELIF _EXECUTIVE
+  PUTFILE "output/P.CODE.bin", "P.CODE", &1000, &10D3
+ ENDIF
 ELSE
- PUTFILE "output/P.CODE.bin", "P.CODE", &1000, &106A
+ IF _SNG45 OR _SOURCE_DISC
+  PUTFILE "output/P.CODE.bin", "P.CODE", &1000, &106A
+ ELIF _EXECUTIVE
+  PUTFILE "output/P.CODE.bin", "P.CODE", &1000, &106C
+ ENDIF
 ENDIF

@@ -44,6 +44,7 @@ INCLUDE "sources/elite-header.h.asm"
 
 _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
+_EXECUTIVE              = (_RELEASE = 3)
 
 \ ******************************************************************************
 \
@@ -68,6 +69,8 @@ ORG CODE%
 
 IF _SNG45
  INCBIN "extracted/sng45/workspaces/BCFS-MOS.bin"
+ELIF _EXECUTIVE
+ INCBIN "extracted/executive/workspaces/BCFS-MOS.bin"
 ELIF _SOURCE_DISC
  INCBIN "extracted/source-disc/workspaces/BCFS-MOS.bin"
 ENDIF
@@ -138,6 +141,8 @@ INCBIN "output/SHIPS.bin"
 
 IF _SNG45
  INCBIN "extracted/sng45/workspaces/BCFS-SHIPS.bin"
+ELIF _EXECUTIVE
+ INCBIN "extracted/executive/workspaces/BCFS-SHIPS.bin"
 ELIF _SOURCE_DISC
  INCBIN "extracted/source-disc/workspaces/BCFS-SHIPS.bin"
 ENDIF

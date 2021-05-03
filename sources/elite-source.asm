@@ -43,6 +43,7 @@ CPU 1                   \ Switch to 65C02 assembly, as this code runs on the
 
 _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
+_EXECUTIVE              = (_RELEASE = 3)
 
 \ ******************************************************************************
 \
@@ -50,9 +51,18 @@ _SNG45                  = (_RELEASE = 2)
 \
 \ ******************************************************************************
 
-Q% = _REMOVE_CHECKSUMS  \ Set Q% to TRUE to max out the default commander, FALSE
+IF _SNG45 OR _SOURCE_DISC
+
+ Q% = _REMOVE_CHECKSUMS \ Set Q% to TRUE to max out the default commander, FALSE
                         \ for the standard default commander (this is set to
                         \ TRUE if checksums are disabled, just for convenience)
+
+ELIF _EXECUTIVE
+
+ Q% = TRUE              \ The Executive version starts with a maxed-out default
+                        \ commander
+
+ENDIF
 
 D% = &D000              \ The address where the ship blueprints get moved to
                         \ after loading, so they go from &D000 to &F200
@@ -1340,6 +1350,8 @@ ENDMACRO
  CHAR 'Y'
  EQUB 0
 
+IF _SNG45 OR _SOURCE_DISC
+
  CHAR ' '               \ Token 35:     " LIGHT YEARS"
  CHAR 'L'               \
  CHAR 'I'               \ Encoded as:   " LIGHT YE<138>S"
@@ -1352,6 +1364,17 @@ ENDMACRO
  TWOK 'A', 'R'
  CHAR 'S'
  EQUB 0
+
+ELIF _EXECUTIVE
+
+ CHAR ' '               \ Token 35:     " L.Y."
+ CHAR 'L'               \
+ CHAR '.'               \ Encoded as:   " L.Y."
+ CHAR 'Y'
+ CHAR '.'
+ EQUB 0
+
+ENDIF
 
  TWOK 'T', 'E'          \ Token 36:     "TECH.LEVEL"
  CHAR 'C'               \
@@ -1793,12 +1816,29 @@ ENDMACRO
  CHAR 'T'
  EQUB 0
 
+IF _SNG45 OR _SOURCE_DISC
+
  RTOK 121               \ Token 100:    "ENERGY LOW{beep}"
  CHAR 'L'               \
  CHAR 'O'               \ Encoded as:   "[121]LOW{7}"
  CHAR 'W'
  CONT 7
  EQUB 0
+
+ELIF _EXECUTIVE
+
+ RTOK 121               \ Token 100:    "ENERGY LOW,SIR{beep}"
+ CHAR 'L'               \
+ CHAR 'O'               \ Encoded as:   "[121]LOW,SIR{7}"
+ CHAR 'W'
+ CHAR ','
+ CHAR 'S'
+ CHAR 'I'
+ CHAR 'R'
+ CONT 7
+ EQUB 0
+
+ENDIF
 
  RTOK 99                \ Token 101:    "RIGHT ON COMMANDER!"
  RTOK 131               \
@@ -1895,7 +1935,7 @@ ENDMACRO
  CHAR 'B'
  EQUB 0
 
-IF _SNG45
+IF _SNG45 OR _EXECUTIVE
 
  RTOK 121               \ Token 114:    "ENERGY UNIT"
  RTOK 14                \
@@ -1949,6 +1989,8 @@ ENDIF
  CONT 0                 \
  EQUB 0                 \ Encoded as:   "[37]:{0}"
 
+IF _SNG45 OR _SOURCE_DISC
+
  TWOK 'I', 'N'          \ Token 120:    "INCOMING MISSILE"
  RTOK 91                \
  TWOK 'I', 'N'          \ Encoded as:   "<140>[91]<140>G [106]"
@@ -1956,6 +1998,22 @@ ENDIF
  CHAR ' '
  RTOK 106
  EQUB 0
+
+ELIF _EXECUTIVE
+
+ TWOK 'I', 'N'          \ Token 120:    "INCOMING MISSILE,SIR"
+ RTOK 91                \
+ TWOK 'I', 'N'          \ Encoded as:   "<140>[91]<140>G [106],SIR"
+ CHAR 'G'
+ CHAR ' '
+ RTOK 106
+ CHAR ','
+ CHAR 'S'
+ CHAR 'I'
+ CHAR 'R'
+ EQUB 0
+
+ENDIF
 
  TWOK 'E', 'N'          \ Token 121:    "ENERGY "
  TWOK 'E', 'R'          \
@@ -2174,6 +2232,11 @@ IF _SNG45
 
  EQUB 0, 0              \ These bytes appear to be unused and just contain noise
  EQUB &E4, &63, &A5
+
+ELIF _EXECUTIVE
+
+ EQUB 0, 0              \ These bytes appear to be unused and just contain noise
+ EQUB &A5
 
 ELIF _SOURCE_DISC
 
@@ -3325,7 +3388,15 @@ PRINT "WP workspace from  ", ~WP," to ", ~P%
 \
 \ ******************************************************************************
 
+IF _SNG45 OR _SOURCE_DISC
+
 ORG &8200
+
+ELIF _EXECUTIVE
+
+ORG &8500
+
+ENDIF
 
 .K%
 
@@ -3341,7 +3412,15 @@ ORG &8200
 \
 \ ******************************************************************************
 
+IF _SNG45 OR _SOURCE_DISC
+
 ORG &8600
+
+ELIF _EXECUTIVE
+
+ORG &8900
+
+ENDIF
 
 .LP
 
@@ -3434,7 +3513,7 @@ LOAD_A% = LOAD%
 \
 \       Name: Parasite variables
 \       Type: Workspace
-\    Address: &1000 to &100B
+\    Address: &1000 to &100B (&100D in the Executive version)
 \   Category: Workspaces
 \    Summary: Various variables used by the parasite
 \
@@ -3550,6 +3629,39 @@ LOAD_A% = LOAD%
                         \ Toggled by pressing "K" when paused, see the DKS3
                         \ routine for details
 
+IF _EXECUTIVE
+
+.JUMP
+
+ SKIP 1                 \ Infinite jump range configuration setting
+                        \
+                        \   * 0 = maximum jump range is the standard 7 light
+                        \         years (default)
+                        \
+                        \   * Non-zero = jump range is infinite
+                        \
+                        \ Toggled by pressing "@" when paused, see the DK4
+                        \ routine for details
+                        \
+                        \ Not only is the jump range infinite, but you don't use
+                        \ any fuel when jumping, either
+
+.SPEAK
+
+ SKIP 1                 \ Speech configuration setting
+                        \
+                        \   * 0 = speech is disabled (default)
+                        \
+                        \   * Non-zero = speech is enabled
+                        \
+                        \ Toggled by pressing ":" when paused, see the DK4
+                        \ routine for details
+                        \
+                        \ For speech to work, the BBC must be fitted with a
+                        \ Watford Electronics Beeb Speech Synthesiser
+
+ENDIF
+
 .BSTK
 
  SKIP 1                 \ Bitstik configuration setting
@@ -3624,11 +3736,28 @@ LOAD_A% = LOAD%
 
 .NA%
 
+IF _SNG45 OR _SOURCE_DISC
+
  EQUS "JAMESON"         \ The current commander name, which defaults to JAMESON
  EQUB 13                \
-                        \ The commander name can be up to 7 characters (the DFS
-                        \ limit for file names), and is terminated by a carriage
-                        \ return
+                        \ The commander name can be up to seven characters (the
+                        \ DFS limit for file names), and is terminated by a
+                        \ carriage return
+
+ELIF _EXECUTIVE
+
+ EQUS "FIREBUD"         \ The current commander name, which defaults to FIREBUD
+ EQUB 13                \ in the Executive version (this version comes with a
+                        \ maxed-out commander by default, so it gets a different
+                        \ name, which is presumably a seven-character riff on
+                        \ "Firebird", the publishers of the non-Acorn versions
+                        \ of Elite)
+                        \
+                        \ The commander name can be up to seven characters (the
+                        \ DFS limit for file names), and is terminated by a
+                        \ carriage return
+
+ENDIF
 
                         \ NA%+8 is the start of the commander data block
                         \
@@ -3661,7 +3790,15 @@ ENDIF
 
  EQUB 70                \ QQ14 = Fuel level, #13
 
+IF _SNG45 OR _SOURCE_DISC
+
  EQUB 0                 \ COK = Competition flags, #14
+
+ELIF _EXECUTIVE
+
+ EQUB %10000000         \ COK = Competition flags, #14
+
+ENDIF
 
  EQUB 0                 \ GCNT = Galaxy number, 0-7, #15
 
@@ -3763,9 +3900,19 @@ ENDIF
 
 .CHK2
 
+IF _SNG45 OR _SOURCE_DISC
+
  EQUB &03 EOR &A9       \ The checksum value for the default commander, EOR'd
                         \ with &A9 to make it harder to tamper with the checksum
                         \ byte, #74
+
+ELIF _EXECUTIVE
+
+ EQUB &3F EOR &A9       \ The checksum value for the maxed-out default
+                        \ commander, EOR'd with &A9 to make it harder to tamper
+                        \ with the checksum byte, #74
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -3788,7 +3935,16 @@ ENDIF
 
 .CHK
 
+IF _SNG45 OR _SOURCE_DISC
+
  EQUB &03               \ The checksum value for the default commander, #75
+
+ELIF _EXECUTIVE
+
+ EQUB &3F               \ The checksum value for the maxed-out default
+                        \ commander, #75
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -3865,17 +4021,19 @@ ENDIF
  PHA                    \ at least as long as the do65c02 routine, which ends
  LDX #0                 \ with a jump to G% below to start the game
  RTS
+
  BRK
  EQUS "ELITE - By Ian Bell & David Braben"
  EQUB 10
  EQUB 13
  BRK
- LDA SC
- ADC 2
- CMP F%-1
- BNE P%-2
- EQUD &7547534
- EQUD &452365
+
+ LDA SC                 \ This section of unused code is particularly useful to
+ ADC 2                  \ hackers, as it contains the value of F% (in the
+ CMP F%-1               \ CMP F%-1 instruction), which we need to undo the
+ BNE P%-2               \ encryption. We also need the value of G%, which is
+ EQUD &7547534          \ easy enough to work out as it's just after this block.
+ EQUD &452365           \ See the elite-decrypt.py script for more details
  EQUB &8D
 
 .G%
@@ -5569,12 +5727,29 @@ ENDIF
                         \ planet altitude check and move on to the sun distance
                         \ check
 
+IF _SNG45 OR _SOURCE_DISC
+
  LDA #50                \ If our energy bank status in ENERGY is >= 50, skip
  CMP ENERGY             \ printing the following message (so the message is
  BCC P%+6               \ only shown if our energy is low)
 
  ASL A                  \ Print recursive token 100 ("ENERGY LOW{beep}") as an
  JSR MESS               \ in-flight message
+
+ELIF _EXECUTIVE
+
+ LDA #50                \ If our energy bank status in ENERGY is >= 50, skip
+ CMP ENERGY             \ printing the following message (so the message is
+ BCC P%+11              \ only shown if our energy is low)
+
+ ASL A                  \ Print recursive token 100 ("ENERGY LOW{beep}") as an
+ JSR MESS               \ in-flight message
+
+ LDX #2                 \ Call TALK with X = 2 to say "Energy low" using the
+ JSR TALK               \ Watford Electronics Beeb Speech Synthesiser (if one
+                        \ is fitted and speech has been enabled)
+
+ENDIF
 
  LDY #&FF               \ Set our altitude in ALTIT to &FF, the maximum
  STY ALTIT
@@ -6379,6 +6554,22 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: Firebird
+\       Type: Variable
+\   Category: Copy protection
+\    Summary: The name "Firebird", buried in the code of the Executive version
+\
+\ ******************************************************************************
+
+IF _EXECUTIVE
+
+ EQUS "Firebird"
+ EQUB 13
+
+ENDIF
+
+\ ******************************************************************************
+\
 \       Name: MT1
 \       Type: Subroutine
 \   Category: Text
@@ -7048,6 +7239,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ELTA-LSX2.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ELTA-LSX2.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ELTA-LSX2.bin"
  ENDIF
@@ -7075,6 +7268,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ELTA-LSY2.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ELTA-LSY2.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ELTA-LSY2.bin"
  ENDIF
@@ -7387,6 +7582,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ELTB-LBUF.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ELTB-LBUF.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ELTB-LBUF.bin"
  ENDIF
@@ -7689,6 +7886,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ELTB-HBUF.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ELTB-HBUF.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ELTB-HBUF.bin"
  ENDIF
@@ -8070,6 +8269,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ELTB-PBUF.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ELTB-PBUF.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ELTB-PBUF.bin"
  ENDIF
@@ -10934,6 +11135,16 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
                         \ Fall through into the CHPR print routine to
                         \ actually make the sound
 
+IF _EXECUTIVE
+
+ BNE CHPRD              \ Jump down to CHPRD to actually make the sound,
+                        \ skipping the code that prevents CHPR from beeping if
+                        \ speech is enabled, so the beep gets made even if
+                        \ speech is enabled (this BNE is effectively a JMP as
+                        \ A is never 0)
+
+ENDIF
+
 \ ******************************************************************************
 \
 \       Name: CHPR
@@ -10955,8 +11166,21 @@ DTW7 = MT16 + 1         \ Point DTW7 to the second byte of the instruction above
 
 .CHPR
 
-.CHPRD                  \ This label is in the original source but is not used
-                        \ anywhere
+IF _EXECUTIVE
+
+ CMP #7                 \ If this is not a beep character, jump to CHPRD to
+ BNE CHPRD              \ print the character
+
+ BIT SPEAK              \ If speech is disabled, jump to CHPRD to print the
+ BPL CHPRD              \ character
+
+ RTS                    \ If we get here then this is a beep character and
+                        \ speech is enabled, so return from the subroutine to
+                        \ prevent the beep from being made
+
+ENDIF
+
+.CHPRD
 
  STA K3                 \ Store the character to print in K3
 
@@ -20481,6 +20705,13 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA #189               \ Print recursive token 29 ("HYPERSPACE ")
  JSR TT27
 
+IF _EXECUTIVE
+
+ BIT JUMP               \ If infinite jump range is configured, then jump down
+ BMI goTT147+3          \ to IJUMP so we do the jump whatever the distance
+
+ENDIF
+
  LDA QQ8+1              \ If the high byte of the distance to the selected
  BNE goTT147            \ system in QQ8 is > 0, then it is definitely too far to
                         \ jump (as our maximum range is 7.0 light years, or a
@@ -21488,6 +21719,14 @@ LOAD_D% = LOAD% + P% - CODE%
  STY MJ                 \ Set the mis-jump flag in MJ to &FF, to indicate that
                         \ we are now in witchspace
 
+IF _EXECUTIVE
+
+ LDX #4                 \ Call TALK with X = 4 to say "Oh shit, it's a mis-jump"
+ JSR TALK               \ using the Watford Electronics Beeb Speech Synthesiser
+                        \ (if one is fitted and speech has been enabled)
+
+ENDIF
+
 .MJP1
 
  JSR GTHG               \ Call GTHG to spawn a Thargoid ship
@@ -21528,9 +21767,23 @@ LOAD_D% = LOAD% + P% - CODE%
 
 .TT18
 
+IF _SNG45 OR _SOURCE_DISC
+
  LDA QQ14               \ Subtract the distance to the selected system (in QQ8)
  SEC                    \ from the amount of fuel in our tank (in QQ14) into A
  SBC QQ8
+
+ELIF _EXECUTIVE
+
+ LDA QQ14               \ Subtract the distance to the selected system (in QQ8)
+
+ BIT JUMP               \ If infinite jump range is configured, then jump down
+ BMI IJUMP              \ to IJUMP so we don't subtract any fuel for this jump
+
+ SEC                    \ from the amount of fuel in our tank (in QQ14) into A
+ SBC QQ8
+
+ENDIF
 
  BCS P%+4               \ If the subtraction didn't overflow, skip the next
                         \ instruction
@@ -21539,6 +21792,12 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ end up with a negative amount of fuel
 
  STA QQ14               \ Store the updated fuel amount in QQ14
+
+IF _EXECUTIVE
+
+.IJUMP
+
+ENDIF
 
  LDA QQ11               \ If the current view is not a space view, jump to ee5
  BNE ee5                \ to skip the following
@@ -30364,6 +30623,18 @@ LOAD_F% = LOAD% + P% - CODE%
 
  JSR RESET              \ Call RESET to initialise most of the game variables
 
+IF _EXECUTIVE
+
+ JSR DEMON              \ Call DEMON to show the demo
+
+ LDX #&FF               \ Set the stack pointer to &01FF, which is the standard
+ TXS                    \ location for the 6502 stack, so this instruction
+                        \ effectively resets the stack
+
+ JSR RESET              \ Call RESET to initialise most of the game variables
+
+ENDIF
+
                         \ Fall through into DEATH2 to start the game
 
 \ ******************************************************************************
@@ -30418,6 +30689,14 @@ LOAD_F% = LOAD% + P% - CODE%
 
  JSR FX200              \ Disable the ESCAPE key and clear memory if the BREAK
                         \ key is pressed (*FX 200,3)
+
+IF _EXECUTIVE
+
+ LDX #3                 \ Call TALK with X = 3 to say "Elite" using the Watford
+ JSR TALK               \ Electronics Beeb Speech Synthesiser (if one is fitted
+                        \ speech has been enabled)
+
+ENDIF
 
  LDX #CYL               \ Call TITLE to show a rotating Cobra Mk III (#CYL) and
  LDA #6                 \ token 6 ("LOAD NEW {single cap}COMMANDER {all caps}
@@ -32664,6 +32943,14 @@ ENDIF
                         \ success, so if it's clear, jump to KYTB to return from
                         \ the subroutine (as KYTB contains an RTS)
 
+IF _EXECUTIVE
+
+ LDX #1                 \ Call TALK with X = 1 to say "Incoming missile" using
+ JSR TALK               \ the Watford Electronics Beeb Speech Synthesiser (if
+                        \ one is fitted and speech has been enabled)
+
+ENDIF
+
  LDA #120               \ Print recursive token 120 ("INCOMING MISSILE") as an
  JSR MESS               \ in-flight message
 
@@ -33113,6 +33400,11 @@ ENDIF
 \   * Y toggles reverse joystick Y channel (&44)
 \   * J toggles reverse both joystick channels (&45)
 \   * K toggles keyboard and joystick (&46)
+\
+\ The Executive version supports two additional configuration options:
+\
+\   * @ toggles infinite jump range and fuel (&47)
+\   * : toggles speech (&48)
 \
 \ The numbers in brackets are the internal key numbers (see p.142 of the
 \ Advanced User Guide for a list of internal key numbers). We pass the key that
@@ -33597,8 +33889,17 @@ ENDIF
 
  INY                    \ Increment Y to point to the next toggle key
 
+IF _SNG45 OR _SOURCE_DISC
+
  CPY #&47               \ The last toggle key is &46 (K), so check whether we
                         \ have just done that one
+
+ELIF _EXECUTIVE
+
+ CPY #&49               \ The last toggle key is &48 (:), so check whether we
+                        \ have just done that one
+
+ENDIF
 
  BNE DKL4               \ If not, loop back to check for the next toggle key
 
@@ -34867,6 +35168,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ELTG-align.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ELTG-align.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ELTG-align.bin"
  ENDIF
@@ -34906,6 +35209,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ELTG-log.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ELTG-log.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ELTG-log.bin"
  ENDIF
@@ -34942,6 +35247,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ELTG-logL.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ELTG-logL.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ELTG-logL.bin"
  ENDIF
@@ -34982,6 +35289,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ELTG-antilog.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ELTG-antilog.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ELTG-antilog.bin"
  ENDIF
@@ -35025,6 +35334,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ELTG-antilogODD.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ELTG-antilogODD.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ELTG-antilogODD.bin"
  ENDIF
@@ -41371,7 +41682,8 @@ LOAD_I% = LOAD% + P% - CODE%
  JSR nWq                \ Call nWq to create a random cloud of stardust
 
  LDX #LO(acorn)         \ Set (Y X) to the address of acorn, which contains the
- LDY #HI(acorn)         \ "ACORNSOFT PRESENTS" text
+ LDY #HI(acorn)         \ text: "ACORNSOFT PRESENTS" (or, in the Executive
+                        \ version: "PIZZASOFT PRESENTS")
 
  JSR SLIDE              \ Call SLIDE to display the Star Wars scroll text
 
@@ -41644,8 +41956,17 @@ LOAD_I% = LOAD% + P% - CODE%
  ROR DELT4
  STA DELT4+1
 
+IF _EXECUTIVE
+
+ LDX #LO(executive)     \ Set (Y X) to the address of executive, which contains
+ LDY #HI(executive)     \ the text: "THE EXECUTIVE VERSION"
+
+ JSR SLIDE              \ Call SLIDE to display the Star Wars scroll text
+
+ENDIF
+
  LDX #LO(byian)         \ Set (Y X) to the address of byian, which contains the
- LDY #HI(byian)         \ "BY IAN BELL AND DAVID BRABEN" text
+ LDY #HI(byian)         \ text: "BY IAN BELL AND DAVID BRABEN"
 
  JSR SLIDE              \ Call SLIDE to display the Star Wars scroll text
 
@@ -41681,8 +42002,10 @@ LOAD_I% = LOAD% + P% - CODE%
                         \ of the screen
 
  LDX #LO(true3)         \ Set (Y X) to the address of true3, which contains the
- LDY #HI(true3)         \ "THE GALAXY IS IN TURMOIL, THE NAVY FAR AWAY AS THE
-                        \ EMPIRE CRUMBLES" text
+ LDY #HI(true3)         \ text: "THE GALAXY IS IN TURMOIL, THE NAVY FAR AWAY AS
+                        \ THE EMPIRE CRUMBLES" (or, in the Executive version:
+                        \ "CONGRATULATIONS ON OBTAINING A COPY OF THIS ELUSIVE
+                        \ PRODUCT")
 
  JSR SLIDE              \ Call SLIDE to display the Star Wars scroll text
 
@@ -42627,23 +42950,34 @@ LOAD_I% = LOAD% + P% - CODE%
 \       Name: acorn
 \       Type: Variable
 \   Category: Demo
-\    Summary: The text for the demo's first scroll text
+\    Summary: The text for the demo's opening scroll text
 \
 \ ******************************************************************************
 
 .acorn
+
+IF _SNG45 OR _SOURCE_DISC
 
  EQUS ":::ACORNSOFT::::"
  EQUS ";;;;;;;;;;;;;;;;"
  EQUS "::::PRESENTS"
  EQUB 0
 
+ELIF _EXECUTIVE
+
+ EQUS ":::PIZZASOFT::::"
+ EQUS ";;;;;;;;;;;;;;;;"
+ EQUS "::::PRESENTS"
+ EQUB 0
+
+ENDIF
+
 \ ******************************************************************************
 \
 \       Name: byian
 \       Type: Variable
 \   Category: Demo
-\    Summary: The text for the demo's second scroll text
+\    Summary: The text for the demo's middle scroll text
 \
 \ ******************************************************************************
 
@@ -42657,20 +42991,197 @@ LOAD_I% = LOAD% + P% - CODE%
 
 \ ******************************************************************************
 \
+\       Name: executive
+\       Type: Variable
+\   Category: Demo
+\    Summary: Extra text for the demo in the Executive version
+\
+\ ******************************************************************************
+
+.executive
+
+IF _EXECUTIVE
+
+ EQUS "::::::THE;::::::"
+ EQUS ";;;EXECUTIVE;;;;"
+ EQUS "::::VERSION"
+ EQUB 0
+
+ENDIF
+
+\ ******************************************************************************
+\
 \       Name: true3
 \       Type: Variable
 \   Category: Demo
-\    Summary: The text for the demo's third scroll text
+\    Summary: The text for the demo's final scroll text
 \
 \ ******************************************************************************
 
 .true3
+
+IF _SNG45 OR _SOURCE_DISC
 
  EQUS "THE:GALAXY:IS:IN"
  EQUS "TURMOIL,THE:NAVY"
  EQUS "FAR:AWAY:AS::THE"
  EQUS "EMPIRE:CRUMBLES."
  EQUB 0
+
+ELIF _EXECUTIVE
+
+ EQUS "CONGRATULATIONS:"
+ EQUS ";ON;OBTAINING;A;"
+ EQUS "::COPY:OF:THIS::"
+ EQUS "ELUSIVE;PRODUCT."
+ EQUB 0
+
+ENDIF
+
+\ ******************************************************************************
+\
+\       Name: TALK
+\       Type: Subroutine
+\   Category: Sound
+\    Summary: Speak using the Watford Electronics Beeb Speech Synthesiser
+\
+\ ------------------------------------------------------------------------------
+\
+\ In the Executive version, if you have a Watford Electronics Beeb Speech
+\ Synthesiser fitted and enable speech by presing ":" while the game is paused,
+\ then the game will speak to you at various points.
+\
+\ ******************************************************************************
+
+.TALK
+
+IF _EXECUTIVE
+
+ TYA                    \ Store Y on the stack to we can retrieve it later
+ PHA
+
+ BIT SPEAK              \ If SPEAK is 0, then speech is not enabled, so jump
+ BPL TALK4              \ to TALK4 to restore Y from the stack and return
+                        \ from the subroutine
+
+ LDA #0                 \ Set SC = 0
+ STA SC
+
+ LDY #LO(SPEECH)        \ Set Y to point to the low byte of SPEECH
+
+ LDA #HI(SPEECH)        \ Set SC(1 0) so it points to the start of the page
+ STA SC+1               \ containing SPEECH, so by this point, so SC+Y points
+                        \ to the first byte of SPEECH
+
+.TALKL
+
+ LDA (SC),Y             \ Fetch the next byte from the SPEECH block
+
+ CMP #13                \ If it not 13 (which is the terminator for each speech
+ BNE TALK1              \ command), jump to TALK1 to skip to the next byte
+
+ DEX                    \ We just reached a terminator, so decrement the phrase
+                        \ number in X
+
+ BEQ TALK2              \ If X is now 0, we have now found the terminator just
+                        \ before the phrase we want (the X-th phrase), so jump
+                        \ to TALK2 to speak it
+
+.TALK1
+
+ INY                    \ Increment the byte counter in Y to point to the next
+                        \ byte in the SPEECH table
+
+ BNE TALKL              \ If Y is non-zero, loop back to TALKL to process the
+                        \ next byte
+
+ INC SC+1               \ Y is 0, which means SC+Y has just crossed a page
+                        \ boundary, so increment the high byte in SC+1 so that
+                        \ SC+Y points to the next page
+
+ BNE TALKL              \ Loop back to TALKL to process the next byte (this BNE
+                        \ is effectively a JMP as SC+1 is never zero)
+
+.TALK2
+
+ INY                    \ If we get here then SC+Y points to the terminator
+                        \ before the phrase we want, so increment Y to point to
+                        \ the start of the phrase we want
+
+ BNE TALK3              \ If Y is non-zero, then SC+Y points to the phrase we
+                        \ want to speak, so jump to TALK3 to do the speaking
+
+ INC SC+1               \ Y is 0, which means SC+Y has just crossed a page
+                        \ boundary, so increment the high byte in SC+1 so that
+                        \ SC+Y points to the next page
+
+.TALK3
+
+ TYA                    \ Set (Y X) to point to (SC+1 Y), i.e. SC+Y
+ TAX
+ LDY SC+1
+
+ JSR OSCLI              \ Call OSCLI to run the OS command in SC+Y, which will
+                        \ be of the form "*TALK xx", a command for making the
+                        \ Watford Electronics Beeb Speech Synthesiser talk
+
+.TALK4
+
+ PLA                    \ Restore the value of Y we stored on the stack, so it
+ TAY                    \ gets preserved across the call to the subroutine
+
+ RTS                    \ Return from the subroutine
+
+ENDIF
+
+\ ******************************************************************************
+\
+\       Name: SPEECH
+\       Type: Variable
+\   Category: Sound
+\    Summary: Phrases for the Watford Electronics Beeb Speech Synthesiser
+\
+\ ******************************************************************************
+
+.SPEECH
+
+IF _EXECUTIVE
+
+ EQUB 13
+
+ EQUS "TALK "           \ 1: "Incoming missile"
+ EQUS "A NN1 "
+ EQUS "PA2 "
+ EQUS "KK3 AA MM IH NG "
+ EQUS "PA4 "
+ EQUS "MM IH SS I LL"
+ EQUB 13
+
+ EQUS "TALK "           \ 2: "Energy low"
+ EQUS "N ER1 G "
+ EQUS "PA4 "
+ EQUS "LOW"
+ EQUB 13
+
+ EQUS "TALK "           \ 3: "Elite"
+ EQUS "EH LL EY TT1"
+ EQUB 13
+
+ EQUS "TALK "           \ 4: "Oh shit, it's a mis-jump"
+ EQUS "O "
+ EQUS "PA2 "
+ EQUS "SH IH TT1 "
+ EQUS "PA5 "
+ EQUS "IH TT1 SS "
+ EQUS "PA4 "
+ EQUS "A "
+ EQUS "PA4 "
+ EQUS "MM IS "
+ EQUS "PA2 "
+ EQUS "JH UW1 MM PP"
+ EQUB 13
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -46172,6 +46683,11 @@ IF _SOURCE_DISC
 
  EQUB 7                  \ System   7, Galaxy 0                  Lave = Token 26
 
+ELIF _EXECUTIVE
+
+ EQUB 7                  \ System   7, Galaxy 0                  Lave = Token 26
+ EQUB 46                 \ System  46, Galaxy 0              Riedquat = Token 27
+
 ENDIF
 
 \ ******************************************************************************
@@ -46239,6 +46755,11 @@ ENDIF
 IF _SOURCE_DISC
 
  EQUB &80                \ System   7, Galaxy 0                  Lave = Token 26
+
+ELIF _EXECUTIVE
+
+ EQUB &80                \ System   7, Galaxy 0                  Lave = Token 26
+ EQUB &80                \ System   7, Galaxy 0              Riedquat = Token 27
 
 ENDIF
 
@@ -46933,6 +47454,98 @@ IF _SOURCE_DISC
  ECHR 'T'
  ECHR ' '
  ECHR '1'
+ EQUB VE
+
+ELIF _EXECUTIVE
+
+ ETWO 'T', 'H'          \ Token 26:     "THIS MESSAGE IS AVAILABLE ONLY ON THE
+ ECHR 'I'               \                EXECUTIVE VERSION OF THIS PROGRAM"
+ ECHR 'S'               \
+ ECHR ' '               \ Encoded as:   "<226>IS M<237>SA<231>[202]AVAI<249>B
+ ECHR 'M'               \                <229> <223>LY <223> [147]E<230>CU<251>
+ ETWO 'E', 'S'          \                <250> <250>RSI<223> OF <226>IS PROGRAM"
+ ECHR 'S'
+ ECHR 'A'
+ ETWO 'G', 'E'
+ ETOK 202
+ ECHR 'A'
+ ECHR 'V'
+ ECHR 'A'
+ ECHR 'I'
+ ETWO 'L', 'A'
+ ECHR 'B'
+ ETWO 'L', 'E'
+ ECHR ' '
+ ETWO 'O', 'N'
+ ECHR 'L'
+ ECHR 'Y'
+ ECHR ' '
+ ETWO 'O', 'N'
+ ECHR ' '
+ ETOK 147
+ ECHR 'E'
+ ETWO 'X', 'E'
+ ECHR 'C'
+ ECHR 'U'
+ ETWO 'T', 'I'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ETWO 'V', 'E'
+ ECHR 'R'
+ ECHR 'S'
+ ECHR 'I'
+ ETWO 'O', 'N'
+ ECHR ' '
+ ECHR 'O'
+ ECHR 'F'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ECHR 'I'
+ ECHR 'S'
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'R'
+ ECHR 'O'
+ ECHR 'G'
+ ECHR 'R'
+ ECHR 'A'
+ ECHR 'M'
+ EQUB VE
+
+ENDIF
+
+IF _EXECUTIVE
+
+ ETWO 'O', 'N'          \ Token 27:     "ONLY THIS EXECUTIVE VERSION HAS THE @
+ ECHR 'L'               \                TOGGLE"
+ ECHR 'Y'               \
+ ECHR ' '               \ Encoded as:   "<223>LY [148]E<230>CU<251><250> <250>RS
+ ETOK 148               \                I<223> HAS [147]@ TOGG<229>"
+ ECHR 'E'
+ ETWO 'X', 'E'
+ ECHR 'C'
+ ECHR 'U'
+ ETWO 'T', 'I'
+ ETWO 'V', 'E'
+ ECHR ' '
+ ETWO 'V', 'E'
+ ECHR 'R'
+ ECHR 'S'
+ ECHR 'I'
+ ETWO 'O', 'N'
+ ECHR ' '
+ ECHR 'H'
+ ECHR 'A'
+ ECHR 'S'
+ ECHR ' '
+ ETOK 147
+ ECHR '@'
+ ECHR ' '
+ ECHR 'T'
+ ECHR 'O'
+ ECHR 'G'
+ ECHR 'G'
+ ETWO 'L', 'E'
  EQUB VE
 
 ENDIF

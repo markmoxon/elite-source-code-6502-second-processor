@@ -21,6 +21,7 @@
 #
 #   -rel1   Decrypt the source disc version from Ian Bell's site
 #   -rel2   Decrypt the SNG45 release version
+#   -rel3   Decrypt the Executive version
 #
 # If unspecified, the default is rel2
 #
@@ -43,6 +44,9 @@ for arg in argv[1:]:
     if arg == "-rel2":
         release = 2
         folder = "sng45"
+    if arg == "-rel3":
+        release = 3
+        folder = "executive"
 
 print("Elite Decryption")
 
@@ -61,6 +65,9 @@ print("[ Read    ] extracted/" + folder + "/P.CODE.bin")
 
 # Third part: V, which reverses the order of bytes between G% and F%-1
 # Can be reversed by simply repeating the reversal
+#
+# These values can be calculated from the unused code at prtblock,
+# which contains a CMP F%-1 instruction
 
 if release == 1:
     # Source disc
@@ -70,6 +77,10 @@ elif release == 2:
     # SNG45
     g = 0x10D1
     f = 0x818F - 1
+elif release == 3:
+    # Executive
+    g = 0x10D3
+    f = 0x82e7 - 1
 
 while g < f:
     tmp = data_block[g - 0x1000]

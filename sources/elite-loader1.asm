@@ -29,6 +29,7 @@ INCLUDE "sources/elite-header.h.asm"
 
 _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
+_EXECUTIVE              = (_RELEASE = 3)
 
 \ ******************************************************************************
 \
@@ -89,7 +90,7 @@ ORG &0090
 \
 \ ******************************************************************************
 
-IF _SNG45
+IF _SNG45 OR _EXECUTIVE
 
  CODE% = &1FDC
  LOAD% = &1FDC
@@ -103,7 +104,7 @@ ENDIF
 
 ORG CODE%
 
-IF _SNG45
+IF _SNG45 OR _EXECUTIVE
 
  EQUS "Copyright (c) Acornsoft Limited 1985"
 
@@ -294,13 +295,13 @@ ENDMACRO
 
  CLD                    \ Clear the decimal flag, so we're not in decimal mode
 
-IF _SNG45
+IF _SNG45 OR _EXECUTIVE
 
  NOP                    \ In SNG45, the release version of 6502 Second Processor
  NOP                    \ Elite, the detection code from the original source is
  NOP                    \ disabled and replaced by NOPs
- NOP
- NOP
+ NOP                    \
+ NOP                    \ This is also true in the Executive version
  NOP
  NOP
  NOP
@@ -401,7 +402,7 @@ ENDIF
 
  BRK
 
-IF _SNG45
+IF _SNG45 OR _EXECUTIVE
 
  EQUB &0A               \ Print a line feed
 

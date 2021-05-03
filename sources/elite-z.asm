@@ -29,6 +29,7 @@ INCLUDE "sources/elite-header.h.asm"
 
 _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
+_EXECUTIVE              = (_RELEASE = 3)
 
 \ ******************************************************************************
 \
@@ -262,13 +263,24 @@ ORG &2300
 \ but it's quicker to use a lookup table, at the expense of three pages of
 \ memory.
 \
+\ The Executive version uses a different font to the standard OS, which is
+\ included in the P.FONTEX.bin file. This means all in-game text uses this new
+\ font, which is based on the 1960s Westminster font. Ths font style is similar
+\ to the machine-readable font on cheques, and is in a style that we would now
+\ call "retro-futuristic" (though presumably it was just "futuristic" back in
+\ 1984).
+\
 \ ******************************************************************************
 
 ORG CODE%
 
 FONT% = P% DIV 256
 
-INCBIN "binaries/P.FONT.bin"
+IF _SNG45 OR _SOURCE_DISC
+ INCBIN "binaries/P.FONT.bin"
+ELIF _EXECUTIVE
+ INCBIN "binaries/P.FONTEX.bin"
+ENDIF
 
 \ ******************************************************************************
 \
@@ -299,6 +311,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ICODE-log.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ICODE-log.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ICODE-log.bin"
  ENDIF
@@ -343,6 +357,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ICODE-logL.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ICODE-logL.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ICODE-logL.bin"
  ENDIF
@@ -383,6 +399,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ICODE-antilog.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ICODE-antilog.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ICODE-antilog.bin"
  ENDIF
@@ -426,6 +444,8 @@ IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
   INCBIN "extracted/sng45/workspaces/ICODE-antilogODD.bin"
+ ELIF _EXECUTIVE
+  INCBIN "extracted/executive/workspaces/ICODE-antilogODD.bin"
  ELIF _SOURCE_DISC
   INCBIN "extracted/source-disc/workspaces/ICODE-antilogODD.bin"
  ENDIF
@@ -896,9 +916,26 @@ NEXT
  STA VIA+&4E            \ (SHEILA &4E) bits 0 and 3-5 (i.e. disable the Timer1,
                         \ CB1, CB2 and CA2 interrupts from the System VIA)
 
+IF _SNG45 OR _SOURCE_DISC
+
  LDA #%01111111         \ Set 6522 User VIA interrupt enable register IER
  STA &FE6E              \ (SHEILA &6E) bits 0-7 (i.e. disable all hardware
                         \ interrupts from the User VIA)
+
+ELIF _EXECUTIVE
+
+ LDA #%01111111         \ At this point, the other 6502SP versions set the 6522
+                        \ User VIA interrupt enable register IER to this value
+                        \ to disable all hardware interrupts from the User VIA,
+                        \ but the Executive version is missing the STA &FE6E
+                        \ instruction, so it doesn't disable all the interrupts.
+                        \ This is because the Watford Electronics Beeb Speech
+                        \ Synthesiser that the Executive version supports plugs
+                        \ into the user port, which is controlled by the 6522
+                        \ User VIA, so this ensures we don't disable the speech
+                        \ synthesiser if one is fitted
+
+ENDIF
 
  LDA IRQ1V              \ Store the current IRQ1V vector in VEC, so VEC(1 0) now
  STA VEC                \ contains the original address of the IRQ1 handler

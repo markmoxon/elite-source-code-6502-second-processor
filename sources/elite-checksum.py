@@ -28,6 +28,8 @@ for arg in argv[1:]:
         release = 1
     if arg == "-rel2":
         release = 2
+    if arg == "-rel3":
+        release = 3
 
 print("Elite Big Code File")
 print("Encryption = ", Encrypt)
@@ -42,7 +44,16 @@ elite_file.close()
 
 # Commander data checksum
 
-commander_start = 12 + 5
+if release == 1:
+    # Source disc
+    commander_start = 12 + 5
+elif release == 2:
+    # SNG45
+    commander_start = 12 + 5
+elif release == 3:
+    # Executive
+    commander_start = 14 + 5
+
 commander_offset = 0x52
 CH = 0x4B - 2
 CY = 0
@@ -62,7 +73,15 @@ if Encrypt:
 
 # First part: ZP routine, which sets the checksum byte at S%-1
 
-s = 0x106A
+if release == 1:
+    # Source disc
+    s = 0x106A
+elif release == 2:
+    # SNG45
+    s = 0x106A
+elif release == 3:
+    # Executive
+    s = 0x106C
 
 s_checksum = 0x10
 carry = 1
@@ -113,6 +132,10 @@ elif release == 2:
     # SNG45
     g = 0x10D1
     f = 0x818F - 1
+elif release == 3:
+    # Executive
+    g = 0x10D3
+    f = 0x82e7 - 1
 
 if Encrypt:
     while g < f:
