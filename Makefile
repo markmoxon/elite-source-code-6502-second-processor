@@ -6,20 +6,27 @@ PYTHON?=python
 #
 #   source-disc
 #   sng45
+#   executive
 #
 # So, for example:
 #
-#   make encrypt verify release-6502sp=source-disc
+#   make encrypt verify release-6502sp=executive
 #
-# will build the version from the source disc. If you omit the release-6502sp
-# parameter, it will build the SNG45 version.
+# will build the Executive version. If you omit the release-6502sp parameter,
+# it will build the SNG45 version.
 
 ifeq ($(release-6502sp), source-disc)
   rel-6502sp=1
   folder-6502sp='/source-disc'
+  suffix-6502sp='-from-source-disc'
+else ifeq ($(release-6502sp), executive)
+  rel-6502sp=3
+  folder-6502sp='/executive'
+  suffix-6502sp='-executive'
 else
   rel-6502sp=2
   folder-6502sp='/sng45'
+  suffix-6502sp='-sng45'
 endif
 
 .PHONY:build
@@ -34,7 +41,7 @@ build:
 	$(BEEBASM) -i sources/elite-loader1.asm -v >> output/compile.txt
 	$(BEEBASM) -i sources/elite-loader2.asm -v >> output/compile.txt
 	$(PYTHON) sources/elite-checksum.py -u -rel$(rel-6502sp)
-	$(BEEBASM) -i sources/elite-disc.asm -do elite-6502sp.ssd -boot ELITE
+	$(BEEBASM) -i sources/elite-disc.asm -do elite-6502sp$(suffix-6502sp).ssd -boot ELITE
 
 .PHONY:encrypt
 encrypt:
@@ -48,7 +55,7 @@ encrypt:
 	$(BEEBASM) -i sources/elite-loader1.asm -v >> output/compile.txt
 	$(BEEBASM) -i sources/elite-loader2.asm -v >> output/compile.txt
 	$(PYTHON) sources/elite-checksum.py -rel$(rel-6502sp)
-	$(BEEBASM) -i sources/elite-disc.asm -do elite-6502sp.ssd -boot ELITE
+	$(BEEBASM) -i sources/elite-disc.asm -do elite-6502sp$(suffix-6502sp).ssd -boot ELITE
 
 .PHONY:verify
 verify:
