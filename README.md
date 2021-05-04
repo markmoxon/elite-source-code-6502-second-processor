@@ -264,40 +264,7 @@ The differences in the source disc release compared to the SNG45 release are:
 
 * The loader in the source disc release contains a load of Tube-detection code that is disabled in the SNG45 release.
 
-The differences in the Executive version compared to the SNG45 release are:
-
-* The top laser line in the source disc release aims slightly lower than in the SNG45 version (see the `LASLI` routine for details).
-
-* Memory map: LP = &8900, K% = &8500
-* Different override tokens for Lave, Riedquat (RUTOK, RUPLA, RUGAL):
-  Lave: "THIS MESSAGE IS AVAILABLE ONLY ON THE EXECUTIVE VERSION OF THIS PROGRAM"
-  Riedquat: "ONLY THIS EXECUTIVE VERSION HAS THE @ TOGGLE"
-* Two new config settings, @ and : (DK4)
-* Speech (:) TALK, SPEECH, parasite variables
-  If speech is enabled, CHPR doesn't make beep noises (though BELL still does)
-  Says "Elite" when displaying the title screen (BR part 1)
-  Repeatedly says "Energy low" when energy is low (main flight 15)
-  Says "Oh shit, it's a mis-jump" on a mis-jump (MJP)
-  Repeatedly says "Incoming missile" when a missile is incoming (SFRMIS)
-* Infinite jump range (@) (hyp for jump range, TT18 for fuel)
-* Loader does not disable all hardware interrupts from the User VIA (i.e. speech synthesiser) - ENTRY
-* Demo text (DEMON, acorn, executive, true3):
-    Pizzasoft instead of Acornsoft
-    The Executive Version before authors' names
-    Congratulations on obtaining a copy of this elusive product. instead of galaxy in turmoil
-* Demo starts automatically (TT170)
-* Font FONT%
-* Tokens:
-  L.Y. instead of LIGHT YEARS
-  ENERGY LOW,SIR
-  INCOMING MISSILE,SIR
-
-* SIR in tokens
-* 'Firebird' string
-* Starting commander is called Firebud and is maxed-out (NA%, CHK, CHK2)
-* COK is different - has bit 7 set in NA% (NA%)
-* br1/death2 resetting is different?
-
+The differences in the Executive version compared to the SNG45 release are detailed in the deep dive on [secrets of the Executive version](https://www.bbcelite.com/deep_dives/secrets_of_the_executive_version.html).
 
 ## Notes on the original source files
 

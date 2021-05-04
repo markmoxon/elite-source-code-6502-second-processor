@@ -3367,7 +3367,7 @@ PRINT "WP workspace from  ", ~WP," to ", ~P%
 \
 \       Name: K%
 \       Type: Workspace
-\    Address: &8200 to &85FF
+\    Address: &8200 to &85FF (&8500 to &88FF in the Executive version)
 \   Category: Workspaces
 \    Summary: Ship data blocks
 \  Deep dive: Ship data blocks
@@ -3406,7 +3406,7 @@ ENDIF
 \
 \       Name: LP
 \       Type: Workspace
-\    Address: &8600 to &91FF
+\    Address: &8600 to &91FF (&8900 to &8BFF in the Executive version)
 \   Category: Workspaces
 \    Summary: Variables used for displaying the scrolling text in the demo
 \
@@ -3513,7 +3513,7 @@ LOAD_A% = LOAD%
 \
 \       Name: Parasite variables
 \       Type: Workspace
-\    Address: &1000 to &100B (&100D in the Executive version)
+\    Address: &1000 to &100B (&1000 to &100D in the Executive version)
 \   Category: Workspaces
 \    Summary: Various variables used by the parasite
 \
@@ -29924,6 +29924,9 @@ LOAD_F% = LOAD% + P% - CODE%
 \ the cursor keys or joystick have been used (i.e. the values that are returned
 \ by routine TT17).
 \
+\ This routine also checks for the "F" key press (search for a system), which
+\ applies to enhanced versions only.
+\
 \ Arguments:
 \
 \   A                   The internal key number of the key pressed (see p.142 of
@@ -41648,6 +41651,7 @@ LOAD_I% = LOAD% + P% - CODE%
 \   Category: Demo
 \    Summary: Show the demo
 \  Deep dive: The 6502 Second Processor demo mode
+\             Secrets of the Executive version
 \
 \ ------------------------------------------------------------------------------
 \
@@ -43044,12 +43048,25 @@ ENDIF
 \       Type: Subroutine
 \   Category: Sound
 \    Summary: Speak using the Watford Electronics Beeb Speech Synthesiser
+\  Deep dive: Secrets of the Executive version
 \
 \ ------------------------------------------------------------------------------
 \
 \ In the Executive version, if you have a Watford Electronics Beeb Speech
 \ Synthesiser fitted and enable speech by presing ":" while the game is paused,
 \ then the game will speak to you at various points.
+\
+\ Arguments:
+\
+\   X                   The number of the phrase to speak:
+\
+\                         1 = "Incoming missile"
+\
+\                         2 = "Energy low"
+\
+\                         3 = "Elite"
+\
+\                         4 = "Oh shit, it's a mis-jump"
 \
 \ ******************************************************************************
 
@@ -43140,6 +43157,7 @@ ENDIF
 \       Type: Variable
 \   Category: Sound
 \    Summary: Phrases for the Watford Electronics Beeb Speech Synthesiser
+\  Deep dive: Secrets of the Executive version
 \
 \ ******************************************************************************
 
