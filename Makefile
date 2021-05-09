@@ -17,16 +17,16 @@ PYTHON?=python
 
 ifeq ($(release-6502sp), source-disc)
   rel-6502sp=1
-  folder-6502sp='/source-disc'
-  suffix-6502sp='-from-source-disc'
+  folder-6502sp=/source-disc
+  suffix-6502sp=-from-source-disc
 else ifeq ($(release-6502sp), executive)
   rel-6502sp=3
-  folder-6502sp='/executive'
-  suffix-6502sp='-executive'
+  folder-6502sp=/executive
+  suffix-6502sp=-executive
 else
   rel-6502sp=2
-  folder-6502sp='/sng45'
-  suffix-6502sp='-sng45'
+  folder-6502sp=/sng45
+  suffix-6502sp=-sng45
 endif
 
 .PHONY:build
