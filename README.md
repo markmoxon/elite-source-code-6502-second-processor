@@ -33,9 +33,18 @@ My hope is that this repository and the [accompanying website](https://www.bbcel
 
 * [Building different releases of Elite](#building-different-releases-of-elite)
 
+  * [Building the source disc release](#building-the-source-disc-release)
+
+  * [Building the Executive version](#building-the-executive-version)
+
+  * [Building the SNG45 release](#building-the-sng45-release)
+
+  * [Differences between the releases](#differences-between-the-releases)
+
 * [Notes on the original source files](#notes-on-the-original-source-files)
 
   * [Fixing the original build process](#fixing-the-original-build-process)
+
   * [Producing byte-accurate binaries](#producing-byte-accurate-binaries)
 
 ## Acknowledgements
@@ -220,7 +229,9 @@ This repository contains the source code for three different releases of 6502 Se
 
 * The Executive version from Ian Bell's site (which was also never released)
 
-By default the build process builds the SNG45 release, but you can build the other relases as follows.
+By default the build process builds the SNG45 release, but you can build the other releases as follows.
+
+### Building the source disc release
 
 You can build the source disc release by appending `release-6502sp=source-disc` to the `make` command, like this on Windows:
 
@@ -236,6 +247,8 @@ make encrypt verify release-6502sp=source-disc
 
 This will produce a file called `elite-6502sp-from-source-disc.ssd` that contains the source disc release.
 
+### Building the Executive version
+
 You can build the Executive version by appending `release-6502sp=executive` to the `make` command, like this on Windows:
 
 ```
@@ -250,9 +263,13 @@ make encrypt verify release-6502sp=executive
 
 This will produce a file called `elite-6502sp-executive.ssd` that contains the Executive version.
 
-You can also add `release-6502sp=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 release, though that's the default value so it isn't necessary.
+### Building the SNG45 release
 
-You can see the differences between the releases by searching the source code for `_SNG45` (for features in the SNG45 release) or `_SOURCE_DISC` (for features in the source disc release) or `_EXECUTIVE_` (for features in the Executive version). There are only a few differences in the source disc release (if you ignore [workspace noise](#producing-byte-accurate-binaries)), but quite a few in the Executive version.
+You can add `release-6502sp=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 release, though that's the default value so it isn't necessary.
+
+You can see the differences between the releases by searching the source code for `_SNG45` (for features in the SNG45 release) or `_SOURCE_DISC` (for features in the source disc release) or `_EXECUTIVE` (for features in the Executive version). There are only a few differences in the source disc release (if you ignore [workspace noise](#producing-byte-accurate-binaries)), but quite a few in the Executive version.
+
+### Differences between the releases
 
 The differences in the source disc release compared to the SNG45 release are:
 
