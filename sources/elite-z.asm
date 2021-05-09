@@ -479,7 +479,7 @@ ENDIF
 \ page number for the start of the character row containing that coordinate.
 \
 \ Screen memory is from &4000 to &7DFF, so the lookup works like this:
-
+\
 \   Y =   0 to  7,  lookup value = &40 (so row 1 is from &4000 to &41FF)
 \   Y =   8 to 15,  lookup value = &42 (so row 2 is from &4200 to &43FF)
 \   Y =  16 to 23,  lookup value = &44 (so row 3 is from &4400 to &45FF)
