@@ -33994,7 +33994,7 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ Screen memory from &4000 to &8000 is saved to disc with an incremental
+\ Screen memory from &4000 to &7FFF is saved to disc with an incremental
 \ filename, starting with ":0.X.SCREEN1" for the first screenshot, then
 \ ":0.X.SCREEN2" for the next, and so on.
 \
@@ -34028,7 +34028,7 @@ ENDIF
  LDY #HI(oscobl)
 
  LDA #0                 \ Call OSFILE with A = 0 to save a file containing the
- JSR OSFILE             \ screen memory from &4000 to &8000
+ JSR OSFILE             \ screen memory from &4000 to &7FFF
 
  INC scname+11          \ Increment the screenshot number in the filename at
                         \ scname, so ":0.X.SCREEN1" becomes ":0.X.SCREEN2" and
