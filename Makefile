@@ -1,7 +1,7 @@
 BEEBASM?=beebasm
 PYTHON?=python
 
-# You can set the release that gets built by adding 'release-6502sp=<rel>' to
+# You can set the release that gets built by adding 'release=<rel>' to
 # the make command, where <rel> is one of:
 #
 #   source-disc
@@ -10,16 +10,16 @@ PYTHON?=python
 #
 # So, for example:
 #
-#   make encrypt verify release-6502sp=executive
+#   make encrypt verify release=executive
 #
-# will build the Executive version. If you omit the release-6502sp parameter,
+# will build the Executive version. If you omit the release parameter,
 # it will build the SNG45 version.
 
-ifeq ($(release-6502sp), source-disc)
+ifeq ($(release), source-disc)
   rel-6502sp=1
   folder-6502sp=/source-disc
   suffix-6502sp=-from-source-disc
-else ifeq ($(release-6502sp), executive)
+else ifeq ($(release), executive)
   rel-6502sp=3
   folder-6502sp=/executive
   suffix-6502sp=-executive

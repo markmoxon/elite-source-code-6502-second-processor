@@ -241,39 +241,39 @@ By default the build process builds the SNG45 release, but you can build the oth
 
 ### Building the source disc release
 
-You can build the source disc release by appending `release-6502sp=source-disc` to the `make` command, like this on Windows:
+You can build the source disc release by appending `release=source-disc` to the `make` command, like this on Windows:
 
 ```
-make.bat encrypt verify release-6502sp=source-disc
+make.bat encrypt verify release=source-disc
 ```
 
 or this on a Mac or Linux:
 
 ```
-make encrypt verify release-6502sp=source-disc
+make encrypt verify release=source-disc
 ```
 
 This will produce a file called `elite-6502sp-from-source-disc.ssd` that contains the source disc release.
 
 ### Building the Executive version
 
-You can build the Executive version by appending `release-6502sp=executive` to the `make` command, like this on Windows:
+You can build the Executive version by appending `release=executive` to the `make` command, like this on Windows:
 
 ```
-make.bat encrypt verify release-6502sp=executive
+make.bat encrypt verify release=executive
 ```
 
 or this on a Mac or Linux:
 
 ```
-make encrypt verify release-6502sp=executive
+make encrypt verify release=executive
 ```
 
 This will produce a file called `elite-6502sp-executive.ssd` that contains the Executive version.
 
 ### Building the SNG45 release
 
-You can add `release-6502sp=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 release, though that's the default value so it isn't necessary.
+You can add `release=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 release, though that's the default value so it isn't necessary.
 
 You can see the differences between the releases by searching the source code for `_SNG45` (for features in the SNG45 release) or `_SOURCE_DISC` (for features in the source disc release) or `_EXECUTIVE` (for features in the Executive version). There are only a few differences in the source disc release (if you ignore [workspace noise](#producing-byte-accurate-binaries)), but quite a few in the Executive version.
 
