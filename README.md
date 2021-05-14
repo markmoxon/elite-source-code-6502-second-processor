@@ -1,6 +1,6 @@
 # Fully documented source code for Elite on the BBC Micro with a 6502 Second Processor
 
-[BBC Micro (cassette)](https://github.com/markmoxon/elite-beebasm) | [BBC Micro (disc)](https://github.com/markmoxon/disc-elite-beebasm) | **6502 Second Processor** | [BBC Master](https://github.com/markmoxon/master-elite-beebasm) | [Acorn Electron](https://github.com/markmoxon/electron-elite-beebasm)
+[BBC Micro (cassette)](https://github.com/markmoxon/cassette-elite-beebasm) | [BBC Micro (disc)](https://github.com/markmoxon/disc-elite-beebasm) | **6502 Second Processor** | [BBC Master](https://github.com/markmoxon/master-elite-beebasm) | [Acorn Electron](https://github.com/markmoxon/electron-elite-beebasm)
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
 
@@ -43,7 +43,7 @@ See the [introduction](#introduction) for more information.
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
 
-You can build the fully functioning game from this source. Three releases are currently supported ([see below](#building-different-releases-of-elite)): the official SNG45 release, the Executive version, and the version produced by the original source discs.
+You can build the fully functioning game from this source. [Three releases](#building-different-releases-of-elite) are currently supported: the official SNG45 release, the Executive version, and the version produced by the original source discs.
 
 It is a companion to the [bbcelite.com website](https://www.bbcelite.com), which contains all the code from this repository, but laid out in a much more human-friendly fashion. The links above will take you to repositories for the other versions of Elite that are covered by this project.
 
