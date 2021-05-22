@@ -2783,7 +2783,7 @@ ORG &0800
 
 .TP
 
- SKIP 1                 \ The current mission status:
+ SKIP 1                 \ The current mission status
                         \
                         \   * Bits 0-1 = Mission 1 status
                         \
@@ -30328,6 +30328,7 @@ LOAD_F% = LOAD% + P% - CODE%
 .brkd
 
  EQUB 0
+
 \ ******************************************************************************
 \
 \       Name: BRBR
@@ -40811,6 +40812,10 @@ ENDIF
 \                         * 2 = left
 \
 \                         * 3 = right
+\
+\ Other entry points:
+\
+\   LO2                 Contains an RTS
 \
 \ ******************************************************************************
 
