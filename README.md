@@ -27,7 +27,7 @@ See the [introduction](#introduction) for more information.
   * [Verifying the output](#verifying-the-output)
   * [Log files](#log-files)
 
-* [Building different releases of Elite](#building-different-releases-of-elite)
+* [Building different releases of 6502 Second Processor Elite](#building-different-releases-of-6502-second-processor-elite)
 
   * [Building the source disc release](#building-the-source-disc-release)
   * [Building the Executive version](#building-the-executive-version)
@@ -227,7 +227,7 @@ All the compiled binaries match the extracts, so we know we are producing the sa
 
 During compilation, details of every step are output in a file called `compile.txt` in the `output` folder. If you have problems, it might come in handy, and it's a great reference if you need to know the addresses of labels and variables for debugging (or just snooping around).
 
-## Building different releases of Elite
+## Building different releases of 6502 Second Processor Elite
 
 This repository contains the source code for three different releases of 6502 Second Processor Elite:
 
