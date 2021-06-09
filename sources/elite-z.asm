@@ -1816,10 +1816,6 @@ ENDIF
 
  LDA Y1                 \ Fetch the y-coordinate into A
 
-\.CPIX                  \ This label is commented out in the original source. It
-                        \ would provide a new entry point with A specifying the
-                        \ y-coordinate instead of Y1, but it isn't used anywhere
-
  TAY                    \ Store the y-coordinate in Y
 
  LDA ylookup,Y          \ Look up the page number of the character row that
