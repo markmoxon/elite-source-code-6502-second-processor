@@ -17331,7 +17331,6 @@ ENDIF
 
  LDA #64                \ Set the main loop counter to 64, so the ship rotates
  STA MCNT               \ for 64 iterations through MVEIT
- 
 
 .BRL1
 
