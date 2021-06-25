@@ -5,8 +5,9 @@
 \ 6502 Second Processor Elite was written by Ian Bell and David Braben and is
 \ copyright Acornsoft 1985
 \
-\ The code on this site is identical to the version released on Ian Bell's
-\ personal website at http://www.elitehomepage.org/
+\ The code on this site is identical to the source discs released on Ian Bell's
+\ personal website at http://www.elitehomepage.org/ (it's just been reformatted
+\ to be more readable)
 \
 \ The commentary is copyright Mark Moxon, and any misunderstandings or mistakes
 \ in the documentation are entirely my fault
@@ -7676,11 +7677,9 @@ ENDMACRO
 
  LDA DELTA              \ Fetch our ship's speed into A, in the range 0-40
 
-\LSR A                  \ Draw the speed indicator using a range of 0-31, and
- JSR DIL-1              \ increment SC to point to the next indicator (the roll
-                        \ indicator). The LSR is commented out as it isn't
-                        \ required with a call to DIL-1, so perhaps this was
-                        \ originally a call to DIL that got optimised
+ JSR DIL-1              \ Draw the speed indicator using a range of 0-31, and
+                        \ increment SC to point to the next indicator (the roll
+                        \ indicator)
 
 \ ******************************************************************************
 \
@@ -8209,7 +8208,7 @@ ENDMACRO
                         \ to the next indicator, i.e. the one below the one we
                         \ just drew
 
-.DL9                    \ This label is not used but is in the original source
+.DL9
 
  RTS                    \ Return from the subroutine
 

@@ -5,8 +5,9 @@
 \ 6502 Second Processor Elite was written by Ian Bell and David Braben and is
 \ copyright Acornsoft 1985
 \
-\ The code on this site is identical to the version released on Ian Bell's
-\ personal website at http://www.elitehomepage.org/
+\ The code on this site is identical to the source discs released on Ian Bell's
+\ personal website at http://www.elitehomepage.org/ (it's just been reformatted
+\ to be more readable)
 \
 \ The commentary is copyright Mark Moxon, and any misunderstandings or mistakes
 \ in the documentation are entirely my fault
@@ -868,7 +869,10 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ Set A and X to random numbers. The C and V flags are also set randomly.
+\ Set A and X to random numbers (though note that X is set to the random number
+\ that was returned in A the last time DORND was called).
+\
+\ The C and V flags are also set randomly.
 \
 \ This is a simplified version of the DORND routine in the main game code. It
 \ swaps the two calculations around and omits the ROL A instruction, but is
