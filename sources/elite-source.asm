@@ -2898,7 +2898,7 @@ ORG &0800
                         \   * 37 = large cargo bay of 35 tonnes
                         \
                         \ The value is two greater than the actual capacity to
-                        \ male the maths in tnpr slightly more efficient
+                        \ make the maths in tnpr slightly more efficient
 
 .QQ20
 
@@ -3817,23 +3817,23 @@ ENDIF
 
  EQUB 22+(15 AND Q%)    \ CRGO = Cargo capacity, #22
 
- EQUB 0                 \ QQ20+0  = Amount of Food in cargo hold, #23
- EQUB 0                 \ QQ20+1  = Amount of Textiles in cargo hold, #24
- EQUB 0                 \ QQ20+2  = Amount of Radioactives in cargo hold, #25
- EQUB 0                 \ QQ20+3  = Amount of Slaves in cargo hold, #26
- EQUB 0                 \ QQ20+4  = Amount of Liquor/Wines in cargo hold, #27
- EQUB 0                 \ QQ20+5  = Amount of Luxuries in cargo hold, #28
- EQUB 0                 \ QQ20+6  = Amount of Narcotics in cargo hold, #29
- EQUB 0                 \ QQ20+7  = Amount of Computers in cargo hold, #30
- EQUB 0                 \ QQ20+8  = Amount of Machinery in cargo hold, #31
- EQUB 0                 \ QQ20+9  = Amount of Alloys in cargo hold, #32
- EQUB 0                 \ QQ20+10 = Amount of Firearms in cargo hold, #33
- EQUB 0                 \ QQ20+11 = Amount of Furs in cargo hold, #34
- EQUB 0                 \ QQ20+12 = Amount of Minerals in cargo hold, #35
- EQUB 0                 \ QQ20+13 = Amount of Gold in cargo hold, #36
- EQUB 0                 \ QQ20+14 = Amount of Platinum in cargo hold, #37
- EQUB 0                 \ QQ20+15 = Amount of Gem-Stones in cargo hold, #38
- EQUB 0                 \ QQ20+16 = Amount of Alien Items in cargo hold, #39
+ EQUB 0                 \ QQ20+0  = Amount of food in cargo hold, #23
+ EQUB 0                 \ QQ20+1  = Amount of textiles in cargo hold, #24
+ EQUB 0                 \ QQ20+2  = Amount of radioactives in cargo hold, #25
+ EQUB 0                 \ QQ20+3  = Amount of slaves in cargo hold, #26
+ EQUB 0                 \ QQ20+4  = Amount of liquor/Wines in cargo hold, #27
+ EQUB 0                 \ QQ20+5  = Amount of luxuries in cargo hold, #28
+ EQUB 0                 \ QQ20+6  = Amount of narcotics in cargo hold, #29
+ EQUB 0                 \ QQ20+7  = Amount of computers in cargo hold, #30
+ EQUB 0                 \ QQ20+8  = Amount of machinery in cargo hold, #31
+ EQUB 0                 \ QQ20+9  = Amount of alloys in cargo hold, #32
+ EQUB 0                 \ QQ20+10 = Amount of firearms in cargo hold, #33
+ EQUB 0                 \ QQ20+11 = Amount of furs in cargo hold, #34
+ EQUB 0                 \ QQ20+12 = Amount of minerals in cargo hold, #35
+ EQUB 0                 \ QQ20+13 = Amount of gold in cargo hold, #36
+ EQUB 0                 \ QQ20+14 = Amount of platinum in cargo hold, #37
+ EQUB 0                 \ QQ20+15 = Amount of gem-stones in cargo hold, #38
+ EQUB 0                 \ QQ20+16 = Amount of alien items in cargo hold, #39
 
  EQUB Q%                \ ECM = E.C.M., #40
 
@@ -3855,23 +3855,23 @@ ENDIF
 
  EQUB 0                 \ FIST = Legal status ("fugitive/innocent status"), #52
 
- EQUB 16                \ AVL+0  = Market availability of Food, #53
- EQUB 15                \ AVL+1  = Market availability of Textiles, #54
- EQUB 17                \ AVL+2  = Market availability of Radioactives, #55
- EQUB 0                 \ AVL+3  = Market availability of Slaves, #56
- EQUB 3                 \ AVL+4  = Market availability of Liquor/Wines, #57
- EQUB 28                \ AVL+5  = Market availability of Luxuries, #58
- EQUB 14                \ AVL+6  = Market availability of Narcotics, #59
- EQUB 0                 \ AVL+7  = Market availability of Computers, #60
- EQUB 0                 \ AVL+8  = Market availability of Machinery, #61
- EQUB 10                \ AVL+9  = Market availability of Alloys, #62
- EQUB 0                 \ AVL+10 = Market availability of Firearms, #63
- EQUB 17                \ AVL+11 = Market availability of Furs, #64
- EQUB 58                \ AVL+12 = Market availability of Minerals, #65
- EQUB 7                 \ AVL+13 = Market availability of Gold, #66
- EQUB 9                 \ AVL+14 = Market availability of Platinum, #67
- EQUB 8                 \ AVL+15 = Market availability of Gem-Stones, #68
- EQUB 0                 \ AVL+16 = Market availability of Alien Items, #69
+ EQUB 16                \ AVL+0  = Market availability of food, #53
+ EQUB 15                \ AVL+1  = Market availability of textiles, #54
+ EQUB 17                \ AVL+2  = Market availability of radioactives, #55
+ EQUB 0                 \ AVL+3  = Market availability of slaves, #56
+ EQUB 3                 \ AVL+4  = Market availability of liquor/Wines, #57
+ EQUB 28                \ AVL+5  = Market availability of luxuries, #58
+ EQUB 14                \ AVL+6  = Market availability of narcotics, #59
+ EQUB 0                 \ AVL+7  = Market availability of computers, #60
+ EQUB 0                 \ AVL+8  = Market availability of machinery, #61
+ EQUB 10                \ AVL+9  = Market availability of alloys, #62
+ EQUB 0                 \ AVL+10 = Market availability of firearms, #63
+ EQUB 17                \ AVL+11 = Market availability of furs, #64
+ EQUB 58                \ AVL+12 = Market availability of minerals, #65
+ EQUB 7                 \ AVL+13 = Market availability of gold, #66
+ EQUB 9                 \ AVL+14 = Market availability of platinum, #67
+ EQUB 8                 \ AVL+15 = Market availability of gem-stones, #68
+ EQUB 0                 \ AVL+16 = Market availability of alien items, #69
 
  EQUB 0                 \ QQ26 = Random byte that changes for each visit to a
                         \ system, for randomising market prices, #70
@@ -5071,7 +5071,7 @@ ENDIF
  STA QQ20,Y             \ of type Y in the cargo hold, as we just successfully
                         \ scooped one canister of type Y
 
- TYA                    \ Print recursive token 48 + A as an in-flight token,
+ TYA                    \ Print recursive token 48 + Y as an in-flight token,
  ADC #208               \ which will be in the range 48 ("FOOD") to 64 ("ALIEN
  JSR MESS               \ ITEMS"), so this prints the scooped item's name
 
@@ -21143,7 +21143,7 @@ ENDIF
                         \ "g"), padded to a width of two characters
 
  JSR var                \ Call var to set QQ19+3 = economy * |economic_factor|
-                        \ (and set the availability of Alien Items to 0)
+                        \ (and set the availability of alien items to 0)
 
  LDA QQ19+1             \ Fetch the byte #1 that we stored above and jump to
  BMI TT155              \ TT155 if it is negative (i.e. if the economic_factor
@@ -21412,7 +21412,7 @@ ENDIF
 \ ------------------------------------------------------------------------------
 \
 \ Set QQ19+3 = economy * |economic_factor|, given byte #1 of the market prices
-\ table for an item. Also sets the availability of Alien Items to 0.
+\ table for an item. Also sets the availability of alien items to 0.
 \
 \ This routine forms part of the calculations for market item prices (TT151)
 \ and availability (GVL).
@@ -21438,7 +21438,7 @@ ENDIF
 
  CLC                    \ Clear the C flag so we can do additions below
 
- LDA #0                 \ Set AVL+16 (availability of Alien Items) to 0,
+ LDA #0                 \ Set AVL+16 (availability of alien items) to 0,
  STA AVL+16             \ setting A to 0 in the process
 
 .TT153
@@ -21576,7 +21576,7 @@ ENDIF
                         \ QQ19+1
 
  JSR var                \ Call var to set QQ19+3 = economy * |economic_factor|
-                        \ (and set the availability of Alien Items to 0)
+                        \ (and set the availability of alien items to 0)
 
  LDA QQ23+3,X           \ Fetch byte #3 from the market prices table (mask) and
  AND QQ26               \ AND with the random number for this system visit
@@ -22607,7 +22607,7 @@ ENDIF
                         \ the transaction, so jump to c to return from the
                         \ subroutine (as c contains an RTS)
 
- LDA #197               \ Otherwise we don't have enough cash to but this piece
+ LDA #197               \ Otherwise we don't have enough cash to buy this piece
  JSR prq                \ of equipment, so print recursive token 37 ("CASH")
                         \ followed by a question mark
 
@@ -25014,7 +25014,8 @@ LOAD_E% = LOAD% + P% - CODE%
 \ copied into the first two K3 bytes, and the sign of the sign byte is copied
 \ into the highest K3 byte.
 \
-\ The comments below are written for the x-coordinate into K3(2 1 0).
+\ The comments below are written for copying the planet's x-coordinate into
+\ K3(2 1 0).
 \
 \ Arguments:
 \
@@ -32162,8 +32163,9 @@ ENDIF
 .ELT2F
 
  BRK                    \ The error that is printed if we try to load an
- EQUS "IIllegal "       \ invalid commander file with bit 7 of byte #0 set
- EQUS "ELITE II file"   \ (the spelling mistake is in the original source)
+ EQUB &49               \ invalid commander file with bit 7 of byte #0 set
+ EQUS "Illegal "        \ (&49 is the error number)
+ EQUS "ELITE II file"
  BRK
 
 \.MINI                  \ These instructions are commented out in the original
@@ -34251,7 +34253,7 @@ ENDIF
  BMI out                \ If A < 0 (50% chance), return from the subroutine
                         \ (as out contains an RTS)
 
- CPX #22                \ If X >= 22 (89% chance), return from the subroutine
+ CPX #22                \ If X >= 22 (91% chance), return from the subroutine
  BCS out                \ (as out contains an RTS)
 
  LDA QQ20,X             \ If we do not have any of item QQ20+X, return from the
@@ -34461,7 +34463,7 @@ ENDMACRO
 
  ITEM 45,  -1, 'g', 250, %00001111   \ 15 = Gem-Stones
 
- ITEM 53,  15, 't', 192, %00000111   \ 16 = Alien Items
+ ITEM 53,  15, 't', 192, %00000111   \ 16 = Alien items
 
 \ ******************************************************************************
 \
@@ -48185,7 +48187,7 @@ ENDMACRO
 .SHIP_ESCAPE_POD
 
  EQUB 0 + (2 << 4)      \ Max. canisters on demise = 0
-                        \ Market item when scooped = 2 + 1 = 3 (Slaves)
+                        \ Market item when scooped = 2 + 1 = 3 (slaves)
  EQUW 16 * 16           \ Targetable area          = 16 * 16
  EQUB &2C               \ Edges data offset (low)  = &002C
  EQUB &44               \ Faces data offset (low)  = &0044
@@ -50493,7 +50495,7 @@ ENDMACRO
 .SHIP_THARGON
 
  EQUB 0 + (15 << 4)     \ Max. canisters on demise = 0
-                        \ Market item when scooped = 15 + 1 = 16 (Alien items)
+                        \ Market item when scooped = 15 + 1 = 16 (alien items)
  EQUW 40 * 40           \ Targetable area          = 40 * 40
  EQUB LO(SHIP_CANISTER_EDGES - SHIP_THARGON)         \ Edges data = canister
  EQUB &50               \ Faces data offset (low)  = &0050

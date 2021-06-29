@@ -6585,14 +6585,14 @@ ENDMACRO
  LDY #2                 \ Fetch byte #2 from the parameter block (the number of
  LDA (OSSC),Y           \ the missile indicator) into A
 
- ASL A                  \ Set T = A * 8
+ ASL A                  \ Set T = A * 16
  ASL A
  ASL A
  ASL A
  STA T
 
  LDA #97                \ Set SC = 97 - T
- SBC T                  \        = 96 + 1 - (X * 8)
+ SBC T                  \        = 96 + 1 - (X * 16)
  STA SC
 
                         \ So the low byte of SC(1 0) contains the row address
