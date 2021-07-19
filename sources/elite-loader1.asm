@@ -41,17 +41,17 @@ _EXECUTIVE              = (_RELEASE = 3)
 N% = 77                 \ N% is set to the number of bytes in the VDU table, so
                         \ we can loop through them in the loader below
 
-OSWRCH = &FFEE          \ The address for the OSWRCH routine
-OSBYTE = &FFF4          \ The address for the OSBYTE routine
-OSWORD = &FFF1          \ The address for the OSWORD routine
-OSCLI = &FFF7           \ The address for the OSCLI routine
+IRQ1V = &0204           \ The IRQ1V vector that we intercept to implement the
+                        \ split-sceen mode
 
 VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
                         \ known as SHEILA)
 
-IRQ1V = &0204           \ The IRQ1V vector that we intercept to implement the
-                        \ split-sceen mode
+OSWRCH = &FFEE          \ The address for the OSWRCH routine
+OSBYTE = &FFF4          \ The address for the OSBYTE routine
+OSWORD = &FFF1          \ The address for the OSWORD routine
+OSCLI = &FFF7           \ The address for the OSCLI routine
 
 \ ******************************************************************************
 \
