@@ -1236,8 +1236,8 @@ ENDIF
 \       Name: MESS2
 \       Type: Variable
 \   Category: Loader
-\    Summary: The OS command string for loading and running the second part of
-\             the loader
+\    Summary: The OS command string for running the second part of the loader in
+\             file ELITEa
 \
 \ ******************************************************************************
 

@@ -1373,9 +1373,8 @@ ENDIF
  PHA                    \ Store A on the stack so we can retrieve it after the
                         \ following call to NVOSWRCH
 
- LDA #2                 \ Send ASCII 2 to the printer using the non-vectored
- JSR NVOSWRCH           \ OSWRCH, which means "start sending characters to the
-                        \ printer"
+ LDA #2                 \ Print ASCII 2 using the non-vectored OSWRCH, which
+ JSR NVOSWRCH           \ means "start sending characters to the printer"
 
  PLA                    \ Retrieve A from the stack, though this is a bit
                         \ pointless given the next instruction, as they cancel
@@ -1409,9 +1408,8 @@ ENDIF
 
 .sent
 
- LDA #3                 \ Send ASCII 3 to the printer using the non-vectored
- JSR NVOSWRCH           \ OSWRCH, which means "stop sending characters to the
-                        \ printer"
+ LDA #3                 \ Print ASCII 3 using the non-vectored OSWRCH, which
+ JSR NVOSWRCH           \ means "stop sending characters to the printer"
 
  PLA                    \ Retrieve A from the stack
 
@@ -1485,17 +1483,15 @@ ENDIF
 
 .prilf
 
- LDA #2                 \ Send ASCII 2 to the printer using the non-vectored
- JSR NVOSWRCH           \ OSWRCH, which means "start sending characters to the
-                        \ printer"
+ LDA #2                 \ Print ASCII 2 using the non-vectored OSWRCH, which
+ JSR NVOSWRCH           \ means "start sending characters to the printer"
 
  LDA #10                \ Send ASCII 10 to the printer twice using the POSWRCH
  JSR POSWRCH            \ routine, which prints a blank line below the current
  JSR POSWRCH            \ line as ASCII 10 is the line feed character
 
- LDA #3                 \ Send ASCII 3 to the printer using the non-vectored
- JSR NVOSWRCH           \ OSWRCH, which means "stop sending characters to the
-                        \ printer"
+ LDA #3                 \ Print ASCII 3 using the non-vectored OSWRCH, which
+ JSR NVOSWRCH           \ means "stop sending characters to the printer"
 
  JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
                         \ return from the subroutine using a tail call
@@ -1722,7 +1718,7 @@ ENDIF
 \       Name: DOT
 \       Type: Subroutine
 \   Category: Dashboard
-\    Summary: Implement the #DOdot command (draw a dot on the compass)
+\    Summary: Implement the #DOdot command (draw a dash on the compass)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -1730,35 +1726,35 @@ ENDIF
 \
 \   OSSC(1 0)           A parameter block as follows:
 \
-\                         * Byte #2 = The screen pixel x-coordinate of the dot
+\                         * Byte #2 = The screen pixel x-coordinate of the dash
 \
-\                         * Byte #3 = The screen pixel x-coordinate of the dot
+\                         * Byte #3 = The screen pixel x-coordinate of the dash
 \
-\                         * Byte #4 = The colour of the dot
+\                         * Byte #4 = The colour of the dash
 \
 \ ******************************************************************************
 
 .DOT
 
- LDY #2                 \ Fetch byte #2 from the parameter block (the dot's
+ LDY #2                 \ Fetch byte #2 from the parameter block (the dash's
  LDA (OSSC),Y           \ x-coordinate) and store it in X1
  STA X1
 
- INY                    \ Fetch byte #3 from the parameter block (the dot's
+ INY                    \ Fetch byte #3 from the parameter block (the dash's
  LDA (OSSC),Y           \ y-coordinate) and store it in X1
  STA Y1
 
- INY                    \ Fetch byte #3 from the parameter block (the dot's
+ INY                    \ Fetch byte #3 from the parameter block (the dash's
  LDA (OSSC),Y           \ colour) and store it in COL
  STA COL
 
- CMP #WHITE2            \ If the dot's colour is not white, jump to CPIX2 to
- BNE CPIX2              \ draw a single-height dot in the compass, as it is
+ CMP #WHITE2            \ If the dash's colour is not white, jump to CPIX2 to
+ BNE CPIX2              \ draw a single-height dash in the compass, as it is
                         \ showing that the planet or station is behind us
 
-                        \ Otherwise the dot is white, which is in front of us,
+                        \ Otherwise the dash is white, which is in front of us,
                         \ so fall through into CPIX4 to draw a double-height
-                        \ dot in the compass
+                        \ dash in the compass
 
 \ ******************************************************************************
 \
@@ -1798,7 +1794,7 @@ ENDIF
 \       Name: CPIX2
 \       Type: Subroutine
 \   Category: Drawing pixels
-\    Summary: Draw a single-height dot on the dashboard
+\    Summary: Draw a single-height dash on the dashboard
 \
 \ ------------------------------------------------------------------------------
 \

@@ -37,7 +37,7 @@
 
 .ZP
 
- SEC
+ SEC                    \ Set the C flag so the addition below starts at 1
 
  LDY #0                 \ Set Y = 0
 
@@ -80,12 +80,14 @@
 .SC
 
  LDY #0                 \ (X Y) = SC(1 0) = &1300
- STY SC
- LDX #&13
+ STY SC                 \
+                        \ starting with the low byte
+
+ LDX #&13               \ Set X = &13 for the high byte
 
 .DEEL
 
- STX SC+1
+ STX SC+1               \ Set the high byte of SC(1 0) to X
 
  TYA                    \ ?(X Y) = ?(X Y) EOR Y EOR &75
  EOR (SC),Y
@@ -116,7 +118,7 @@
 
 .SC
 
- STA V
+ STA V                  \ First set the low byte, then the high byte
  LDA #G%DIV256
  STA V+1
 

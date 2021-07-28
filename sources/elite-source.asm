@@ -4260,8 +4260,8 @@ ENDIF
 
  LDA QQ1                \ Set A = the current system's galactic y-coordinate
 
- CMP #72
- BNE EN4                \ If A <> 72 then jump to EN4
+ CMP #72                \ If A <> 72 then jump to EN4
+ BNE EN4
 
  JMP DEBRIEF2           \ If we get here, mission 1 is complete and no longer in
                         \ progress, mission 2 has started and we have picked up
@@ -4363,8 +4363,9 @@ ENDIF
 \
 \ ******************************************************************************
 
- LDX JSTX               \ Set X to the current rate of roll in JSTX, and
- JSR cntr               \ apply keyboard damping twice (if enabled) so the roll
+ LDX JSTX               \ Set X to the current rate of roll in JSTX
+
+ JSR cntr               \ Apply keyboard damping twice (if enabled) so the roll
  JSR cntr               \ rate in X creeps towards the centre by 2
 
                         \ The roll rate in JSTX increases if we press ">" (and
@@ -4422,8 +4423,9 @@ ENDIF
  ORA ALP2               \ Store A in ALPHA, but with the sign set to ALP2 (so
  STA ALPHA              \ ALPHA has a different sign to the actual roll rate)
 
- LDX JSTY               \ Set X to the current rate of pitch in JSTY, and
- JSR cntr               \ apply keyboard damping so the pitch rate in X creeps
+ LDX JSTY               \ Set X to the current rate of pitch in JSTY
+
+ JSR cntr               \ Apply keyboard damping so the pitch rate in X creeps
                         \ towards the centre by 1
 
  TXA                    \ Set A and Y to the pitch rate but with the sign bit
@@ -9707,8 +9709,9 @@ ENDIF
 
  LDA #103               \ Set A to token 103 ("PULSE LASER")
 
- LDX CNT                \ Set Y = the laser power for view X
- LDY LASER,X
+ LDX CNT                \ Retrieve the view number from CNT that we stored above
+
+ LDY LASER,X            \ Set Y = the laser power for view X
 
  CPY #128+POW           \ If the laser power for view X is not #POW+128 (beam
  BNE P%+4               \ laser), skip the next LDA instruction
@@ -14453,7 +14456,7 @@ LOAD_C% = LOAD% +P% - CODE%
  LDX #0                 \ Set X = 0
 
  STX XX4                \ Set XX4 = 0, which we will use as a counter for
-                        \ drawing 8 concentric rings
+                        \ drawing eight concentric rings
 
  STX K3+1               \ Set the high bytes of K3(1 0) and K4(1 0) to 0
  STX K4+1
@@ -19260,7 +19263,7 @@ LOAD_D% = LOAD% + P% - CODE%
                         \ to pass to the Tc routine if we call it
 
  BCS Tc                 \ If the C flag is set, then there is no room in the
-                        \ cargo hold, jump up to Tc to print a "Cargo?" error, 
+                        \ cargo hold, jump up to Tc to print a "Cargo?" error,
                         \ beep, clear the number and try again
 
  LDA QQ24               \ There is room in the cargo hold, so now to check
@@ -22125,7 +22128,7 @@ ENDIF
 \       Name: RDLI
 \       Type: Variable
 \   Category: Loader
-\    Summary: The OS command string for loading the flight code file D.CODE
+\    Summary: The OS command string for running the flight code in file D.CODE
 \             in the disc version of Elite
 \
 \ ------------------------------------------------------------------------------
@@ -22136,7 +22139,7 @@ ENDIF
 
 .RDLI
 
- EQUS "R.D.CODE"
+ EQUS "R.D.CODE"        \ This is short for "*RUN D.CODE"
  EQUB 13
 
 \ ******************************************************************************
@@ -22158,7 +22161,7 @@ ENDIF
 \                       present, refund the cost of the item, and then beep and
 \                       exit to the docking bay (i.e. show the Status Mode
 \                       screen)
-\                        
+\
 \ ******************************************************************************
 
 .bay
@@ -22743,7 +22746,8 @@ ENDIF
  ADC #80                \ "RIGHT"
  JSR TT27
 
- JSR INCYC              \ Move the text cursor down a row
+ JSR INCYC              \ Move the text cursor down a row, and increment the
+                        \ counter in YC at the same time
 
  LDY YC                 \ Update Y with the incremented counter in YC
 
@@ -23013,7 +23017,7 @@ LOAD_E% = LOAD% + P% - CODE%
  AND #%00011111         \ extract bits 0-4 by AND'ing with %11111
 
  BEQ P%+7               \ If all those bits are zero, then skip the following
-                        \ 2 instructions to go to step 3
+                        \ two instructions to go to step 3
 
  ORA #%10000000         \ We now have a number in the range 1-31, which we can
                         \ easily convert into a two-letter token, but first we
@@ -23142,7 +23146,7 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Name: tal
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Print the current galaxy numbe
+\    Summary: Print the current galaxy number
 \
 \ ------------------------------------------------------------------------------
 \
@@ -23356,14 +23360,14 @@ LOAD_E% = LOAD% + P% - CODE%
  DEX                    \ If token = 5, this is control code 5 (fuel, newline,
  BEQ fwl                \ cash, newline), so jump to fwl
 
- DEX                    \ If token > 6, skip the following 3 instructions
+ DEX                    \ If token > 6, skip the following three instructions
  BNE P%+7
 
  LDA #%10000000         \ This token is control code 6 (switch to Sentence
  STA QQ17               \ Case), so set bit 7 of QQ17 to switch to Sentence Case
  RTS                    \ and return from the subroutine as we are done
 
- DEX                    \ If token > 8, skip the following 2 instructions
+ DEX                    \ If token > 8, skip the following two instructions
  DEX
  BNE P%+5
 
@@ -23381,7 +23385,7 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ range (i.e. where the recursive token number is
                         \ correct and doesn't need correcting)
 
- CMP #14                \ If token < 14, skip the following 2 instructions
+ CMP #14                \ If token < 14, skip the following two instructions
  BCC P%+6
 
  CMP #32                \ If token < 32, then this means token is in 14-31, so
@@ -23784,7 +23788,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
  TAX                    \ Copy the token number into X
 
- LDA #LO(QQ18)          \ Set V, V+1 to point to the recursive token table at
+ LDA #LO(QQ18)          \ Set V(1 0) to point to the recursive token table at
  STA V                  \ location QQ18
  LDA #HI(QQ18)
  STA V+1
@@ -24867,46 +24871,46 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Name: DOT
 \       Type: Subroutine
 \   Category: Text
-\    Summary: Draw a dot on the compass by sending a #DOdot command to the I/O
+\    Summary: Draw a dash on the compass by sending a #DOdot command to the I/O
 \             processor
 \
 \ ------------------------------------------------------------------------------
 \
-\ Draw a dot on the compass.
+\ Draw a dash on the compass.
 \
 \ Arguments:
 \
-\   COMX                The screen pixel x-coordinate of the dot
+\   COMX                The screen pixel x-coordinate of the dash
 \
-\   COMY                The screen pixel y-coordinate of the dot
+\   COMY                The screen pixel y-coordinate of the dash
 \
-\   COMC                The colour and thickness of the dot:
+\   COMC                The colour and thickness of the dash:
 \
-\                         * #WHITE2 = a double-height dot in white, for when the
-\                           object in the compass is in front of us
+\                         * #WHITE2 = a double-height dash in white, for when
+\                           the object in the compass is in front of us
 \
-\                         * #GREEN2 = a single-height dot in green, for when the
-\                           object in the compass is behind us
+\                         * #GREEN2 = a single-height dash in green, for when
+\                           the object in the compass is behind us
 \
 \ ******************************************************************************
 
 .DOT
 
- LDA COMY               \ Store the y-coordinate of the dot in byte #0 of the
+ LDA COMY               \ Store the y-coordinate of the dash in byte #0 of the
  STA DOTY1              \ parameter block below
 
- LDA COMX               \ Store the x-coordinate of the dot in byte #1 of the
+ LDA COMX               \ Store the x-coordinate of the dash in byte #1 of the
  STA DOTX1              \ parameter block below
 
- LDA COMC               \ Store the dot colour in byte #2 of the parameter block
- STA DOTCOL             \ below
+ LDA COMC               \ Store the dash colour in byte #2 of the parameter
+ STA DOTCOL             \ block below
 
  LDX #LO(DOTpars)       \ Set (Y X) to point to the parameter block below
  LDY #HI(DOTpars)
 
  LDA #DOdot             \ Send a #DODKS4 command to the I/O processor to draw
- JMP OSWORD             \ the dot on-screen, returning from the subroutine using
-                        \ a tail call
+ JMP OSWORD             \ the dash on-screen, returning from the subroutine
+                        \ using a tail call
 
 .DOTpars
 
@@ -24916,15 +24920,15 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .DOTX1
 
- EQUB 0                 \ The x-coordinate of the dot
+ EQUB 0                 \ The x-coordinate of the dash
 
 .DOTY1
 
- EQUB 0                 \ The y-coordinate of the dot
+ EQUB 0                 \ The y-coordinate of the dash
 
 .DOTCOL
 
- EQUB 0                 \ The colour of the dot
+ EQUB 0                 \ The colour of the dash
 
  RTS                    \ End of the parameter block
 
@@ -26911,7 +26915,7 @@ LOAD_E% = LOAD% + P% - CODE%
                         \
                         \   XX____X1____X2____XX+1      ->      +  +__+  +
                         \
-                        \ They all end up with a line between X1 and Y1, which
+                        \ They all end up with a line between X1 and X2, which
                         \ is what we want. There's probably a mathematical proof
                         \ of why this works somewhere, but the above is probably
                         \ easier to follow.
@@ -29107,7 +29111,7 @@ LOAD_F% = LOAD% + P% - CODE%
  LDA #0                 \ Set the delay in DLY to 0, so any new in-flight
  STA DLY                \ messages will be shown instantly
 
- JMP me3                \ Jump back into the main spawning loop at TT100
+ JMP me3                \ Jump back into the main spawning loop at me3
 
 \ ******************************************************************************
 \
@@ -29686,7 +29690,7 @@ LOAD_F% = LOAD% + P% - CODE%
 
  STA INWK+32            \ Store A in the AI flag of this ship
 
- TYA
+ TYA                    \ Set A to the new ship type in Y
 
  EQUB &2C               \ Skip the next instruction by turning it into
                         \ &2C &A9 &1F, or BIT &1FA9, which does nothing apart
@@ -30369,7 +30373,7 @@ LOAD_F% = LOAD% + P% - CODE%
  JSR backtonormal       \ Disable the keyboard and set the SVN flag to 0
 
  TAY                    \ The call to backtonormal sets A to 0, so this sets Y
-                        \ to 0, which use as a loop counter below
+                        \ to 0, which we use as a loop counter below
 
  LDA #7                 \ Set A = 7 to generate a beep before we print the error
                         \ message
@@ -30971,8 +30975,9 @@ ENDIF
                         \ to 96, which is the distance at which the rotating
                         \ ship starts out before coming towards us
 
- LDX #127
- STX INWK+29            \ Set roll counter = 127, so don't dampen the roll
+ LDX #127               \ Set roll counter = 127, so don't dampen the roll
+ STX INWK+29
+
  STX INWK+30            \ Set pitch counter = 127, so don't dampen the pitch
 
  INX                    \ Set QQ17 to 128 (so bit 7 is set) to switch to
@@ -34461,38 +34466,22 @@ ENDMACRO
 
 .QQ23
 
- ITEM 19,  -2, 't',   6, %00000001   \ 0  = Food
-
- ITEM 20,  -1, 't',  10, %00000011   \ 1  = Textiles
-
- ITEM 65,  -3, 't',   2, %00000111   \ 2  = Radioactives
-
- ITEM 40,  -5, 't', 226, %00011111   \ 3  = Slaves
-
- ITEM 83,  -5, 't', 251, %00001111   \ 4  = Liquor/Wines
-
- ITEM 196,  8, 't',  54, %00000011   \ 5  = Luxuries
-
- ITEM 235, 29, 't',   8, %01111000   \ 6  = Narcotics
-
- ITEM 154, 14, 't',  56, %00000011   \ 7  = Computers
-
- ITEM 117,  6, 't',  40, %00000111   \ 8  = Machinery
-
- ITEM 78,   1, 't',  17, %00011111   \ 9  = Alloys
-
+ ITEM 19,  -2, 't',   6, %00000001   \  0 = Food
+ ITEM 20,  -1, 't',  10, %00000011   \  1 = Textiles
+ ITEM 65,  -3, 't',   2, %00000111   \  2 = Radioactives
+ ITEM 40,  -5, 't', 226, %00011111   \  3 = Slaves
+ ITEM 83,  -5, 't', 251, %00001111   \  4 = Liquor/Wines
+ ITEM 196,  8, 't',  54, %00000011   \  5 = Luxuries
+ ITEM 235, 29, 't',   8, %01111000   \  6 = Narcotics
+ ITEM 154, 14, 't',  56, %00000011   \  7 = Computers
+ ITEM 117,  6, 't',  40, %00000111   \  8 = Machinery
+ ITEM 78,   1, 't',  17, %00011111   \  9 = Alloys
  ITEM 124, 13, 't',  29, %00000111   \ 10 = Firearms
-
  ITEM 176, -9, 't', 220, %00111111   \ 11 = Furs
-
  ITEM 32,  -1, 't',  53, %00000011   \ 12 = Minerals
-
  ITEM 97,  -1, 'k',  66, %00000111   \ 13 = Gold
-
  ITEM 171, -2, 'k',  55, %00011111   \ 14 = Platinum
-
  ITEM 45,  -1, 'g', 250, %00001111   \ 15 = Gem-Stones
-
  ITEM 53,  15, 't', 192, %00000111   \ 16 = Alien items
 
 \ ******************************************************************************
@@ -42285,44 +42274,91 @@ ENDIF
 
  STZ INWK+7             \ Set x_hi = 0
 
- LDA Y2TB,Y             \ Set A to Y2, the end point's y-coordinate from Y1TB
+ LDA Y2TB,Y             \ Set A to Y2, the end point's y-coordinate from Y2TB
 
- SEC
- SBC BALI
- BCC GR6
+ SEC                    \ Set A = A - BALI
+ SBC BALI               \       = Y2 - BALI
 
- STA R
- ASL A
- ROL INWK+7
- ASL A
- ROL INWK+7
- ADC #D
- STA INWK+6
- LDA INWK+7
- ADC #0
- STA INWK+7
- STZ S
- LDA #%10000000
- STA P
+ BCC GR6                \ If Y2 < BALI, jump down to GR6 to process the next
+                        \ line, as this one is not yet on-screen
+
+ STA R                  \ Set R = Y2 - BALI
+
+ ASL A                  \ Shift bits 6-7 of A into bits 0-1 of z_hi, so the C
+ ROL INWK+7             \ flag is clear (as we set z_hi to 0 above) and z_hi is
+ ASL A                  \ the high byte if A * 4 = (Y2 - BALI) * 4 is expressed
+ ROL INWK+7             \ as a 16-bit value, i.e. ((Y2 - BALI) * 4) div 256
+
+ ADC #D                 \ Set (z_hi z_lo) = (z_hi z_lo) + #D
+ STA INWK+6             \
+                        \ first adding the low bytes
+
+ LDA INWK+7             \ And then adding the high bytes, so we now have:
+ ADC #0                 \
+ STA INWK+7             \   (z_hi z_lo) = ((Y2 - BALI) * 4 div 256) + #D
+                        \
+                        \ so because we set z_sign to 0 above, we have:
+                        \
+                        \   (z_sign z_hi z_lo) = ((Y2 - BALI) * 4 div 256) + #D
+
+ STZ S                  \ Set S = 0
+
+ LDA #%10000000         \ Set A to a negative sign byte
+
+ STA P                  \ Set P = 128
 
  JSR ADD                \ Set (A X) = (A P) + (S R)
+                        \           = -128 + (0 R)
+                        \           = -128 + R
+                        \           = -128 + (Y2 - BALI)
+                        \           = Y2 - BALI - 128
 
- STA INWK+5
- STX INWK+3
+ STA INWK+5             \ Set (y_sign y_lo) = (A X)
+ STX INWK+3             \                   = Y2 - BALI - 128
+                        \
+                        \ so because we set y_hi to 0 above, we have:
+                        \
+                        \   (y_sign y_hi y_lo) = Y2 - BALI - 128
 
- LDA X2TB,Y
- EOR #%10000000
- BPL GR3
- EOR #%11111111
- INA
+ LDA X2TB,Y             \ Set A to the x-coordinate of the line's start point,
+                        \ let's call it X2. A is in the range 0 to 255, and we
+                        \ now need to move the coordinate to the left so it's in
+                        \ the range -128 to +128, but we need to put the result
+                        \ into (x_sign x_hi x_lo) which is a sign-magnitude
+                        \ number, so we can't just subtract 128, as that would
+                        \ give us a two's complement number
+
+ EOR #%10000000         \ Flip the sign bit of A
+
+ BPL GR3                \ If bit 7 is now clear, meaning it was previously set,
+                        \ then jump to GR3 as the original A was in the range
+                        \ 128 to 255, and we now have the correct result for
+                        \ A = A - 128, which is also |A - 128| as A was positive
+
+                        \ Otherwise bit 7 was previously clear, so A was in the
+                        \ range 0 to 127 and the EOR has shifted that up to 128
+                        \ to 255, so we need to negate the number so that 128
+                        \ becomes 0, 129 becomes 1 and so on
+
+ EOR #%11111111         \ Negate the result in A by flipping all the bits and
+ INA                    \ adding 1, i.e. using two's complement to negate it to
+                        \ set A to the magnitude part of the sign-magnitude
+                        \ number A - 128, i.e. |A - 128|
 
 .GR3
 
- STA INWK
- LDA X2TB,Y
- EOR #%10000000
- AND #%10000000
- STA INWK+2
+ STA INWK               \ Set x_lo = |A - 128|
+                        \          = |X2 - 128|
+
+ LDA X2TB,Y             \ Set x_sign to the opposite of bit 7 in X2, so it will
+ EOR #%10000000         \ be positive if X2 > 127 and negative if X2 <= 127, so
+ AND #%10000000         \ x_sign has the correct sign for X2 - 128:
+ STA INWK+2             \
+                        \   (x_sign x_lo) = X2 - 128
+                        \
+                        \ and because we set x_hi to 0 above, we have:
+                        \
+                        \   (x_sign x_hi x_lo) = X2 - 128
 
  JSR PROJ               \ Project the line's end coordinate onto the screen,
                         \ returning:
@@ -42425,24 +42461,24 @@ ENDIF
  LDA X1UB,Y             \ Copy the Y-th line's coordinates from the UB table
  STA X1                 \ into both the VB table and into (X1, Y1) and (X2, Y2)
  STA X1VB,Y
-
  LDA Y1UB,Y
  STA Y1
  STA Y1VB,Y
-
  LDA X2UB,Y
  STA X2
  STA X2VB,Y
-
  LDA Y2UB,Y
  STA Y2
  STA Y2VB,Y
 
  JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
 
- DEY
- BNE GRL2
- JSR LBFL
+ DEY                    \ Decrement the number of coordinates in Y
+
+ BNE GRL2               \ Loop back to GRL2 to draw the next set of coordinates
+                        \ until we have done them all
+
+ JSR LBFL               \ Call LBFL to draw the line in the line buffer
 
 .GREX2
 
