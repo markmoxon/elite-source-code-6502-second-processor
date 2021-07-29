@@ -376,7 +376,7 @@ ELIF _SOURCE_DISC
 
 \JSR ZZZAP              \ These instructions are commented out in the original
 \BRK                    \ source
-\BRK
+\EQUB 0
 \EQUS " This program only runs on a BBC Micro with 6502 Second Processor"
 \EQUW &0C0A
 \BRK
@@ -401,7 +401,7 @@ ENDIF
  BRK                    \ Execute a BRK instruction to display the following
                         \ system error, and stop everything
 
- BRK
+ EQUB 0                 \ Error number
 
 IF _SNG45 OR _EXECUTIVE
 
@@ -417,8 +417,8 @@ ELIF _SOURCE_DISC
 
 ENDIF
 
- EQUW &0D0A             \ Print a line feed and a carriage return
-
+ EQUB 10                \ Line feed and carriage return
+ EQUB 13
  BRK
 
 .ZZZAP

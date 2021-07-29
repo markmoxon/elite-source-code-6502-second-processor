@@ -1330,7 +1330,9 @@ ENDIF
 
  BRK                    \ Execute a BRK instruction
 
- EQUS "TTEST"           \ A carriage-return-terminated test string, which
+ EQUB &54               \ Error number
+
+ EQUS "TEST"            \ A carriage-return-terminated test string, which
  EQUB 13                \ doesn't appear to be used anywhere
 
  BRK                    \ End of the test string
