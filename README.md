@@ -45,7 +45,7 @@ See the [introduction](#introduction) for more information.
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
 
-You can build the fully functioning game from this source. [Three releases](#building-different-releases-of-elite) are currently supported: the official SNG45 release, the Executive version, and the version produced by the original source discs.
+You can build the fully functioning game from this source. [Three releases](#building-different-releases-of-6502-second-processor-elite) are currently supported: the official SNG45 release, the Executive version, and the version produced by the original source discs.
 
 It is a companion to the [bbcelite.com website](https://www.bbcelite.com), which contains all the code from this repository, but laid out in a much more human-friendly fashion. The links at the top of this page will take you to repositories for the other versions of Elite that are covered by this project.
 
