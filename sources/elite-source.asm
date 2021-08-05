@@ -2779,7 +2779,7 @@ ORG &0800
  SKIP 8                 \ The current commander name
                         \
                         \ The commander name can be up to 7 characters (the DFS
-                        \ limit for file names), and is terminated by a carriage
+                        \ limit for filenames), and is terminated by a carriage
                         \ return
 
 .TP
@@ -3276,12 +3276,8 @@ ORG &0D00
 
 .LSO
 
- SKIP 192               \ This space has two uses:
-                        \
-                        \   * The ship line heap for the space station (see
-                        \     NWSPS for details)
-                        \
-                        \   * The sun line heap (see SUN for details)
+ SKIP 192               \ The ship line heap for the space station (see NWSPS)
+                        \ and the sun line heap (see SUN)
                         \
                         \ The spaces can be shared as our local bubble of
                         \ universe can support either the sun or a space
@@ -3711,7 +3707,7 @@ ENDIF
 \   Category: Save and load
 \    Summary: The drive and directory number used when saving or loading a
 \             commander file
-\  Deep dive: Commander save files.
+\  Deep dive: Commander save files
 \
 \ ------------------------------------------------------------------------------
 \
@@ -3762,7 +3758,7 @@ IF _SNG45 OR _SOURCE_DISC
  EQUS "JAMESON"         \ The current commander name, which defaults to JAMESON
  EQUB 13                \
                         \ The commander name can be up to seven characters (the
-                        \ DFS limit for file names), and is terminated by a
+                        \ DFS limit for filenames), and is terminated by a
                         \ carriage return
 
 ELIF _EXECUTIVE
@@ -3775,7 +3771,7 @@ ELIF _EXECUTIVE
                         \ of Elite)
                         \
                         \ The commander name can be up to seven characters (the
-                        \ DFS limit for file names), and is terminated by a
+                        \ DFS limit for filenames), and is terminated by a
                         \ carriage return
 
 ENDIF
@@ -7595,6 +7591,11 @@ NEXT
 \   Category: Drawing lines
 \    Summary: The multi-segment line buffer used by LOIN
 \
+\ ------------------------------------------------------------------------------
+\
+\ This buffer contains a hidden message containing the authors' names, which is
+\ overwritten when the buffer is used.
+\
 \ ******************************************************************************
 
 .LBUF
@@ -7602,11 +7603,26 @@ NEXT
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
+
+  EQUS "By Ian Bell & David Braben"
+  EQUB 10
+  EQUB 13
   INCBIN "extracted/sng45/workspaces/ELTB-LBUF.bin"
+
  ELIF _EXECUTIVE
+
+  EQUS "- By Ian Bell & David Braben"
+  EQUB 10
+  EQUB 13
   INCBIN "extracted/executive/workspaces/ELTB-LBUF.bin"
+
  ELIF _SOURCE_DISC
+
+  EQUS "By Ian Bell & David Braben"
+  EQUB 10
+  EQUB 13
   INCBIN "extracted/source-disc/workspaces/ELTB-LBUF.bin"
+
  ENDIF
 
 ELSE
@@ -14094,11 +14110,6 @@ LOAD_C% = LOAD% +P% - CODE%
 \ This is called when an enemy ship has run out of both energy and luck, so it's
 \ time to bail.
 \
-\ Other entry points:
-\
-\   SFS1-2              Add a missile to the local bubble that has AI enabled,
-\                       is hostile, but has no E.C.M.
-\
 \ ******************************************************************************
 
 .SESCP
@@ -14147,6 +14158,11 @@ LOAD_C% = LOAD% +P% - CODE%
 \   INWK                The whole INWK workspace is preserved
 \
 \   X                   X is preserved
+\
+\ Other entry points:
+\
+\   SFS1-2              Add a missile to the local bubble that has AI enabled,
+\                       is hostile, but has no E.C.M.
 \
 \ ******************************************************************************
 
@@ -22976,10 +22992,6 @@ LOAD_E% = LOAD% + P% - CODE%
 \ Print control code 3 (the selected system name, i.e. the one in the crosshairs
 \ in the Short-range Chart).
 \
-\ Other entry points:
-\
-\   cmn-1               Contains an RTS
-\
 \ ******************************************************************************
 
 .cpl
@@ -23062,7 +23074,7 @@ LOAD_E% = LOAD% + P% - CODE%
 \
 \ Other entry points:
 \
-\   ypl-1               Contains an RTS
+\   cmn-1               Contains an RTS
 \
 \ ******************************************************************************
 
@@ -23096,6 +23108,10 @@ LOAD_E% = LOAD% + P% - CODE%
 \ ------------------------------------------------------------------------------
 \
 \ Print control code 2 (the current system name).
+\
+\ Other entry points:
+\
+\   ypl-1               Contains an RTS
 \
 \ ******************************************************************************
 
@@ -26541,10 +26557,6 @@ LOAD_E% = LOAD% + P% - CODE%
 \   SUNX(1 0)           The x-coordinate of the vertical centre axis of the old
 \                       sun (the one currently on-screen)
 \
-\ Other entry points:
-\
-\   RTS2                Contains an RTS
-\
 \ ******************************************************************************
 
  JMP WPLS               \ Jump to WPLS to remove the old sun from the screen. We
@@ -27019,6 +27031,10 @@ LOAD_E% = LOAD% + P% - CODE%
 \
 \ This part erases any remaining traces of the old sun, now that we have drawn
 \ all the way to the top of the new sun.
+\
+\ Other entry points:
+\
+\   RTS2                Contains an RTS
 \
 \ ******************************************************************************
 
@@ -32981,10 +32997,6 @@ ENDIF
 \ message of encouragement if the kill total is a multiple of 256, and then
 \ make a nearby explosion sound.
 \
-\ Other entry points:
-\
-\   EXNO-2              Set X = 7 and fall through into EXNO to make the sound
-\                       of a ship exploding
 \
 \ ******************************************************************************
 
@@ -33031,6 +33043,11 @@ ENDIF
 \
 \                         * 15 = explosion is quieter (i.e. this is just a laser
 \                                strike)
+\
+\ Other entry points:
+\
+\   EXNO-2              Set X = 7 and fall through into EXNO to make the sound
+\                       of a ship exploding
 \
 \ ******************************************************************************
 
@@ -40626,8 +40643,6 @@ ENDIF
 \ view we are looking through (front, rear, left, right).
 \
 \ Other entry points:
-\
-\   LO2                 Contains an RTS
 \
 \   PU1-1               Contains an RTS
 \

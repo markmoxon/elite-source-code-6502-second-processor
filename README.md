@@ -2,7 +2,7 @@
 
 [BBC Micro (cassette)](https://github.com/markmoxon/cassette-elite-beebasm) | [BBC Micro (disc)](https://github.com/markmoxon/disc-elite-beebasm) | **6502 Second Processor** | [BBC Master](https://github.com/markmoxon/master-elite-beebasm) | [Acorn Electron](https://github.com/markmoxon/electron-elite-beebasm) | [Elite-A](https://github.com/markmoxon/elite-a-beebasm)
 
-![Screenshot of the Executive version of 6502 Second Processor Elite on the BBC Micro](https://www.bbcelite.com/images/github/Elite-Executive.png)
+![Screenshot of 6502 Second Processor Elite on the BBC Micro](https://www.bbcelite.com/images/github/Elite-TubeMaster.png)
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
 
@@ -233,11 +233,11 @@ During compilation, details of every step are output in a file called `compile.t
 
 This repository contains the source code for three different releases of 6502 Second Processor Elite:
 
-* The release from the SNG45 Acornsoft release (the first official release of 6502 Second Processor Elite)
+* The official SNG45 Acornsoft release, which was the first appearence of 6502 Second Processor Elite, and the one included on all subsequent discs
 
-* The release produced by the source disc from Ian Bell's site (which was never released)
+* The game produced by the source disc from Ian Bell's site, which was never released
 
-* The Executive version from Ian Bell's site (which was also never released)
+* The Executive version from Ian Bell's site, which was also never released
 
 By default the build process builds the SNG45 release, but you can build the other releases as follows.
 
@@ -277,11 +277,11 @@ This will produce a file called `elite-6502sp-executive.ssd` that contains the E
 
 You can add `release=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 release, though that's the default value so it isn't necessary.
 
-You can see the differences between the releases by searching the source code for `_SNG45` (for features in the SNG45 release) or `_SOURCE_DISC` (for features in the source disc release) or `_EXECUTIVE` (for features in the Executive version). There are only a few differences in the source disc release (if you ignore [workspace noise](#producing-byte-accurate-binaries)), but quite a few in the Executive version.
-
 ### Differences between the releases
 
-The differences in the source disc release compared to the SNG45 release are:
+You can see the differences between the releases by searching the source code for `_SNG45` (for features in the SNG45 release) or `_SOURCE_DISC` (for features in the source disc release) or `_EXECUTIVE` (for features in the Executive version). There are only a few differences in the source disc release (if you ignore [workspace noise](#producing-byte-accurate-binaries)), but quite a few in the Executive version.
+
+The main differences in the source disc release compared to the SNG45 release are:
 
 * In the source disc release, the extended description of Lave is replaced by the rather cryptic "Bits'n Pieces - End Of Part 1". You can see this by pressing F6 just after starting the game (you have to be docked at Lave).
 
@@ -291,7 +291,9 @@ The differences in the source disc release compared to the SNG45 release are:
 
 * The loader in the source disc release contains a load of Tube-detection code that is disabled in the SNG45 release.
 
-The differences in the Executive version compared to the SNG45 release are detailed in the deep dive on [secrets of the Executive version](https://www.bbcelite.com/deep_dives/secrets_of_the_executive_version.html).
+There are lots of differences in the Executive version compared to the SNG45 release. You can read more about them in the deep dive on [secrets of the Executive version](https://www.bbcelite.com/deep_dives/secrets_of_the_executive_version.html).
+
+See the [accompanying website](https://www.bbcelite.com/6502sp/releases.html) for a comprehensive list of differences between the releases.
 
 ## Notes on the original source files
 
