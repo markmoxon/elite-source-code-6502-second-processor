@@ -20920,7 +20920,7 @@ ENDIF
 
 .zZ
 
- LDA #&60               \ Set (QQ9, QQ10) to (96, 96), which is where we always
+ LDA #96                \ Set (QQ9, QQ10) to (96, 96), which is where we always
  STA QQ9                \ arrive in a new galaxy (the selected system will be
  STA QQ10               \ set to the nearest actual system later on)
 
@@ -28481,16 +28481,6 @@ LOAD_F% = LOAD% + P% - CODE%
 .KILLSHP
 
  STX XX4                \ Store the slot number of the ship to remove in XX4
-
-                        \ The following two instructions appear in the BASIC
-                        \ source file (ELITEF), but in the text source file
-                        \ (ELITEF.TXT) they are replaced by:
-                        \
-                        \   CPX MSTG
-                        \
-                        \ which does the same thing, but saves two bytes of
-                        \ memory (as CPX MSTG is a two-byte opcode, while LDA
-                        \ MSTG and CMP XX4 take up four bytes between them)
 
  LDA MSTG               \ Check whether this slot matches the slot number in
  CMP XX4                \ MSTG, which is the target of our missile lock
