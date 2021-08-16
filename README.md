@@ -31,9 +31,9 @@ See the [introduction](#introduction) for more information.
 
 * [Building different releases of 6502 Second Processor Elite](#building-different-releases-of-6502-second-processor-elite)
 
+  * [Building the SNG45 release](#building-the-sng45-release)
   * [Building the source disc release](#building-the-source-disc-release)
   * [Building the Executive version](#building-the-executive-version)
-  * [Building the SNG45 release](#building-the-sng45-release)
   * [Differences between the releases](#differences-between-the-releases)
 
 * [Notes on the original source files](#notes-on-the-original-source-files)
@@ -239,7 +239,11 @@ This repository contains the source code for three different releases of 6502 Se
 
 * The Executive version from Ian Bell's site, which was also never released
 
-By default the build process builds the SNG45 release, but you can build the other releases as follows.
+By default the build process builds the SNG45 release, but you can build a specified release using the `release=` build parameter.
+
+### Building the SNG45 release
+
+You can add `release=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 release, though that's the default value so it isn't necessary.
 
 ### Building the source disc release
 
@@ -272,10 +276,6 @@ make encrypt verify release=executive
 ```
 
 This will produce a file called `elite-6502sp-executive.ssd` that contains the Executive version.
-
-### Building the SNG45 release
-
-You can add `release=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 release, though that's the default value so it isn't necessary.
 
 ### Differences between the releases
 
