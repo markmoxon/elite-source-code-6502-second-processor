@@ -40,6 +40,8 @@ _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
 _EXECUTIVE              = (_RELEASE = 3)
 
+GUARD &4000             \ Guard against assembling over screen memory
+
 \ ******************************************************************************
 \
 \ Configuration variables

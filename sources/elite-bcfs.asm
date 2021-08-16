@@ -47,6 +47,8 @@ _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
 _EXECUTIVE              = (_RELEASE = 3)
 
+GUARD &F800             \ Guard against assembling over MOS memory
+
 \ ******************************************************************************
 \
 \ Configuration variables
