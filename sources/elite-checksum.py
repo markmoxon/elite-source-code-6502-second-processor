@@ -127,15 +127,15 @@ if Encrypt:
 if release == 1:
     # Source disc
     g = 0x10D1
-    f = 0x81B0 - 1
+    f = 0x81C3 - 1
 elif release == 2:
     # SNG45
     g = 0x10D1
-    f = 0x818F - 1
+    f = 0x81A2 - 1
 elif release == 3:
     # Executive
     g = 0x10D3
-    f = 0x82e7 - 1
+    f = 0x82FA - 1
 
 if Encrypt:
     while g < f:
