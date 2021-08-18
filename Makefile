@@ -40,8 +40,9 @@ build:
 	$(BEEBASM) -i sources/elite-z.asm -v >> output/compile.txt
 	$(BEEBASM) -i sources/elite-loader1.asm -v >> output/compile.txt
 	$(BEEBASM) -i sources/elite-loader2.asm -v >> output/compile.txt
+	$(BEEBASM) -i sources/elite-readme.asm -v >> output/compile.txt
 	$(PYTHON) sources/elite-checksum.py -u -rel$(rel-6502sp)
-	$(BEEBASM) -i sources/elite-disc.asm -do elite-6502sp$(suffix-6502sp).ssd -boot ELITE
+	$(BEEBASM) -i sources/elite-disc.asm -do elite-6502sp$(suffix-6502sp).ssd -boot ELITE -title "E L I T E"
 
 .PHONY:encrypt
 encrypt:
@@ -54,8 +55,9 @@ encrypt:
 	$(BEEBASM) -i sources/elite-z.asm -v >> output/compile.txt
 	$(BEEBASM) -i sources/elite-loader1.asm -v >> output/compile.txt
 	$(BEEBASM) -i sources/elite-loader2.asm -v >> output/compile.txt
+	$(BEEBASM) -i sources/elite-readme.asm -v >> output/compile.txt
 	$(PYTHON) sources/elite-checksum.py -rel$(rel-6502sp)
-	$(BEEBASM) -i sources/elite-disc.asm -do elite-6502sp$(suffix-6502sp).ssd -boot ELITE
+	$(BEEBASM) -i sources/elite-disc.asm -do elite-6502sp$(suffix-6502sp).ssd -boot ELITE -title "E L I T E"
 
 .PHONY:verify
 verify:

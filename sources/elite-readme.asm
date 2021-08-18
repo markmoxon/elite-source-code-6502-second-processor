@@ -1,6 +1,6 @@
 \ ******************************************************************************
 \
-\ 6502 SECOND PROCESSOR ELITE DISC IMAGE SCRIPT
+\ 6502 SECOND PROCESSOR ELITE README
 \
 \ 6502 Second Processor Elite was written by Ian Bell and David Braben and is
 \ copyright Acornsoft 1985
@@ -20,14 +20,9 @@
 \
 \ ------------------------------------------------------------------------------
 \
-\ This source file produces one of the following SSD disc images, depending on
-\ which release is being built:
+\ This source file produces the following binary file:
 \
-\   * elite-6502sp-sng45.ssd
-\   * elite-6502sp-from-source-disc.ssd
-\   * elite-6502sp-executive.ssd
-\
-\ This can be loaded into an emulator or a real BBC Micro.
+\   * output/README.txt
 \
 \ ******************************************************************************
 
@@ -37,32 +32,37 @@ _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
 _EXECUTIVE              = (_RELEASE = 3)
 
-IF _SNG45 OR _EXECUTIVE
- PUTFILE "output/ELITE.bin", "ELITE", &FF1FDC, &FF2085
-ELIF _SOURCE_DISC
- PUTFILE "output/ELITE.bin", "ELITE", &FF2000, &FF2085
-ENDIF
+.readme
 
-PUTFILE "output/ELITEa.bin", "I.ELITEa", &FF2000, &FF2000
-
-IF _SNG45 OR _SOURCE_DISC
- PUTFILE "output/I.CODE.bin", "I.CODE", &FF2400, &FF2C89
+ EQUB 10, 13
+ EQUS "---------------------------------------"
+ EQUB 10, 13
+ EQUS "Acornsoft Elite"
+ EQUB 10, 13
+ EQUB 10, 13
+ EQUS "Version: BBC with 6502 Second Processor"
+ EQUB 10, 13
+IF _SOURCE_DISC
+ EQUS "Release: Ian Bell's source disc"
+ EQUB 10, 13
+ EQUS "Code no: Not officially released"
+ EQUB 10, 13
+ELIF _SNG45
+ EQUS "Release: Official Acornsoft release"
+ EQUB 10, 13
+ EQUS "Code no: Acornsoft SNG45 v1.0"
+ EQUB 10, 13
 ELIF _EXECUTIVE
- PUTFILE "output/I.CODE.bin", "I.CODE", &032400, &032C89
+ EQUS "Release: Executive version"
+ EQUB 10, 13
+ EQUS "Code no: Not officially released"
+ EQUB 10, 13
 ENDIF
+ EQUB 10, 13
+ EQUS "See www.bbcelite.com for details"
+ EQUB 10, 13
+ EQUS "---------------------------------------"
+ EQUB 10, 13
 
-IF _REMOVE_CHECKSUMS
- IF _SNG45 OR _SOURCE_DISC
-  PUTFILE "output/P.CODE.bin", "P.CODE", &001000, &0010D1
- ELIF _EXECUTIVE
-  PUTFILE "output/P.CODE.bin", "P.CODE", &001000, &0010D3
- ENDIF
-ELSE
- IF _SNG45 OR _SOURCE_DISC
-  PUTFILE "output/P.CODE.bin", "P.CODE", &001000, &00106A
- ELIF _EXECUTIVE
-  PUTFILE "output/P.CODE.bin", "P.CODE", &001000, &00106C
- ENDIF
-ENDIF
+SAVE "output/README.txt", readme, P%
 
-PUTFILE "output/README.txt", "README", &FFFFFF, &FFFFFF
