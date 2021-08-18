@@ -45,17 +45,17 @@ _EXECUTIVE              = (_RELEASE = 3)
 IF _SOURCE_DISC
  EQUS "Release: Ian Bell's source disc"
  EQUB 10, 13
- EQUS "Code no: Not officially released"
+ EQUS "         Not officially released"
  EQUB 10, 13
 ELIF _SNG45
  EQUS "Release: Official Acornsoft release"
  EQUB 10, 13
- EQUS "Code no: Acornsoft SNG45 v1.0"
+ EQUS "         Acornsoft SNG45 v1.0"
  EQUB 10, 13
 ELIF _EXECUTIVE
  EQUS "Release: Executive version"
  EQUB 10, 13
- EQUS "Code no: Not officially released"
+ EQUS "         Not officially released"
  EQUB 10, 13
 ENDIF
  EQUB 10, 13
