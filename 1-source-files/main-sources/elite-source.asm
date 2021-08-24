@@ -22,22 +22,22 @@
 \
 \ This source file produces the following binary files:
 \
-\   * output/ELTA.bin
-\   * output/ELTB.bin
-\   * output/ELTC.bin
-\   * output/ELTD.bin
-\   * output/ELTE.bin
-\   * output/ELTF.bin
-\   * output/ELTG.bin
-\   * output/ELTH.bin
-\   * output/ELTI.bin
-\   * output/ELTJ.bin
-\   * output/SHIPS.bin
-\   * output/WORDS.bin
+\   * ELTA.bin
+\   * ELTB.bin
+\   * ELTC.bin
+\   * ELTD.bin
+\   * ELTE.bin
+\   * ELTF.bin
+\   * ELTG.bin
+\   * ELTH.bin
+\   * ELTI.bin
+\   * ELTJ.bin
+\   * SHIPS.bin
+\   * WORDS.bin
 \
 \ ******************************************************************************
 
-INCLUDE "sources/elite-header.h.asm"
+INCLUDE "1-source-files/main-sources/elite-header.h.asm"
 
 CPU 1                   \ Switch to 65C02 assembly, as this code runs on the
                         \ 6502 Second Processor
@@ -2329,7 +2329,7 @@ NEXT
 
 \ ******************************************************************************
 \
-\ Save output/WORDS.bin
+\ Save WORDS.bin
 \
 \ ******************************************************************************
 
@@ -2341,7 +2341,7 @@ PRINT "Execute at ", ~LOAD_WORDS%
 PRINT "Reload at ", ~LOAD_WORDS%
 
 PRINT "S.WORDS ",~CODE_WORDS%," ",~P%," ",~LOAD_WORDS%," ",~LOAD_WORDS%
-SAVE "output/WORDS.bin", CODE_WORDS%, P%, LOAD_WORDS%
+SAVE "3-assembled-output/WORDS.bin", CODE_WORDS%, P%, LOAD_WORDS%
 
 \ ******************************************************************************
 \
@@ -7267,11 +7267,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ELTA-LSX2.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTA-LSX2.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ELTA-LSX2.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTA-LSX2.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ELTA-LSX2.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTA-LSX2.bin"
  ENDIF
 
 ELSE
@@ -7296,11 +7296,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ELTA-LSY2.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTA-LSY2.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ELTA-LSY2.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTA-LSY2.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ELTA-LSY2.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTA-LSY2.bin"
  ENDIF
 
 ELSE
@@ -7312,7 +7312,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\ Save output/ELTA.bin
+\ Save ELTA.bin
 \
 \ ******************************************************************************
 
@@ -7324,7 +7324,7 @@ PRINT "Execute at ", ~LOAD%
 PRINT "Reload at ", ~LOAD_A%
 
 PRINT "S.ELTA ", ~S1%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD_A%
-SAVE "output/ELTA.bin", S1%, P%, LOAD%
+SAVE "3-assembled-output/ELTA.bin", S1%, P%, LOAD%
 
 \ ******************************************************************************
 \
@@ -7619,21 +7619,21 @@ IF _MATCH_EXTRACTED_BINARIES
   EQUS "By Ian Bell & David Braben"
   EQUB 10
   EQUB 13
-  INCBIN "extracted/sng45/workspaces/ELTB-LBUF.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTB-LBUF.bin"
 
  ELIF _EXECUTIVE
 
   EQUS "- By Ian Bell & David Braben"
   EQUB 10
   EQUB 13
-  INCBIN "extracted/executive/workspaces/ELTB-LBUF.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTB-LBUF.bin"
 
  ELIF _SOURCE_DISC
 
   EQUS "By Ian Bell & David Braben"
   EQUB 10
   EQUB 13
-  INCBIN "extracted/source-disc/workspaces/ELTB-LBUF.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTB-LBUF.bin"
 
  ENDIF
 
@@ -7934,11 +7934,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ELTB-HBUF.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTB-HBUF.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ELTB-HBUF.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTB-HBUF.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ELTB-HBUF.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTB-HBUF.bin"
  ENDIF
 
 ELSE
@@ -8317,11 +8317,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ELTB-PBUF.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTB-PBUF.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ELTB-PBUF.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTB-PBUF.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ELTB-PBUF.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTB-PBUF.bin"
  ENDIF
 
 ELSE
@@ -11569,7 +11569,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\ Save output/ELTB.bin
+\ Save ELTB.bin
 \
 \ ******************************************************************************
 
@@ -11581,7 +11581,7 @@ PRINT "Execute at ", ~LOAD%
 PRINT "Reload at ", ~LOAD_B%
 
 PRINT "S.ELTB ", ~CODE_B%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD_B%
-SAVE "output/ELTB.bin", CODE_B%, P%, LOAD%
+SAVE "3-assembled-output/ELTB.bin", CODE_B%, P%, LOAD%
 
 \ ******************************************************************************
 \
@@ -17627,7 +17627,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\ Save output/ELTC.bin
+\ Save ELTC.bin
 \
 \ ******************************************************************************
 
@@ -17639,7 +17639,7 @@ PRINT "Execute at ", ~LOAD%
 PRINT "Reload at ", ~LOAD_C%
 
 PRINT "S.ELTC ", ~CODE_C%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD_C%
-SAVE "output/ELTC.bin", CODE_C%, P%, LOAD%
+SAVE "3-assembled-output/ELTC.bin", CODE_C%, P%, LOAD%
 
 \ ******************************************************************************
 \
@@ -22965,7 +22965,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\ Save output/ELTD.bin
+\ Save ELTD.bin
 \
 \ ******************************************************************************
 
@@ -22977,7 +22977,7 @@ PRINT "Execute at ", ~LOAD%
 PRINT "Reload at ", ~LOAD_D%
 
 PRINT "S.ELTD ", ~CODE_D%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD_D%
-SAVE "output/ELTD.bin", CODE_D%, P%, LOAD%
+SAVE "3-assembled-output/ELTD.bin", CODE_D%, P%, LOAD%
 
 \ ******************************************************************************
 \
@@ -28226,7 +28226,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
 \ ******************************************************************************
 \
-\ Save output/ELTE.bin
+\ Save ELTE.bin
 \
 \ ******************************************************************************
 
@@ -28238,7 +28238,7 @@ PRINT "Execute at ", ~LOAD%
 PRINT "Reload at ", ~LOAD_E%
 
 PRINT "S.ELTE ", ~CODE_E%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD_E%
-SAVE "output/ELTE.bin", CODE_E%, P%, LOAD%
+SAVE "3-assembled-output/ELTE.bin", CODE_E%, P%, LOAD%
 
 \ ******************************************************************************
 \
@@ -35146,7 +35146,7 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\ Save output/ELTF.bin
+\ Save ELTF.bin
 \
 \ ******************************************************************************
 
@@ -35158,7 +35158,7 @@ PRINT "Execute at ", ~LOAD%
 PRINT "Reload at ", ~LOAD_F%
 
 PRINT "S.ELTF ", ~CODE_F%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD_F%
-SAVE "output/ELTF.bin", CODE_F%, P%, LOAD%
+SAVE "3-assembled-output/ELTF.bin", CODE_F%, P%, LOAD%
 
 \ ******************************************************************************
 \
@@ -35174,11 +35174,11 @@ LOAD_G% = LOAD% + P% - CODE%
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ELTG-align.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTG-align.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ELTG-align.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTG-align.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ELTG-align.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTG-align.bin"
  ENDIF
 
 ELSE
@@ -35215,11 +35215,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ELTG-log.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTG-log.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ELTG-log.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTG-log.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ELTG-log.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTG-log.bin"
  ENDIF
 
 ELSE
@@ -35253,11 +35253,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ELTG-logL.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTG-logL.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ELTG-logL.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTG-logL.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ELTG-logL.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTG-logL.bin"
  ENDIF
 
 ELSE
@@ -35295,11 +35295,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ELTG-antilog.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTG-antilog.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ELTG-antilog.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTG-antilog.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ELTG-antilog.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTG-antilog.bin"
  ENDIF
 
 ELSE
@@ -35340,11 +35340,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ELTG-antilogODD.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTG-antilogODD.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ELTG-antilogODD.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTG-antilogODD.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ELTG-antilogODD.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTG-antilogODD.bin"
  ENDIF
 
 ELSE
@@ -39214,7 +39214,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\ Save output/ELTG.bin
+\ Save ELTG.bin
 \
 \ ******************************************************************************
 
@@ -39226,7 +39226,7 @@ PRINT "Execute at ", ~LOAD%
 PRINT "Reload at ", ~LOAD_G%
 
 PRINT "S.ELTG ", ~CODE_G%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD_G%
-SAVE "output/ELTG.bin", CODE_G%, P%, LOAD%
+SAVE "3-assembled-output/ELTG.bin", CODE_G%, P%, LOAD%
 
 \ ******************************************************************************
 \
@@ -41477,7 +41477,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\ Save output/ELTH.bin
+\ Save ELTH.bin
 \
 \ ******************************************************************************
 
@@ -41489,7 +41489,7 @@ PRINT "Execute at ", ~LOAD%
 PRINT "Reload at ", ~LOAD_H%
 
 PRINT "S.ELTH ", ~CODE_H%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD_H%
-SAVE "output/ELTH.bin", CODE_H%, P%, LOAD%
+SAVE "3-assembled-output/ELTH.bin", CODE_H%, P%, LOAD%
 
 \ ******************************************************************************
 \
@@ -43243,7 +43243,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\ Save output/ELTI.bin
+\ Save ELTI.bin
 \
 \ ******************************************************************************
 
@@ -43255,7 +43255,7 @@ PRINT "Execute at ", ~LOAD%
 PRINT "Reload at ", ~LOAD_I%
 
 PRINT "S.ELTI ", ~CODE_I%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD_H%
-SAVE "output/ELTI.bin", CODE_I%, P%, LOAD%
+SAVE "3-assembled-output/ELTI.bin", CODE_I%, P%, LOAD%
 
 \ ******************************************************************************
 \
@@ -47757,7 +47757,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\ Save output/ELTJ.bin
+\ Save ELTJ.bin
 \
 \ ******************************************************************************
 
@@ -47769,7 +47769,7 @@ PRINT "Execute at ", ~LOAD%
 PRINT "Reload at ", ~LOAD_J%
 
 PRINT "S.ELTJ ", ~CODE_J%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD_J%
-SAVE "output/ELTJ.bin", CODE_J%, P%, LOAD%
+SAVE "3-assembled-output/ELTJ.bin", CODE_J%, P%, LOAD%
 
 \ ******************************************************************************
 \
@@ -51035,7 +51035,7 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\ Save output/SHIPS.bin
+\ Save SHIPS.bin
 \
 \ ******************************************************************************
 
@@ -51047,7 +51047,7 @@ PRINT "Execute at ", ~LOAD_SHIPS%
 PRINT "Reload at ", ~LOAD_SHIPS%
 
 PRINT "S.SHIPS ", ~CODE_SHIPS%, " ", ~P%, " ", ~LOAD_SHIPS%, " ", ~LOAD_SHIPS%
-SAVE "output/SHIPS.bin", CODE_SHIPS%, P%, LOAD_SHIPS%
+SAVE "3-assembled-output/SHIPS.bin", CODE_SHIPS%, P%, LOAD_SHIPS%
 
 \ ******************************************************************************
 \

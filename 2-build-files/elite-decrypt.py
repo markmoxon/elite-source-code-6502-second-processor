@@ -14,10 +14,10 @@
 # existing unprot.bin files, so they can be compared if required
 #
 # Run this script by changing directory to the repository's root folder and
-# running the script with "python sources/elite-decrypt.py"
+# running the script with "python 2-build-files/elite-decrypt.py"
 #
 # You can decrypt specific releases by adding the following arguments, as in
-# "python sources/elite-decrypt.py -rel1" for example:
+# "python 2-build-files/elite-decrypt.py -rel1" for example:
 #
 #   -rel1   Decrypt the source disc release from Ian Bell's site
 #   -rel2   Decrypt the SNG45 release
@@ -54,12 +54,12 @@ data_block = bytearray()
 
 # Load assembled code file
 
-elite_file = open("extracted/" + folder + "/P.CODE.bin", "rb")
+elite_file = open("4-reference-binaries/" + folder + "/P.CODE.bin", "rb")
 data_block.extend(elite_file.read())
 elite_file.close()
 
 print()
-print("[ Read    ] extracted/" + folder + "/P.CODE.bin")
+print("[ Read    ] 4-reference-binaries/" + folder + "/P.CODE.bin")
 
 # Do decryption
 
@@ -101,13 +101,13 @@ for n in range(0x1300, 0xA000):
 s = 0x106A
 data_block[s - 0x1000 - 1] = 0x60
 
-print("[ Decrypt ] extracted/" + folder + "/P.CODE.bin")
+print("[ Decrypt ] 4-reference-binaries/" + folder + "/P.CODE.bin")
 
 # Write output file for P.CODE.decrypt
 
-output_file = open("extracted/" + folder + "/P.CODE.decrypt.bin", "wb")
+output_file = open("4-reference-binaries/" + folder + "/P.CODE.decrypt.bin", "wb")
 output_file.write(data_block)
 output_file.close()
 
-print("[ Save    ] extracted/" + folder + "/P.CODE.decrypt.bin")
+print("[ Save    ] 4-reference-binaries/" + folder + "/P.CODE.decrypt.bin")
 print()

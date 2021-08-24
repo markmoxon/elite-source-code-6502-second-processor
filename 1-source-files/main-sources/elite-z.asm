@@ -22,11 +22,11 @@
 \
 \ This source file produces the following binary file:
 \
-\   * output/I.CODE.bin
+\   * I.CODE.bin
 \
 \ ******************************************************************************
 
-INCLUDE "sources/elite-header.h.asm"
+INCLUDE "1-source-files/main-sources/elite-header.h.asm"
 
 _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
@@ -281,9 +281,9 @@ ORG CODE%
 FONT% = P% DIV 256
 
 IF _SNG45 OR _SOURCE_DISC
- INCBIN "binaries/P.FONT.bin"
+ INCBIN "1-source-files/fonts/P.FONT.bin"
 ELIF _EXECUTIVE
- INCBIN "binaries/P.FONTEX.bin"
+ INCBIN "1-source-files/fonts/P.FONTEX.bin"
 ENDIF
 
 \ ******************************************************************************
@@ -314,11 +314,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ICODE-log.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ICODE-log.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ICODE-log.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ICODE-log.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ICODE-log.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ICODE-log.bin"
  ENDIF
 
 ELSE
@@ -360,11 +360,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ICODE-logL.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ICODE-logL.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ICODE-logL.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ICODE-logL.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ICODE-logL.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ICODE-logL.bin"
  ENDIF
 
 ELSE
@@ -402,11 +402,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ICODE-antilog.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ICODE-antilog.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ICODE-antilog.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ICODE-antilog.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ICODE-antilog.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ICODE-antilog.bin"
  ENDIF
 
 ELSE
@@ -447,11 +447,11 @@ ENDIF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ICODE-antilogODD.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ICODE-antilogODD.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ICODE-antilogODD.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ICODE-antilogODD.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ICODE-antilogODD.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ICODE-antilogODD.bin"
  ENDIF
 
 ELSE
@@ -8676,7 +8676,7 @@ CPU 0                   \ Switch back to normal 6502 asembly
 
 \ ******************************************************************************
 \
-\ Save output/I.CODE.bin
+\ Save I.CODE.bin
 \
 \ ******************************************************************************
 
@@ -8689,4 +8689,4 @@ PRINT "Reload at ", ~LOAD%
 PRINT "protlen = ", ~protlen
 
 PRINT "S.I.CODE ", ~CODE%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD%
-SAVE "output/I.CODE.bin", CODE%, P%, LOAD%
+SAVE "3-assembled-output/I.CODE.bin", CODE%, P%, LOAD%
