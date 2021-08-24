@@ -20,7 +20,11 @@ See the [introduction](#introduction) for more information.
 
 * [Browsing the source in an IDE](#browsing-the-source-in-an-ide)
 
-* [Building 6502 Second Processor Elite from the source](#building-6502-second-processor-elite-from-the-source)
+* [Folder structure](#folder-structure)
+
+* [Flicker-free Elite](#flicker-free-elite)
+
+* [Building Elite from the source](#building-elite-from-the-source)
 
   * [Requirements](#requirements)
   * [Build targets](#build-targets)
@@ -51,7 +55,7 @@ It is a companion to the [bbcelite.com website](https://www.bbcelite.com), which
 
 * If you want to browse the source and read about how Elite works under the hood, you will probably find [the website](https://www.bbcelite.com) is a better place to start than this repository.
 
-* If you would rather explore the source code in your favourite IDE, then the [annotated source](sources/elite-source.asm) is what you're looking for. It contains the exact same content as the website, so you won't be missing out (the website is generated from the source files, so they are guaranteed to be identical). You might also like to read the section on [Browsing the source in an IDE](#browsing-the-source-in-an-ide) for some tips.
+* If you would rather explore the source code in your favourite IDE, then the [annotated source](1-source-files/main-sources/elite-source.asm) is what you're looking for. It contains the exact same content as the website, so you won't be missing out (the website is generated from the source files, so they are guaranteed to be identical). You might also like to read the section on [Browsing the source in an IDE](#browsing-the-source-in-an-ide) for some tips.
 
 * If you want to build Elite from the source on a modern computer, to produce a working game disc that can be loaded into a BBC Micro or an emulator, then you want the section on [Building 6502 Second Processor Elite from the source](#building-6502-second-processor-elite-from-the-source).
 
@@ -67,7 +71,7 @@ The commentary is copyright &copy; Mark Moxon. Any misunderstandings or mistakes
 
 Huge thanks are due to the original authors for not only creating such an important piece of my childhood, but also for releasing the source code for us to play with; to Paul Brink for his annotated disassembly; and to Kieran Connell for his [BeebAsm version](https://github.com/kieranhj/elite-beebasm), which I forked as the original basis for this project. You can find more information about this project in the [accompanying website's project page](https://www.bbcelite.com/about_site/about_this_project.html).
 
-The following archive from Ian Bell's site forms the basis for this project:
+The following archive from Ian Bell's personal website forms the basis for this project:
 
 * [6502 Second Processor sources as a disc image](http://www.elitehomepage.org/archive/a/a5022201.zip)
 
@@ -87,11 +91,11 @@ My hope is that the educational and non-profit intentions of this repository wil
 
 If you want to browse the source in an IDE, you might find the following useful.
 
-* The most interesting files are in the [sources](sources) folder:
+* The most interesting files are in the [main-sources](1-source-files/main-sources) folder:
 
-  * The main game's source code is in the [elite-source.asm](sources/elite-source.asm) file (for the parasite, i.e. the Second Processor) and [elite-z.asm](sources/elite-z.asm) (for the I/O processor, i.e. the BBC Micro) - this is the motherlode and probably contains all the stuff you're interested in.
+  * The main game's source code is in the [elite-source.asm](1-source-files/main-sources/elite-source.asm) file (for the parasite, i.e. the Second Processor) and [elite-z.asm](1-source-files/main-sources/elite-z.asm) (for the I/O processor, i.e. the BBC Micro) - this is the motherlode and probably contains all the stuff you're interested in.
 
-  * The game's loader is in the [elite-loader1.asm](sources/elite-loader1.asm) and [elite-loader2.asm](sources/elite-loader2.asm) files - these are mainly concerned with setup and copy protection.
+  * The game's loader is in the [elite-loader1.asm](1-source-files/main-sources/elite-loader1.asm) and [elite-loader2.asm](1-source-files/main-sources/elite-loader2.asm) files - these are mainly concerned with setup and copy protection.
 
 * It's probably worth skimming through the [notes on terminology and notations](https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html) on the accompanying website, as this explains a number of terms used in the commentary, without which it might be a bit tricky to follow at times (in particular, you should understand the terminology I use for multi-byte numbers).
 
@@ -101,13 +105,33 @@ If you want to browse the source in an IDE, you might find the following useful.
 
 * If you know the name of a routine, you can find it by searching for `Name: <name>`, as in `Name: SCAN` (for the 3D scanner routine) or `Name: LL9` (for the ship-drawing routine).
 
-* The entry point for the [main game code](sources/elite-source.asm) is routine `TT170`, which you can find by searching for `Name: TT170` (though there are some decryption and setup routines at `S%` and `BEGIN` that you may also find useful). If you want to follow the program flow all the way from the title screen around the main game loop, then you can find a number of [deep dives on program flow](https://www.bbcelite.com/deep_dives/) on the accompanying website.
+* The entry point for the [main game code](1-source-files/main-sources/elite-source.asm) is routine `TT170`, which you can find by searching for `Name: TT170` (though there are some decryption and setup routines at `S%` and `BEGIN` that you may also find useful). If you want to follow the program flow all the way from the title screen around the main game loop, then you can find a number of [deep dives on program flow](https://www.bbcelite.com/deep_dives/) on the accompanying website.
 
 * The source code is designed to be read at an 80-column width and with a monospaced font, just like in the good old days.
 
 I hope you enjoy exploring the inner-workings of BBC Elite as much as I have.
 
-## Building 6502 Second Processor Elite from the source
+## Folder structure
+
+There are five main folders in this repository, which reflect the order of the build process.
+
+* [1-source-files](1-source-files) contains all the different source files, such as the main assembler source files, image binaries, fonts, boot files and so on
+
+* [2-build-files](2-build-files) contains build-related scripts, such as the checksum, encryption and crc32 verification scripts
+
+* [3-assembled-output](3-assembled-output) contains the output from the assembly process, when the source files are assembled and the results processed by the build files
+
+* [4-reference-binaries](4-reference-binaries) contains the correct binaries for each release, so we can verify that our assembled output matches the reference
+
+* [5-compiled-game-discs](5-compiled-game-discs) contains the final output of the build process: an SSD disc image that contains the compiled game and which can be run on real hardware or in an emulator
+
+## Flicker-free Elite
+
+This repository also includes a flicker-free version, which incorporates the backported flicker-free ship-drawing routines from the BBC Master. The flicker-free code is in a separate branch called `flicker-free`, and apart from the code differences for reducing flicker, this branch is identical to the main branch and the same build process applies. Checksum values are different, but that's about it.
+
+For more information on the flicker-free code, see the deep dives on [flicker-free ship drawing](https://www.bbcelite.com/deep_dives/flicker-free_ship_drawing.html) and [backporting the flicker-free algorithm](https://www.bbcelite.com/deep_dives/backporting_the_flicker-free_algorithm.html).
+
+## Building Elite from the source
 
 ### Requirements
 
@@ -150,7 +174,7 @@ make.bat build
 make.bat encrypt
 ```
 
-will produce a file called `elite-6502sp-sng45.ssd` containing the SNG45 release, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
+will produce a file called `elite-6502sp-sng45.ssd` in the `5-compiled-game-discs` folder that contains the SNG45 release, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
 
 ### Mac and Linux
 
@@ -166,11 +190,11 @@ make build
 make encrypt
 ```
 
-will produce a file called `elite-6502sp-sng45.ssd` containing the SNG45 release, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
+will produce a file called `elite-6502sp-sng45.ssd` in the `5-compiled-game-discs` folder that contains the SNG45 release, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
 
 ### Verifying the output
 
-The build process also supports a verification target that prints out checksums of all the generated files, along with the checksums of the files extracted from the original sources.
+The build process also supports a verification target that prints out checksums of all the generated files, along with the checksums of the files from the original sources.
 
 You can run this verification step on its own, or you can run it once a build has finished. To run it on its own, use the following command on Windows:
 
@@ -196,12 +220,12 @@ or this on Mac/Linux:
 make encrypt verify
 ```
 
-The Python script `crc32.py` does the actual verification, and shows the checksums and file sizes of both sets of files, alongside each other, and with a Match column that flags any discrepancies. If you are building an unencrypted set of files then there will be lots of differences, while the encrypted files should match.
+The Python script `crc32.py` in the `2-build-files` folder does the actual verification, and shows the checksums and file sizes of both sets of files, alongside each other, and with a Match column that flags any discrepancies. If you are building an unencrypted set of files then there will be lots of differences, while the encrypted files should match.
 
-The binaries in the `extracted` folder were taken straight from the [6502 Second Processor sources disc image](http://www.elitehomepage.org/archive/a/a5022201.zip), while those in the `output` folder are produced by the build process. For example, if you don't make any changes to the code and build the project with `make encrypt verify`, then this is the output of the verification process:
+The binaries in the `4-reference-binaries` folder were taken straight from the [6502 Second Processor sources disc image](http://www.elitehomepage.org/archive/a/a5022201.zip), while those in the `3-assembled-output` folder are produced by the build process. For example, if you don't make any changes to the code and build the project with `make encrypt verify`, then this is the output of the verification process:
 
 ```
-[--extracted--]  [---output----]
+[--originals--]  [---output----]
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
 ffdb229a    788  ffdb229a    788   Yes   ELITE.bin
@@ -223,11 +247,11 @@ ee25ce2a   6454  ee25ce2a   6454   Yes   I.CODE.bin
 fc481d3e   1024  fc481d3e   1024   Yes   WORDS.bin
 ```
 
-All the compiled binaries match the extracts, so we know we are producing the same final game as the release version.
+All the compiled binaries match the originals, so we know we are producing the same final game as the release version.
 
 ### Log files
 
-During compilation, details of every step are output in a file called `compile.txt` in the `output` folder. If you have problems, it might come in handy, and it's a great reference if you need to know the addresses of labels and variables for debugging (or just snooping around).
+During compilation, details of every step are output in a file called `compile.txt` in the `3-assembled-output` folder. If you have problems, it might come in handy, and it's a great reference if you need to know the addresses of labels and variables for debugging (or just snooping around).
 
 ## Building different releases of 6502 Second Processor Elite
 
@@ -235,9 +259,9 @@ This repository contains the source code for three different releases of 6502 Se
 
 * The official SNG45 Acornsoft release, which was the first appearence of 6502 Second Processor Elite, and the one included on all subsequent discs
 
-* The game produced by the source disc from Ian Bell's site, which was never released
+* The game produced by the source disc from Ian Bell's personal website, which was never released
 
-* The Executive version from Ian Bell's site, which was also never released
+* The Executive version from Ian Bell's personal website, which was also never released
 
 By default the build process builds the SNG45 release, but you can build a specified release using the `release=` build parameter.
 
@@ -259,7 +283,7 @@ or this on a Mac or Linux:
 make encrypt verify release=source-disc
 ```
 
-This will produce a file called `elite-6502sp-from-source-disc.ssd` that contains the source disc release.
+This will produce a file called `elite-6502sp-from-source-disc.ssd` in the `5-compiled-game-discs` folder that contains the source disc release.
 
 ### Building the Executive version
 
@@ -275,7 +299,7 @@ or this on a Mac or Linux:
 make encrypt verify release=executive
 ```
 
-This will produce a file called `elite-6502sp-executive.ssd` that contains the Executive version.
+This will produce a file called `elite-6502sp-executive.ssd` in the `5-compiled-game-discs` folder that contains the Executive version.
 
 ### Differences between the releases
 
@@ -299,11 +323,11 @@ See the [accompanying website](https://www.bbcelite.com/6502sp/releases.html) fo
 
 ### Fixing the original build process
 
-The source files on the source disc do not build as they are; some massaging is required, as described in [this thread on Stardot](https://stardot.org.uk/forums/viewtopic.php?t=14607). Note also that the `P.DIALS2P` file on the source disc has some erroneous dots in the right-hand side of the dashboard; a fixed version is available in the `images` folder in this repository, and this fixed version was used to build the reference binaries in the `extracted` folder.
+The source files on the source disc do not build as they are; some massaging is required, as described in [this thread on Stardot](https://stardot.org.uk/forums/viewtopic.php?t=14607). Note also that the `P.DIALS2P` file on the source disc has some erroneous dots in the right-hand side of the dashboard; a fixed version is available in the `images` folder in this repository, and this fixed version was used to build the reference binaries in the `4-reference-binaries` folder.
 
 ### Producing byte-accurate binaries
 
-The `extracted/<release>/workspaces` folders (where `<release>` is the release version) contain binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either intialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `extracted/<release>/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
+The `4-reference-binaries/<release>/workspaces` folders (where `<release>` is the release version) contain binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either intialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `4-reference-binaries/<release>/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
 
 Here's an example of how these binaries are included, in this case for the `LBUF` workspace in the `ELTB` section:
 
@@ -313,11 +337,11 @@ Here's an example of how these binaries are included, in this case for the `LBUF
 IF _MATCH_EXTRACTED_BINARIES
 
  IF _SNG45
-  INCBIN "extracted/sng45/workspaces/ELTB-LBUF.bin"
+  INCBIN "4-reference-binaries/sng45/workspaces/ELTB-LBUF.bin"
  ELIF _EXECUTIVE
-  INCBIN "extracted/executive/workspaces/ELTB-LBUF.bin"
+  INCBIN "4-reference-binaries/executive/workspaces/ELTB-LBUF.bin"
  ELIF _SOURCE_DISC
-  INCBIN "extracted/source-disc/workspaces/ELTB-LBUF.bin"
+  INCBIN "4-reference-binaries/source-disc/workspaces/ELTB-LBUF.bin"
  ENDIF
 
 ELSE

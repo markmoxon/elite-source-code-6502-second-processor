@@ -22,19 +22,19 @@
 \
 \ This source file produces the following binary file:
 \
-\   * output/ELITEa.bin
+\   * ELITEa.bin
 \
 \ after reading in the following files:
 \
-\   * binaries/P.DIALS2P.bin
-\   * binaries/P.DATE2P.bin
-\   * binaries/Z.ACSOFT.bin
-\   * binaries/Z.ELITE.bin
-\   * binaries/Z.(C)ASFT.bin
+\   * 1-source-files/images/P.DIALS2P.bin
+\   * 1-source-files/images/P.DATE2P.bin
+\   * 1-source-files/images/Z.ACSOFT.bin
+\   * 1-source-files/images/Z.ELITE.bin
+\   * 1-source-files/images/Z.(C)ASFT.bin
 \
 \ ******************************************************************************
 
-INCLUDE "sources/elite-header.h.asm"
+INCLUDE "1-source-files/main-sources/elite-header.h.asm"
 
 _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
@@ -307,29 +307,29 @@ ENDMACRO
 
 .DIALS
 
-INCBIN "binaries/P.DIALS2P.bin"
+INCBIN "1-source-files/images/P.DIALS2P.bin"
 
 .DATE
 
-INCBIN "binaries/P.DATE2P.bin"
+INCBIN "1-source-files/images/P.DATE2P.bin"
 
 .ASOFT
 
-INCBIN "binaries/Z.ACSOFT.bin"
+INCBIN "1-source-files/images/Z.ACSOFT.bin"
 
 .ELITE
 
-INCBIN "binaries/Z.ELITE.bin"
+INCBIN "1-source-files/images/Z.ELITE.bin"
 
 .CpASOFT
 
-INCBIN "binaries/Z.(C)ASFT.bin"
+INCBIN "1-source-files/images/Z.(C)ASFT.bin"
 
 \ ******************************************************************************
 \
-\ Save output/ELITEa.bin
+\ Save ELITEa.bin
 \
 \ ******************************************************************************
 
 PRINT "S.ELITEa ", ~CODE%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD%
-SAVE "output/ELITEa.bin", CODE%, P%, LOAD%
+SAVE "3-assembled-output/ELITEa.bin", CODE%, P%, LOAD%

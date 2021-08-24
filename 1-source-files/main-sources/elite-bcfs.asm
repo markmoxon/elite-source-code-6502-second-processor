@@ -22,26 +22,26 @@
 \
 \ This source file produces the following binary files:
 \
-\   * output/P.CODE.unprot.bin
+\   * P.CODE.unprot.bin
 \
 \ after reading in the following files:
 \
-\   * output/ELTA.bin
-\   * output/ELTB.bin
-\   * output/ELTC.bin
-\   * output/ELTD.bin
-\   * output/ELTE.bin
-\   * output/ELTF.bin
-\   * output/ELTG.bin
-\   * output/ELTH.bin
-\   * output/ELTI.bin
-\   * output/ELTJ.bin
-\   * output/SHIPS.bin
-\   * output/WORDS.bin
+\   * ELTA.bin
+\   * ELTB.bin
+\   * ELTC.bin
+\   * ELTD.bin
+\   * ELTE.bin
+\   * ELTF.bin
+\   * ELTG.bin
+\   * ELTH.bin
+\   * ELTI.bin
+\   * ELTJ.bin
+\   * SHIPS.bin
+\   * WORDS.bin
 \
 \ ******************************************************************************
 
-INCLUDE "sources/elite-header.h.asm"
+INCLUDE "1-source-files/main-sources/elite-header.h.asm"
 
 _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
@@ -71,62 +71,62 @@ LOAD% = &1000           \ The load address of the main game code file, which is
 ORG CODE%
 
 IF _SNG45
- INCBIN "extracted/sng45/workspaces/BCFS-MOS.bin"
+ INCBIN "4-reference-binaries/sng45/workspaces/BCFS-MOS.bin"
 ELIF _EXECUTIVE
- INCBIN "extracted/executive/workspaces/BCFS-MOS.bin"
+ INCBIN "4-reference-binaries/executive/workspaces/BCFS-MOS.bin"
 ELIF _SOURCE_DISC
- INCBIN "extracted/source-disc/workspaces/BCFS-MOS.bin"
+ INCBIN "4-reference-binaries/source-disc/workspaces/BCFS-MOS.bin"
 ENDIF
 
 .elitea
 
 PRINT "elitea = ", ~P%
-INCBIN "output/ELTA.bin"
+INCBIN "3-assembled-output/ELTA.bin"
 
 .eliteb
 
 PRINT "eliteb = ", ~P%
-INCBIN "output/ELTB.bin"
+INCBIN "3-assembled-output/ELTB.bin"
 
 .elitec
 
 PRINT "elitec = ", ~P%
-INCBIN "output/ELTC.bin"
+INCBIN "3-assembled-output/ELTC.bin"
 
 .elited
 
 PRINT "elited = ", ~P%
-INCBIN "output/ELTD.bin"
+INCBIN "3-assembled-output/ELTD.bin"
 
 .elitee
 
 PRINT "elitee = ", ~P%
-INCBIN "output/ELTE.bin"
+INCBIN "3-assembled-output/ELTE.bin"
 
 .elitef
 
 PRINT "elitef = ", ~P%
-INCBIN "output/ELTF.bin"
+INCBIN "3-assembled-output/ELTF.bin"
 
 .eliteg
 
 PRINT "eliteg = ", ~P%
-INCBIN "output/ELTG.bin"
+INCBIN "3-assembled-output/ELTG.bin"
 
 .eliteh
 
 PRINT "eliteh = ", ~P%
-INCBIN "output/ELTH.bin"
+INCBIN "3-assembled-output/ELTH.bin"
 
 .elitei
 
 PRINT "elitei = ", ~P%
-INCBIN "output/ELTI.bin"
+INCBIN "3-assembled-output/ELTI.bin"
 
 .elitej
 
 PRINT "elitej = ", ~P%
-INCBIN "output/ELTJ.bin"
+INCBIN "3-assembled-output/ELTJ.bin"
 
 F% = P%
 PRINT "F% = ", ~F%
@@ -135,29 +135,29 @@ PRINT "P% = ", ~P%
 .words
 
 PRINT "words = ", ~P%
-INCBIN "output/WORDS.bin"
+INCBIN "3-assembled-output/WORDS.bin"
 
 .ships
 
 PRINT "ships = ", ~P%
-INCBIN "output/SHIPS.bin"
+INCBIN "3-assembled-output/SHIPS.bin"
 
 IF _SNG45
- INCBIN "extracted/sng45/workspaces/BCFS-SHIPS.bin"
+ INCBIN "4-reference-binaries/sng45/workspaces/BCFS-SHIPS.bin"
 ELIF _EXECUTIVE
- INCBIN "extracted/executive/workspaces/BCFS-SHIPS.bin"
+ INCBIN "4-reference-binaries/executive/workspaces/BCFS-SHIPS.bin"
 ELIF _SOURCE_DISC
- INCBIN "extracted/source-disc/workspaces/BCFS-SHIPS.bin"
+ INCBIN "4-reference-binaries/source-disc/workspaces/BCFS-SHIPS.bin"
 ENDIF
 
 .end
 
 \ ******************************************************************************
 \
-\ Save 6502sp/output/P.CODE.unprot.bin
+\ Save P.CODE.unprot.bin
 \
 \ ******************************************************************************
 
 PRINT "P% = ", ~P%
 PRINT "S.P.CODE ", ~LOAD%, ~(F% + &0400 + &2200), " ", ~LOAD%, ~LOAD%
-SAVE "output/P.CODE.unprot.bin", CODE%, (F% + &0400 + &2200), LOAD%
+SAVE "3-assembled-output/P.CODE.unprot.bin", CODE%, (F% + &0400 + &2200), LOAD%

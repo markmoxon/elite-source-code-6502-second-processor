@@ -22,11 +22,11 @@
 \
 \ This source file produces the following binary file:
 \
-\   * output/ELITE.bin
+\   * ELITE.bin
 \
 \ ******************************************************************************
 
-INCLUDE "sources/elite-header.h.asm"
+INCLUDE "1-source-files/main-sources/elite-header.h.asm"
 
 _SOURCE_DISC            = (_RELEASE = 1)
 _SNG45                  = (_RELEASE = 2)
@@ -1259,9 +1259,9 @@ ENDIF
 
 \ ******************************************************************************
 \
-\ Save output/ELITE.bin
+\ Save ELITE.bin
 \
 \ ******************************************************************************
 
 PRINT "S.ELITE ", ~CODE%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD%
-SAVE "output/ELITE.bin", CODE%, P%, LOAD%
+SAVE "3-assembled-output/ELITE.bin", CODE%, P%, LOAD%
