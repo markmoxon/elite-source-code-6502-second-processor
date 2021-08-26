@@ -2280,12 +2280,15 @@ ENDIF
 .SNE
 
 FOR I%, 0, 31
-  N = ABS(SIN((I% / 64) * 2 * PI))
-  IF N >= 1
-    EQUB 255
-  ELSE
-    EQUB INT(256 * N + 0.5)
-  ENDIF
+
+ N = ABS(SIN((I% / 64) * 2 * PI))
+
+ IF N >= 1
+  EQUB 255
+ ELSE
+  EQUB INT(256 * N + 0.5)
+ ENDIF
+
 NEXT
 
 \ ******************************************************************************
@@ -2324,7 +2327,9 @@ NEXT
 .ACT
 
 FOR I%, 0, 31
-  EQUB INT((128 / PI) * ATN(I% / 32) + 0.5)
+
+ EQUB INT((128 / PI) * ATN(I% / 32) + 0.5)
+
 NEXT
 
 \ ******************************************************************************
@@ -3419,11 +3424,11 @@ PRINT "WP workspace from  ", ~WP," to ", ~P%
 
 IF _SNG45 OR _SOURCE_DISC
 
-ORG &8200
+ ORG &8200
 
 ELIF _EXECUTIVE
 
-ORG &8500
+ ORG &8500
 
 ENDIF
 
@@ -3443,11 +3448,11 @@ ENDIF
 
 IF _SNG45 OR _SOURCE_DISC
 
-ORG &8600
+ ORG &8600
 
 ELIF _EXECUTIVE
 
-ORG &8900
+ ORG &8900
 
 ENDIF
 
@@ -7276,7 +7281,7 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP 256               \ The ball line heap for storing x-coordinates (see the
+  SKIP 256              \ The ball line heap for storing x-coordinates (see the
                         \ deep dive on "The ball line heap" for details)
 
 ENDIF
@@ -7305,7 +7310,7 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP 256               \ The ball line heap for storing y-coordinates (see the
+  SKIP 256              \ The ball line heap for storing y-coordinates (see the
                         \ deep dive on "The ball line heap" for details)
 
 ENDIF
@@ -7356,7 +7361,9 @@ LOAD_B% = LOAD% + P% - CODE%
 .UNIV
 
 FOR I%, 0, NOSH
-  EQUW K% + I% * NI%    \ Address of block no. I%, of size NI%, in workspace K%
+
+ EQUW K% + I% * NI%     \ Address of block no. I%, of size NI%, in workspace K%
+
 NEXT
 
 \ ******************************************************************************
@@ -7619,6 +7626,7 @@ IF _MATCH_EXTRACTED_BINARIES
   EQUS "By Ian Bell & David Braben"
   EQUB 10
   EQUB 13
+
   INCBIN "4-reference-binaries/sng45/workspaces/ELTB-LBUF.bin"
 
  ELIF _EXECUTIVE
@@ -7626,6 +7634,7 @@ IF _MATCH_EXTRACTED_BINARIES
   EQUS "- By Ian Bell & David Braben"
   EQUB 10
   EQUB 13
+
   INCBIN "4-reference-binaries/executive/workspaces/ELTB-LBUF.bin"
 
  ELIF _SOURCE_DISC
@@ -7633,6 +7642,7 @@ IF _MATCH_EXTRACTED_BINARIES
   EQUS "By Ian Bell & David Braben"
   EQUB 10
   EQUB 13
+
   INCBIN "4-reference-binaries/source-disc/workspaces/ELTB-LBUF.bin"
 
  ENDIF
@@ -7943,7 +7953,7 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP 256
+  SKIP 256
 
 ENDIF
 
@@ -8326,7 +8336,7 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP 256               \ The pixel buffer to send with this command
+  SKIP 256              \ The pixel buffer to send with this command
 
 ENDIF
 
@@ -35183,7 +35193,7 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- ALIGN 256              \ Align the log tables so they start on page boundaries
+  ALIGN 256             \ Align the log tables so they start on page boundaries
 
 ENDIF
 
@@ -35224,11 +35234,14 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP 1
+  SKIP 1
 
  FOR I%, 1, 255
-   B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
-   EQUB B% DIV 256
+
+  B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
+
+  EQUB B% DIV 256
+
  NEXT
 
 ENDIF
@@ -35262,11 +35275,14 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP 1
+  SKIP 1
 
  FOR I%, 1, 255
-   B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
-   EQUB B% MOD 256
+
+  B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
+
+  EQUB B% MOD 256
+
  NEXT
 
 ENDIF
@@ -35305,12 +35321,15 @@ IF _MATCH_EXTRACTED_BINARIES
 ELSE
 
  FOR I%, 0, 255
-   B% = INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
-   IF B% = 256
-     EQUB B%+1
-   ELSE
-     EQUB B%
-   ENDIF
+
+  B% = INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
+
+  IF B% = 256
+   EQUB B%+1
+  ELSE
+   EQUB B%
+  ENDIF
+
  NEXT
 
 ENDIF
@@ -35350,12 +35369,15 @@ IF _MATCH_EXTRACTED_BINARIES
 ELSE
 
  FOR I%, 0, 255
-   B% = INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
-   IF B% = 256
-     EQUB B%+1
-   ELSE
-     EQUB B%
-   ENDIF
+
+  B% = INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
+
+  IF B% = 256
+   EQUB B%+1
+  ELSE
+   EQUB B%
+  ENDIF
+
  NEXT
 
 ENDIF

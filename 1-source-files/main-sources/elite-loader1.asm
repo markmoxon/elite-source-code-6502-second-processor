@@ -43,9 +43,6 @@ GUARD &4000             \ Guard against assembling over screen memory
 N% = 77                 \ N% is set to the number of bytes in the VDU table, so
                         \ we can loop through them in the loader below
 
-IRQ1V = &0204           \ The IRQ1V vector that we intercept to implement the
-                        \ split-sceen mode
-
 VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
                         \ known as SHEILA)

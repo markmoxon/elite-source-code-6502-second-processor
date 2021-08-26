@@ -42,22 +42,30 @@ _EXECUTIVE              = (_RELEASE = 3)
  EQUB 10, 13
  EQUS "Version: BBC with 6502 Second Processor"
  EQUB 10, 13
+
 IF _SOURCE_DISC
+
  EQUS "Release: Ian Bell's source disc"
  EQUB 10, 13
  EQUS "         Not officially released"
  EQUB 10, 13
+
 ELIF _SNG45
+
  EQUS "Release: Official Acornsoft release"
  EQUB 10, 13
  EQUS "         Acornsoft SNG45 v1.0"
  EQUB 10, 13
+
 ELIF _EXECUTIVE
+
  EQUS "Release: Executive version"
  EQUB 10, 13
  EQUS "         Not officially released"
  EQUB 10, 13
+
 ENDIF
+
  EQUB 10, 13
  EQUS "See www.bbcelite.com for details"
  EQUB 10, 13

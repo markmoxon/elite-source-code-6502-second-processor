@@ -83,9 +83,6 @@ Tina = &0B00            \ The address of the code block for the TINA command,
                         \ code that executes on the I/O processor before the
                         \ main game code terminates
 
-D% = &D000              \ The address where the ship blueprints get moved to
-                        \ after loading, so they go from &D000 to &F200
-
 VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
                         \ known as SHEILA)
@@ -95,8 +92,6 @@ NVOSWRCH = &FFCB        \ The address for the non-vectored OSWRCH routine
 OSWRCH = &FFEE          \ The address for the OSWRCH routine
 OSBYTE = &FFF4          \ The address for the OSBYTE routine
 OSWORD = &FFF1          \ The address for the OSWORD routine
-OSFILE = &FFDD          \ The address for the OSFILE routine
-OSCLI = &FFF7           \ The address for the OSCLI routine
 
 CODE% = &2400           \ The assembly address of the main I/O processor code
 LOAD% = &2400           \ The load address of the main I/O processor code
@@ -323,11 +318,14 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP 1
+  SKIP 1
 
  FOR I%, 1, 255
-   B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
-   EQUB B% DIV 256
+
+  B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
+
+  EQUB B% DIV 256
+
  NEXT
 
 ENDIF
@@ -369,11 +367,14 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP 1
+  SKIP 1
 
  FOR I%, 1, 255
-   B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
-   EQUB B% MOD 256
+
+  B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
+
+  EQUB B% MOD 256
+
  NEXT
 
 ENDIF
@@ -412,12 +413,15 @@ IF _MATCH_EXTRACTED_BINARIES
 ELSE
 
  FOR I%, 0, 255
-   B% = INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
-   IF B% = 256
-     EQUB B%+1
-   ELSE
-     EQUB B%
-   ENDIF
+
+  B% = INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
+
+  IF B% = 256
+   EQUB B%+1
+  ELSE
+   EQUB B%
+  ENDIF
+
  NEXT
 
 ENDIF
@@ -457,12 +461,15 @@ IF _MATCH_EXTRACTED_BINARIES
 ELSE
 
  FOR I%, 0, 255
-   B% = INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
-   IF B% = 256
-     EQUB B%+1
-   ELSE
-     EQUB B%
-   ENDIF
+
+  B% = INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
+
+  IF B% = 256
+   EQUB B%+1
+  ELSE
+   EQUB B%
+  ENDIF
+
  NEXT
 
 ENDIF
@@ -503,7 +510,9 @@ ENDIF
 .ylookup
 
 FOR I%, 0, 255
-  EQUB &40 + ((I% DIV 8) * 2)
+
+ EQUB &40 + ((I% DIV 8) * 2)
+
 NEXT
 
 \ ******************************************************************************
