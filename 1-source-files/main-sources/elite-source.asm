@@ -35183,7 +35183,7 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- ALIGN 256
+ ALIGN 256              \ Align the log tables so they start on page boundaries
 
 ENDIF
 
