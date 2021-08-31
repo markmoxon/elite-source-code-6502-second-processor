@@ -225,6 +225,7 @@ The Python script `crc32.py` in the `2-build-files` folder does the actual verif
 The binaries in the `4-reference-binaries` folder were taken straight from the [6502 Second Processor sources disc image](http://www.elitehomepage.org/archive/a/a5022201.zip), while those in the `3-assembled-output` folder are produced by the build process. For example, if you don't make any changes to the code and build the project with `make encrypt verify`, then this is the output of the verification process:
 
 ```
+Results for release: sng45
 [--originals--]  [---output----]
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
@@ -269,6 +270,8 @@ By default the build process builds the SNG45 release, but you can build a speci
 
 You can add `release=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 release, though that's the default value so it isn't necessary.
 
+The verification checksums for this version are shown above.
+
 ### Building the source disc release
 
 You can build the source disc release by appending `release=source-disc` to the `make` command, like this on Windows:
@@ -285,6 +288,32 @@ make encrypt verify release=source-disc
 
 This will produce a file called `elite-6502sp-from-source-disc.ssd` in the `5-compiled-game-discs` folder that contains the source disc release.
 
+The verification checksums for this version are as follows:
+
+```
+Results for release: source-disc
+[--originals--]  [---output----]
+Checksum   Size  Checksum   Size  Match  Filename
+-----------------------------------------------------------
+56520930    752  56520930    752   Yes   ELITE.bin
+e78cb0cf   5769  e78cb0cf   5769   Yes   ELITEa.bin
+455ba962   2666  455ba962   2666   Yes   ELTA.bin
+ff84a532   3096  ff84a532   3096   Yes   ELTB.bin
+54e6f0e3   3284  54e6f0e3   3284   Yes   ELTC.bin
+cb34d904   3336  cb34d904   3336   Yes   ELTD.bin
+9c847981   2708  9c847981   2708   Yes   ELTE.bin
+dbb22442   3954  dbb22442   3954   Yes   ELTF.bin
+22b0e99e   3591  22b0e99e   3591   Yes   ELTG.bin
+a949f485   1427  a949f485   1427   Yes   ELTH.bin
+6379fa24   1411  6379fa24   1411   Yes   ELTI.bin
+62e09fa4   3619  62e09fa4   3619   Yes   ELTJ.bin
+a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
+5908b6d5  38832  5908b6d5  38832   Yes   P.CODE.bin
+11ccbb59  38832  11ccbb59  38832   Yes   P.CODE.unprot.bin
+2580d019   8460  2580d019   8460   Yes   SHIPS.bin
+57406380   1024  57406380   1024   Yes   WORDS.bin
+```
+
 ### Building the Executive version
 
 You can build the Executive version by appending `release=executive` to the `make` command, like this on Windows:
@@ -300,6 +329,32 @@ make encrypt verify release=executive
 ```
 
 This will produce a file called `elite-6502sp-executive.ssd` in the `5-compiled-game-discs` folder that contains the Executive version.
+
+The verification checksums for this version are as follows:
+
+```
+Results for release: executive
+[--originals--]  [---output----]
+Checksum   Size  Checksum   Size  Match  Filename
+-----------------------------------------------------------
+ffdb229a    788  ffdb229a    788   Yes   ELITE.bin
+e78cb0cf   5769  e78cb0cf   5769   Yes   ELITEa.bin
+975735eb   2680  975735eb   2680   Yes   ELTA.bin
+ed6ac460   3108  ed6ac460   3108   Yes   ELTB.bin
+cd8079af   3284  cd8079af   3284   Yes   ELTC.bin
+483aaeb3   3351  483aaeb3   3351   Yes   ELTD.bin
+ba87b08c   2708  ba87b08c   2708   Yes   ELTE.bin
+3056d88d   3973  3056d88d   3973   Yes   ELTF.bin
+e7249d72   3529  e7249d72   3529   Yes   ELTG.bin
+c325ced4   1427  c325ced4   1427   Yes   ELTH.bin
+69e4c627   1667  69e4c627   1667   Yes   ELTI.bin
+e2cf0d8a   3674  e2cf0d8a   3674   Yes   ELTJ.bin
+52d06559   6451  52d06559   6451   Yes   I.CODE.bin
+13bbc0b5  39143  13bbc0b5  39143   Yes   P.CODE.bin
+d597e3d0  39143  d597e3d0  39143   Yes   P.CODE.unprot.bin
+2580d019   8460  2580d019   8460   Yes   SHIPS.bin
+272668f2   1024  272668f2   1024   Yes   WORDS.bin
+```
 
 ### Differences between the releases
 
