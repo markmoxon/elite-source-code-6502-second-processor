@@ -121,7 +121,7 @@ if Encrypt:
 
 # Third part: V, which reverses the order of bytes between G% and F%-1
 
-# The values of G% and F% are hardcoded, which is not ideal - they should
+# The values of G% and F% are hard-coded, which is not ideal - they should
 # really come from the build process. Maybe later!
 
 if release == 1:
