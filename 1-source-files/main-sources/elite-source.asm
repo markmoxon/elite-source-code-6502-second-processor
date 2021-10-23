@@ -7269,7 +7269,7 @@ ENDIF
 
 .LSX2
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ELTA-LSX2.bin"
@@ -7298,7 +7298,7 @@ ENDIF
 
 .LSY2
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ELTA-LSY2.bin"
@@ -7619,7 +7619,7 @@ NEXT
 
 .LBUF
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
 
@@ -7941,7 +7941,7 @@ ENDIF
 
  EQUB 0                 \ The number of bytes to receive with this command
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ELTB-HBUF.bin"
@@ -8324,7 +8324,7 @@ ENDIF
 
  EQUB 0                 \ The number of bytes to receive with this command
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ELTB-PBUF.bin"
@@ -35234,7 +35234,7 @@ SAVE "3-assembled-output/ELTF.bin", CODE_F%, P%, LOAD%
 CODE_G% = P%
 LOAD_G% = LOAD% + P% - CODE%
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ELTG-align.bin"
@@ -35275,7 +35275,7 @@ ENDIF
 
 .log
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ELTG-log.bin"
@@ -35316,7 +35316,7 @@ ENDIF
 
 .logL
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ELTG-logL.bin"
@@ -35361,7 +35361,7 @@ ENDIF
 
 .antilog
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ELTG-antilog.bin"
@@ -35409,7 +35409,7 @@ ENDIF
 
 .antilogODD
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ELTG-antilogODD.bin"
