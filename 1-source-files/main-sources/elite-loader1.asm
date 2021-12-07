@@ -1252,7 +1252,7 @@ ENDIF
 
 .MESS2
 
- EQUS "R.I.ELITEa"        \ This is short for "*RUN I.ELITEa"
+ EQUS "R.I.ELITEa"      \ This is short for "*RUN I.ELITEa"
  EQUB 13
 
 \ ******************************************************************************
