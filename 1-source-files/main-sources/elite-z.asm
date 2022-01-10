@@ -65,7 +65,7 @@ PARMAX = 15             \ The number of dashboard parameters transmitted with
                         \ the #RDPARAMS and OSWRCH 137 <param> commands
 
 IRQ1V = &0204           \ The IRQ1V vector that we intercept to implement the
-                        \ split-sceen mode
+                        \ split-screen mode
 
 WRCHV = &020E           \ The WRCHV vector that we intercept to implement our
                         \ own custom OSWRCH commands for communicating over the
