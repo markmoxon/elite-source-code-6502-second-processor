@@ -2681,7 +2681,8 @@ ENDIF
 \
 \   * X1 < X2 and Y1 > Y2
 \
-\   * Draw from (X1, Y1) at bottom left to (X2, Y2) at top right
+\   * Draw from (X1, Y1) at bottom left to (X2, Y2) at top right, omitting the
+\     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
 \ cassette and disc versions has been unrolled to speed it up. The algorithm is
@@ -2961,7 +2962,8 @@ ENDIF
 \
 \   * X1 < X2 and Y1 <= Y2
 \
-\   * Draw from (X1, Y1) at top left to (X2, Y2) at bottom right
+\   * Draw from (X1, Y1) at top left to (X2, Y2) at bottom right, omitting the
+\     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
 \ cassette and disc versions has been unrolled to speed it up. The algorithm is
@@ -3444,7 +3446,8 @@ ENDIF
 \
 \   * X1 < X2 and Y1 >= Y2
 \
-\   * Draw from (X1, Y1) at top left to (X2, Y2) at bottom right
+\   * Draw from (X1, Y1) at top left to (X2, Y2) at bottom right, omitting the
+\     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
 \ cassette and disc versions has been unrolled to speed it up. The algorithm is
@@ -4019,7 +4022,8 @@ ENDIF
 \
 \   * X1 >= X2 and Y1 >= Y2
 \
-\   * Draw from (X1, Y1) at bottom left to (X2, Y2) at top right
+\   * Draw from (X1, Y1) at bottom left to (X2, Y2) at top right, omitting the
+\     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
 \ cassette and disc versions has been unrolled to speed it up. The algorithm is
@@ -4587,7 +4591,7 @@ ENDIF
 \ The parameters match those put into the HBUF block in the parasite. Each line
 \ is drawn from (X1, Y1) to (X2, Y1), and lines are drawn in orange.
 \
-\ We do not draw a pixel at the end point (X2, X1).
+\ We do not draw a pixel at the right end of the line.
 \
 \ Arguments:
 \
