@@ -4,7 +4,8 @@
 
 Version: BBC with 6502 Second Processor
 Variant: Acornsoft SNG45 release
-Release: Acornsoft SNG45
+Product: Acornsoft SNG45
+         Acornsoft SNG47
 
 See www.bbcelite.com for details
 ---------------------------------------

@@ -52,9 +52,9 @@ ELIF _SNG45
 
  EQUS "Variant: Acornsoft SNG45 release"
  EQUB 10, 13
- EQUS "Release: Acornsoft SNG45"
+ EQUS "Product: Acornsoft SNG45"
  EQUB 10, 13
- EQUS "Release: Acornsoft SNG47"
+ EQUS "         Acornsoft SNG47"
  EQUB 10, 13
 
 ELIF _EXECUTIVE
