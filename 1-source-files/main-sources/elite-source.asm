@@ -42,9 +42,9 @@ INCLUDE "1-source-files/main-sources/elite-header.h.asm"
 CPU 1                   \ Switch to 65C02 assembly, as this code runs on the
                         \ 6502 Second Processor
 
-_SOURCE_DISC            = (_RELEASE = 1)
-_SNG45                  = (_RELEASE = 2)
-_EXECUTIVE              = (_RELEASE = 3)
+_SOURCE_DISC            = (_VARIANT = 1)
+_SNG45                  = (_VARIANT = 2)
+_EXECUTIVE              = (_VARIANT = 3)
 
 GUARD &F800             \ Guard against assembling over MOS memory
 

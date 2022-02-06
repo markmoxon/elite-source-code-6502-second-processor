@@ -3,8 +3,8 @@
 Acornsoft Elite
 
 Version: BBC with 6502 Second Processor
-Release: Official Acornsoft release
-         Acornsoft SNG45 v1.0
+Variant: Acornsoft SNG45 release
+Release: Acornsoft SNG45
 
 See www.bbcelite.com for details
 ---------------------------------------

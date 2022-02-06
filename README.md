@@ -33,12 +33,12 @@ See the [introduction](#introduction) for more information.
   * [Verifying the output](#verifying-the-output)
   * [Log files](#log-files)
 
-* [Building different releases of 6502 Second Processor Elite](#building-different-releases-of-6502-second-processor-elite)
+* [Building different variants of 6502 Second Processor Elite](#building-different-variants-of-6502-second-processor-elite)
 
-  * [Building the SNG45 release](#building-the-sng45-release)
-  * [Building the source disc release](#building-the-source-disc-release)
+  * [Building the SNG45 variant](#building-the-sng45-variant)
+  * [Building the source disc variant](#building-the-source-disc-variant)
   * [Building the Executive version](#building-the-executive-version)
-  * [Differences between the releases](#differences-between-the-releases)
+  * [Differences between the variants](#differences-between-the-variants)
 
 * [Notes on the original source files](#notes-on-the-original-source-files)
 
@@ -49,7 +49,7 @@ See the [introduction](#introduction) for more information.
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
 
-You can build the fully functioning game from this source. [Three releases](#building-different-releases-of-6502-second-processor-elite) are currently supported: the official SNG45 release, the Executive version, and the version produced by the original source discs.
+You can build the fully functioning game from this source. [Three variants](#building-different-variants-of-6502-second-processor-elite) are currently supported: the Acornsoft SNG45 release, the Executive version, and the version produced by the original source discs.
 
 It is a companion to the [bbcelite.com website](https://www.bbcelite.com), which contains all the code from this repository, but laid out in a much more human-friendly fashion. The links at the top of this page will take you to repositories for the other versions of Elite that are covered by this project.
 
@@ -121,7 +121,7 @@ There are five main folders in this repository, which reflect the order of the b
 
 * [3-assembled-output](3-assembled-output) contains the output from the assembly process, when the source files are assembled and the results processed by the build files.
 
-* [4-reference-binaries](4-reference-binaries) contains the correct binaries for each release, so we can verify that our assembled output matches the reference.
+* [4-reference-binaries](4-reference-binaries) contains the correct binaries for each variant, so we can verify that our assembled output matches the reference.
 
 * [5-compiled-game-discs](5-compiled-game-discs) contains the final output of the build process: an SSD disc image that contains the compiled game and which can be run on real hardware or in an emulator.
 
@@ -150,11 +150,11 @@ Let's look at how to build 6502 Second Processor Elite from the source.
 There are two main build targets available. They are:
 
 * `build` - An unencrypted version
-* `encrypt` - An encrypted version that exactly matches the released version of the game
+* `encrypt` - An encrypted version that includes the same obfuscation as the released version of the game
 
 The unencrypted version should be more useful for anyone who wants to make modifications to the game code. It includes a default commander with lots of cash and equipment, which makes it easier to test the game. As this target produces unencrypted files, the binaries produced will be quite different to the binaries on the original source disc, which are encrypted.
 
-The encrypted version produces the released version of Elite, along with the standard default commander.
+The encrypted version contains an obfuscated version of the game binary, along with the standard default commander.
 
 Builds are supported for both Windows and Mac/Linux systems. In all cases the build process is defined in the `Makefile` provided.
 
@@ -174,7 +174,7 @@ make.bat build
 make.bat encrypt
 ```
 
-will produce a file called `elite-6502sp-sng45.ssd` in the `5-compiled-game-discs` folder that contains the SNG45 release, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
+will produce a file called `elite-6502sp-sng45.ssd` in the `5-compiled-game-discs` folder that contains the SNG45 variant, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
 
 ### Mac and Linux
 
@@ -190,7 +190,7 @@ make build
 make encrypt
 ```
 
-will produce a file called `elite-6502sp-sng45.ssd` in the `5-compiled-game-discs` folder that contains the SNG45 release, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
+will produce a file called `elite-6502sp-sng45.ssd` in the `5-compiled-game-discs` folder that contains the SNG45 variant, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
 
 ### Verifying the output
 
@@ -225,7 +225,7 @@ The Python script `crc32.py` in the `2-build-files` folder does the actual verif
 The binaries in the `4-reference-binaries` folder were taken straight from the [6502 Second Processor sources disc image](http://www.elitehomepage.org/archive/a/a5022201.zip), while those in the `3-assembled-output` folder are produced by the build process. For example, if you don't make any changes to the code and build the project with `make encrypt verify`, then this is the output of the verification process:
 
 ```
-Results for release: sng45
+Results for variant: sng45
 [--originals--]  [---output----]
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
@@ -248,50 +248,50 @@ ee25ce2a   6454  ee25ce2a   6454   Yes   I.CODE.bin
 fc481d3e   1024  fc481d3e   1024   Yes   WORDS.bin
 ```
 
-All the compiled binaries match the originals, so we know we are producing the same final game as the release version.
+All the compiled binaries match the originals, so we know we are producing the same final game as the SNG45 variant.
 
 ### Log files
 
 During compilation, details of every step are output in a file called `compile.txt` in the `3-assembled-output` folder. If you have problems, it might come in handy, and it's a great reference if you need to know the addresses of labels and variables for debugging (or just snooping around).
 
-## Building different releases of 6502 Second Processor Elite
+## Building different variants of 6502 Second Processor Elite
 
-This repository contains the source code for three different releases of 6502 Second Processor Elite:
+This repository contains the source code for three different variants of 6502 Second Processor Elite:
 
-* The official SNG45 Acornsoft release, which was the first appearence of 6502 Second Processor Elite, and the one included on all subsequent discs
+* The Acornsoft SNG45 release, which was the first appearence of 6502 Second Processor Elite, and the one included on all subsequent discs
 
-* The game produced by the source disc from Ian Bell's personal website, which was never released
+* The variant produced by the source disc from Ian Bell's personal website, which was never released
 
 * The Executive version from Ian Bell's personal website, which was also never released
 
-By default the build process builds the SNG45 release, but you can build a specified release using the `release=` build parameter.
+By default the build process builds the SNG45 variant, but you can build a specified variant using the `variant=` build parameter.
 
-### Building the SNG45 release
+### Building the SNG45 variant
 
-You can add `release=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 release, though that's the default value so it isn't necessary.
+You can add `variant=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 variant, though that's the default value so it isn't necessary.
 
 The verification checksums for this version are shown above.
 
-### Building the source disc release
+### Building the source disc variant
 
-You can build the source disc release by appending `release=source-disc` to the `make` command, like this on Windows:
+You can build the source disc variant by appending `variant=source-disc` to the `make` command, like this on Windows:
 
 ```
-make.bat encrypt verify release=source-disc
+make.bat encrypt verify variant=source-disc
 ```
 
 or this on a Mac or Linux:
 
 ```
-make encrypt verify release=source-disc
+make encrypt verify variant=source-disc
 ```
 
-This will produce a file called `elite-6502sp-from-source-disc.ssd` in the `5-compiled-game-discs` folder that contains the source disc release.
+This will produce a file called `elite-6502sp-from-source-disc.ssd` in the `5-compiled-game-discs` folder that contains the source disc variant.
 
 The verification checksums for this version are as follows:
 
 ```
-Results for release: source-disc
+Results for variant: source-disc
 [--originals--]  [---output----]
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
@@ -316,16 +316,16 @@ a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
 
 ### Building the Executive version
 
-You can build the Executive version by appending `release=executive` to the `make` command, like this on Windows:
+You can build the Executive version by appending `variant=executive` to the `make` command, like this on Windows:
 
 ```
-make.bat encrypt verify release=executive
+make.bat encrypt verify variant=executive
 ```
 
 or this on a Mac or Linux:
 
 ```
-make encrypt verify release=executive
+make encrypt verify variant=executive
 ```
 
 This will produce a file called `elite-6502sp-executive.ssd` in the `5-compiled-game-discs` folder that contains the Executive version.
@@ -333,7 +333,7 @@ This will produce a file called `elite-6502sp-executive.ssd` in the `5-compiled-
 The verification checksums for this version are as follows:
 
 ```
-Results for release: executive
+Results for variant: executive
 [--originals--]  [---output----]
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
@@ -356,23 +356,23 @@ d597e3d0  39143  d597e3d0  39143   Yes   P.CODE.unprot.bin
 272668f2   1024  272668f2   1024   Yes   WORDS.bin
 ```
 
-### Differences between the releases
+### Differences between the variants
 
-You can see the differences between the releases by searching the source code for `_SNG45` (for features in the SNG45 release) or `_SOURCE_DISC` (for features in the source disc release) or `_EXECUTIVE` (for features in the Executive version). There are only a few differences in the source disc release (if you ignore [workspace noise](#producing-byte-accurate-binaries)), but quite a few in the Executive version.
+You can see the differences between the variants by searching the source code for `_SNG45` (for features in the SNG45 variant) or `_SOURCE_DISC` (for features in the source disc variant) or `_EXECUTIVE` (for features in the Executive version). There are only a few differences in the source disc variant (if you ignore [workspace noise](#producing-byte-accurate-binaries)), but quite a few in the Executive version.
 
-The main differences in the source disc release compared to the SNG45 release are:
+The main differences in the source disc variant compared to the SNG45 variant are:
 
-* In the source disc release, the extended description of Lave is replaced by the rather cryptic "Bits'n Pieces - End Of Part 1". You can see this by pressing F6 just after starting the game (you have to be docked at Lave).
+* In the source disc variant, the extended description of Lave is replaced by the rather cryptic "Bits'n Pieces - End Of Part 1". You can see this by pressing F6 just after starting the game (you have to be docked at Lave).
 
-* The top laser line in the source disc release aims slightly lower than in the SNG45 release (see the `LASLI` routine for details).
+* The top laser line in the source disc variant aims slightly lower than in the SNG45 variant (see the `LASLI` routine for details).
 
-* The loader in the source disc release is missing the copyright string from the start of the file ("Copyright (c) Acornsoft Limited 1985").
+* The loader in the source disc variant is missing the copyright string from the start of the file ("Copyright (c) Acornsoft Limited 1985").
 
-* The loader in the source disc release contains a load of Tube-detection code that is disabled in the SNG45 release.
+* The loader in the source disc variant contains a load of Tube-detection code that is disabled in the SNG45 variant.
 
-There are lots of differences in the Executive version compared to the SNG45 release. You can read more about them in the deep dive on [secrets of the Executive version](https://www.bbcelite.com/deep_dives/secrets_of_the_executive_version.html).
+There are lots of differences in the Executive version compared to the SNG45 variant. You can read more about them in the deep dive on [secrets of the Executive version](https://www.bbcelite.com/deep_dives/secrets_of_the_executive_version.html).
 
-See the [accompanying website](https://www.bbcelite.com/6502sp/releases.html) for a comprehensive list of differences between the releases.
+See the [accompanying website](https://www.bbcelite.com/6502sp/releases.html) for a comprehensive list of differences between the variants.
 
 ## Notes on the original source files
 
@@ -382,7 +382,7 @@ The source files on the source disc do not build as they are; some massaging is 
 
 ### Producing byte-accurate binaries
 
-The `4-reference-binaries/<release>/workspaces` folders (where `<release>` is the release version) contain binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either intialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `4-reference-binaries/<release>/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
+The `4-reference-binaries/<variant>/workspaces` folders (where `<variant>` is the variant) contain binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either intialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `4-reference-binaries/<variant>/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
 
 Here's an example of how these binaries are included, in this case for the `LBUF` workspace in the `ELTB` section:
 

@@ -19,7 +19,7 @@
 # You can decrypt specific releases by adding the following arguments, as in
 # "python 2-build-files/elite-decrypt.py -rel1" for example:
 #
-#   -rel1   Decrypt the source disc release from Ian Bell's site
+#   -rel1   Decrypt the source disc variant from Ian Bell's site
 #   -rel2   Decrypt the SNG45 release
 #   -rel3   Decrypt the Executive version
 #
