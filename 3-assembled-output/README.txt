@@ -3,8 +3,9 @@
 Acornsoft Elite (flicker-free version)
 
 Version: BBC with 6502 Second Processor
-Release: Official Acornsoft release
-         Acornsoft SNG45 v1.0
+Variant: Acornsoft SNG45 release
+Product: Acornsoft SNG45
+         Acornsoft SNG47
 
 Contains the flicker-free ship drawing
 routines from the BBC Master version,

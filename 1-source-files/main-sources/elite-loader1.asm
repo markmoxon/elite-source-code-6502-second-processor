@@ -28,9 +28,9 @@
 
 INCLUDE "1-source-files/main-sources/elite-header.h.asm"
 
-_SOURCE_DISC            = (_RELEASE = 1)
-_SNG45                  = (_RELEASE = 2)
-_EXECUTIVE              = (_RELEASE = 3)
+_SOURCE_DISC            = (_VARIANT = 1)
+_SNG45                  = (_VARIANT = 2)
+_EXECUTIVE              = (_VARIANT = 3)
 
 GUARD &4000             \ Guard against assembling over screen memory
 
@@ -42,9 +42,6 @@ GUARD &4000             \ Guard against assembling over screen memory
 
 N% = 77                 \ N% is set to the number of bytes in the VDU table, so
                         \ we can loop through them in the loader below
-
-IRQ1V = &0204           \ The IRQ1V vector that we intercept to implement the
-                        \ split-sceen mode
 
 VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
@@ -877,6 +874,7 @@ ENDIF
 \   Category: Utility routines
 \    Summary: Generate random numbers
 \  Deep dive: Generating random numbers
+\             Fixing ship positions
 \
 \ ------------------------------------------------------------------------------
 \
@@ -1254,7 +1252,7 @@ ENDIF
 
 .MESS2
 
- EQUS "R.I.ELITEa"        \ This is short for "*RUN I.ELITEa"
+ EQUS "R.I.ELITEa"      \ This is short for "*RUN I.ELITEa"
  EQUB 13
 
 \ ******************************************************************************

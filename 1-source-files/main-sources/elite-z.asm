@@ -28,9 +28,9 @@
 
 INCLUDE "1-source-files/main-sources/elite-header.h.asm"
 
-_SOURCE_DISC            = (_RELEASE = 1)
-_SNG45                  = (_RELEASE = 2)
-_EXECUTIVE              = (_RELEASE = 3)
+_SOURCE_DISC            = (_VARIANT = 1)
+_SNG45                  = (_VARIANT = 2)
+_EXECUTIVE              = (_VARIANT = 3)
 
 GUARD &4000             \ Guard against assembling over screen memory
 
@@ -65,7 +65,7 @@ PARMAX = 15             \ The number of dashboard parameters transmitted with
                         \ the #RDPARAMS and OSWRCH 137 <param> commands
 
 IRQ1V = &0204           \ The IRQ1V vector that we intercept to implement the
-                        \ split-sceen mode
+                        \ split-screen mode
 
 WRCHV = &020E           \ The WRCHV vector that we intercept to implement our
                         \ own custom OSWRCH commands for communicating over the
@@ -83,9 +83,6 @@ Tina = &0B00            \ The address of the code block for the TINA command,
                         \ code that executes on the I/O processor before the
                         \ main game code terminates
 
-D% = &D000              \ The address where the ship blueprints get moved to
-                        \ after loading, so they go from &D000 to &F200
-
 VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
                         \ known as SHEILA)
@@ -95,8 +92,6 @@ NVOSWRCH = &FFCB        \ The address for the non-vectored OSWRCH routine
 OSWRCH = &FFEE          \ The address for the OSWRCH routine
 OSBYTE = &FFF4          \ The address for the OSBYTE routine
 OSWORD = &FFF1          \ The address for the OSWORD routine
-OSFILE = &FFDD          \ The address for the OSFILE routine
-OSCLI = &FFF7           \ The address for the OSCLI routine
 
 CODE% = &2400           \ The assembly address of the main I/O processor code
 LOAD% = &2400           \ The load address of the main I/O processor code
@@ -311,7 +306,7 @@ ENDIF
 
 .log
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ICODE-log.bin"
@@ -323,11 +318,14 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP 1
+  SKIP 1
 
  FOR I%, 1, 255
-   B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
-   EQUB B% DIV 256
+
+  B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
+
+  EQUB B% DIV 256
+
  NEXT
 
 ENDIF
@@ -357,7 +355,7 @@ ENDIF
 
 .logL
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ICODE-logL.bin"
@@ -369,11 +367,14 @@ IF _MATCH_EXTRACTED_BINARIES
 
 ELSE
 
- SKIP 1
+  SKIP 1
 
  FOR I%, 1, 255
-   B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
-   EQUB B% MOD 256
+
+  B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
+
+  EQUB B% MOD 256
+
  NEXT
 
 ENDIF
@@ -399,7 +400,7 @@ ENDIF
 
 .antilog
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ICODE-antilog.bin"
@@ -412,12 +413,15 @@ IF _MATCH_EXTRACTED_BINARIES
 ELSE
 
  FOR I%, 0, 255
-   B% = INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
-   IF B% = 256
-     EQUB B%+1
-   ELSE
-     EQUB B%
-   ENDIF
+
+  B% = INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
+
+  IF B% = 256
+   EQUB B%+1
+  ELSE
+   EQUB B%
+  ENDIF
+
  NEXT
 
 ENDIF
@@ -444,7 +448,7 @@ ENDIF
 
 .antilogODD
 
-IF _MATCH_EXTRACTED_BINARIES
+IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
   INCBIN "4-reference-binaries/sng45/workspaces/ICODE-antilogODD.bin"
@@ -457,12 +461,15 @@ IF _MATCH_EXTRACTED_BINARIES
 ELSE
 
  FOR I%, 0, 255
-   B% = INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
-   IF B% = 256
-     EQUB B%+1
-   ELSE
-     EQUB B%
-   ENDIF
+
+  B% = INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
+
+  IF B% = 256
+   EQUB B%+1
+  ELSE
+   EQUB B%
+  ENDIF
+
  NEXT
 
 ENDIF
@@ -503,7 +510,9 @@ ENDIF
 .ylookup
 
 FOR I%, 0, 255
-  EQUB &40 + ((I% DIV 8) * 2)
+
+ EQUB &40 + ((I% DIV 8) * 2)
+
 NEXT
 
 \ ******************************************************************************
@@ -2672,7 +2681,8 @@ ENDIF
 \
 \   * X1 < X2 and Y1 > Y2
 \
-\   * Draw from (X1, Y1) at bottom left to (X2, Y2) at top right
+\   * Draw from (X1, Y1) at bottom left to (X2, Y2) at top right, omitting the
+\     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
 \ cassette and disc versions has been unrolled to speed it up. The algorithm is
@@ -2952,7 +2962,8 @@ ENDIF
 \
 \   * X1 < X2 and Y1 <= Y2
 \
-\   * Draw from (X1, Y1) at top left to (X2, Y2) at bottom right
+\   * Draw from (X1, Y1) at top left to (X2, Y2) at bottom right, omitting the
+\     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
 \ cassette and disc versions has been unrolled to speed it up. The algorithm is
@@ -3435,7 +3446,8 @@ ENDIF
 \
 \   * X1 < X2 and Y1 >= Y2
 \
-\   * Draw from (X1, Y1) at top left to (X2, Y2) at bottom right
+\   * Draw from (X1, Y1) at top left to (X2, Y2) at bottom right, omitting the
+\     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
 \ cassette and disc versions has been unrolled to speed it up. The algorithm is
@@ -4010,7 +4022,8 @@ ENDIF
 \
 \   * X1 >= X2 and Y1 >= Y2
 \
-\   * Draw from (X1, Y1) at bottom left to (X2, Y2) at top right
+\   * Draw from (X1, Y1) at bottom left to (X2, Y2) at top right, omitting the
+\     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
 \ cassette and disc versions has been unrolled to speed it up. The algorithm is
@@ -4578,7 +4591,7 @@ ENDIF
 \ The parameters match those put into the HBUF block in the parasite. Each line
 \ is drawn from (X1, Y1) to (X2, Y1), and lines are drawn in orange.
 \
-\ We do not draw a pixel at the end point (X2, X1).
+\ We do not draw a pixel at the right end of the line.
 \
 \ Arguments:
 \
@@ -6380,27 +6393,27 @@ ENDMACRO
 
                         \ We now check the joystick or Bitstik
 
- LDX #1                 \ Call OSBYTE 128 to fetch the 16-bit value from ADC
- LDA #128               \ channel 1 (the joystick X value), returning the value
- JSR OSBYTE             \ in (Y X)
+ LDX #1                 \ Call OSBYTE with A = 128 to fetch the 16-bit value
+ LDA #128               \ from ADC channel 1 (the joystick X value), returning
+ JSR OSBYTE             \ the value in (Y X)
 
  TYA                    \ Copy Y to A, so the result is now in (A X)
 
  LDY #10                \ Store the high byte of the joystick X value in byte
  STA (OSSC),Y           \ #10 of the block pointed to by OSSC
 
- LDX #2                 \ Call OSBYTE 128 to fetch the 16-bit value from ADC
- LDA #128               \ channel 2 (the joystick Y value), returning the value
- JSR OSBYTE             \ in (Y X)
+ LDX #2                 \ Call OSBYTE with A = 128 to fetch the 16-bit value
+ LDA #128               \ from ADC channel 2 (the joystick Y value), returning
+ JSR OSBYTE             \ the value in (Y X)
 
  TYA                    \ Copy Y to A, so the result is now in (A X)
 
  LDY #11                \ Store the high byte of the joystick Y value in byte
  STA (OSSC),Y           \ #11 of the block pointed to by OSSC
 
- LDX #3                 \ Call OSBYTE 128 to fetch the 16-bit value from ADC
- LDA #128               \ channel 3 (the Bitstik rotation value), returning the
- JSR OSBYTE             \ value in (Y X)
+ LDX #3                 \ Call OSBYTE with A = 128 to fetch the 16-bit value
+ LDA #128               \ from ADC channel 3 (the Bitstik rotation value),
+ JSR OSBYTE             \ returning the value in (Y X)
 
  TYA                    \ Copy Y to A, so the result is now in (A X)
 
@@ -7189,7 +7202,7 @@ ENDMACRO
                         \ above - so load the Y-th byte from Q(1 0), which will
                         \ contain the bitmap for the Y-th row of the character
 
- AND #%11110000         \ Extract the top nibble of the character definition
+ AND #%11110000         \ Extract the high nibble of the character definition
                         \ byte, so the first four pixels on this row of the
                         \ character are in the first nibble, i.e. xxxx 0000
                         \ where xxxx is the pattern of those four pixels in the
@@ -7197,7 +7210,7 @@ ENDMACRO
 
  STA U                  \ Set A = (A >> 4) OR A
  LSR A                  \
- LSR A                  \ which duplicates the top nibble into the bottom nibble
+ LSR A                  \ which duplicates the high nibble into the low nibble
  LSR A                  \ to give xxxx xxxx
  LSR A
  ORA U
@@ -7223,12 +7236,12 @@ ENDMACRO
  LDA (Q),Y              \ Fetch the the bitmap for the Y-th row of the character
                         \ again
 
- AND #%00001111         \ This time we extract the bottom nibble of the
-                        \ character definition, to get 0000 xxxx
+ AND #%00001111         \ This time we extract the low nibble of the character
+                        \ definition, to get 0000 xxxx
 
  STA U                  \ Set A = (A << 4) OR A
  ASL A                  \
- ASL A                  \ which duplicates the bottom nibble into the top nibble
+ ASL A                  \ which duplicates the low nibble into the high nibble
  ASL A                  \ to give xxxx xxxx
  ASL A
  ORA U

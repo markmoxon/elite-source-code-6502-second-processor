@@ -1,4 +1,4 @@
-# Source file for the 6502 Second Processor version of Elite
+# Source files for the 6502 Second Processor version of Elite
 
 This folder contains the source files for the 6502 Second Processor version of Elite.
 

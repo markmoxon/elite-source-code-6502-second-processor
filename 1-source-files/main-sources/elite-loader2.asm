@@ -26,19 +26,19 @@
 \
 \ after reading in the following files:
 \
-\   * 1-source-files/images/P.DIALS2P.bin
-\   * 1-source-files/images/P.DATE2P.bin
-\   * 1-source-files/images/Z.ACSOFT.bin
-\   * 1-source-files/images/Z.ELITE.bin
-\   * 1-source-files/images/Z.(C)ASFT.bin
+\   * P.DIALS2P.bin
+\   * P.DATE2P.bin
+\   * Z.ACSOFT.bin
+\   * Z.ELITE.bin
+\   * Z.(C)ASFT.bin
 \
 \ ******************************************************************************
 
 INCLUDE "1-source-files/main-sources/elite-header.h.asm"
 
-_SOURCE_DISC            = (_RELEASE = 1)
-_SNG45                  = (_RELEASE = 2)
-_EXECUTIVE              = (_RELEASE = 3)
+_SOURCE_DISC            = (_VARIANT = 1)
+_SNG45                  = (_VARIANT = 2)
+_EXECUTIVE              = (_VARIANT = 3)
 
 GUARD &4000             \ Guard against assembling over screen memory
 
@@ -51,9 +51,6 @@ GUARD &4000             \ Guard against assembling over screen memory
 D% = &D000              \ The address where the ship blueprints get moved to
                         \ after loading, so they go from &D000 to &F200
 
-OSWRCH = &FFEE          \ The address for the OSWRCH routine
-OSBYTE = &FFF4          \ The address for the OSBYTE routine
-OSWORD = &FFF1          \ The address for the OSWORD routine
 OSCLI = &FFF7           \ The address for the OSCLI routine
 
 \ ******************************************************************************
