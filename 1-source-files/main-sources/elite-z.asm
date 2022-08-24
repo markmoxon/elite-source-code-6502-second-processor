@@ -5568,22 +5568,22 @@ ENDIF
 \
 \       Name: HANGER
 \       Type: Subroutine
-\   Category: Ship hanger
-\    Summary: Implement the OSWORD 248 command (display the ship hanger)
+\   Category: Ship hangar
+\    Summary: Implement the OSWORD 248 command (display the ship hangar)
 \
 \ ------------------------------------------------------------------------------
 \
-\ This command is sent after the ships in the hanger have been drawn, so all it
-\ has to do is draw the hanger's background.
+\ This command is sent after the ships in the hangar have been drawn, so all it
+\ has to do is draw the hangar's background.
 \
-\ The hanger background is made up of two parts:
+\ The hangar background is made up of two parts:
 \
-\   * The hanger floor consists of 11 screen-wide horizontal lines, which start
+\   * The hangar floor consists of 11 screen-wide horizontal lines, which start
 \     out quite spaced out near the bottom of the screen, and bunch ever closer
 \     together as the eye moves up towards the horizon, where they merge to give
 \     a sense of perspective
 \
-\   * The back wall of the hanger consists of 15 equally spaced vertical lines
+\   * The back wall of the hangar consists of 15 equally spaced vertical lines
 \     that join the horizon to the top of the screen
 \
 \ The ships in the hangar have already been drawn by this point, so the lines
@@ -5591,7 +5591,7 @@ ENDIF
 \ them look like they are behind and below the ships. This is achieved by
 \ drawing the lines in from the screen edges until they bump into something
 \ already on-screen. For the horizontal lines, when there are multiple ships in
-\ the hanger, this also means drawing lines between the ships, as well as in
+\ the hangar, this also means drawing lines between the ships, as well as in
 \ from each side.
 \
 \ Other entry points:
@@ -5636,7 +5636,7 @@ ENDIF
  CLC                    \
  ADC #Y                 \ where #Y is the y-coordinate of the centre of the
  TAY                    \ screen, so Y is now the horizontal pixel row of the
-                        \ line we want to draw to display the hanger floor
+                        \ line we want to draw to display the hangar floor
 
  LDA ylookup,Y          \ Look up the page number of the character row that
  STA SC+1               \ contains the pixel with the y-coordinate in Y, and
@@ -5677,14 +5677,14 @@ ENDIF
                         \ already on-screen, at which point stop drawing
 
  LDY #2                 \ Fetch byte #2 from the parameter block, which tells us
- LDA (OSSC),Y           \ whether the ship hanger contains just one ship, or
+ LDA (OSSC),Y           \ whether the ship hangar contains just one ship, or
  TAY                    \ multiple ships
 
  BEQ HA2                \ If byte #2 is zero, jump to HA2 to skip the following
-                        \ as there is only one ship in the hanger
+                        \ as there is only one ship in the hangar
 
                         \ If we get here then there are multiple ships in the
-                        \ hanger, so we also need to draw the horizontal line in
+                        \ hangar, so we also need to draw the horizontal line in
                         \ the gap between the ships
 
  LDY #0                 \ First we draw the line from the centre of the screen
@@ -5826,8 +5826,8 @@ ENDIF
 \
 \       Name: HAS2
 \       Type: Subroutine
-\   Category: Ship hanger
-\    Summary: Draw a hanger background line from left to right
+\   Category: Ship hangar
+\    Summary: Draw a hangar background line from left to right
 \
 \ ------------------------------------------------------------------------------
 \
@@ -5948,8 +5948,8 @@ ENDIF
 \
 \       Name: HAS3
 \       Type: Subroutine
-\   Category: Ship hanger
-\    Summary: Draw a hanger background line from right to left
+\   Category: Ship hangar
+\    Summary: Draw a hangar background line from right to left
 \
 \ ------------------------------------------------------------------------------
 \
@@ -6456,7 +6456,7 @@ ENDMACRO
  EQUW DOT               \ #DOdot   = 245 (&F5)     5 = Draw a dot on the compass
  EQUW DODKS4            \ #DODKS4  = 246 (&F6)     6 = Scan for a specific key
  EQUW HLOIN             \            247 (&F7)     7 = Draw orange sun lines
- EQUW HANGER            \            248 (&F8)     8 = Display the hanger
+ EQUW HANGER            \            248 (&F8)     8 = Display the hangar
  EQUW SOMEPROT          \            249 (&F9)     9 = Copy protection
  EQUW SAFE              \            250 (&FA)    10 = Do nothing
  EQUW SAFE              \            251 (&FB)    11 = Do nothing
