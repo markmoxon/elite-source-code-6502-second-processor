@@ -4145,7 +4145,7 @@ ENDIF
 \       Name: DOENTRY
 \       Type: Subroutine
 \   Category: Flight
-\    Summary: Dock at the space station, show the ship hanger and work out any
+\    Summary: Dock at the space station, show the ship hangar and work out any
 \             mission progression
 \
 \ ******************************************************************************
@@ -4168,7 +4168,7 @@ ENDIF
 
  STA ENERGY             \ Recharge the energy banks
 
- JSR HALL               \ Show the ship hanger
+ JSR HALL               \ Show the ship hangar
 
  LDY #44                \ Wait for 44/50 of a second (0.88 seconds)
  JSR DELAY
@@ -5180,7 +5180,7 @@ ENDIF
                         \ If we arrive here, either the docking computer has
                         \ been activated, or we just docked successfully
 
- JMP DOENTRY            \ Go to the docking bay (i.e. show the ship hanger)
+ JMP DOENTRY            \ Go to the docking bay (i.e. show the ship hangar)
 
 .MA62
 
@@ -11446,7 +11446,7 @@ ENDIF
  STA QQ14               \ fuel, so set the current fuel level in QQ14 to 70, or
                         \ 7.0 light years
 
- JMP GOIN               \ Go to the docking bay (i.e. show the ship hanger
+ JMP GOIN               \ Go to the docking bay (i.e. show the ship hangar
                         \ screen) and return from the subroutine with a tail
                         \ call
 
@@ -11608,12 +11608,12 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \       Name: HATB
 \       Type: Variable
-\   Category: Ship hanger
-\    Summary: Ship hanger group table
+\   Category: Ship hangar
+\    Summary: Ship hangar group table
 \
 \ ------------------------------------------------------------------------------
 \
-\ This table contains groups of ships to show in the ship hanger. A group of
+\ This table contains groups of ships to show in the ship hangar. A group of
 \ ships is shown half the time (the other half shows a solo ship), and each of
 \ the four groups is equally likely.
 \
@@ -11635,7 +11635,7 @@ LOAD_C% = LOAD% +P% - CODE%
 
 .HATB
 
-                        \ Hanger group for X = 0
+                        \ Hangar group for X = 0
                         \
                         \ Shuttle (left) and Transporter (right)
 
@@ -11651,7 +11651,7 @@ LOAD_C% = LOAD% +P% - CODE%
  EQUB 0
  EQUB 0
 
-                        \ Hanger group for X = 9
+                        \ Hangar group for X = 9
                         \
                         \ Three cargo canisters (left, far right and forward,
                         \ right)
@@ -11668,7 +11668,7 @@ LOAD_C% = LOAD% +P% - CODE%
  EQUB %01000000         \ x_hi = %01000000 = 64, z_hi   = 1     -> x = +64
  EQUB %00000110         \ z_lo = %00000110 = 6,  x_sign = 0        z = +262
 
-                        \ Hanger group for X = 18
+                        \ Hangar group for X = 18
                         \
                         \ Viper (right) and Krait (left)
 
@@ -11684,7 +11684,7 @@ LOAD_C% = LOAD% +P% - CODE%
  EQUB 0
  EQUB 0
 
-                        \ Hanger group for X = 27
+                        \ Hangar group for X = 27
                         \
                         \ Viper (right and forward) and Krait (left)
 
@@ -11704,20 +11704,20 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \       Name: HALL
 \       Type: Subroutine
-\   Category: Ship hanger
-\    Summary: Draw the ships in the ship hanger, then draw the hanger by sending
+\   Category: Ship hangar
+\    Summary: Draw the ships in the ship hangar, then draw the hangar by sending
 \             an OSWORD 248 command to the I/O processor
 \
 \ ------------------------------------------------------------------------------
 \
-\ Half the time this will draw one of the four pre-defined ship hanger groups in
+\ Half the time this will draw one of the four pre-defined ship hangar groups in
 \ HATB, and half the time this will draw a solitary Sidewinder, Mamba, Krait or
 \ Adder on a random position. In all cases, the ships will be randomly spun
 \ around on the ground so they can face in any dirction, and larger ships are
 \ drawn higher up off the ground than smaller ships.
 \
 \ The ships are drawn by the HAS1 routine, which uses the normal ship-drawing
-\ routine in LL9, and then the hanger background is drawn by sending an OSWORD
+\ routine in LL9, and then the hangar background is drawn by sending an OSWORD
 \ 248 command to the I/O processor.
 \
 \ ******************************************************************************
@@ -11806,7 +11806,7 @@ LOAD_C% = LOAD% +P% - CODE%
  PHA                    \ call to HAS1 (as it contains the index of the next
                         \ byte in HATB
 
- JSR HAS1               \ Call HAS1 to draw this ship in the hanger
+ JSR HAS1               \ Call HAS1 to draw this ship in the hangar
 
  PLA                    \ Restore the value of X, so X points to the next byte
  TAX                    \ in HATB after the three bytes we copied into XX15
@@ -11818,9 +11818,9 @@ LOAD_C% = LOAD% +P% - CODE%
 
  LDY #128               \ Set Y = 128 to send as byte #2 of the parameter block
                         \ to the OSWORD 248 command below, to tell the I/O
-                        \ processor that there are multiple ships in the hanger
+                        \ processor that there are multiple ships in the hangar
 
- BNE HA9                \ Jump to HA9 to display the ship hanger (this BNE is
+ BNE HA9                \ Jump to HA9 to display the ship hangar (this BNE is
                         \ effectively a JMP as Y is never zero)
 
 .HA7
@@ -11839,7 +11839,7 @@ LOAD_C% = LOAD% +P% - CODE%
  ADC #SH3               \ which is the ship type of a Sidewinder, Mamba, Krait
  STA XX15+2             \ or Adder
 
- JSR HAS1               \ Call HAS1 to draw this ship in the hanger, with the
+ JSR HAS1               \ Call HAS1 to draw this ship in the hangar, with the
                         \ the following properties:
                         \
                         \   * Random x-coordinate from -63 to +63
@@ -11849,15 +11849,15 @@ LOAD_C% = LOAD% +P% - CODE%
                         \   * Random z-coordinate from +256 to +639
 
  LDY #0                 \ Set Y = 0 to use in the following instruction, to tell
-                        \ the hanger-drawing routine that there is just one ship
-                        \ in the hanger, so it knows not to draw between the
+                        \ the hangar-drawing routine that there is just one ship
+                        \ in the hangar, so it knows not to draw between the
                         \ ships
 
 .HA9
 
  STY HANG+2             \ Store Y in byte #2 of the parameter block to the
                         \ OSWORD 248 command below, to specify whether there
-                        \ are multiple ships in the hanger
+                        \ are multiple ships in the hangar
 
  JSR UNWISE             \ Call UNWISE, which (as noted above) does nothing in
                         \ the 6502 Second Processor version of Elite
@@ -11868,7 +11868,7 @@ LOAD_C% = LOAD% +P% - CODE%
  LDY #HI(HANG)
 
  JMP OSWORD             \ Send an OSWORD 248 command to the I/O processor to
-                        \ draw the ship hanger, returning from the subroutine
+                        \ draw the ship hangar, returning from the subroutine
                         \ using a tail call
 
 .HANG
@@ -11879,20 +11879,20 @@ LOAD_C% = LOAD% +P% - CODE%
 
  EQUB 0                 \ Multiple ship flag:
                         \
-                        \   * 0 = there is just one ship in the hanger
+                        \   * 0 = there is just one ship in the hangar
                         \
-                        \   * 128 = there are multiple ships in the hanger
+                        \   * 128 = there are multiple ships in the hangar
 
 \ ******************************************************************************
 \
 \       Name: HAS1
 \       Type: Subroutine
-\   Category: Ship hanger
-\    Summary: Draw a ship in the ship hanger
+\   Category: Ship hangar
+\    Summary: Draw a ship in the ship hangar
 \
 \ ------------------------------------------------------------------------------
 \
-\ The ship's position within the hanger is determined by the arguments and the
+\ The ship's position within the hangar is determined by the arguments and the
 \ size of the ship's targetable area, as follows:
 \
 \   * The x-coordinate is (x_sign x_hi 0) from the arguments, so the ship can be
@@ -12025,7 +12025,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \       Name: UNWISE
 \       Type: Subroutine
-\   Category: Ship hanger
+\   Category: Ship hangar
 \    Summary: Switch the main line-drawing routine between EOR and OR logic
 \
 \ ------------------------------------------------------------------------------
@@ -18388,9 +18388,9 @@ LOAD_D% = LOAD% + P% - CODE%
  CMP #%00000010
  BEQ TT70
 
- LDA QQ3                \ The LSR A above shifted bit 0 of QQ3 into the C flag,
- BCC TT71               \ so this jumps to TT71 if bit 0 of QQ3 is 0, in other
-                        \ words if QQ3 = %000, %001 or %010 (0, 1 or 2)
+ LDA QQ3                \ If (QQ3 + 1) >> 1 < %10, i.e. if QQ3 = %000, %001 or
+ BCC TT71               \ %010 (0, 1 or 2), then jump to TT71 with A set to the
+                        \ original value of QQ3
 
  SBC #5                 \ Here QQ3 = %101, %110 or %111 (5, 6 or 7), so subtract
  CLC                    \ 5 to bring it down to 0, 1 or 2 (the C flag is already
@@ -18426,8 +18426,8 @@ LOAD_D% = LOAD% + P% - CODE%
  LDA #162               \ Print recursive token 2 ("GOVERNMENT") followed by
  JSR TT68               \ a colon
 
- LDA QQ4                \ The system economy is determined by the value in QQ4,
-                        \ so fetch it into A
+ LDA QQ4                \ The system's government is determined by the value in
+                        \ QQ4, so fetch it into A
 
  CLC                    \ Print recursive token 17 + A, followed by a paragraph
  ADC #177               \ break and Sentence Case, so:
