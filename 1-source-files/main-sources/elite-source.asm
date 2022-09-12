@@ -31174,7 +31174,7 @@ ENDIF
  AND #3                 \ iterations, so for the other three, skip to nodesire
  BNE nodesire           \ so we only scan for key presses once every four loops
 
- STX NEEDKEY            \ Set NEEDKEY = 128, so the call to LL9 below draw the
+ STX NEEDKEY            \ Set NEEDKEY = 128, so the call to LL9 below draws the
                         \ ship and scans for key presses (LL9 resets NEEDKEY to
                         \ 0 so we have to reset NEEDKEY every four iterations
                         \ round the inner loop)
@@ -35682,7 +35682,7 @@ ENDIF
  BEQ LLfix              \ If A = 0, jump to LLfix to return a result of 0, as
                         \ 0 * Q / 256 is always 0
 
-                        \ We now want to calculate log(A) + log(Q), first adding
+                        \ We now want to calculate log(A) - log(Q), first adding
                         \ the low bytes (from the logL table), and then the high
                         \ bytes (from the log table)
 
