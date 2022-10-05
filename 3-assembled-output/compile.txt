@@ -2816,7 +2816,7 @@ Code size is &400
 Execute at &81B0 
 Reload at &81B0 
 S.WORDS &400  &800  &81B0  &81B0 
-Saving file 'versions/6502sp/3-assembled-output/WORDS.bin'
+Saving file '3-assembled-output/WORDS.bin'
 .UP
      0800
      0800
@@ -4285,7 +4285,7 @@ Code size is &A6A
 Execute at &1000 
 Reload at &1000 
 S.ELTA &100C  &1A76  &1000  &1000 
-Saving file 'versions/6502sp/3-assembled-output/ELTA.bin'
+Saving file '3-assembled-output/ELTA.bin'
 .UNIV
      1A76   00 82
      1A78   25 82
@@ -5548,7 +5548,7 @@ Code size is &C18
 Execute at &1000 
 Reload at &1A76 
 S.ELTB &1A76  &268E  &1000  &1A76 
-Saving file 'versions/6502sp/3-assembled-output/ELTB.bin'
+Saving file '3-assembled-output/ELTB.bin'
 .HATB
      268E   09
      268F   54
@@ -7413,7 +7413,7 @@ Code size is &CDA
 Execute at &1000 
 Reload at &268E 
 S.ELTC &268E  &3368  &1000  &268E 
-Saving file 'versions/6502sp/3-assembled-output/ELTC.bin'
+Saving file '3-assembled-output/ELTC.bin'
 .tnpr1
      3368   8D F9 08   STA &08F9
      336B   A9 01      LDA #&01
@@ -9138,7 +9138,7 @@ Code size is &D08
 Execute at &1000 
 Reload at &3368 
 S.ELTD &3368  &4070  &1000  &3368 
-Saving file 'versions/6502sp/3-assembled-output/ELTD.bin'
+Saving file '3-assembled-output/ELTD.bin'
 .cpl
      4070   A2 05      LDX #&05
 .TT53
@@ -10682,7 +10682,7 @@ Code size is &A94
 Execute at &1000 
 Reload at &4070 
 S.ELTE &4070  &4B04  &1000  &4070 
-Saving file 'versions/6502sp/3-assembled-output/ELTE.bin'
+Saving file '3-assembled-output/ELTE.bin'
 .KS3
      4B04   A5 19      LDA &19
      4B06   8D FC 08   STA &08FC
@@ -12887,7 +12887,7 @@ Code size is &F75
 Execute at &1000 
 Reload at &4B04 
 S.ELTF &4B04  &5A79  &1000  &4B04 
-Saving file 'versions/6502sp/3-assembled-output/ELTF.bin'
+Saving file '3-assembled-output/ELTF.bin'
 .log
 .logL
 .antilog
@@ -14298,7 +14298,7 @@ Code size is &DFE
 Execute at &1000 
 Reload at &5A79 
 S.ELTG &5A79  &6877  &1000  &5A79 
-Saving file 'versions/6502sp/3-assembled-output/ELTG.bin'
+Saving file '3-assembled-output/ELTG.bin'
 .MVEIT
      6877   A5 64      LDA &64
      6879   29 A0      AND #&A0
@@ -15049,7 +15049,7 @@ Code size is &593
 Execute at &1000 
 Reload at &6877 
 S.ELTH &6877  &6E0A  &1000  &6877 
-Saving file 'versions/6502sp/3-assembled-output/ELTH.bin'
+Saving file '3-assembled-output/ELTH.bin'
 .HIMCNT
      6E0A   00
 .ZINF2
@@ -15817,7 +15817,7 @@ Code size is &583
 Execute at &1000 
 Reload at &6E0A 
 S.ELTI &6E0A  &738D  &1000  &6877 
-Saving file 'versions/6502sp/3-assembled-output/ELTI.bin'
+Saving file '3-assembled-output/ELTI.bin'
 .TKN1
      738D   57
 Macro EJMP:
@@ -25714,7 +25714,7 @@ Code size is &E02
 Execute at &1000 
 Reload at &738D 
 S.ELTJ &738D  &818F  &1000  &738D 
-Saving file 'versions/6502sp/3-assembled-output/ELTJ.bin'
+Saving file '3-assembled-output/ELTJ.bin'
 .XX21
      D000   66 D0
      D002   64 D1
@@ -37470,7 +37470,7 @@ Code size is &210C
 Execute at &D000 
 Reload at &D000 
 S.SHIPS &D000  &F10C  &D000  &D000 
-Saving file 'versions/6502sp/3-assembled-output/SHIPS.bin'
+Saving file '3-assembled-output/SHIPS.bin'
 ELITE game code &71  bytes free
 F% = &818F 
 Ends at &F10C 
@@ -37503,7 +37503,7 @@ ships = &858F
 .end
 P% = &A78F 
 S.P.CODE &1000 &A78F  &1000 &1000 
-Saving file 'versions/6502sp/3-assembled-output/P.CODE.unprot.bin'
+Saving file '3-assembled-output/P.CODE.unprot.bin'
 .ZP
      0080
 .P
@@ -40446,7 +40446,7 @@ Execute at &2400
 Reload at &2400 
 protlen = &24 
 S.I.CODE &2400  &3D36  &2400  &2400 
-Saving file 'versions/6502sp/3-assembled-output/I.CODE.bin'
+Saving file '3-assembled-output/I.CODE.bin'
 .ZP
      0090
 .P
@@ -40938,7 +40938,7 @@ End macro FNE
      22E5   52 2E 49 ...
      22EF   0D
 S.ELITE &1FDC  &22F0  &1FDC  &1FDC 
-Saving file 'versions/6502sp/3-assembled-output/ELITE.bin'
+Saving file '3-assembled-output/ELITE.bin'
 .Z1
      0090
 .Z2
@@ -41025,7 +41025,7 @@ End macro MVE
 .ELITE
 .CpASOFT
 S.ELITEa &2000  &3689  &2000  &2000 
-Saving file 'versions/6502sp/3-assembled-output/ELITEa.bin'
+Saving file '3-assembled-output/ELITEa.bin'
 .readme
      0000   0A
      0001   0D
@@ -41057,4 +41057,4 @@ Saving file 'versions/6502sp/3-assembled-output/ELITEa.bin'
      00E1   2D 2D 2D ...
      0108   0A
      0109   0D
-Saving file 'versions/6502sp/3-assembled-output/README.txt'
+Saving file '3-assembled-output/README.txt'
