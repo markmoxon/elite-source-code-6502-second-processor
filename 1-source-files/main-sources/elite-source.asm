@@ -473,7 +473,7 @@ ORG &0000
                         \
                         \   * &FF = no target
                         \
-                        \   * 1-13 = the slot number of the ship that our
+                        \   * 1-20 = the slot number of the ship that our
                         \            missile is locked onto
 
 .XX1
@@ -3440,7 +3440,7 @@ ENDIF
 \
 \       Name: LP
 \       Type: Workspace
-\    Address: &8600 to &91FF (&8900 to &8BFF in the Executive version)
+\    Address: &8600 to &91FF (&8900 to &94FF in the Executive version)
 \   Category: Workspaces
 \    Summary: Variables used for displaying the scrolling text in the demo
 \
@@ -3729,8 +3729,8 @@ ENDIF
 \ ------------------------------------------------------------------------------
 \
 \ The drive part of this string (the "0") is updated with the chosen drive in
-\ the QUS1 routine, but the directory part (the "E") is fixed. The variable is
-\ followed directly by the commander file at NA%, which starts with the
+\ the GTNMEW routine, but the directory part (the "E") is fixed. The variable
+\ is followed directly by the commander file at NA%, which starts with the
 \ commander name, so the full string at S1% is in the format ":0.E.JAMESON",
 \ which gives the full filename of the commander file.
 \
@@ -8490,7 +8490,8 @@ ENDIF
 \       Name: FLIP
 \       Type: Subroutine
 \   Category: Stardust
-\    Summary: Reflect the stardust particles in the screen diagonal
+\    Summary: Reflect the stardust particles in the screen diagonal and redraw
+\             the stardust field
 \
 \ ------------------------------------------------------------------------------
 \
@@ -11315,11 +11316,11 @@ ENDIF
  LDA ALP2               \ Send the sign of the roll angle to the I/O processor
  JSR OSWRCH
 
- LDA BETA               \ Send the magnitude of the pitch angle to the I/O
- JSR OSWRCH             \ processor
-
- LDA BET1               \ Send the sign of the pitch angle to the I/O processor
+ LDA BETA               \ Send the signed pitch angle to the I/O processor
  JSR OSWRCH
+
+ LDA BET1               \ Send the magnitude of the pitch angle to the I/O
+ JSR OSWRCH             \ processor
 
  LDA DELTA              \ Send the current speed to the I/O processor
  JSR OSWRCH
@@ -13944,13 +13945,13 @@ LOAD_C% = LOAD% +P% - CODE%
  STA INWK+5             \ launched just below our line of sight
 
  LDA MSTG               \ Set A to the missile lock target, shifted left so the
- ASL A                  \ slot number is in bits 1-4
+ ASL A                  \ slot number is in bits 1-5
 
  ORA #%10000000         \ Set bit 7 and store the result in byte #32, the AI
  STA INWK+32            \ flag launched ship for the launched ship. For missiles
                         \ this enables AI (bit 7), makes it friendly towards us
                         \ (bit 6), sets the target to the value of MSTG (bits
-                        \ 1-4), and sets its lock status as launched (bit 0).
+                        \ 1-5), and sets its lock status as launched (bit 0).
                         \ It doesn't matter what it does for our abandoned
                         \ Cobra, as the AI flag gets overwritten once we return
                         \ from the subroutine back to the ESCAPE routine that
@@ -17499,7 +17500,7 @@ ENDIF
  BEQ PAL1               \ Keep looping up to PAL1 until a key is pressed
 
  LDA #0                 \ Set the ship's AI flag to 0 (no AI) so it doesn't get
- STA INWK+31            \ any ideas of its pwn
+ STA INWK+31            \ any ideas of its own
 
  LDA #1                 \ Clear the top part of the screen, draw a white border,
  JSR TT66               \ and set the current view type in QQ11 to 1
@@ -20813,6 +20814,7 @@ ENDIF
 \
 \   wW2                 Start the hyperspace countdown, starting the countdown
 \                       from the value in A
+\
 \ ******************************************************************************
 
 .wW
@@ -21324,6 +21326,8 @@ ENDIF
 \       Type: Subroutine
 \   Category: Text
 \    Summary: Print a space
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -24567,7 +24571,7 @@ LOAD_E% = LOAD% + P% - CODE%
  LDY #31                \ Clear bits 3, 4 and 6 in the ship's byte #31, which
  LDA (INF),Y            \ stops drawing the ship on-screen (bit 3), hides it
  AND #%10100111         \ from the scanner (bit 4) and stops any lasers firing
- STA (INF),Y            \ at it (bit 6)
+ STA (INF),Y            \ (bit 6)
 
 .WS1
 
@@ -25188,9 +25192,10 @@ LOAD_E% = LOAD% + P% - CODE%
  STX NEWB               \ Set NEWB to %00000000, though this gets overridden by
                         \ the default flags from E% in NWSHP below
 
- STX FRIN+1             \ Set the sun/space station slot at FRIN+1 to 0, to
-                        \ indicate we should show the space station rather than
-                        \ the sun
+ STX FRIN+1             \ Set the second slot in the FRIN table to 0, so when we
+                        \ fall through into NWSHP below, the new station that
+                        \ gets created will go into slot FRIN+1, as this will be
+                        \ the first empty slot that the routine finds
 
  DEX                    \ Set roll counter to 255 (maximum roll with no
  STX INWK+29            \ damping)
@@ -30785,7 +30790,7 @@ IF _EXECUTIVE
 
  LDX #3                 \ Call TALK with X = 3 to say "Elite" using the Watford
  JSR TALK               \ Electronics Beeb Speech Synthesiser (if one is fitted
-                        \ speech has been enabled)
+                        \ and speech has been enabled)
 
 ENDIF
 
@@ -30832,9 +30837,9 @@ ENDIF
                         \ them are targeted
 
  LDA #7                 \ Call TITLE to show a rotating Asp Mk II (#ASP) and
- LDX #ASP               \ token 7 ("LOAD NEW {single cap}COMMANDER {all caps}
- JSR TITLE              \ (Y/N)?{sentence case}{cr}{cr}""), returning with the
-                        \ internal number of the key pressed in A
+ LDX #ASP               \ token 7 ("PRESS SPACE OR FIRE,{single cap}COMMANDER.
+ JSR TITLE              \ {cr}{cr}"), returning with the internal number of the
+                        \ key pressed in A
 
  JSR ping               \ Set the target system coordinates (QQ9, QQ10) to the
                         \ current system coordinates (QQ0, QQ1) we just loaded
@@ -31174,7 +31179,7 @@ ENDIF
  AND #3                 \ iterations, so for the other three, skip to nodesire
  BNE nodesire           \ so we only scan for key presses once every four loops
 
- STX NEEDKEY            \ Set NEEDKEY = 128, so the call to LL9 below draw the
+ STX NEEDKEY            \ Set NEEDKEY = 128, so the call to LL9 below draws the
                         \ ship and scans for key presses (LL9 resets NEEDKEY to
                         \ 0 so we have to reset NEEDKEY every four iterations
                         \ round the inner loop)
@@ -31926,11 +31931,11 @@ ENDIF
  STX stack              \ so we can restore it in the MEBRK routine
 
  LDA #LO(MEBRK)         \ Set BRKV to point to the MEBRK routine, disabling
- SEI                    \ while we make the change and re-enabling them once we
- STA BRKV               \ are done. MEBRK is the BRKV handler for disc access
- LDA #HI(MEBRK)         \ operations, and replaces the standard BRKV handler in
- STA BRKV+1             \ BRBR while disc access operations are happening
- CLI
+ SEI                    \ interrupts while we make the change and re-enabling
+ STA BRKV               \ them once we are done. MEBRK is the BRKV handler for
+ LDA #HI(MEBRK)         \ disc access operations, and replaces the standard BRKV
+ STA BRKV+1             \ handler in BRBR while disc access operations are
+ CLI                    \ happening
 
  LDA #1                 \ Print extended token 1, the disc access menu, which
  JSR DETOK              \ presents these options:
@@ -35661,7 +35666,7 @@ ENDIF
  BEQ LLfix              \ If A = 0, jump to LLfix to return a result of 0, as
                         \ 0 * Q / 256 is always 0
 
-                        \ We now want to calculate log(A) + log(Q), first adding
+                        \ We now want to calculate log(A) - log(Q), first adding
                         \ the low bytes (from the logL table), and then the high
                         \ bytes (from the log table)
 
@@ -37820,7 +37825,7 @@ ENDIF
  BEQ EE31
 
  LDA XX1+31             \ The ship is exploding, so set bit 3 of the ship's byte
- ORA #8                 \ #31 to denote that we are drawing something on-screen
+ ORA #%00001000         \ #31 to denote that we are drawing something on-screen
  STA XX1+31             \ for this ship
 
  JMP DOEXP              \ Jump to DOEXP to display the explosion cloud,
@@ -40982,9 +40987,10 @@ ENDIF
                         \ view)
 
  JSR FLIP               \ Swap the x- and y-coordinates of all the stardust
-                        \ particles
+                        \ particles and redraw the stardust field
 
- JSR WPSHPS             \ Wipe all the ships from the scanner
+ JSR WPSHPS             \ Wipe all the ships from the scanner and mark them all
+                        \ as not being shown on-screen
 
                         \ And fall through into SIGHT to draw the laser
                         \ crosshairs
@@ -48918,7 +48924,7 @@ ENDMACRO
  EQUB LO(SHIP_TRANSPORTER_EDGES - SHIP_TRANSPORTER)   \ Edges data offset (low)
  EQUB LO(SHIP_TRANSPORTER_FACES - SHIP_TRANSPORTER)   \ Faces data offset (low)
  EQUB 149               \ Max. edge count          = (149 - 1) / 4 = 37
- EQUB 48                \ Gun vertex               = 48
+ EQUB 48                \ Gun vertex               = 48 / 4 = 12
  EQUB 26                \ Explosion count          = 5, as (4 * n) + 6 = 26
  EQUB 222               \ Number of vertices       = 222 / 6 = 37
  EQUB 46                \ Number of edges          = 46
@@ -49362,7 +49368,7 @@ ENDMACRO
  EQUB LO(SHIP_ANACONDA_EDGES - SHIP_ANACONDA)      \ Edges data offset (low)
  EQUB LO(SHIP_ANACONDA_FACES - SHIP_ANACONDA)      \ Faces data offset (low)
  EQUB 93                \ Max. edge count          = (93 - 1) / 4 = 23
- EQUB 48                \ Gun vertex               = 48
+ EQUB 48                \ Gun vertex               = 48 / 4 = 12
  EQUB 46                \ Explosion count          = 10, as (4 * n) + 6 = 46
  EQUB 90                \ Number of vertices       = 90 / 6 = 15
  EQUB 25                \ Number of edges          = 25
@@ -50070,7 +50076,7 @@ ENDMACRO
  EQUB LO(SHIP_COBRA_MK_1_EDGES - SHIP_COBRA_MK_1)  \ Edges data offset (low)
  EQUB LO(SHIP_COBRA_MK_1_FACES - SHIP_COBRA_MK_1)  \ Faces data offset (low)
  EQUB 73                \ Max. edge count          = (73 - 1) / 4 = 18
- EQUB 40                \ Gun vertex               = 40
+ EQUB 40                \ Gun vertex               = 40 / 4 = 10
  EQUB 26                \ Explosion count          = 5, as (4 * n) + 6 = 26
  EQUB 66                \ Number of vertices       = 66 / 6 = 11
  EQUB 18                \ Number of edges          = 18
@@ -50348,7 +50354,7 @@ ENDMACRO
  EQUB LO(SHIP_ASP_MK_2_EDGES - SHIP_ASP_MK_2)      \ Edges data offset (low)
  EQUB LO(SHIP_ASP_MK_2_FACES - SHIP_ASP_MK_2)      \ Faces data offset (low)
  EQUB 105               \ Max. edge count          = (105 - 1) / 4 = 26
- EQUB 32                \ Gun vertex               = 32
+ EQUB 32                \ Gun vertex               = 32 / 4 = 8
  EQUB 26                \ Explosion count          = 5, as (4 * n) + 6 = 26
  EQUB 114               \ Number of vertices       = 114 / 6 = 19
  EQUB 28                \ Number of edges          = 28
