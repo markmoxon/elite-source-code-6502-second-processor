@@ -473,7 +473,7 @@ ORG &0000
                         \
                         \   * &FF = no target
                         \
-                        \   * 1-13 = the slot number of the ship that our
+                        \   * 1-20 = the slot number of the ship that our
                         \            missile is locked onto
 
 .XX1
@@ -3440,7 +3440,7 @@ ENDIF
 \
 \       Name: LP
 \       Type: Workspace
-\    Address: &8600 to &91FF (&8900 to &8BFF in the Executive version)
+\    Address: &8600 to &91FF (&8900 to &94FF in the Executive version)
 \   Category: Workspaces
 \    Summary: Variables used for displaying the scrolling text in the demo
 \
@@ -11316,11 +11316,11 @@ ENDIF
  LDA ALP2               \ Send the sign of the roll angle to the I/O processor
  JSR OSWRCH
 
- LDA BETA               \ Send the magnitude of the pitch angle to the I/O
- JSR OSWRCH             \ processor
-
- LDA BET1               \ Send the sign of the pitch angle to the I/O processor
+ LDA BETA               \ Send the signed pitch angle to the I/O processor
  JSR OSWRCH
+
+ LDA BET1               \ Send the magnitude of the pitch angle to the I/O
+ JSR OSWRCH             \ processor
 
  LDA DELTA              \ Send the current speed to the I/O processor
  JSR OSWRCH
@@ -13945,13 +13945,13 @@ LOAD_C% = LOAD% +P% - CODE%
  STA INWK+5             \ launched just below our line of sight
 
  LDA MSTG               \ Set A to the missile lock target, shifted left so the
- ASL A                  \ slot number is in bits 1-4
+ ASL A                  \ slot number is in bits 1-5
 
  ORA #%10000000         \ Set bit 7 and store the result in byte #32, the AI
  STA INWK+32            \ flag launched ship for the launched ship. For missiles
                         \ this enables AI (bit 7), makes it friendly towards us
                         \ (bit 6), sets the target to the value of MSTG (bits
-                        \ 1-4), and sets its lock status as launched (bit 0).
+                        \ 1-5), and sets its lock status as launched (bit 0).
                         \ It doesn't matter what it does for our abandoned
                         \ Cobra, as the AI flag gets overwritten once we return
                         \ from the subroutine back to the ESCAPE routine that
@@ -20814,6 +20814,7 @@ ENDIF
 \
 \   wW2                 Start the hyperspace countdown, starting the countdown
 \                       from the value in A
+\
 \ ******************************************************************************
 
 .wW
@@ -21325,6 +21326,8 @@ ENDIF
 \       Type: Subroutine
 \   Category: Text
 \    Summary: Print a space
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -31928,11 +31931,11 @@ ENDIF
  STX stack              \ so we can restore it in the MEBRK routine
 
  LDA #LO(MEBRK)         \ Set BRKV to point to the MEBRK routine, disabling
- SEI                    \ while we make the change and re-enabling them once we
- STA BRKV               \ are done. MEBRK is the BRKV handler for disc access
- LDA #HI(MEBRK)         \ operations, and replaces the standard BRKV handler in
- STA BRKV+1             \ BRBR while disc access operations are happening
- CLI
+ SEI                    \ interrupts while we make the change and re-enabling
+ STA BRKV               \ them once we are done. MEBRK is the BRKV handler for
+ LDA #HI(MEBRK)         \ disc access operations, and replaces the standard BRKV
+ STA BRKV+1             \ handler in BRBR while disc access operations are
+ CLI                    \ happening
 
  LDA #1                 \ Print extended token 1, the disc access menu, which
  JSR DETOK              \ presents these options:
