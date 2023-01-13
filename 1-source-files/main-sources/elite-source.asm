@@ -37,7 +37,7 @@
 \
 \ ******************************************************************************
 
-INCLUDE "1-source-files/main-sources/elite-header.h.asm"
+INCLUDE "1-source-files/main-sources/elite-build-options.asm"
 
 CPU 1                   \ Switch to 65C02 assembly, as this code runs on the
                         \ 6502 Second Processor
