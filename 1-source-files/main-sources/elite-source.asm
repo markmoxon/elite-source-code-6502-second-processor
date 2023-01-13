@@ -40730,10 +40730,6 @@ ENDIF
 \ This routine flips the relevant geometric axes in INWK depending on which
 \ view we are looking through (front, rear, left, right).
 \
-\ Other entry points:
-\
-\   PU1-1               Contains an RTS
-\
 \ ******************************************************************************
 
 .PLUT
