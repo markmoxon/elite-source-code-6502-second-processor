@@ -37,7 +37,7 @@
 \
 \ ******************************************************************************
 
-INCLUDE "1-source-files/main-sources/elite-header.h.asm"
+INCLUDE "1-source-files/main-sources/elite-build-options.asm"
 
 CPU 1                   \ Switch to 65C02 assembly, as this code runs on the
                         \ 6502 Second Processor
@@ -17446,7 +17446,7 @@ ENDIF
                         \ about the stolen Constrictor)
 
  BNE BRPS               \ Jump to BRP via BRPS to print the extended token in A
-                        \ and show the Status Mode screen), returning from the
+                        \ and show the Status Mode screen, returning from the
                         \ subroutine using a tail call (this BNE is effectively
                         \ a JMP as A is never zero)
 
@@ -17505,7 +17505,7 @@ ENDIF
  LDA #1                 \ Clear the top part of the screen, draw a white border,
  JSR TT66               \ and set the current view type in QQ11 to 1
 
- JSR LL9                \ Draw the ship on screen to remove it
+ JSR LL9                \ Draw the ship on screen to redisplay it
 
                         \ Fall through into MT23 to move to row 10, switch to
                         \ white text, and switch to lower case when printing
@@ -21436,7 +21436,7 @@ ENDIF
  JSR TRADEMODE          \ and set up a printable trading screen with a view type
                         \ in QQ11 of 32 (Market Price screen)
 
- LDA #5                 \ Move the text cursor to column 4
+ LDA #5                 \ Move the text cursor to column 5
  JSR DOXC
 
  LDA #167               \ Print recursive token 7 ("{current system name} MARKET
@@ -23458,7 +23458,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
  LDX QQ17               \ Fetch QQ17, which controls letter case, into X
 
- BEQ TT74               \ If QQ17 = 0, then ALL CAPS is set, so jump to TT27
+ BEQ TT74               \ If QQ17 = 0, then ALL CAPS is set, so jump to TT74
                         \ to print this character as is (i.e. as a capital)
 
  BMI TT41               \ If QQ17 has bit 7 set, then we are using Sentence
@@ -26378,13 +26378,17 @@ LOAD_E% = LOAD% + P% - CODE%
 \       Name: PLS22
 \       Type: Subroutine
 \   Category: Drawing planets
-\    Summary: Draw a circle or half-circle
+\    Summary: Draw an ellipse or half-ellipse
 \  Deep dive: The sine, cosine and arctan tables
+\             Drawing meridians and equators
+\             Drawing craters
 \
 \ ------------------------------------------------------------------------------
 \
-\ Draw a circle or half-circle, used for the planet's equator and meridian, or
-\ crater.
+\ Draw an ellipse or half-ellipse, to be used for the planet's equator and
+\ meridian (in which case we draw half an ellipse), or crater (in which case we
+\ draw a full ellipse). The shape that is drawn is a circle that has been
+\ squashed, as if the circle has been tilted at an angle away from the viewer.
 \
 \ This routine is called from parts 2 and 3 of PL9, and does the following:
 \
@@ -26402,11 +26406,11 @@ LOAD_E% = LOAD% + P% - CODE%
 \
 \   TGT                 The number of segments to draw:
 \
-\                         * 32 for a half circle (a meridian)
+\                         * 32 for a half ellipse (a meridian)
 \
-\                         * 64 for a half circle (a crater)
+\                         * 64 for a full ellipse (a crater)
 \
-\   CNT2                The starting segment for drawing the half-circle
+\   CNT2                The starting segment for drawing the half-ellipse
 \
 \ ******************************************************************************
 
@@ -26639,7 +26643,7 @@ LOAD_E% = LOAD% + P% - CODE%
  STA LSX                \ be filled up
 
  JSR CHKON              \ Call CHKON to check whether any part of the new sun's
-                        \ circle appears on-screen, and of it does, set P(2 1)
+                        \ circle appears on-screen, and if it does, set P(2 1)
                         \ to the maximum y-coordinate of the new sun on-screen
 
  BCS PLF3-3             \ If CHKON set the C flag then the new sun's circle does
@@ -27034,7 +27038,7 @@ LOAD_E% = LOAD% + P% - CODE%
 .PLF11
 
                         \ If we get here then there is no old sun line on this
-                        \ line, so we can just draw the new sun's line. The new
+                        \ line, so we can just draw the new sun's line
 
  LDX K3                 \ Set YY(1 0) = K3(1 0), the x-coordinate of the centre
  STX YY                 \ of the new sun's line
@@ -27625,7 +27629,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
  LDA #2                 \ The high byte is negative and non-zero, so we went
  STA X1                 \ past the left edge of the screen, so clip X1 to the
-                        \ y-coordinate of the left edge of the screen
+                        \ x-coordinate of the left edge of the screen
 
  CLC                    \ The line does fit on-screen, so clear the C flag to
                         \ indicate success
@@ -30762,7 +30766,7 @@ ENDIF
 \       Name: BR1 (Part 1 of 2)
 \       Type: Subroutine
 \   Category: Start and end
-\    Summary: Start or restart the game
+\    Summary: Show the "Load New Commander (Y/N)?" screen and start the game
 \
 \ ------------------------------------------------------------------------------
 \
@@ -30825,7 +30829,8 @@ ENDIF
 \       Name: BR1 (Part 2 of 2)
 \       Type: Subroutine
 \   Category: Start and end
-\    Summary: Show the "Load New Commander (Y/N)?" screen and start the game
+\    Summary: Show the "Press Fire or Space, Commander" screen and start the
+\             game
 \
 \ ------------------------------------------------------------------------------
 \
@@ -32959,7 +32964,7 @@ ENDIF
 
 .ECMOF
 
- LDA #0                 \ Set ECMA and ECMB to 0 to indicate that no E.C.M. is
+ LDA #0                 \ Set ECMA and ECMP to 0 to indicate that no E.C.M. is
  STA ECMA               \ currently running
  STA ECMP
 
@@ -34009,7 +34014,7 @@ ENDIF
  JMP DEATH2             \ ESCAPE is being pressed, so jump to DEATH2 to end
                         \ the game
 
- CPX #&64               \ If "B" is not being pressed, skip to DK7
+ CPX #&64               \ If "B" is not being pressed, skip to nobit
  BNE nobit
 
  LDA BSTK               \ Toggle the value of BSTK between 0 and &FF
