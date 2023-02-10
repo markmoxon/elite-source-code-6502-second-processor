@@ -5179,8 +5179,7 @@ ENDIF
 
 .GOIN
 
-                        \ If we arrive here, either the docking computer has
-                        \ been activated, or we just docked successfully
+                        \ If we arrive here, we just docked successfully
 
  JMP DOENTRY            \ Go to the docking bay (i.e. show the ship hangar)
 
