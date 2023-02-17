@@ -18,15 +18,15 @@ PYTHON?=python
 ifeq ($(variant), source-disc)
   variant-6502sp=1
   folder-6502sp=/source-disc
-  suffix-6502sp=-from-source-disc
+  suffix-6502sp=-flicker-free-from-source-disc
 else ifeq ($(variant), executive)
   variant-6502sp=3
   folder-6502sp=/executive
-  suffix-6502sp=-executive
+  suffix-6502sp=-flicker-free-executive
 else
   variant-6502sp=2
   folder-6502sp=/sng45
-  suffix-6502sp=-sng45
+  suffix-6502sp=-flicker-free-sng45
 endif
 
 .PHONY:build
@@ -42,7 +42,7 @@ build:
 	$(BEEBASM) -i 1-source-files/main-sources/elite-loader2.asm -v >> 3-assembled-output/compile.txt
 	$(BEEBASM) -i 1-source-files/main-sources/elite-readme.asm -v >> 3-assembled-output/compile.txt
 	$(PYTHON) 2-build-files/elite-checksum.py -u -rel$(variant-6502sp)
-	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp-flicker-free$(suffix-6502sp).ssd -boot ELITE -title "E L I T E"
+	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp$(suffix-6502sp).ssd -boot ELITE -title "E L I T E"
 
 .PHONY:encrypt
 encrypt:
@@ -57,8 +57,13 @@ encrypt:
 	$(BEEBASM) -i 1-source-files/main-sources/elite-loader2.asm -v >> 3-assembled-output/compile.txt
 	$(BEEBASM) -i 1-source-files/main-sources/elite-readme.asm -v >> 3-assembled-output/compile.txt
 	$(PYTHON) 2-build-files/elite-checksum.py -rel$(variant-6502sp)
-	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp-flicker-free$(suffix-6502sp).ssd -boot ELITE -title "E L I T E"
+	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp$(suffix-6502sp).ssd -boot ELITE -title "E L I T E"
 
 .PHONY:verify
 verify:
 	@$(PYTHON) 2-build-files/crc32.py 4-reference-binaries$(folder-6502sp) 3-assembled-output
+
+.PHONY:b2
+b2:
+	curl -G "http://localhost:48075/reset/b2"
+	curl -H "Content-Type:application/binary" --upload-file "5-compiled-game-discs/elite-6502sp$(suffix-6502sp).ssd" "http://localhost:48075/run/b2?name=elite-6502sp$(suffix-6502sp).ssd"
