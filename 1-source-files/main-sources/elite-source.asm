@@ -26039,14 +26039,24 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ the sun, jump to PL57 to skip the following
                         \ instructions
 
- JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
-                        \ processor for drawing on-screen, which redraws the
-                        \ planet and this removes it from the screen
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- STZ LSP                \ Reset the ball line heap by setting the ball line heap
-                        \ pointer to 0
+\JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
+\                       \ processor for drawing on-screen, which redraws the
+\                       \ planet and this removes it from the screen
+\
+\STZ LSP                \ Reset the ball line heap by setting the ball line heap
+\                       \ pointer to 0
+\
+\RTS                    \ Return from the subroutine
 
- RTS                    \ Return from the subroutine
+                        \ --- And replaced by: -------------------------------->
+
+ JMP WPLS2              \ This is the planet, so jump to WPLS2 to remove it from
+                        \ screen, returning from the subroutine using a tail
+                        \ call
+
+                        \ --- End of replacement ------------------------------>
 
 .PL57
 
@@ -26209,7 +26219,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .PL20A
 
- JMP LS2FL              \ Call LS2FL to remove the planet from the screen
+ JMP WPLS2              \ Call WPLS2 to remove the planet from the screen
 
                         \ --- End of added code ------------------------------->
 
@@ -27609,10 +27619,10 @@ LOAD_E% = LOAD% + P% - CODE%
 \
 \ ******************************************************************************
 
-.LS2FL
-
                         \ --- Mod: Code removed for flicker-free planets: ----->
 
+\.LS2FL
+\
 \LDY LSP                \ Set Y to the ball line heap pointer, which contains
 \                       \ the number of the first free byte after the end of the
 \                       \ LSX2 and LSY2 heaps - in other words, the number of
@@ -27723,9 +27733,27 @@ LOAD_E% = LOAD% + P% - CODE%
 \
 \LDY #126               \ Jump to WP3 above to send a whole new OSWRCH 129
 \JMP WP3                \ command to draw the first batch of points
-\
 
-                        \ --- And replaced by: -------------------------------->
+                        \ --- End of removed code ----------------------------->
+
+\ ******************************************************************************
+\
+\       Name: WPLS2
+\       Type: Subroutine
+\   Category: Drawing planets
+\    Summary: Remove the planet from the screen
+\  Deep dive: The ball line heap
+\
+\ ------------------------------------------------------------------------------
+\
+\ We do this by redrawing it using the lines stored in the ball line heap when
+\ the planet was originally drawn by the BLINE routine.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.WPLS2
 
  LDY LSX2               \ If LSX2 is non-zero (which indicates the ball line
  BNE WP1                \ heap is empty), jump to WP1 to reset the line heap
@@ -27751,7 +27779,7 @@ LOAD_E% = LOAD% + P% - CODE%
 
  RTS                    \ Return from the subroutine
 
-                        \ --- End of replacement ------------------------------>
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
