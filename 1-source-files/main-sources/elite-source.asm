@@ -26309,11 +26309,20 @@ LOAD_E% = LOAD% + P% - CODE%
                         \
                         \   (XX16+3 K2+3) = sidev_y / z
 
- JSR PLS2               \ Call PLS2 to draw the second meridian
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
-                        \ processor for drawing on-screen, returning from the
-                        \ subroutine using a tail call
+\JSR PLS2               \ Call PLS2 to draw the second meridian
+\
+\JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
+\                       \ processor for drawing on-screen, returning from the
+\                       \ subroutine using a tail call
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP PLS2               \ Jump to PLS2 to draw the second meridian, returning
+                        \ from the subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -26440,11 +26449,20 @@ LOAD_E% = LOAD% + P% - CODE%
  STZ CNT2               \ Set CNT2 = 0 as we are drawing a full circle, so we
                         \ don't need to apply an offset
 
- JSR PLS22              \ Call PLS22 to draw the crater
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
-                        \ processor for drawing on-screen, returning from the
+\JSR PLS22              \ Call PLS22 to draw the crater
+\
+\JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
+\                       \ processor for drawing on-screen, returning from the
+\                       \ subroutine using a tail call
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP PLS22              \ Jump to PLS22 to draw the crater, returning from the
                         \ subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -27350,6 +27368,13 @@ LOAD_E% = LOAD% + P% - CODE%
  BCS RTS2               \ If CHKON set the C flag then the circle does not fit
                         \ on-screen, so return from the subroutine (as RTS2
                         \ contains an RTS)
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+ LDA #0                 \ Set LSX2 = 0 to indicate that the ball line heap is
+ STA LSX2               \ not empty, as we are about to fill it
+
+                        \ --- End of added code ------------------------------->
 
  LDX K                  \ Set X = K = radius
 
