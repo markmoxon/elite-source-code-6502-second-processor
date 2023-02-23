@@ -8420,11 +8420,47 @@ ENDIF
                         \ we call BLINE it can draw the first line, from this
                         \ point to the next
 
- BEQ BL5                \ This is the first call to BLINE, so we don't need to
-                        \ to copy the previous point to XX15 as there isn't one,
-                        \ so we jump to BL5 to tidy up and return from the
-                        \ subroutine (this BEQ is effectively a JMP, as we just
-                        \ incremented FLAG to 0)
+                        \ --- Mod: Code removed for flicker-free planets: ----->
+
+\BEQ BL5                \ This is the first call to BLINE, so we don't need to
+\                       \ to copy the previous point to XX15 as there isn't one,
+\                       \ so we jump to BL5 to tidy up and return from the
+\                       \ subroutine (this BEQ is effectively a JMP, as we just
+\                       \ incremented FLAG to 0)
+
+                        \ --- And replaced by: -------------------------------->
+
+.BL5
+
+ JSR DrawPlanetLine     \ Draw the current line from the old planet
+
+                        \ The following inserts a &FF marker into the LSY2 line
+                        \ heap to indicate that the next call to BLINE should
+                        \ store both the (X1, Y1) and (X2, Y2) points. We do
+                        \ this on the very first call to BLINE (when FLAG is
+                        \ &FF), and on subsequent calls if the segment does not
+                        \ fit on-screen, in which case we don't draw or store
+                        \ that segment, and we start a new segment with the next
+                        \ call to BLINE that does fit on-screen
+
+ LDY LSP                \ If byte LSP-1 of LSY2 = &FF, jump to BL7 to tidy up
+ LDA #&FF               \ and return from the subroutine, as the point that has
+ CMP LSY2-1,Y           \ been passed to BLINE is the start of a segment, so all
+ BEQ BL7                \ we need to do is save the coordinate in K5, without
+                        \ moving the pointer in LSP
+
+ STA LSY2,Y             \ Otherwise we just tried to plot a segment but it
+                        \ didn't fit on-screen, so put the &FF marker into the
+                        \ heap for this point, so the next call to BLINE starts
+                        \ a new segment
+
+ INC LSP                \ Increment LSP to point to the next point in the heap
+
+ BNE BL7                \ Jump to BL7 to tidy up and return from the subroutine
+                        \ (this BNE is effectively a JMP, as LSP will never be
+                        \ zero)
+
+                        \ --- End of replacement ------------------------------>
 
 .BL1
 
@@ -8460,7 +8496,39 @@ ENDIF
                         \ screen anyway, so jump to BL5, to avoid drawing and
                         \ storing this line
 
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+ LDA SWAP               \ If SWAP = 0, then we didn't have to swap the line
+ BEQ BL9                \ coordinates around during the clipping process, so
+                        \ jump to BL9 to skip the following swap
+
+ LDA X1                 \ Otherwise the coordinates were swapped by the call to
+ LDY X2                 \ LL145 above, so we swap (X1, Y1) and (X2, Y2) back
+ STA X2                 \ again
+ STY X1
+ LDA Y1
+ LDY Y2
+ STA Y2
+ STY Y1
+
+.BL9
+
+                        \ --- End of added code ------------------------------->
+
  LDY LSP                \ Set Y = LSP
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+ LDA LSY2-1,Y           \ If byte LSP-1 of LSY2 is not &FF, jump down to BL8
+ CMP #&FF               \ to skip the following (X1, Y1) code
+ BNE BL8
+
+                        \ Byte LSP-1 of LSY2 is &FF, which indicates that we
+                        \ need to store (X1, Y1) in the heap
+
+ JSR DrawPlanetLine     \ Draw the current line from the old planet
+
+                        \ --- End of added code ------------------------------->
 
  LDA X1                 \ Store X1 in the LSP-th byte of LSX2
  STA LSX2,Y
@@ -8469,6 +8537,20 @@ ENDIF
  STA LSY2,Y
 
  INY                    \ Increment Y to point to the next byte in LSX2/LSY2
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.BL8
+
+ LDA #&FF               \ Set bit 7 of K3+8 so we do not draw the current line
+ STA K3+8               \ in the call to DrawPlanetLine, but store the
+                        \ coordinates so we we can check them below
+
+ JSR DrawPlanetLine+2   \ Calculate the current line from the old heap, but do
+                        \ not draw it, but store the coordinates (X1, Y1) and
+                        \ (X2, Y2) in K3+4 to K3+7
+
+                        \ --- End of added code ------------------------------->
 
  LDA X2                 \ Store X2 in the LSP-th byte of LSX2
  STA LSX2,Y
@@ -8480,7 +8562,26 @@ ENDIF
 
  STY LSP                \ Update LSP to point to the same as Y
 
-.BL5
+                        \ --- Mod: Code removed for flicker-free planets: ----->
+
+\.BL5
+
+                        \ --- And replaced by: -------------------------------->
+
+ JSR DrawNewPlanetLine  \ Draw a line from (X1, Y1) to (X2, Y2), but only if it
+                        \ is different to the old line in K3+4 to K3+7
+
+ LDA XX13               \ If XX13 is non-zero, jump up to BL5 to add a &FF
+ BNE BL5                \ marker to the end of the line heap. XX13 is non-zero
+                        \ after the call to the clipping routine LL145 above if
+                        \ the end of the line was clipped, meaning the next line
+                        \ sent to BLINE can't join onto the end but has to start
+                        \ a new segment, and that's what inserting the &FF
+                        \ marker does
+
+.BL7
+
+                        \ --- End of replacement ------------------------------>
 
  LDA K6                 \ Copy the data for this step point from K6(3 2 1 0)
  STA K5                 \ into K5(3 2 1 0), for use in the next call to BLINE:
@@ -26061,18 +26162,31 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .PL9
 
- JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
-                        \ processor for drawing on-screen, which will erase the
-                        \ planet from the screen
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- STZ LSP                \ Reset the ball line heap by setting the ball line heap
-                        \ pointer to 0
+\JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
+\                       \ processor for drawing on-screen, which will erase the
+\                       \ planet from the screen
+\
+\STZ LSP                \ Reset the ball line heap by setting the ball line heap
+\                       \ pointer to 0
+\
+\JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
+\
+\BCS PL20               \ If the call to CIRCLE returned with the C flag set,
+\                       \ then the circle does not fit on-screen, so jump to
+\                       \ PL20 to return from the subroutine
+
+                        \ --- And replaced by: -------------------------------->
 
  JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
 
- BCS PL20               \ If the call to CIRCLE returned with the C flag set,
+ BCS PL20A              \ If the call to CIRCLE returned with the C flag set,
                         \ then the circle does not fit on-screen, so jump to
-                        \ PL20 to return from the subroutine
+                        \ PL20A to remove the planet from the screen and return
+                        \ from the subroutine
+
+                        \ --- End of replacement ------------------------------>
 
  LDA K+1                \ If K+1 is zero, jump to PL25 as K(1 0) < 256, so the
  BEQ PL25               \ planet fits on the screen and we can draw meridians or
@@ -26080,10 +26194,24 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .PL20
 
- JMP LS2FL              \ The planet doesn't fit on-screen, so jump to LS2FL to
-                        \ send the ball line heap to the I/O processor for
-                        \ drawing on-screen, returning from the subroutine using
-                        \ a tail call
+                        \ --- Mod: Code removed for flicker-free planets: ----->
+
+\JMP LS2FL              \ The planet doesn't fit on-screen, so jump to LS2FL to
+\                       \ send the ball line heap to the I/O processor for
+\                       \ drawing on-screen, returning from the subroutine using
+\                       \ a tail call
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
+                        \ any lines that are left in the ball line heap, before
+                        \ returning from the subroutine using a tail call
+
+.PL20A
+
+ JMP LS2FL              \ Call LS2FL to remove the planet from the screen
+
+                        \ --- End of added code ------------------------------->
 
 .PL25
 
@@ -26625,7 +26753,17 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .PL40
 
- RTS                    \ Return from the subroutine
+                        \ --- Mod: Code removed for flicker-free planets: ----->
+
+\RTS                    \ Return from the subroutine
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
+                        \ any lines that are left in the ball line heap,
+                        \ returning from the subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -27275,6 +27413,29 @@ LOAD_E% = LOAD% + P% - CODE%
                         \ line segments, which CIRCLE2 then sends to the I/O
                         \ processor for drawing
 
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+                        \ We now set things up for flicker-free circle plotting,
+                        \ by setting the following:
+                        \
+                        \   XX14 = offset to the first coordinate in the ball
+                        \          line heap
+                        \
+                        \   XX14+1 = the number of bytes in the heap for the
+                        \            circle that's currently on-screen (or 0 if
+                        \            there is no ship currently on-screen)
+
+ STZ XX14               \ Set XX14 = 0, to point to the offset before the first
+                        \ set of circle coordinates in the ball line heap
+
+ LDX LSP                \ Set XX14+1 to the last byte of the ball line heap
+ STX XX14+1
+
+ LDX #1                 \ Set LSP = 1 to reset the ball line heap pointer
+ STX LSP
+
+                        \ --- End of added code ------------------------------->
+
  LDX #&FF               \ Set FLAG = &FF to reset the ball line heap in the call
  STX FLAG               \ to the BLINE routine below
 
@@ -27388,10 +27549,19 @@ LOAD_E% = LOAD% + P% - CODE%
  STZ LSP                \ Reset the ball line heap by setting the ball line heap
                         \ pointer to 0
 
- JSR CIRCLE3            \ Call CIRCLE3 to populate the ball line heap
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
-                        \ Fall through into LS2FL to send the ball line heap to
-                        \ the I/O processor for drawing on-screen
+\JSR CIRCLE3            \ Call CIRCLE3 to populate the ball line heap
+\
+\                       \ Fall through into LS2FL to send the ball line heap to
+\                       \ the I/O processor for drawing on-screen
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP CIRCLE3            \ Call CIRCLE3 to draw the circle, returning from the
+                        \ subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -27416,116 +27586,147 @@ LOAD_E% = LOAD% + P% - CODE%
 
 .LS2FL
 
- LDY LSP                \ Set Y to the ball line heap pointer, which contains
-                        \ the number of the first free byte after the end of the
-                        \ LSX2 and LSY2 heaps - in other words, the number of
-                        \ points in the ball line heap
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
-                        \ We now loop through the ball line heap using Y as a
-                        \ pointer
+\LDY LSP                \ Set Y to the ball line heap pointer, which contains
+\                       \ the number of the first free byte after the end of the
+\                       \ LSX2 and LSY2 heaps - in other words, the number of
+\                       \ points in the ball line heap
+\
+\                       \ We now loop through the ball line heap using Y as a
+\                       \ pointer
+\
+\.WP3
+\
+\STY T                  \ Set T = the number of points in the heap
+\
+\BEQ WP1                \ If there are no points in the heap, jump down to WP1
+\                       \ to return from the subroutine
+\
+\LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
+\JSR OSWRCH             \ tell it to start receiving a new line to draw. The
+\                       \ parameter to this call needs to contain the number of
+\                       \ bytes we are going to send for the line's coordinates,
+\                       \ so let's calculate that now
+\
+\TYA                    \ Transfer the Y counter into A, so A now contains the
+\                       \ number of coordinates to send to the I/O processor
+\
+\BMI WP2                \ If the counter in A > 127, then jump to WP2, as we
+\                       \ need to send the points in two batches (as the line
+\                       \ buffer in the I/O processor can hold 256 bytes, and
+\                       \ each coordinate occupies two bytes)
+\
+\SEC                    \ Set A = (A * 2) + 1
+\ROL A                  \
+\                       \ so A now contains the number of bytes we are going to
+\                       \ send, plus 1 (the extra 1 is required as the value
+\                       \ sent needs to point to the first free byte after the
+\                       \ end of the byte list)
+\
+\JSR OSWRCH             \ Send A to the I/O processor as the argument to the
+\                       \ OSWRCH 129 command, so the I/O processor can set the
+\                       \ LINMAX variable in the BEGINLIN routine
+\
+\                       \ We now want to send the points themselves to the I/O
+\                       \ processor
+\
+\LDY #0                 \ Set Y = 0 to act as a loop through the first T points
+\
+\.WPL1
+\
+\LDA LSX2,Y             \ Send the x-coordinate of the start of the line segment
+\JSR OSWRCH
+\
+\LDA LSY2,Y             \ Send the y-coordinate of the start of the line segment
+\JSR OSWRCH
+\
+\INY                    \ Increment the pointer to point to the next coordinate
+\
+\LDA LSX2,Y             \ Send the x-coordinate of the end of the line segment
+\JSR OSWRCH
+\
+\LDA LSY2,Y             \ Send the y-coordinate of the end of the line segment
+\JSR OSWRCH
+\
+\INY                    \ Increment the pointer to point to the next coordinate
+\
+\CPY T                  \ If Y < T then loop back to send the next coordinate,
+\BCC WPL1               \ until we have sent them all. The I/O processor will
+\                       \ now draw the line
+\
+\.WP1
+\
+\RTS                    \ Return from the subroutine
+\
+\.WP2
+\
+\                       \ If we get here then there are more than 127 points in
+\                       \ the line heap to send to the I/O processor, so we need
+\                       \ to send them in two batches. We start by sending the
+\                       \ second half of the coordinates, making sure we include
+\                       \ the last coordinate from the first batch to make sure
+\                       \ the circles drawn by each batch join up
+\
+\ASL A                  \ Shift A left, shifting bit 7 (which we know is set)
+\                       \ into the C flag, so this sets:
+\                       \
+\                       \   A = (A * 2) mod 256
+\                       \
+\                       \ So A contains the number of bytes left over in the
+\                       \ second batch if we send a full first batch
+\
+\ADC #4                 \ Set A = A + 4 + C
+\                       \       = A + 4 + 1
+\                       \
+\                       \ so A now contains the number of bytes we are going to
+\                       \ send in each batch, plus 4 (because we need to send
+\                       \ the extra coordinate at the start of the second
+\                       \ batch), plus 1 (the extra 1 is required as the value
+\                       \ sent needs to point to the first free byte after the
+\                       \ end of the byte list)
+\
+\JSR OSWRCH             \ Send A to the I/O processor as the argument to the
+\                       \ OSWRCH 129 command, so the I/O processor can set the
+\                       \ LINMAX variable in the BEGINLIN routine
+\
+\LDY #126               \ Call WPL1 above with Y = 126 to send the second batch
+\JSR WPL1               \ of points from the ball line heap to the I/O
+\                       \ processor, starting from the last coordinate of the
+\                       \ first batch, so that gets sent in both batches (this
+\                       \ is why Y = 126 rather than 127)
+\
+\LDY #126               \ Jump to WP3 above to send a whole new OSWRCH 129
+\JMP WP3                \ command to draw the first batch of points
+\
 
-.WP3
+                        \ --- And replaced by: -------------------------------->
 
- STY T                  \ Set T = the number of points in the heap
+ LDY LSX2               \ If LSX2 is non-zero (which indicates the ball line
+ BNE WP1                \ heap is empty), jump to WP1 to reset the line heap
+                        \ without redrawing the planet
 
- BEQ WP1                \ If there are no points in the heap, jump down to WP1
-                        \ to return from the subroutine
+ STY XX14               \ Reset XX14 to the start of the ball line heap (we can
+                        \ set this to 0 rather than 1 to take advantage of the
+                        \ fact that Y is 0 - the effect is the same)
 
- LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
- JSR OSWRCH             \ tell it to start receiving a new line to draw. The
-                        \ parameter to this call needs to contain the number of
-                        \ bytes we are going to send for the line's coordinates,
-                        \ so let's calculate that now
+ LDA LSP                \ Set XX14+1 to the end of the ball line heap
+ STA XX14+1
 
- TYA                    \ Transfer the Y counter into A, so A now contains the
-                        \ number of coordinates to send to the I/O processor
+ JSR EraseRestOfPlanet  \ Draw the contents of the ball line heap to erase the
+                        \ old planet
 
- BMI WP2                \ If the counter in A > 127, then jump to WP2, as we
-                        \ need to send the points in two batches (as the line
-                        \ buffer in the I/O processor can hold 256 bytes, and
-                        \ each coordinate occupies two bytes)
+ LDA #1                 \ Set LSP = 1 to reset the ball line heap pointer
+ STA LSP
 
- SEC                    \ Set A = (A * 2) + 1
- ROL A                  \
-                        \ so A now contains the number of bytes we are going to
-                        \ send, plus 1 (the extra 1 is required as the value
-                        \ sent needs to point to the first free byte after the
-                        \ end of the byte list)
-
- JSR OSWRCH             \ Send A to the I/O processor as the argument to the
-                        \ OSWRCH 129 command, so the I/O processor can set the
-                        \ LINMAX variable in the BEGINLIN routine
-
-                        \ We now want to send the points themselves to the I/O
-                        \ processor
-
- LDY #0                 \ Set Y = 0 to act as a loop through the first T points
-
-.WPL1
-
- LDA LSX2,Y             \ Send the x-coordinate of the start of the line segment
- JSR OSWRCH
-
- LDA LSY2,Y             \ Send the y-coordinate of the start of the line segment
- JSR OSWRCH
-
- INY                    \ Increment the pointer to point to the next coordinate
-
- LDA LSX2,Y             \ Send the x-coordinate of the end of the line segment
- JSR OSWRCH
-
- LDA LSY2,Y             \ Send the y-coordinate of the end of the line segment
- JSR OSWRCH
-
- INY                    \ Increment the pointer to point to the next coordinate
-
- CPY T                  \ If Y < T then loop back to send the next coordinate,
- BCC WPL1               \ until we have sent them all. The I/O processor will
-                        \ now draw the line
+ LDA #&FF               \ Set LSX2 = &FF to indicate the ball line heap is empty
+ STA LSX2
 
 .WP1
 
  RTS                    \ Return from the subroutine
 
-.WP2
-
-                        \ If we get here then there are more than 127 points in
-                        \ the line heap to send to the I/O processor, so we need
-                        \ to send them in two batches. We start by sending the
-                        \ second half of the coordinates, making sure we include
-                        \ the last coordinate from the first batch to make sure
-                        \ the circles drawn by each batch join up
-
- ASL A                  \ Shift A left, shifting bit 7 (which we know is set)
-                        \ into the C flag, so this sets:
-                        \
-                        \   A = (A * 2) mod 256
-                        \
-                        \ So A contains the number of bytes left over in the
-                        \ second batch if we send a full first batch
-
- ADC #4                 \ Set A = A + 4 + C
-                        \       = A + 4 + 1
-                        \
-                        \ so A now contains the number of bytes we are going to
-                        \ send in each batch, plus 4 (because we need to send
-                        \ the extra coordinate at the start of the second
-                        \ batch), plus 1 (the extra 1 is required as the value
-                        \ sent needs to point to the first free byte after the
-                        \ end of the byte list)
-
- JSR OSWRCH             \ Send A to the I/O processor as the argument to the
-                        \ OSWRCH 129 command, so the I/O processor can set the
-                        \ LINMAX variable in the BEGINLIN routine
-
- LDY #126               \ Call WPL1 above with Y = 126 to send the second batch
- JSR WPL1               \ of points from the ball line heap to the I/O
-                        \ processor, starting from the last coordinate of the
-                        \ first batch, so that gets sent in both batches (this
-                        \ is why Y = 126 rather than 127)
-
- LDY #126               \ Jump to WP3 above to send a whole new OSWRCH 129
- JMP WP3                \ command to draw the first batch of points
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -39373,20 +39574,24 @@ ENDIF
  LDA XX12               \ Set Y2 (aka XX15+3) = y2_lo
  STA XX15+3
 
- LDA SWAP               \ If SWAP = 0, then we didn't have to swap the line
- BEQ noswap             \ coordinates around during the clipping process, so
-                        \ jump to noswap to skip the following swap
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- LDA X1                 \ Otherwise the coordinates were swapped above,
- LDY X2                 \ so we swap (X1, Y1) and (X2, Y2) back again
- STA X2
- STY X1
- LDA Y1
- LDY Y2
- STA Y2
- STY Y1
+\LDA SWAP               \ If SWAP = 0, then we didn't have to swap the line
+\BEQ noswap             \ coordinates around during the clipping process, so
+\                       \ jump to noswap to skip the following swap
+\
+\LDA X1                 \ Otherwise the coordinates were swapped above,
+\LDY X2                 \ so we swap (X1, Y1) and (X2, Y2) back again
+\STA X2
+\STY X1
+\LDA Y1
+\LDY Y2
+\STA Y2
+\STY Y1
+\
+\.noswap
 
-.noswap
+                        \ --- End of removed code ----------------------------->
 
  CLC                    \ Clear the C flag as the clipped line fits on-screen
 
@@ -51692,6 +51897,229 @@ ENDMACRO
  EQUB &20, &FD
  EQUB &B8, &90
  EQUB &01, &60
+
+\ ******************************************************************************
+\
+\       Name: EraseRestOfPlanet
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw all remaining lines in the ball line heap to erase the rest
+\             of the old planet
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.EraseRestOfPlanet
+
+ LDY XX14               \ Set Y to the offset in XX14, which points to the part
+                        \ of the heap that we are overwriting with new points
+
+ CPY XX14+1             \ If XX14 >= XX14+1, then we have already redrawn all of
+ BCS eras1              \ the lines from the old circle's ball line heap, so
+                        \ skip the following
+
+ JSR DrawPlanetLine     \ Erase the next planet line from the ball line heap
+
+ JMP EraseRestOfPlanet  \ Loop back for the next line in the ball line heap
+
+.eras1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawPlanetLine
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a segment of the old planet from the ball line heap
+\
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   DrawPlanetLine+2    If bit 7 of K3+8 is set, store the line coordinates in
+\                       K3+4 to K3+7 (X1, Y1, X2, Y2) and do not draw the line
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.DrawPlanetLine
+
+ STZ K3+8               \ Clear bit 7 of K3+8 so we draw the current line below
+
+ STZ K3+9               \ Clear bit 7 of K3+9 to indicate that there is no line
+                        \ to draw (we may change this below)
+
+ LDA XX14               \ If XX14 = 1, then this is the first point from the
+ CMP #2                 \ heap, so jump to plin3 to set the previous coordinate
+ BCC plin3              \ and return from the subroutine
+
+ LDA X1                 \ Save X1, X2, Y1, Y2 and Y on the stack
+ PHA
+ LDA Y1
+ PHA
+ LDA X2
+ PHA
+ LDA Y2
+ PHA
+ TYA
+ PHA
+
+ LDY XX14               \ Set Y to the offset in XX14, which points to the part
+                        \ of the heap that we are overwriting with new points
+
+ CPY XX14+1             \ If XX14 >= XX14+1, then we have already redrawn all of
+ BCS plin1              \ the lines from the old circle's ball line heap, so
+                        \ jump to plin1 to return from the subroutine
+
+                        \ Otherwise we need to draw the line from the heap, to
+                        \ erase it from the screen
+
+ LDA K3+2               \ Set X1 = K3+2 = screen x-coordinate of previous point
+ STA X1                 \ from the old heap
+
+ LDA K3+3               \ Set Y1 = K3+3 = screen y-coordinate of previous point
+ STA Y1                 \ from the old heap
+
+ LDA LSX2,Y             \ Set X2 to the y-coordinate from the XX14-th point in
+ STA X2                 \ the heap
+
+ STA K3+2               \ Store the x-coordinate of the point we are overwriting
+                        \ in K3+2, so we can use it on the next iteration
+
+ LDA LSY2,Y             \ Set Y2 to the y-coordinate from the XX14-th point in
+ STA Y2                 \ the heap
+
+ STA K3+3               \ Store the y-coordinate of the point we are overwriting
+                        \ in K3+3, so we can use it on the next iteration
+
+ INC XX14               \ Increment XX14 to point to the next coordinate, so we
+                        \ work our way through the current heap
+
+ LDA Y1                 \ If Y1 or Y2 = &FF then this indicates a break in the
+ CMP #&FF               \ circle, so jump to plin1 to skip the following and
+ BEQ plin1              \ return from the subroutine, asthere is no line to
+ LDA Y2                 \ erase
+ CMP #&FF
+ BEQ plin1
+
+ DEC K3+9               \ Decrement K3+9 to &FF to indicate that there is a line
+                        \ to draw
+
+ BIT K3+8               \ If bit 7 of K3+8 is set, jump to plin2 to store the
+ BMI plin2              \ line coordinates rather than drawing the line
+
+ JSR LL30               \ The coordinates in (X1, Y1) and (X2, Y2) that we just
+                        \ pulled from the ball line heap point to a line that is
+                        \ still on-screen, so call LL30 to draw this line and
+                        \ erase it from the screen
+
+.plin1
+
+ PLA                    \ Restore Y, X1, X2, Y1 and Y2 from the stack
+ TAY
+ PLA
+ STA Y2
+ PLA
+ STA X2
+ PLA
+ STA Y1
+ PLA
+ STA X1
+
+ RTS                    \ Return from the subroutine
+
+.plin2
+
+ LDA X1                 \ Store X1, Y1, X2, Y2 in K3+4 to K3+7
+ STA K3+4
+ LDA Y1
+ STA K3+5
+ LDA X2
+ STA K3+6
+ LDA Y2
+ STA K3+7
+
+ JMP plin1              \ Jump to plin1 to return from the subroutine
+
+.plin3
+
+ LDA LSX2+1             \ Store the heap's first coordinate in K3+2 and K3+3
+ STA K3+2
+ LDA LSY2+1
+ STA K3+3
+
+ INC XX14               \ Increment XX14 to point to the next coordinate, so we
+                        \ work our way through the current heap
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawNewPlanetLine
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a ball line, but only if it is different to the old line
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   K3+4 to K3+7        The (X1, Y1) and (X2, Y2) coordinates of the old line
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.DrawNewPlanetLine
+
+ BIT K3+9               \ If bit 7 of K3+9 is clear, then there is no old line
+ BPL nlin2              \ to draw, so jump to nlin2 to draw the new line only
+
+ LDA K3+4               \ If the old line equals the new line, jump to nlin3
+ CMP X1                 \ to skip drawing both lines
+ BNE nlin1
+ LDA K3+5
+ CMP Y1
+ BNE nlin1
+ LDA K3+6
+ CMP X2
+ BNE nlin1
+ LDA K3+7
+ CMP Y2
+ BEQ nlin3
+
+.nlin1
+
+                        \ If we get here then the old line is differnt to the new
+                        \ line, so we draw them both
+
+ JSR LL30               \ Draw the new line from (X1, Y1) to (X2, Y2)
+
+ LDA K3+4               \ Set up the old line's coordinates
+ STA X1
+ LDA K3+5
+ STA Y1
+ LDA K3+6
+ STA X2
+ LDA K3+7
+ STA Y2
+
+.nlin2
+
+ JSR LL30               \ Draw the old line to erase it
+
+.nlin3
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
