@@ -31,12 +31,40 @@ for arg in argv[1:]:
     if arg == "-rel3":
         release = 3
 
-print("Elite Big Code File")
+print("6502SP Elite Checksum")
 print("Encryption = ", Encrypt)
 
-data_block = bytearray()
+# Configuration variables for scrambling code and calculating checksums
+#
+# Values must match those in 3-assembled-output/compile.txt
+#
+# If you alter the source code, then you should extract the correct values for
+# the following variables and plug them into the following, otherwise the game
+# will fail the checksum process and will hang on loading
+#
+# You can find the correct values for these variables by building your updated
+# source, and then searching compile.txt for "elite-checksum.py", where the new
+# values will be listed
 
-# Load assembled code file
+if release == 1:
+    # Source disc variant
+    s = 0x106A                  # S%
+    g = 0x10D1                  # G%
+    f = 0x81B0                  # F%
+elif release == 2:
+    # SNG45 variant
+    s = 0x106A                  # S%
+    g = 0x10D1                  # G%
+    f = 0x818F                  # F%
+elif release == 3:
+    # Executive variant
+    s = 0x106C                  # S%
+    g = 0x10D3                  # G%
+    f = 0x82e7                  # F%
+
+# Load assembled code file for P.CODE
+
+data_block = bytearray()
 
 elite_file = open("3-assembled-output/P.CODE.unprot.bin", "rb")
 data_block.extend(elite_file.read())
@@ -63,7 +91,7 @@ for i in range(CH, 0, -1):
     CH = CH % 256
     CH = CH ^ data_block[commander_start + i + 8]
 
-print("Commander checksum = ", CH)
+print("Commander checksum = ", hex(CH))
 
 # Must have Commander checksum otherwise game will lock
 
@@ -72,16 +100,6 @@ if Encrypt:
     data_block[commander_start + commander_offset + 1] = CH
 
 # First part: ZP routine, which sets the checksum byte at S%-1
-
-if release == 1:
-    # Source disc
-    s = 0x106A
-elif release == 2:
-    # SNG45
-    s = 0x106A
-elif release == 3:
-    # Executive
-    s = 0x106C
 
 s_checksum = 0x10
 carry = 1
@@ -121,23 +139,8 @@ if Encrypt:
 
 # Third part: V, which reverses the order of bytes between G% and F%-1
 
-# The values of G% and F% are hard-coded, which is not ideal - they should
-# really come from the build process. Maybe later!
-
-if release == 1:
-    # Source disc
-    g = 0x10D1
-    f = 0x81B0 - 1
-elif release == 2:
-    # SNG45
-    g = 0x10D1
-    f = 0x818F - 1
-elif release == 3:
-    # Executive
-    g = 0x10D3
-    f = 0x82e7 - 1
-
 if Encrypt:
+    f -= 1
     while g < f:
         tmp = data_block[g - 0x1000]
         data_block[g - 0x1000] = data_block[f - 0x1000]

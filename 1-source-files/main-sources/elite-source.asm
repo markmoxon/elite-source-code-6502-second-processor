@@ -16867,9 +16867,11 @@ LOAD_C% = LOAD% +P% - CODE%
  LDA DJD                \ If keyboard auto-recentre is disabled, then
  BNE RE2+2              \ jump to RE2+2 to restore A and return
 
- LDX #128               \ If keyboard auto-recentre is enabled, set X to 128
- BMI RE2+2              \ (the middle of our range) and jump to RE2+2 to
-                        \ restore A and return
+ LDX #128               \ If we get here then keyboard auto-recentre is enabled,
+ BMI RE2+2              \ so set X to 128 (the middle of our range) and jump to
+                        \ RE2+2 to restore A and return from the subroutine
+                        \ (this BMI is effectively a JMP as bit 7 of X is always
+                        \ set)
 
 \ ******************************************************************************
 \
@@ -16891,8 +16893,7 @@ LOAD_C% = LOAD% +P% - CODE%
 \
 \   tan(A) = P / Q
 \
-\ The result in A is an integer representing the angle in radians, where 256
-\ represents a full circle of 360 degrees, or 2 * PI radians. The routine
+\ The result in A is an integer representing the angle in radians. The routine
 \ returns values in the range 0 to 128, which covers 0 to 180 degrees (or 0 to
 \ PI radians).
 \
@@ -51535,3 +51536,8 @@ SAVE "3-assembled-output/SHIPS.bin", CODE_SHIPS%, P%, LOAD_SHIPS%
 PRINT "ELITE game code ", ~(K%-F%), " bytes free"
 PRINT "F% = ", ~F%
 PRINT "Ends at ", ~P%
+
+PRINT "Addresses for the scramble routines in elite-checksum.py"
+PRINT "S% = ", ~S%
+PRINT "G% = ", ~G%
+PRINT "F% = ", ~F%
