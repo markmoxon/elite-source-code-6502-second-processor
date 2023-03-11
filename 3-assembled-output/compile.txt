@@ -37587,6 +37587,10 @@ Saving file '3-assembled-output/SHIPS.bin'
 ELITE game code &5B  bytes free
 F% = &81A5 
 Ends at &F1C6 
+Addresses for the scramble routines in elite-checksum.py
+S% = &106A 
+G% = &10D1 
+F% = &81A5 
 .elitea
 elitea = &100C 
 .eliteb
