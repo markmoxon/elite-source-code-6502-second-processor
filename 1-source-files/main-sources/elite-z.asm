@@ -2151,7 +2151,7 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ This routine received bytes from the parasite, each of which is a coordinate
+\ This routine receives bytes from the parasite, each of which is a coordinate
 \ in the line that is currently being drawn (following a call from the parasite
 \ to OSWRCH 129, which starts the I/O processor listening for line bytes). They
 \ are stored in the buffer at TABLE, where LINTAB points to the first free byte
