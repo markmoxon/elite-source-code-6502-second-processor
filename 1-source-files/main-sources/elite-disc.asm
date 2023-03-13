@@ -66,3 +66,6 @@ ELSE
 ENDIF
 
 PUTFILE "3-assembled-output/README.txt", "README", &FFFFFF, &FFFFFF
+
+PUTBASIC "1-source-files/music/load-music.bas", "ELITEM"
+PUTFILE "1-source-files/music/elite-music-6502sp.rom", "MUSIC", &FF8000, &FF8000
