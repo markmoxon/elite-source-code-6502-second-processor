@@ -42,7 +42,7 @@ build:
 	$(BEEBASM) -i 1-source-files/main-sources/elite-loader2.asm -v >> 3-assembled-output/compile.txt
 	$(BEEBASM) -i 1-source-files/main-sources/elite-readme.asm -v >> 3-assembled-output/compile.txt
 	$(PYTHON) 2-build-files/elite-checksum.py -u -rel$(variant-6502sp)
-	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp$(suffix-6502sp).ssd -opt 3 -title "E L I T E"
+	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp-music$(suffix-6502sp).ssd -opt 3 -title "E L I T E"
 
 .PHONY:encrypt
 encrypt:
@@ -57,7 +57,7 @@ encrypt:
 	$(BEEBASM) -i 1-source-files/main-sources/elite-loader2.asm -v >> 3-assembled-output/compile.txt
 	$(BEEBASM) -i 1-source-files/main-sources/elite-readme.asm -v >> 3-assembled-output/compile.txt
 	$(PYTHON) 2-build-files/elite-checksum.py -rel$(variant-6502sp)
-	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp$(suffix-6502sp).ssd -opt 3 -title "E L I T E"
+	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp-music$(suffix-6502sp).ssd -opt 3 -title "E L I T E"
 
 .PHONY:verify
 verify:
@@ -66,4 +66,4 @@ verify:
 .PHONY:b2
 b2:
 	curl -G "http://localhost:48075/reset/b2"
-	curl -H "Content-Type:application/binary" --upload-file "5-compiled-game-discs/elite-6502sp$(suffix-6502sp).ssd" "http://localhost:48075/run/b2?name=elite-6502sp$(suffix-6502sp).ssd"
+	curl -H "Content-Type:application/binary" --upload-file "5-compiled-game-discs/elite-6502sp-music$(suffix-6502sp).ssd" "http://localhost:48075/run/b2?name=elite-6502sp-music$(suffix-6502sp).ssd"
