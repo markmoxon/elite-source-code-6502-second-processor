@@ -37,33 +37,20 @@ _EXECUTIVE              = (_VARIANT = 3)
  EQUB 10, 13
  EQUS "---------------------------------------"
  EQUB 10, 13
- EQUS "Acornsoft Elite"
+ EQUS "Acornsoft Elite... with music!"
  EQUB 10, 13
  EQUB 10, 13
- EQUS "Version: BBC with 6502 Second Processor"
+ EQUS "For the BBC Micro with 16K sideways RAM"
  EQUB 10, 13
-
-IF _SOURCE_DISC
-
- EQUS "Variant: Ian Bell's source disc"
+ EQUS "and 6502 Second Processor"
  EQUB 10, 13
-
-ELIF _SNG45
-
- EQUS "Variant: Acornsoft SNG45 release"
  EQUB 10, 13
- EQUS "Product: Acornsoft SNG45"
+ EQUS "Based on the Acornsoft SNG45 release"
  EQUB 10, 13
- EQUS "         Acornsoft SNG47"
+ EQUS "of Elite by Ian Bell and David Braben"
  EQUB 10, 13
-
-ELIF _EXECUTIVE
-
- EQUS "Variant: The Executive version"
+ EQUS "Copyright (c) Acornsoft 1985"
  EQUB 10, 13
-
-ENDIF
-
  EQUB 10, 13
  EQUS "See www.bbcelite.com for details"
  EQUB 10, 13

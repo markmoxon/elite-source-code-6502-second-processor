@@ -1,11 +1,13 @@
 
 ---------------------------------------
-Acornsoft Elite
+Acornsoft Elite... with music!
 
-Version: BBC with 6502 Second Processor
-Variant: Acornsoft SNG45 release
-Product: Acornsoft SNG45
-         Acornsoft SNG47
+For the BBC Micro with 16K sideways RAM
+and 6502 Second Processor
+
+Based on the Acornsoft SNG45 release
+of Elite by Ian Bell and David Braben
+Copyright (c) Acornsoft 1985
 
 See www.bbcelite.com for details
 ---------------------------------------

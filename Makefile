@@ -1,33 +1,10 @@
 BEEBASM?=beebasm
 PYTHON?=python
 
-# You can set the variant that gets built by adding 'variant=<rel>' to
-# the make command, where <rel> is one of:
-#
-#   source-disc
-#   sng45
-#   executive
-#
-# So, for example:
-#
-#   make encrypt verify variant=executive
-#
-# will build the Executive version. If you omit the variant parameter,
-# it will build the SNG45 variant.
-
-ifeq ($(variant), source-disc)
-  variant-6502sp=1
-  folder-6502sp=/source-disc
-  suffix-6502sp=-from-source-disc
-else ifeq ($(variant), executive)
-  variant-6502sp=3
-  folder-6502sp=/executive
-  suffix-6502sp=-executive
-else
-  variant-6502sp=2
-  folder-6502sp=/sng45
-  suffix-6502sp=-sng45
-endif
+# Music is only supported in the SNG45 variant
+variant-6502sp=2
+folder-6502sp=/sng45
+suffix-6502sp=-sng45
 
 .PHONY:build
 build:
