@@ -106,6 +106,30 @@ LOAD% = &2400           \ The load address of the main I/O processor code
 \
 \ ******************************************************************************
 
+                        \ --- Mod: Code added for music: ---------------------->
+
+ORG &0070
+
+.musicWorkspace
+
+ SKIP 8                 \ Storage for the music player, &0092 to &0099 inclusive
+
+.musicRomNumber
+
+ SKIP 1                 \ The bank number of the sideways ROM slot containing
+                        \ the music player at &009A
+
+.musicStatus
+
+ SKIP 1                 \ A flag to determine whether to play the currently
+                        \ selected music:
+                        \
+                        \   * 0 = do not play the music
+                        \
+                        \   * Non-zero = do play the music
+
+                        \ --- End of added code ------------------------------->
+
 ORG &0080
 
 .ZP
@@ -918,6 +942,31 @@ NEXT
  STA newosrdch+1        \ which modifies the address portion of the JSR &FFFF
  LDA RDCHV+1            \ instruction at the start of the newosrdch routine and
  STA newosrdch+2        \ changes it to a JSR to the existing RDCHV address
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+ LDA #0                 \ Select the title music
+ JSR PlayMusic
+
+ LDA #6                 \ Modify the PlayMusic routine so it plays music on the
+ STA play1+1            \ next call
+
+ SEI                    \ Disable interrupts so we can update the interrupt
+                        \ handler
+
+ LDA #&4C               \ Insert JMP IRQMusic into the LINSCN handler, replacing
+ STA LINSCN+10          \ the STA VIA+&44 instruction, so the IRQMusic routine
+ LDA #LO(IRQMusic)      \ gets called on each vertical sync
+ STA LINSCN+11
+ LDA #HI(IRQMusic)
+ STA LINSCN+12
+
+ CLI                    \ Re-enable interrupts
+
+ LDA #0                 \ Enable sound by default
+ STA DNOIZ
+
+                        \ --- End of added code ------------------------------->
 
  LDA #LO(newosrdch)     \ Disable interrupts and set WRCHV to newosrdch, so
  SEI                    \ calls to OSRDCH are now handled by newosrdch, which
@@ -6458,11 +6507,25 @@ ENDMACRO
  EQUW HLOIN             \            247 (&F7)     7 = Draw orange sun lines
  EQUW HANGER            \            248 (&F8)     8 = Display the hangar
  EQUW SOMEPROT          \            249 (&F9)     9 = Copy protection
- EQUW SAFE              \            250 (&FA)    10 = Do nothing
- EQUW SAFE              \            251 (&FB)    11 = Do nothing
- EQUW SAFE              \            252 (&FC)    12 = Do nothing
- EQUW SAFE              \            253 (&FD)    13 = Do nothing
- EQUW SAFE              \            254 (&FE)    14 = Do nothing
+
+                        \ --- Mod: Code removed for music: -------------------->
+
+\EQUW SAFE              \            250 (&FA)    10 = Do nothing
+\EQUW SAFE              \            251 (&FB)    11 = Do nothing
+\EQUW SAFE              \            252 (&FC)    12 = Do nothing
+\EQUW SAFE              \            253 (&FD)    13 = Do nothing
+\EQUW SAFE              \            254 (&FE)    14 = Do nothing
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUW StopMusic         \            250 (&FA)    10 = Stop music
+ EQUW MusicCommand      \            251 (&FB)    11 = Do nothing
+ EQUW SetMusicStatus    \            252 (&FC)    12 = Do nothing
+ EQUW ProcessOptions    \            253 (&FD)    13 = Do nothing
+ EQUW SetSoundOption    \            254 (&FE)    14 = Do nothing
+
+                        \ --- End of replacement ------------------------------>
+
  EQUW SAFE              \            255 (&FF)    15 = Do nothing
 
  EQUW SAFE              \ These addresses are never used and have no effect, as
@@ -8686,6 +8749,281 @@ CPU 0                   \ Switch back to normal 6502 asembly
 
  JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
                         \ return from the subroutine using a tail call
+
+\ ******************************************************************************
+\
+\       Name: IRQMusic
+\       Type: Subroutine
+\   Category: Music
+\    Summary: The IRQ handler for playing music
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.IRQMusic
+
+ STA VIA+&45            \ Re-do the instruction we replaced when inserting this
+                        \ routine into the standard IRQ1 interrupt handler
+
+ LDA musicStatus        \ If the music status flag is zero, then music is
+ BEQ mirq1              \ disabled, so jump to mirq1 to skip playing the
+                        \ currently selected music
+
+ JSR PlayMusic+3        \ Play the currently selected music
+
+.mirq1
+
+ JMP LINSCN+13          \ Jump back to the normal interrupt handler
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: PlayMusic
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Select, play or stop music
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The action to perform:
+\
+\                         * 0 = Select the title music
+\
+\                         * 3 = Select the docking music
+\
+\                         * 6 = Play the currently selected music
+\
+\                         * 9 = Stop the currently selected music
+\
+\ Other entry points:
+\
+\   PlayMusic+3         Repeat the last action (typically used to continue
+\                       playing in the interrupt routine)
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.PlayMusic
+
+ STA play1+1            \ Modify JSR to jump to &8000 + A
+
+ LDA &F4                \ Fetch the RAM copy of the currently selected ROM and
+ PHA                    \ store it on the stack
+
+ LDA musicRomNumber     \ Fetch the number of the music ROM and switch to it
+ STA &F4
+ STA &FE30
+
+ TYA                    \ Store X and Y on the stack
+ PHA
+ TXA
+ PHA
+
+.play1
+
+ JSR &8006              \ Call the relevant routine in the music ROM (this
+                        \ address is set to &80xx, where xx is the value of A
+                        \ that was passed to the routine)
+
+ PLA                    \ Retrieve X and Y from the stack
+ TAX
+ PLA
+ TAY
+
+ PLA                    \ Set the ROM number back to the value that we stored
+ STA &F4                \ above, to switch back to the previous ROM
+ STA &FE30
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: StopMusic
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Stop any music that is currently playing
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.StopMusic
+
+ LDA #9                 \ Stop any music that is currently playing and select
+ JMP PlayMusic          \ the docking music, returning from the subroutine using
+                        \ a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: MusicCommand
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Send a music command to the PlayMusic routine
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.MusicCommand
+
+ LDY #2                 \ Fetch byte #2 from the parameter block, which contains
+ LDA (OSSC),Y           \ the parameter to pass to the PlayMusic routine
+
+ JSR PlayMusic          \ Call the relevant routine in the music ROM
+
+ LDA #6                 \ Modify the PlayMusic routine so it plays music on the
+ STA play1+1            \ next call
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetMusicStatus
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Update the music status flag
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.SetMusicStatus
+
+ LDY #2                 \ Fetch byte #2 from the parameter block, which contains
+ LDA (OSSC),Y           \ the parameter to pass to the PlayMusic routine
+
+ STA musicStatus        \ Update the music status flag
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ProcessOptions
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Send a music command to the PlayMusic routine
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.ProcessOptions
+
+ LDY #2                 \ Fetch byte #2 from the parameter block, which contains
+ LDA (OSSC),Y           \ the parameter to pass to the PlayMusic routine
+ TAX
+
+ LDA #12                \ Process the music-related options
+ JSR PlayMusic
+
+ BCC DK7                \ If no music-related options were changed, then the C
+                        \ flag will be clear, so jump to DK7 to skip the
+                        \ following
+
+ LDA #7                 \ Make a beep sound so we know something has happened
+ JSR OSWRCH
+
+ LDY #64                \ Wait for 64 vertical syncs
+ JSR DELAY
+
+.DK7
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DELAY
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Wait for a specified time, in 1/50s of a second
+\
+\ ------------------------------------------------------------------------------
+\
+\ Wait for the number of vertical syncs given in Y, so this effectively waits
+\ for Y/50 of a second (as the vertical sync occurs 50 times a second).
+\
+\ Arguments:
+\
+\   Y                   The number of vertical sync events to wait for
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.DELAY
+
+ JSR WSCAN              \ Call WSCAN to wait for the vertical sync, so the whole
+                        \ screen gets drawn
+
+ DEY                    \ Decrement the counter in Y
+
+ BNE DELAY              \ If Y isn't yet at zero, jump back to DELAY to wait
+                        \ for another vertical sync
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetSoundOption
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Update the sound status flag
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.SetSoundOption
+
+ LDY #2                 \ Fetch byte #2 from the parameter block, which contains
+ LDA (OSSC),Y           \ the parameter to pass to the PlayMusic routine
+
+ STA DNOIZ              \ Update the sound status flag
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DNOIZ
+\       Type: Variable
+\   Category: Music
+\    Summary: I/O Processor copy of the sound control flag from the parasite
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.DNOIZ
+
+ SKIP 1                 \ Sound on/off configuration setting
+                        \
+                        \   * 0 = sound is on (default)
+                        \
+                        \   * Non-zero = sound is off
+                        \
+                        \ Toggled by pressing "S" when paused, see the DK4
+                        \ routine for details
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \

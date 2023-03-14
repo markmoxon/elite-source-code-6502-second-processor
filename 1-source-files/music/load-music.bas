@@ -3,7 +3,7 @@ tstaddr = &8008
 values = &90
 unique = &80
 RomSel = &FE30
-romNumber = &0094 : REM Set to address of .musicRomNumber
+romNumber = &0078 : REM Set to address of .musicRomNumber
 fromAddr = &80    : REM We can reuse unique block by this point
 
 PRINT"Acornsoft Elite... with music!"
