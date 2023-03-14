@@ -6519,10 +6519,10 @@ ENDMACRO
                         \ --- And replaced by: -------------------------------->
 
  EQUW StopMusic         \            250 (&FA)    10 = Stop music
- EQUW MusicCommand      \            251 (&FB)    11 = Do nothing
- EQUW SetMusicStatus    \            252 (&FC)    12 = Do nothing
- EQUW ProcessOptions    \            253 (&FD)    13 = Do nothing
- EQUW SetSoundOption    \            254 (&FE)    14 = Do nothing
+ EQUW MusicCommand      \            251 (&FB)    11 = Send PlayMusic command
+ EQUW SetMusicStatus    \            252 (&FC)    12 = Update music status flag
+ EQUW ProcessOptions    \            253 (&FD)    13 = Process music options
+ EQUW SetSoundOption    \            254 (&FE)    14 = Update sound status flag
 
                         \ --- End of replacement ------------------------------>
 
@@ -8919,7 +8919,7 @@ CPU 0                   \ Switch back to normal 6502 asembly
 \       Name: ProcessOptions
 \       Type: Subroutine
 \   Category: Music
-\    Summary: Send a music command to the PlayMusic routine
+\    Summary: Process the music-specific pause options
 \
 \ ******************************************************************************
 
