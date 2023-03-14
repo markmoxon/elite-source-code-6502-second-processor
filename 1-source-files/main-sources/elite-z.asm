@@ -8770,6 +8770,11 @@ CPU 0                   \ Switch back to normal 6502 asembly
  BEQ mirq1              \ disabled, so jump to mirq1 to skip playing the
                         \ currently selected music
 
+ CLD                    \ Clear the Decimal flag in case it was set on entry to
+                        \ the interrupt handler (which will be the case if we
+                        \ are playing music while checking for key presses in
+                        \ the KEYBOARD routine)
+
  JSR PlayMusic+3        \ Play the currently selected music
 
 .mirq1
