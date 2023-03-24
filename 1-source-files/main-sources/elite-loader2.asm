@@ -34,13 +34,13 @@
 \
 \ ******************************************************************************
 
-INCLUDE "1-source-files/main-sources/elite-build-options.asm"
+ INCLUDE "1-source-files/main-sources/elite-build-options.asm"
 
-_SOURCE_DISC            = (_VARIANT = 1)
-_SNG45                  = (_VARIANT = 2)
-_EXECUTIVE              = (_VARIANT = 3)
+ _SOURCE_DISC           = (_VARIANT = 1)
+ _SNG45                 = (_VARIANT = 2)
+ _EXECUTIVE             = (_VARIANT = 3)
 
-GUARD &4000             \ Guard against assembling over screen memory
+ GUARD &4000            \ Guard against assembling over screen memory
 
 \ ******************************************************************************
 \
@@ -48,10 +48,10 @@ GUARD &4000             \ Guard against assembling over screen memory
 \
 \ ******************************************************************************
 
-D% = &D000              \ The address where the ship blueprints get moved to
+ D% = &D000             \ The address where the ship blueprints get moved to
                         \ after loading, so they go from &D000 to &F200
 
-OSCLI = &FFF7           \ The address for the OSCLI routine
+ OSCLI = &FFF7          \ The address for the OSCLI routine
 
 \ ******************************************************************************
 \
@@ -63,7 +63,7 @@ OSCLI = &FFF7           \ The address for the OSCLI routine
 \
 \ ******************************************************************************
 
-ORG &0090
+ ORG &0090
 
 .Z1
 
@@ -79,10 +79,10 @@ ORG &0090
 \
 \ ******************************************************************************
 
-CODE% = &2000
-LOAD% = &2000
+ CODE% = &2000
+ LOAD% = &2000
 
-ORG CODE%
+ ORG CODE%
 
 \ ******************************************************************************
 \
@@ -113,19 +113,19 @@ ORG CODE%
 
 MACRO MVE S%, D%, PA%
 
-  LDA #LO(S%)           \ Set Z1(1 0) = S%
-  STA Z1
-  LDA #HI(S%)
-  STA Z1+1
+ LDA #LO(S%)            \ Set Z1(1 0) = S%
+ STA Z1
+ LDA #HI(S%)
+ STA Z1+1
 
-  LDA #LO(D%)           \ Set Z1(1 0) = D%
-  STA Z2
-  LDA #HI(D%)
-  STA Z2+1
+ LDA #LO(D%)            \ Set Z1(1 0) = D%
+ STA Z2
+ LDA #HI(D%)
+ STA Z2+1
 
-  LDX #PA%              \ Set X = PA%
+ LDX #PA%               \ Set X = PA%
 
-  JSR MVBL              \ Call MVBL to copy X pages from S% to D%
+ JSR MVBL               \ Call MVBL to copy X pages from S% to D%
 
 ENDMACRO
 
@@ -304,23 +304,23 @@ ENDMACRO
 
 .DIALS
 
-INCBIN "1-source-files/images/P.DIALS2P.bin"
+ INCBIN "1-source-files/images/P.DIALS2P.bin"
 
 .DATE
 
-INCBIN "1-source-files/images/P.DATE2P.bin"
+ INCBIN "1-source-files/images/P.DATE2P.bin"
 
 .ASOFT
 
-INCBIN "1-source-files/images/Z.ACSOFT.bin"
+ INCBIN "1-source-files/images/Z.ACSOFT.bin"
 
 .ELITE
 
-INCBIN "1-source-files/images/Z.ELITE.bin"
+ INCBIN "1-source-files/images/Z.ELITE.bin"
 
 .CpASOFT
 
-INCBIN "1-source-files/images/Z.(C)ASFT.bin"
+ INCBIN "1-source-files/images/Z.(C)ASFT.bin"
 
 \ ******************************************************************************
 \
@@ -328,5 +328,5 @@ INCBIN "1-source-files/images/Z.(C)ASFT.bin"
 \
 \ ******************************************************************************
 
-PRINT "S.ELITEa ", ~CODE%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD%
-SAVE "3-assembled-output/ELITEa.bin", CODE%, P%, LOAD%
+ PRINT "S.ELITEa ", ~CODE%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD%
+ SAVE "3-assembled-output/ELITEa.bin", CODE%, P%, LOAD%
