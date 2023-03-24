@@ -26,13 +26,13 @@
 \
 \ ******************************************************************************
 
-INCLUDE "1-source-files/main-sources/elite-build-options.asm"
+ INCLUDE "1-source-files/main-sources/elite-build-options.asm"
 
-_SOURCE_DISC            = (_VARIANT = 1)
-_SNG45                  = (_VARIANT = 2)
-_EXECUTIVE              = (_VARIANT = 3)
+ _SOURCE_DISC           = (_VARIANT = 1)
+ _SNG45                 = (_VARIANT = 2)
+ _EXECUTIVE             = (_VARIANT = 3)
 
-GUARD &4000             \ Guard against assembling over screen memory
+ GUARD &4000            \ Guard against assembling over screen memory
 
 \ ******************************************************************************
 \
@@ -40,61 +40,61 @@ GUARD &4000             \ Guard against assembling over screen memory
 \
 \ ******************************************************************************
 
-VSCAN = 57              \ Defines the split position in the split-screen mode
+ VSCAN = 57             \ Defines the split position in the split-screen mode
 
-Y = 96                  \ The centre y-coordinate of the 256 x 192 space view
+ Y = 96                 \ The centre y-coordinate of the 256 x 192 space view
 
-YELLOW  = %00001111     \ Four mode 1 pixels of colour 1 (yellow)
-RED     = %11110000     \ Four mode 1 pixels of colour 2 (red, magenta or white)
-CYAN    = %11111111     \ Four mode 1 pixels of colour 3 (cyan or white)
-GREEN   = %10101111     \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
-WHITE   = %11111010     \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
-MAGENTA = RED           \ Four mode 1 pixels of colour 2 (red, magenta or white)
-DUST    = WHITE         \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+ YELLOW  = %00001111    \ Four mode 1 pixels of colour 1 (yellow)
+ RED     = %11110000    \ Four mode 1 pixels of colour 2 (red, magenta or white)
+ CYAN    = %11111111    \ Four mode 1 pixels of colour 3 (cyan or white)
+ GREEN   = %10101111    \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
+ WHITE   = %11111010    \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+ MAGENTA = RED          \ Four mode 1 pixels of colour 2 (red, magenta or white)
+ DUST    = WHITE        \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
 
-RED2    = %00000011     \ Two mode 2 pixels of colour 1    (red)
-GREEN2  = %00001100     \ Two mode 2 pixels of colour 2    (green)
-YELLOW2 = %00001111     \ Two mode 2 pixels of colour 3    (yellow)
-BLUE2   = %00110000     \ Two mode 2 pixels of colour 4    (blue)
-MAG2    = %00110011     \ Two mode 2 pixels of colour 5    (magenta)
-CYAN2   = %00111100     \ Two mode 2 pixels of colour 6    (cyan)
-WHITE2  = %00111111     \ Two mode 2 pixels of colour 7    (white)
-STRIPE  = %00100011     \ Two mode 2 pixels of colour 5, 1 (magenta/red)
+ RED2    = %00000011    \ Two mode 2 pixels of colour 1    (red)
+ GREEN2  = %00001100    \ Two mode 2 pixels of colour 2    (green)
+ YELLOW2 = %00001111    \ Two mode 2 pixels of colour 3    (yellow)
+ BLUE2   = %00110000    \ Two mode 2 pixels of colour 4    (blue)
+ MAG2    = %00110011    \ Two mode 2 pixels of colour 5    (magenta)
+ CYAN2   = %00111100    \ Two mode 2 pixels of colour 6    (cyan)
+ WHITE2  = %00111111    \ Two mode 2 pixels of colour 7    (white)
+ STRIPE  = %00100011    \ Two mode 2 pixels of colour 5, 1 (magenta/red)
 
-PARMAX = 15             \ The number of dashboard parameters transmitted with
+ PARMAX = 15            \ The number of dashboard parameters transmitted with
                         \ the #RDPARAMS and OSWRCH 137 <param> commands
 
-IRQ1V = &0204           \ The IRQ1V vector that we intercept to implement the
+ IRQ1V = &0204          \ The IRQ1V vector that we intercept to implement the
                         \ split-screen mode
 
-WRCHV = &020E           \ The WRCHV vector that we intercept to implement our
+ WRCHV = &020E          \ The WRCHV vector that we intercept to implement our
                         \ own custom OSWRCH commands for communicating over the
                         \ Tube
 
-WORDV = &020C           \ The WORDV vector that we intercept to implement our
+ WORDV = &020C          \ The WORDV vector that we intercept to implement our
                         \ own custom OSWORD commands for communicating over the
                         \ Tube
 
-RDCHV = &0210           \ The RDCHV vector that we intercept to add validation
+ RDCHV = &0210          \ The RDCHV vector that we intercept to add validation
                         \ when reading characters using OSRDCH
 
-Tina = &0B00            \ The address of the code block for the TINA command,
+ Tina = &0B00           \ The address of the code block for the TINA command,
                         \ which should start with "TINA" and then be followed by
                         \ code that executes on the I/O processor before the
                         \ main game code terminates
 
-VIA = &FE00             \ Memory-mapped space for accessing internal hardware,
+ VIA = &FE00            \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
                         \ known as SHEILA)
 
-NVOSWRCH = &FFCB        \ The address for the non-vectored OSWRCH routine
+ NVOSWRCH = &FFCB       \ The address for the non-vectored OSWRCH routine
 
-OSWRCH = &FFEE          \ The address for the OSWRCH routine
-OSBYTE = &FFF4          \ The address for the OSBYTE routine
-OSWORD = &FFF1          \ The address for the OSWORD routine
+ OSWRCH = &FFEE         \ The address for the OSWRCH routine
+ OSBYTE = &FFF4         \ The address for the OSBYTE routine
+ OSWORD = &FFF1         \ The address for the OSWORD routine
 
-CODE% = &2400           \ The assembly address of the main I/O processor code
-LOAD% = &2400           \ The load address of the main I/O processor code
+ CODE% = &2400          \ The assembly address of the main I/O processor code
+ LOAD% = &2400          \ The load address of the main I/O processor code
 
 \ ******************************************************************************
 \
@@ -108,7 +108,7 @@ LOAD% = &2400           \ The load address of the main I/O processor code
 
                         \ --- Mod: Code added for music: ---------------------->
 
-ORG &0070
+ ORG &0070
 
 .musicWorkspace
 
@@ -130,7 +130,7 @@ ORG &0070
 
                         \ --- End of added code ------------------------------->
 
-ORG &0080
+ ORG &0080
 
 .ZP
 
@@ -182,7 +182,7 @@ ORG &0080
                         \ block (i.e. OSSC(1 0) = (Y X) from the original call
                         \ in the I/O processor)
 
-ORG &0090
+ ORG &0090
 
 .XX15
 
@@ -256,7 +256,7 @@ ORG &0090
 \
 \ ******************************************************************************
 
-ORG &2300
+ ORG &2300
 
 .TABLE
 
@@ -295,9 +295,9 @@ ORG &2300
 \
 \ ******************************************************************************
 
-ORG CODE%
+ ORG CODE%
 
-FONT% = P% DIV 256
+ FONT% = P% DIV 256
 
 IF _SNG45 OR _SOURCE_DISC
  INCBIN "1-source-files/fonts/P.FONT.bin"
@@ -533,11 +533,11 @@ ENDIF
 
 .ylookup
 
-FOR I%, 0, 255
+ FOR I%, 0, 255
 
- EQUB &40 + ((I% DIV 8) * 2)
+  EQUB &40 + ((I% DIV 8) * 2)
 
-NEXT
+ NEXT
 
 \ ******************************************************************************
 \
@@ -8469,7 +8469,7 @@ ENDMACRO
 \
 \ ******************************************************************************
 
-CPU 1                   \ Switch to 65C02 assembly, because although this
+ CPU 1                  \ Switch to 65C02 assembly, because although this
                         \ routine forms part of the code that runs on the 6502
                         \ CPU of the BBC Micro I/O processor, the do65C02
                         \ routine gets transmitted across the Tube to the
@@ -8553,9 +8553,9 @@ CPU 1                   \ Switch to 65C02 assembly, because although this
 
 .end65C02
 
-protlen = end65C02 - do65C02
+ protlen = end65C02 - do65C02
 
-CPU 0                   \ Switch back to normal 6502 asembly
+ CPU 0                  \ Switch back to normal 6502 asembly
 
 \ ******************************************************************************
 \
@@ -9036,13 +9036,13 @@ CPU 0                   \ Switch back to normal 6502 asembly
 \
 \ ******************************************************************************
 
-PRINT "I.CODE"
-PRINT "Assembled at ", ~CODE%
-PRINT "Ends at ", ~P%
-PRINT "Code size is ", ~(P% - CODE%)
-PRINT "Execute at ", ~LOAD%
-PRINT "Reload at ", ~LOAD%
-PRINT "protlen = ", ~protlen
+ PRINT "I.CODE"
+ PRINT "Assembled at ", ~CODE%
+ PRINT "Ends at ", ~P%
+ PRINT "Code size is ", ~(P% - CODE%)
+ PRINT "Execute at ", ~LOAD%
+ PRINT "Reload at ", ~LOAD%
+ PRINT "protlen = ", ~protlen
 
-PRINT "S.I.CODE ", ~CODE%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD%
-SAVE "3-assembled-output/I.CODE.bin", CODE%, P%, LOAD%
+ PRINT "S.I.CODE ", ~CODE%, " ", ~P%, " ", ~LOAD%, " ", ~LOAD%
+ SAVE "3-assembled-output/I.CODE.bin", CODE%, P%, LOAD%

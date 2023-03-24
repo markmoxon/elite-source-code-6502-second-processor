@@ -31,11 +31,11 @@
 \
 \ ******************************************************************************
 
-INCLUDE "1-source-files/main-sources/elite-build-options.asm"
+ INCLUDE "1-source-files/main-sources/elite-build-options.asm"
 
-_SOURCE_DISC            = (_VARIANT = 1)
-_SNG45                  = (_VARIANT = 2)
-_EXECUTIVE              = (_VARIANT = 3)
+ _SOURCE_DISC           = (_VARIANT = 1)
+ _SNG45                 = (_VARIANT = 2)
+ _EXECUTIVE             = (_VARIANT = 3)
 
 IF _SNG45 OR _EXECUTIVE
  PUTFILE "3-assembled-output/ELITE.bin", "ELITE", &FF1FDC, &FF2085
@@ -43,7 +43,7 @@ ELIF _SOURCE_DISC
  PUTFILE "3-assembled-output/ELITE.bin", "ELITE", &FF2000, &FF2085
 ENDIF
 
-PUTFILE "3-assembled-output/ELITEa.bin", "I.ELITEa", &FF2000, &FF2000
+ PUTFILE "3-assembled-output/ELITEa.bin", "I.ELITEa", &FF2000, &FF2000
 
 IF _SNG45 OR _SOURCE_DISC
  PUTFILE "3-assembled-output/I.CODE.bin", "I.CODE", &FF2400, &FF2C89
@@ -65,10 +65,10 @@ ELSE
  ENDIF
 ENDIF
 
-PUTFILE "3-assembled-output/README.txt", "README", &FFFFFF, &FFFFFF
+ PUTFILE "3-assembled-output/README.txt", "README", &FFFFFF, &FFFFFF
 
-PUTFILE "1-source-files/other-files/E.MAX.bin", "E.MAX", &000000, &000000
+ PUTFILE "1-source-files/other-files/E.MAX.bin", "E.MAX", &000000, &000000
 
-PUTFILE "1-source-files/boot-files/$.!BOOT.bin", "!BOOT", &FFFFFF, &FFFFFF
-PUTBASIC "1-source-files/music/load-music.bas", "ELITEM"
-PUTFILE "1-source-files/music/elite-music-6502sp.rom", "MUSIC", &FF8000, &FF8000
+ PUTFILE "1-source-files/boot-files/$.!BOOT.bin", "!BOOT", &FFFFFF, &FFFFFF
+ PUTBASIC "1-source-files/music/load-music.bas", "ELITEM"
+ PUTFILE "1-source-files/music/elite-music-6502sp.rom", "MUSIC", &FF8000, &FF8000
