@@ -10,5 +10,7 @@
 Copyright (c) Acornsoft 1985
 
 See www.bbcelite.com for details
+
+Build: 2023-03-14 15:17:13
 ---------------------------------------
 

@@ -41205,7 +41205,12 @@ Saving file '3-assembled-output/ELITEa.bin'
      0100   53 65 65 ...
      0120   0A
      0121   0D
-     0122   2D 2D 2D ...
-     0149   0A
-     014A   0D
+     0122   0A
+     0123   0D
+     0124   42 75 69 ...
+     013E   0A
+     013F   0D
+     0140   2D 2D 2D ...
+     0167   0A
+     0168   0D
 Saving file '3-assembled-output/README.txt'
