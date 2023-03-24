@@ -41,13 +41,13 @@
 \
 \ ******************************************************************************
 
-INCLUDE "1-source-files/main-sources/elite-build-options.asm"
+ INCLUDE "1-source-files/main-sources/elite-build-options.asm"
 
-_SOURCE_DISC            = (_VARIANT = 1)
-_SNG45                  = (_VARIANT = 2)
-_EXECUTIVE              = (_VARIANT = 3)
+ _SOURCE_DISC           = (_VARIANT = 1)
+ _SNG45                 = (_VARIANT = 2)
+ _EXECUTIVE             = (_VARIANT = 3)
 
-GUARD &F800             \ Guard against assembling over MOS memory
+ GUARD &F800             \ Guard against assembling over MOS memory
 
 \ ******************************************************************************
 \
@@ -55,10 +55,10 @@ GUARD &F800             \ Guard against assembling over MOS memory
 \
 \ ******************************************************************************
 
-CODE% = &1000           \ The address where the the main game code file (P.CODE)
+ CODE% = &1000          \ The address where the the main game code file (P.CODE)
                         \ is run in the parasite
 
-LOAD% = &1000           \ The load address of the main game code file, which is
+ LOAD% = &1000          \ The load address of the main game code file, which is
                         \ the same as the load address as it doesn't get moved
                         \ after loading
 
@@ -68,7 +68,7 @@ LOAD% = &1000           \ The load address of the main game code file, which is
 \
 \ ******************************************************************************
 
-ORG CODE%
+ ORG CODE%
 
 IF _MATCH_ORIGINAL_BINARIES
 
@@ -94,67 +94,68 @@ ENDIF
 
 .elitea
 
-PRINT "elitea = ", ~P%
-INCBIN "3-assembled-output/ELTA.bin"
+ PRINT "elitea = ", ~P%
+ INCBIN "3-assembled-output/ELTA.bin"
 
 .eliteb
 
-PRINT "eliteb = ", ~P%
-INCBIN "3-assembled-output/ELTB.bin"
+ PRINT "eliteb = ", ~P%
+ INCBIN "3-assembled-output/ELTB.bin"
 
 .elitec
 
-PRINT "elitec = ", ~P%
-INCBIN "3-assembled-output/ELTC.bin"
+ PRINT "elitec = ", ~P%
+ INCBIN "3-assembled-output/ELTC.bin"
 
 .elited
 
-PRINT "elited = ", ~P%
-INCBIN "3-assembled-output/ELTD.bin"
+ PRINT "elited = ", ~P%
+ INCBIN "3-assembled-output/ELTD.bin"
 
 .elitee
 
-PRINT "elitee = ", ~P%
-INCBIN "3-assembled-output/ELTE.bin"
+ PRINT "elitee = ", ~P%
+ INCBIN "3-assembled-output/ELTE.bin"
 
 .elitef
 
-PRINT "elitef = ", ~P%
-INCBIN "3-assembled-output/ELTF.bin"
+ PRINT "elitef = ", ~P%
+ INCBIN "3-assembled-output/ELTF.bin"
 
 .eliteg
 
-PRINT "eliteg = ", ~P%
-INCBIN "3-assembled-output/ELTG.bin"
+ PRINT "eliteg = ", ~P%
+ INCBIN "3-assembled-output/ELTG.bin"
 
 .eliteh
 
-PRINT "eliteh = ", ~P%
-INCBIN "3-assembled-output/ELTH.bin"
+ PRINT "eliteh = ", ~P%
+ INCBIN "3-assembled-output/ELTH.bin"
 
 .elitei
 
-PRINT "elitei = ", ~P%
-INCBIN "3-assembled-output/ELTI.bin"
+ PRINT "elitei = ", ~P%
+ INCBIN "3-assembled-output/ELTI.bin"
 
 .elitej
 
-PRINT "elitej = ", ~P%
-INCBIN "3-assembled-output/ELTJ.bin"
+ PRINT "elitej = ", ~P%
+ INCBIN "3-assembled-output/ELTJ.bin"
 
-F% = P%
-PRINT "F% = ", ~F%
-PRINT "P% = ", ~P%
+ F% = P%
+
+ PRINT "F% = ", ~F%
+ PRINT "P% = ", ~P%
 
 .words
 
-PRINT "words = ", ~P%
-INCBIN "3-assembled-output/WORDS.bin"
+ PRINT "words = ", ~P%
+ INCBIN "3-assembled-output/WORDS.bin"
 
 .ships
 
-PRINT "ships = ", ~P%
-INCBIN "3-assembled-output/SHIPS.bin"
+ PRINT "ships = ", ~P%
+ INCBIN "3-assembled-output/SHIPS.bin"
 
 IF _MATCH_ORIGINAL_BINARIES
 
@@ -180,6 +181,6 @@ ENDIF
 \
 \ ******************************************************************************
 
-PRINT "P% = ", ~P%
-PRINT "S.P.CODE ", ~LOAD%, ~(F% + &0400 + &2200), " ", ~LOAD%, ~LOAD%
-SAVE "3-assembled-output/P.CODE.unprot.bin", CODE%, (F% + &0400 + &2200), LOAD%
+ PRINT "P% = ", ~P%
+ PRINT "S.P.CODE ", ~LOAD%, ~(F% + &0400 + &2200), " ", ~LOAD%, ~LOAD%
+ SAVE "3-assembled-output/P.CODE.unprot.bin", CODE%, (F% + &0400 + &2200), LOAD%
