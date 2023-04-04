@@ -7300,7 +7300,7 @@ IF _MATCH_ORIGINAL_BINARIES
 
 ELSE
 
-  SKIP 256              \ The ball line heap for storing x-coordinates (see the
+ SKIP 256               \ The ball line heap for storing x-coordinates (see the
                         \ deep dive on "The ball line heap" for details)
 
 ENDIF
@@ -7329,7 +7329,7 @@ IF _MATCH_ORIGINAL_BINARIES
 
 ELSE
 
-  SKIP 256              \ The ball line heap for storing y-coordinates (see the
+ SKIP 256               \ The ball line heap for storing y-coordinates (see the
                         \ deep dive on "The ball line heap" for details)
 
 ENDIF
@@ -7972,7 +7972,7 @@ IF _MATCH_ORIGINAL_BINARIES
 
 ELSE
 
-  SKIP 256
+ SKIP 256
 
 ENDIF
 
@@ -8355,7 +8355,7 @@ IF _MATCH_ORIGINAL_BINARIES
 
 ELSE
 
-  SKIP 256              \ The pixel buffer to send with this command
+ SKIP 256               \ The pixel buffer to send with this command
 
 ENDIF
 
@@ -35515,7 +35515,7 @@ IF _MATCH_ORIGINAL_BINARIES
 
 ELSE
 
-  ALIGN 256             \ Align the log tables so they start on page boundaries
+ ALIGN 256              \ Align the log tables so they start on page boundaries
 
 ENDIF
 
