@@ -308,7 +308,31 @@ By default the build process builds the SNG45 variant, but you can build a speci
 
 You can add `variant=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 variant, though that's the default value so it isn't necessary.
 
-The verification checksums for this version are shown above.
+The verification checksums for this version are as follows:
+
+```
+Results for variant: sng45
+[--originals--]  [---output----]
+Checksum   Size  Checksum   Size  Match  Filename
+-----------------------------------------------------------
+ffdb229a    788  ffdb229a    788   Yes   ELITE.bin
+e78cb0cf   5769  e78cb0cf   5769   Yes   ELITEa.bin
+a95bc864   2666  a95bc864   2666   Yes   ELTA.bin
+99c700a0   3096  99c700a0   3096   Yes   ELTB.bin
+681bae80   3290  681bae80   3290   Yes   ELTC.bin
+c395ca71   3336  c395ca71   3336   Yes   ELTD.bin
+a315bf38   2708  a315bf38   2708   Yes   ELTE.bin
+5fc1be4a   3957  5fc1be4a   3957   Yes   ELTF.bin
+6ced0040   3582  6ced0040   3582   Yes   ELTG.bin
+c34e877a   1427  c34e877a   1427   Yes   ELTH.bin
+6e59d3e2   1411  6e59d3e2   1411   Yes   ELTI.bin
+a5dfbfdd   3586  a5dfbfdd   3586   Yes   ELTJ.bin
+ee25ce2a   6454  ee25ce2a   6454   Yes   I.CODE.bin
+9b6480bb  38799  9b6480bb  38799   Yes   P.CODE.bin
+5cfd1851  38799  5cfd1851  38799   Yes   P.CODE.unprot.bin
+2580d019   8460  2580d019   8460   Yes   SHIPS.bin
+fc481d3e   1024  fc481d3e   1024   Yes   WORDS.bin
+```
 
 ### Building the source disc variant
 
