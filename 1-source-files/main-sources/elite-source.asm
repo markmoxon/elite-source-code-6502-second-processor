@@ -35380,7 +35380,7 @@ ENDMACRO
 \ &39, and so on. This means that the other locations - i.e. &1A to &1F, &2A to
 \ &2F and so on - aren't used by the lookup table, but the MOS doesn't let this
 \ space go to waste; instead, those gaps contain MOS code, which is replicated
-\ below as TRANTABLE contains a copy of this entire block of the MOS, not just
+\ below as the table contains a copy of this entire block of the MOS, not just
 \ the table entries.
 \
 \ This table allows code running on the parasite to convert internal key numbers
@@ -38451,7 +38451,8 @@ ENDIF
  ADC #4                 \ next edge
  STA V
 
- BCC ll81               \ If the above addition didn't overflow, jump to ll81
+ BCC ll81               \ If the above addition didn't overflow, jump to ll81 to
+                        \ skip the following instruction
 
  INC V+1                \ Otherwise increment the high byte of V(1 0), as we
                         \ just moved the V(1 0) pointer past a page boundary
