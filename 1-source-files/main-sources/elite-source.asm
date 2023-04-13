@@ -15417,6 +15417,9 @@ ENDIF
 
  LDA #0                 \ Set A = 0 so we can start building the answer in A
 
+\LDX #8                 \ This instruction is commented out in the original
+                        \ source
+
  TAX                    \ Copy A into X. There is a comment in the original
                         \ source here that says "just in case", which refers to
                         \ the MU11 routine in the cassette and disc versions,
@@ -15874,9 +15877,10 @@ ENDIF
                         \ the same results as the loop versions, just in case
                         \ something out there relies on MULT1 returning X = 0
 
-\MUL4                   \ These instructions are commented out in the original
-\BCC P%+4               \ source. They contain the original loop version of the
-\ADC T1                 \ code that's used in the disc and cassette versions
+\.MUL4                  \ These instructions are commented out in the original
+\                       \ source. They contain the original loop version of the
+\BCC P%+4               \ code that's used in the disc and cassette versions
+\ADC T1
 \ROR A
 \ROR P
 \DEX
@@ -15885,6 +15889,7 @@ ENDIF
 \ROR P
 \ORA T
 \RTS
+\
 \.mu10
 \STA P
 \RTS
@@ -15894,8 +15899,7 @@ ENDIF
                         \ cassette and disc versions of Elite the following is
                         \ done with a loop, but it is marginally faster to
                         \ unroll the loop and have seven copies of the code,
-                        \ though it does take up a bit more memory (though that
-                        \ isn't a concern when you have a 6502 Second Processor)
+                        \ though it does take up a bit more memory
 
  BCC P%+4               \ If C (i.e. the next bit from P) is set, do the
  ADC T1                 \ addition for this bit of P:
@@ -16381,10 +16385,15 @@ ENDIF
 
 .DVID4
 
+\LDX #8                 \ This instruction is commented out in the original
+                        \ source
+
  ASL A                  \ Shift A left and store in P (we will build the result
  STA P                  \ in P)
 
  LDA #0                 \ Set A = 0 for us to build a remainder
+
+\.DVL4                  \ This label is commented out in the original source
 
                         \ We now repeat the following five instruction block
                         \ eight times, one for each bit in P. In the cassette
@@ -16559,6 +16568,8 @@ ENDIF
 
  LDA S                  \ Set A = |S|
  AND #%01111111
+
+\BMI DV9                \ This label is commented out in the original source
 
 .DVL6
 
@@ -16904,7 +16915,8 @@ ENDIF
 .ARCTAN
 
  LDA P                  \ Set T1 = P EOR Q, which will have the sign of P * Q
- EOR Q
+ EOR Q                  \
+\AND #%10000000         \ The AND is commented out in the original source
  STA T1
 
  LDA Q                  \ If Q = 0, jump to AR2 to return a right angle
@@ -16983,7 +16995,8 @@ ENDIF
 
  STA T                  \ Set A = 128 - A
  LDA #128               \
- SBC T                  \ The subtraction will work because we did a SEC before
+\SEC                    \ The SEC instruction is commented out in the original
+ SBC T                  \ source, and isn't required as we did a SEC before
                         \ calling AR3
 
  RTS                    \ Return from the subroutine
@@ -19883,6 +19896,11 @@ ENDIF
 
 .TT214
 
+\.TT214                 \ These instructions are commented out in the original
+\PHA                    \ source
+\JSR TT162
+\PLA
+
 .TT221
 
  JSR TT27               \ Print the text token in A
@@ -20984,6 +21002,9 @@ ENDIF
  INX                    \ We own a galactic hyperdrive, so X is &FF, so this
                         \ instruction sets X = 0
 
+\STX QQ8                \ These instructions are commented out in the original
+\STX QQ8+1              \ source
+
  STX GHYP               \ The galactic hyperdrive is a one-use item, so set GHYP
                         \ to 0 so we no longer have one fitted
 
@@ -21015,6 +21036,11 @@ ENDIF
 
  BPL G1                 \ Loop back for the next seed byte, until we have
                         \ rotated them all
+
+\JSR DORND              \ This instruction is commented out in the original
+                        \ source, and would set A and X to random numbers, so
+                        \ perhaps the original plan was to arrive in each new
+                        \ galaxy in a random place?
 
 .zZ
 
@@ -21864,6 +21890,9 @@ ENDIF
 
 .MJP
 
+\JSR CATLOD             \ This instruction is commented out in the original
+                        \ source
+
  LDA #3                 \ Clear the top part of the screen, draw a white border,
  JSR TT66               \ and set the current view type in QQ11 to 3
 
@@ -21990,6 +22019,11 @@ ENDIF
  CMP #253               \ If A >= 253 (0.78% chance) then jump to MJP to trigger
  BCS MJP                \ a mis-jump into witchspace
 
+\JSR TT111              \ This instruction is commented out in the original
+                        \ source. It finds the closest system to coordinates
+                        \ (QQ9, QQ10), but we don't need to do this as the
+                        \ crosshairs will already be on a system by this point
+
  JSR hyp1+3             \ Jump straight to the system at (QQ9, QQ10) without
                         \ first calculating which system is closest
 
@@ -21998,6 +22032,9 @@ ENDIF
  JSR SOLAR              \ Halve our legal status, update the missile indicators,
                         \ and set up data blocks and slots for the planet and
                         \ sun
+
+\JSR CATLOD             \ These instructions are commented out in the original
+\JSR LOMOD              \ source
 
  LDA QQ11               \ If the current view in QQ11 is not a space view (0) or
  AND #%00111111         \ one of the charts (64 or 128), return from the
@@ -22989,9 +23026,17 @@ ENDIF
 \.ref2                  \ These instructions are commented out in the original
 \LDY #187               \ source, but they would jump to pres in the EQSHP
 \JMP pres               \ routine with Y = 187, which would show the error:
-                        \ "LASER PRESENT" (this code was part of the refund
+\Belgium                \ "LASER PRESENT" (this code was part of the refund
                         \ bug in the disc version of Elite, which is why it is
                         \ commented out)
+                        \
+                        \ There is also a comment in the original source - the
+                        \ the solitary word "Belgium"
+                        \
+                        \ This is probably a reference to the Hitchhiker's Guide
+                        \ to the Galaxy, which states that Belgium is the
+                        \ galaxy's rudest word, so this no doubt reflects the
+                        \ authors' strong feelings on the refund bug
 
 .refund
 
@@ -24534,7 +24579,10 @@ ENDIF
 .NWSTARS
 
  LDA QQ11               \ If this is not a space view, jump to WPSHPS to skip
- BNE WPSHPS             \ the initialisation of the SX, SY and SZ tables
+\ORA MJ                 \ the initialisation of the SX, SY and SZ tables. The OR
+ BNE WPSHPS             \ instruction is commented out in the original source,
+                        \ but it would have the effect of also skipping the
+                        \ initialisation if we had mis-jumped into witchspace
 
 \ ******************************************************************************
 \
@@ -25278,6 +25326,10 @@ ENDIF
  STX NEWB               \ Set NEWB to %00000000, though this gets overridden by
                         \ the default flags from E% in NWSHP below
 
+\STX INWK+31            \ This instruction is commented out in the original
+                        \ source. It would set the exploding state and missile
+                        \ count to 0
+
  STX FRIN+1             \ Set the second slot in the FRIN table to 0, so when we
                         \ fall through into NWSHP below, the new station that
                         \ gets created will go into slot FRIN+1, as this will be
@@ -25505,10 +25557,11 @@ ENDIF
                         \ because INWK is in zero page, so INWK+34 = 0
 
  LDA INWK+33            \ Calculate INWK+33 - INF, again using 16-bit
- SBC INF                \ arithmetic, and put the result in (A Y), so the high
- TAY                    \ byte is in A and the low byte in Y. The subtraction
- LDA INWK+34            \ works because the previous subtraction will never
- SBC INF+1              \ underflow, so we know the C flag is set
+\SEC                    \ arithmetic, and put the result in (A Y), so the high
+ SBC INF                \ byte is in A and the low byte in Y. The SEC
+ TAY                    \ instruction is commented out in the original source;
+ LDA INWK+34            \ as the previous subtraction will never underflow, it
+ SBC INF+1              \ is superfluous
 
  BCC NW3+1              \ If we have an underflow from the subtraction, then
                         \ INF > INWK+33 and we definitely don't have enough
@@ -28306,6 +28359,10 @@ ENDIF
 
  LDA K+3                \ Fetch the sign of the result from K+3 (which we know
                         \ has zeroes in bits 0-6, so this just fetches the sign)
+
+\CLC                    \ This instruction is commented out in the original
+                        \ source. It would have no effect as we know the C flag
+                        \ is already clear, as we skipped past the BCS above
 
  BPL PL6                \ If the sign bit is clear and the result is positive,
                         \ then the result is already correct, so return from
@@ -34833,6 +34890,9 @@ ENDMACRO
  ITEM 176, -9, 't', 220, %00111111   \ 11 = Furs
  ITEM 32,  -1, 't',  53, %00000011   \ 12 = Minerals
  ITEM 97,  -1, 'k',  66, %00000111   \ 13 = Gold
+
+\EQUD &360A118          \ This data is commented out in the original source
+
  ITEM 171, -2, 'k',  55, %00011111   \ 14 = Platinum
  ITEM 45,  -1, 'g', 250, %00001111   \ 15 = Gem-Stones
  ITEM 53,  15, 't', 192, %00000111   \ 16 = Alien items
@@ -38699,6 +38759,9 @@ ENDIF
 
 .LL135
 
+\BNE LL139              \ This instruction is commented out in the original
+                        \ source
+
  LDA XX15+2             \ Set (S R) = (y1_hi y1_lo) - 192
  SEC                    \
  SBC #Y*2               \ starting with the low bytes
@@ -38782,6 +38845,8 @@ ENDIF
 
  LDA XX15               \ Set R = x1_lo
  STA R
+
+\.LL120                 \ This label is commented out in the original source
 
  JSR LL129              \ Call LL129 to do the following:
                         \
@@ -38995,9 +39060,10 @@ ENDIF
 
  TXA                    \ Otherwise negate (Y X) using two's complement by first
  EOR #%11111111         \ setting the low byte to ~X + 1
- ADC #1                 \
- TAX                    \ The addition works as we know the C flag is clear from
-                        \ when we passed through the BCS above
+\CLC                    \
+ ADC #1                 \ The CLC instruction is commented out in the original
+ TAX                    \ source. It would have no effect as we know the C flag
+                        \ is clear from when we passed through the BCS above
 
  TYA                    \ Then set the high byte to ~Y + C
  EOR #%11111111

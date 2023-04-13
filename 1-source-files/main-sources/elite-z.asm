@@ -7700,9 +7700,11 @@ ENDMACRO
 
  LDA DELTA              \ Fetch our ship's speed into A, in the range 0-40
 
- JSR DIL-1              \ Draw the speed indicator using a range of 0-31, and
-                        \ increment SC to point to the next indicator (the roll
-                        \ indicator)
+\LSR A                  \ Draw the speed indicator using a range of 0-31, and
+ JSR DIL-1              \ increment SC to point to the next indicator (the roll
+                        \ indicator). The LSR is commented out as it isn't
+                        \ required with a call to DIL-1, so perhaps this was
+                        \ originally a call to DIL that got optimised
 
 \ ******************************************************************************
 \
