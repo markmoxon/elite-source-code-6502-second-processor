@@ -9,8 +9,20 @@
 of Elite by Ian Bell and David Braben
 Copyright (c) Acornsoft 1985
 
+Sound routines by Kieran Connell and
+Simon Morris
+
+Original music by Aidan Bell and Julie
+Dunn (c) D. Braben and I. Bell 1985,
+ported from the C64 by Negative Charge
+
+Elite integration by Mark Moxon
+
+Sideways RAM detection and loading
+routines by Tricky and J.G.Harston
+
 See www.bbcelite.com for details
 
-Build: 2023-03-14 15:17:13
+Build: 2023-04-14 14:00:24
 ---------------------------------------
 

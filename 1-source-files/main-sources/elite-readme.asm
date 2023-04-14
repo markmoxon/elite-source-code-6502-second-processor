@@ -52,6 +52,27 @@
  EQUS "Copyright (c) Acornsoft 1985"
  EQUB 10, 13
  EQUB 10, 13
+ EQUS "Sound routines by Kieran Connell and"
+ EQUB 10, 13
+ EQUS "Simon Morris"
+ EQUB 10, 13
+ EQUB 10, 13
+ EQUS "Original music by Aidan Bell and Julie"
+ EQUB 10, 13
+ EQUS "Dunn (c) D. Braben and I. Bell 1985,"
+ EQUB 10, 13
+ EQUS "ported from the C64 by Negative Charge"
+ EQUB 10, 13
+ EQUB 10, 13
+ EQUS "Elite integration by Mark Moxon"
+ EQUB 10, 13
+ EQUB 10, 13
+ EQUS "Sideways RAM detection and loading"
+ EQUB 10, 13
+ EQUS "routines by Tricky and J.G.Harston"
+ EQUB 10, 13
+ EQUB 10, 13
+
  EQUS "See www.bbcelite.com for details"
  EQUB 10, 13
  EQUB 10, 13
