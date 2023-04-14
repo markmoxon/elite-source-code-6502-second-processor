@@ -52221,8 +52221,8 @@ ENDMACRO
  LDY LSNUM              \ Set Y to the offset in LSNUM, which points to the part
                         \ of the heap that we are overwriting with new points
 
- CPY LSNUM2             \ If LSNUM >= LSNUM2, then we have already redrawn all of
- BCS eras1              \ the lines from the old circle's ball line heap, so
+ CPY LSNUM2             \ If LSNUM >= LSNUM2, then we have already redrawn all
+ BCS eras1              \ of the lines from the old circle's ball line heap, so
                         \ skip the following
 
  JSR DrawPlanetLine     \ Erase the next planet line from the ball line heap
