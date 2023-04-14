@@ -36152,7 +36152,7 @@ ENDIF
  STA X2                 \ Store the x-coordinate of the ship dot in X1, as this
                         \ is where the dash starts
 
- JMP LLX30              \ Draw this edge using smooth animation, by first
+ JMP LSPUT              \ Draw this edge using smooth animation, by first
                         \ drawing the ship's new line and then erasing the
                         \ corresponding old line from the screen, and return
                         \ from the subroutine using a tail call
@@ -38641,7 +38641,7 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- JSR LLX30              \ Draw the laser line using smooth animation, by first
+ JSR LSPUT              \ Draw the laser line using smooth animation, by first
                         \ drawing the new laser line and then erasing the
                         \ corresponding old line from the screen
 
@@ -38837,7 +38837,7 @@ ENDIF
 
                         \ --- Mod: Code added for flicker-free ships: --------->
 
- JSR LLX30              \ Draw this edge using smooth animation, by first
+ JSR LSPUT              \ Draw this edge using smooth animation, by first
                         \ drawing the ship's new line and then erasing the
                         \ corresponding old line from the screen
 
@@ -39091,7 +39091,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: LLX30
+\       Name: LSPUT
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a ship line using smooth animation, by drawing the ship's new
@@ -39142,7 +39142,7 @@ ENDIF
 
                         \ --- Mod: Code added for flicker-free ships: --------->
 
-.LLX30
+.LSPUT
 
  LDY LSNUM              \ Set Y = LSNUM, to get the offset within the ship line
                         \ heap where we want to insert our new line

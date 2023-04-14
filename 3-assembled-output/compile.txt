@@ -13924,7 +13924,7 @@ Saving file '3-assembled-output/ELTF.bin'
      6624   91 66      STA (&66),Y
 .LL82
      6626   60         RTS
-.LLX30
+.LSPUT
      6627   A4 99      LDY &99
      6629   C4 9A      CPY &9A
      662B   08         PHP
