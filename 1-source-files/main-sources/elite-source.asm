@@ -23031,12 +23031,13 @@ ENDIF
                         \ commented out)
                         \
                         \ There is also a comment in the original source - the
-                        \ the solitary word "Belgium"
+                        \ solitary word "Belgium"
                         \
-                        \ This is probably a reference to the Hitchhiker's Guide
-                        \ to the Galaxy, which states that Belgium is the
-                        \ galaxy's rudest word, so this no doubt reflects the
-                        \ authors' strong feelings on the refund bug
+                        \ This is presumably a reference to the Hitchhiker's
+                        \ Guide to the Galaxy, which says that Belgium is the
+                        \ galaxy's most unspeakably rude word, so this no doubt
+                        \ reflects the authors' strong feelings on the refund
+                        \ bug
 
 .refund
 
