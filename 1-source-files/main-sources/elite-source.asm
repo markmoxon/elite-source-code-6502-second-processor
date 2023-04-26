@@ -47201,8 +47201,8 @@ ENDIF
 \ the table below).
 \
 \ In other words, Teorge, Arredi, Anreer and Lave have extended decription
-\ overrides descriptions that are always shown, while the rest only appear when
-\ mission 1 is in progress.
+\ overrides that are always shown, while the rest only appear when mission 1 is
+\ in progress.
 \
 \ The three variables work as follows:
 \
