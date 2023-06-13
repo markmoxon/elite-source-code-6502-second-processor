@@ -3485,7 +3485,7 @@ ENDIF
 .X1TB
 
  SKIP 256               \ The x-coordinates of the start points for character
-                        \ lines in the scroll text (as space coordinates)
+                        \ lines in the scroll text
 
 .Y1TB
 
@@ -11618,7 +11618,7 @@ ENDIF
  JSR NOISE              \ long beep to indicate a failed search
 
  LDA #215               \ Print extended token 215 ("{left align} UNKNOWN
- JMP DETOK              \ PLANET"), which will print on-screem as the left align
+ JMP DETOK              \ PLANET"), which will print on-screen as the left align
                         \ code disables justified text, and return from the
                         \ subroutine using a tail call
 
@@ -18686,7 +18686,7 @@ ENDIF
                         \ section
 
  LDA #193               \ Print recursive token 33 ("GROSS PRODUCTIVITY"),
- JSR TT68               \ followed by colon
+ JSR TT68               \ followed by a colon
 
  LDX QQ7                \ Fetch the 16-bit productivity value from QQ7 into
  LDY QQ7+1              \ (Y X)
