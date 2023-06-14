@@ -222,7 +222,7 @@ ENDIF
  EQUB 0, 0, 0           \
  EQUB 0, 0, 0           \ This is the "vertical sync position" register, which
                         \ defines the row number where the vertical sync pulse
-                        \ is fired. This is aleady set to 34 for mode 1 and 2,
+                        \ is fired. This is already set to 34 for mode 1 and 2,
                         \ so I'm not sure what this VDU sequence does,
                         \ especially as the register number has bit 7 set (it's
                         \ &87 rather than 7). More investigation needed!
@@ -273,8 +273,8 @@ ENDIF
 \
 \ The following macro is used to define the four sound envelopes used in the
 \ game. It uses OSWORD 8 to create an envelope using the 14 parameters in the
-\ the I%-th block of 14 bytes at location E%. This OSWORD call is the same as
-\ BBC BASIC's ENVELOPE command.
+\ I%-th block of 14 bytes at location E%. This OSWORD call is the same as BBC
+\ BASIC's ENVELOPE command.
 \
 \ See variable E% for more details of the envelopes themselves.
 \
