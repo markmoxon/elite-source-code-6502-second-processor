@@ -4876,8 +4876,9 @@ ENDIF
                         \   A       = %11111100
                         \   T AND A = %00111100
                         \
-                        \ so if we stick T AND A in screen memory, that's what
-                        \ we do here, setting A = A AND T
+                        \ So we can stick T AND A in screen memory to get the
+                        \ line we want, which is what we do here by setting
+                        \ A = A AND T
 
  AND S                  \ Apply the pixel mask in A to the four-pixel block of
                         \ coloured pixels in S, so we now know which bits to set
