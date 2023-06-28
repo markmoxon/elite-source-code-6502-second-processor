@@ -194,6 +194,9 @@ ENDIF
                         \ this variable is 0 in the original source, but this
                         \ appears to be a bug, as it should really be 26
 
+ RE = &23               \ The obfuscation byte used to hide the recursive tokens
+                        \ table from crackers viewing the binary code
+
  VE = &57               \ The obfuscation byte used to hide the extended tokens
                         \ table from crackers viewing the binary code
 
@@ -909,9 +912,9 @@ ENDIF
 MACRO CHAR x
 
  IF x = '`'
-   EQUB 39 EOR 35
+   EQUB 39 EOR RE
  ELSE
-   EQUB x EOR 35
+   EQUB x EOR RE
  ENDIF
 
 ENDMACRO
@@ -945,38 +948,38 @@ ENDMACRO
 
 MACRO TWOK t, k
 
- IF t = 'A' AND k = 'L' : EQUB 128 EOR 35 : ENDIF
- IF t = 'L' AND k = 'E' : EQUB 129 EOR 35 : ENDIF
- IF t = 'X' AND k = 'E' : EQUB 130 EOR 35 : ENDIF
- IF t = 'G' AND k = 'E' : EQUB 131 EOR 35 : ENDIF
- IF t = 'Z' AND k = 'A' : EQUB 132 EOR 35 : ENDIF
- IF t = 'C' AND k = 'E' : EQUB 133 EOR 35 : ENDIF
- IF t = 'B' AND k = 'I' : EQUB 134 EOR 35 : ENDIF
- IF t = 'S' AND k = 'O' : EQUB 135 EOR 35 : ENDIF
- IF t = 'U' AND k = 'S' : EQUB 136 EOR 35 : ENDIF
- IF t = 'E' AND k = 'S' : EQUB 137 EOR 35 : ENDIF
- IF t = 'A' AND k = 'R' : EQUB 138 EOR 35 : ENDIF
- IF t = 'M' AND k = 'A' : EQUB 139 EOR 35 : ENDIF
- IF t = 'I' AND k = 'N' : EQUB 140 EOR 35 : ENDIF
- IF t = 'D' AND k = 'I' : EQUB 141 EOR 35 : ENDIF
- IF t = 'R' AND k = 'E' : EQUB 142 EOR 35 : ENDIF
- IF t = 'A' AND k = '?' : EQUB 143 EOR 35 : ENDIF
- IF t = 'E' AND k = 'R' : EQUB 144 EOR 35 : ENDIF
- IF t = 'A' AND k = 'T' : EQUB 145 EOR 35 : ENDIF
- IF t = 'E' AND k = 'N' : EQUB 146 EOR 35 : ENDIF
- IF t = 'B' AND k = 'E' : EQUB 147 EOR 35 : ENDIF
- IF t = 'R' AND k = 'A' : EQUB 148 EOR 35 : ENDIF
- IF t = 'L' AND k = 'A' : EQUB 149 EOR 35 : ENDIF
- IF t = 'V' AND k = 'E' : EQUB 150 EOR 35 : ENDIF
- IF t = 'T' AND k = 'I' : EQUB 151 EOR 35 : ENDIF
- IF t = 'E' AND k = 'D' : EQUB 152 EOR 35 : ENDIF
- IF t = 'O' AND k = 'R' : EQUB 153 EOR 35 : ENDIF
- IF t = 'Q' AND k = 'U' : EQUB 154 EOR 35 : ENDIF
- IF t = 'A' AND k = 'N' : EQUB 155 EOR 35 : ENDIF
- IF t = 'T' AND k = 'E' : EQUB 156 EOR 35 : ENDIF
- IF t = 'I' AND k = 'S' : EQUB 157 EOR 35 : ENDIF
- IF t = 'R' AND k = 'I' : EQUB 158 EOR 35 : ENDIF
- IF t = 'O' AND k = 'N' : EQUB 159 EOR 35 : ENDIF
+ IF t = 'A' AND k = 'L' : EQUB 128 EOR RE : ENDIF
+ IF t = 'L' AND k = 'E' : EQUB 129 EOR RE : ENDIF
+ IF t = 'X' AND k = 'E' : EQUB 130 EOR RE : ENDIF
+ IF t = 'G' AND k = 'E' : EQUB 131 EOR RE : ENDIF
+ IF t = 'Z' AND k = 'A' : EQUB 132 EOR RE : ENDIF
+ IF t = 'C' AND k = 'E' : EQUB 133 EOR RE : ENDIF
+ IF t = 'B' AND k = 'I' : EQUB 134 EOR RE : ENDIF
+ IF t = 'S' AND k = 'O' : EQUB 135 EOR RE : ENDIF
+ IF t = 'U' AND k = 'S' : EQUB 136 EOR RE : ENDIF
+ IF t = 'E' AND k = 'S' : EQUB 137 EOR RE : ENDIF
+ IF t = 'A' AND k = 'R' : EQUB 138 EOR RE : ENDIF
+ IF t = 'M' AND k = 'A' : EQUB 139 EOR RE : ENDIF
+ IF t = 'I' AND k = 'N' : EQUB 140 EOR RE : ENDIF
+ IF t = 'D' AND k = 'I' : EQUB 141 EOR RE : ENDIF
+ IF t = 'R' AND k = 'E' : EQUB 142 EOR RE : ENDIF
+ IF t = 'A' AND k = '?' : EQUB 143 EOR RE : ENDIF
+ IF t = 'E' AND k = 'R' : EQUB 144 EOR RE : ENDIF
+ IF t = 'A' AND k = 'T' : EQUB 145 EOR RE : ENDIF
+ IF t = 'E' AND k = 'N' : EQUB 146 EOR RE : ENDIF
+ IF t = 'B' AND k = 'E' : EQUB 147 EOR RE : ENDIF
+ IF t = 'R' AND k = 'A' : EQUB 148 EOR RE : ENDIF
+ IF t = 'L' AND k = 'A' : EQUB 149 EOR RE : ENDIF
+ IF t = 'V' AND k = 'E' : EQUB 150 EOR RE : ENDIF
+ IF t = 'T' AND k = 'I' : EQUB 151 EOR RE : ENDIF
+ IF t = 'E' AND k = 'D' : EQUB 152 EOR RE : ENDIF
+ IF t = 'O' AND k = 'R' : EQUB 153 EOR RE : ENDIF
+ IF t = 'Q' AND k = 'U' : EQUB 154 EOR RE : ENDIF
+ IF t = 'A' AND k = 'N' : EQUB 155 EOR RE : ENDIF
+ IF t = 'T' AND k = 'E' : EQUB 156 EOR RE : ENDIF
+ IF t = 'I' AND k = 'S' : EQUB 157 EOR RE : ENDIF
+ IF t = 'R' AND k = 'I' : EQUB 158 EOR RE : ENDIF
+ IF t = 'O' AND k = 'N' : EQUB 159 EOR RE : ENDIF
 
 ENDMACRO
 
@@ -1005,7 +1008,7 @@ ENDMACRO
 
 MACRO CONT n
 
- EQUB n EOR 35
+ EQUB n EOR RE
 
 ENDMACRO
 
@@ -1049,7 +1052,7 @@ MACRO RTOK n
   t = n
  ENDIF
 
- EQUB t EOR 35
+ EQUB t EOR RE
 
 ENDMACRO
 
@@ -7714,7 +7717,7 @@ ENDIF
 \       Name: NLIN3
 \       Type: Subroutine
 \   Category: Drawing lines
-\    Summary: Print a title and a horizontal line at row 19 to box it in
+\    Summary: Print a title and draw a horizontal line at row 19 to box it in
 \
 \ ------------------------------------------------------------------------------
 \
@@ -23562,7 +23565,7 @@ ENDIF
                         \ return from the subroutine using a tail call
 
  DEX                    \ If token = 2, this is control code 2 (current system
- BEQ ypl                \ name), so jump to ypl to print the current system name 
+ BEQ ypl                \ name), so jump to ypl to print the current system name
                         \ and return from the subroutine using a tail call
 
  DEX                    \ If token > 3, skip the following instruction
@@ -24079,8 +24082,9 @@ ENDIF
                         \ which is the next character of this token that we
                         \ want to print
 
- EOR #35                \ Tokens are stored in memory having been EOR'd with 35
-                        \ (see variable QQ18 for details), so we repeat the
+ EOR #RE                \ Tokens are stored in memory having been EOR'd with the
+                        \ value of RE - which is 35 for all versions of Elite
+                        \ except for NES, where RE is 62 - so we repeat the
                         \ EOR to get the actual character to print
 
  JSR TT27               \ Print the text token in A, which could be a letter,
