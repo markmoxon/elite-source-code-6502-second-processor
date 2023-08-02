@@ -2294,9 +2294,9 @@ ENDIF
 .SNE
 
  FOR I%, 0, 31
- 
+
   N = ABS(SIN((I% / 64) * 2 * PI))
- 
+
   IF N >= 1
    B% = 255
   ELSE
@@ -3873,7 +3873,7 @@ ENDIF
                         \ used for up/down lasers, but they were dropped),
                         \ #20-21
 
- EQUB 22+(15 AND Q%)    \ CRGO = Cargo capacity, #22
+ EQUB 22 + (15 AND Q%)  \ CRGO = Cargo capacity, #22
 
  EQUB 0                 \ QQ20+0  = Amount of food in cargo hold, #23
  EQUB 0                 \ QQ20+1  = Amount of textiles in cargo hold, #24
@@ -3909,7 +3909,7 @@ ENDIF
 
  EQUD 0                 \ These four bytes appear to be unused, #47-50
 
- EQUB 3+(Q% AND 1)      \ NOMSL = Number of missiles, #51
+ EQUB 3 + (Q% AND 1)    \ NOMSL = Number of missiles, #51
 
  EQUB 0                 \ FIST = Legal status ("fugitive/innocent status"), #52
 
@@ -23572,11 +23572,11 @@ ENDIF
  BNE P%+5
 
  JMP cpl                \ This token is control code 3 (selected system name)
-                        \ so jump to cpl to print the selected system name 
+                        \ so jump to cpl to print the selected system name
                         \ and return from the subroutine using a tail call
 
  DEX                    \ If token = 4, this is control code 4 (commander
- BEQ cmn                \ name), so jump to cmm to print the commander name 
+ BEQ cmn                \ name), so jump to cmm to print the commander name
                         \ and return from the subroutine using a tail call
 
  DEX                    \ If token = 5, this is control code 5 (fuel, newline,
@@ -30914,9 +30914,9 @@ ENDIF
  STA INWK+6             \ 127, and store in byte #6 (z_lo)
 
  TXA                    \ Set A to the random number in X and keep bits 0-3 and
- AND #%10001111         \ the bit 7 to get a number between -15 and +15, and
- STA INWK+29            \ store in byte #29 (roll counter) to give our ship a
-                        \ gentle roll with damping
+ AND #%10001111         \ the sign in bit 7 to get a number between -15 and +15,
+ STA INWK+29            \ and store in byte #29 (roll counter) to give our ship
+                        \ a gentle roll with damping
 
  STY LASCT              \ Set the laser count to 127 to act as a counter in the
  LSR LASCT              \ D2 loop below, so this setting determines how long the
