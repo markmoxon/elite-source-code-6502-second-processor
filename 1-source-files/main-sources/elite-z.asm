@@ -5837,9 +5837,11 @@ ENDIF
 \
 \ This routine draws a line to the right, starting with the third pixel of the
 \ pixel row at screen address SC(1 0), and aborting if we bump into something
-\ that's already on-screen. HAL2 draws from the left edge of the screen to the
-\ halfway point, and then HAL3 takes over to draw from the halfway point across
-\ the right half of the screen.
+\ that's already on-screen.
+\
+\ HAL2 draws from the left edge of the screen to the halfway point, and then
+\ HAL3 takes over to draw from the halfway point across the right half of the
+\ screen.
 \
 \ ******************************************************************************
 
@@ -5899,6 +5901,16 @@ ENDIF
                         \ the high byte of SC(1 0) in SC+1 to point to the next
                         \ page (i.e. the right half of this screen row) and fall
                         \ into HAL3 to repeat the performance
+
+\ ******************************************************************************
+\
+\       Name: HAL3
+\       Type: Subroutine
+\   Category: Ship hangar
+\    Summary: Draw a hangar background line from left to right, stopping when it
+\             bumps into existing on-screen content
+\
+\ ******************************************************************************
 
 .HAL3
 
