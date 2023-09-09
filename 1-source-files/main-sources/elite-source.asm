@@ -635,7 +635,7 @@ ENDIF
 
 .QQ11
 
- SKIP 1                 \ The number of the current view:
+ SKIP 1                 \ The type of the current view:
                         \
                         \   0   = Space view
                         \   1   = Title screen
@@ -8925,7 +8925,7 @@ ENDIF
 
  AND #%01111111         \ If |x_hi| >= 120 then jump to KILL1 to recycle this
  CMP #120               \ particle, as it's gone off the side of the screen,
- BCS KILL1              \ and re-join at STC1 with the new particle
+ BCS KILL1              \ and rejoin at STC1 with the new particle
 
  LDA YY+1               \ Set Y1 and y_hi to the high byte of YY in YY+1, so
  STA SY,Y               \ the new x-coordinate is in (y_hi y_lo) and the high
@@ -8933,11 +8933,11 @@ ENDIF
 
  AND #%01111111         \ If |y_hi| >= 120 then jump to KILL1 to recycle this
  CMP #120               \ particle, as it's gone off the top or bottom of the
- BCS KILL1              \ screen, and re-join at STC1 with the new particle
+ BCS KILL1              \ screen, and rejoin at STC1 with the new particle
 
  LDA SZ,Y               \ If z_hi < 16 then jump to KILL1 to recycle this
  CMP #16                \ particle, as it's so close that it's effectively gone
- BCC KILL1              \ past us, and re-join at STC1 with the new particle
+ BCC KILL1              \ past us, and rejoin at STC1 with the new particle
 
  STA ZZ                 \ Set ZZ to the z-coordinate in z_hi
 
@@ -9268,11 +9268,11 @@ ENDIF
 
  AND #%01111111         \ If |y_hi| >= 110 then jump to KILL6 to recycle this
  CMP #110               \ particle, as it's gone off the top or bottom of the
- BCS KILL6              \ screen, and re-join at STC6 with the new particle
+ BCS KILL6              \ screen, and rejoin at STC6 with the new particle
 
  LDA SZ,Y               \ If z_hi >= 160 then jump to KILL6 to recycle this
  CMP #160               \ particle, as it's so far away that it's too far to
- BCS KILL6              \ see, and re-join at STC1 with the new particle
+ BCS KILL6              \ see, and rejoin at STC1 with the new particle
 
  STA ZZ                 \ Set ZZ to the z-coordinate in z_hi
 
@@ -14869,7 +14869,7 @@ ENDIF
 
  AND #%01111111         \ If |x_hi| >= 116 then jump to KILL2 to recycle this
  CMP #116               \ particle, as it's gone off the side of the screen,
- BCS KILL2              \ and re-join at STC2 with the new particle
+ BCS KILL2              \ and rejoin at STC2 with the new particle
 
  LDA YY+1               \ Set Y1 and y_hi to the high byte of YY in YY+1, so
  STA SY,Y               \ the new x-coordinate is in (y_hi y_lo) and the high
@@ -14877,7 +14877,7 @@ ENDIF
 
  AND #%01111111         \ If |y_hi| >= 116 then jump to ST5 to recycle this
  CMP #116               \ particle, as it's gone off the top or bottom of the
- BCS ST5                \ screen, and re-join at STC2 with the new particle
+ BCS ST5                \ screen, and rejoin at STC2 with the new particle
 
 .STC2
 
@@ -17227,7 +17227,7 @@ ENDIF
 .PDL1
 
  LDA RUPLA-1,Y          \ Fetch the Y-th byte from RUPLA-1 into A (we use
-                        \ RUPLA-1 because Y is looping from 26 to 1
+                        \ RUPLA-1 because Y is looping from 26 to 1)
 
  CMP ZZ                 \ If A doesn't match the system whose description we
  BNE PD2                \ are printing (in ZZ), jump to PD2 to keep looping
@@ -19159,7 +19159,7 @@ ENDIF
  BCC TT87               \ won't spill out of the bottom of the screen
 
  LDX QQ11               \ A >= 152, so we need to check whether this will fit in
-                        \ this view, so fetch the view number
+                        \ this view, so fetch the view type
 
  BMI TT87               \ If this is the Short-range Chart then the y-coordinate
                         \ is fine, so skip to TT87
@@ -20851,7 +20851,7 @@ ENDIF
                         \ system to the nearest system to (QQ9, QQ10), and jumps
                         \ back into this routine at TTX111 below
 
- AND #%11000000         \ If either bit 6 or 7 of the view number is set - so
+ AND #%11000000         \ If either bit 6 or 7 of the view type is set - so
  BNE P%+3               \ this is either the Short-range or Long-range Chart -
                         \ then skip the following instruction
 
@@ -22143,7 +22143,7 @@ ENDIF
 
  STA FIST               \ Update our legal status with the new value
 
- LDA #255               \ Set the view number in QQ11 to 255
+ LDA #255               \ Set the view type in QQ11 to 255
  STA QQ11
 
  JSR HFS1               \ Call HFS1 to draw 8 concentric rings to remove the
@@ -23041,7 +23041,7 @@ ENDIF
 \
 \   A                   The power of the new laser to be fitted
 \
-\   X                   The view number for fitting the new laser
+\   X                   The view number for fitting the new laser (0-3)
 \
 \ Returns:
 \
@@ -28689,7 +28689,7 @@ ENDIF
 \
 \ Part 12 of the main flight loop calls this routine to remove the ship that is
 \ currently being analysed by the flight loop. Once the ship is removed, it
-\ jumps back to MAL1 to re-join the main flight loop, with X pointing to the
+\ jumps back to MAL1 to rejoin the main flight loop, with X pointing to the
 \ same slot that we just cleared (and which now contains the next ship in the
 \ local bubble of universe).
 \
@@ -28711,7 +28711,7 @@ ENDIF
  LDX XSAV               \ Restore the current ship's slot number from XSAV,
                         \ which now points to the next ship in the bubble
 
- JMP MAL1               \ Jump to MAL1 to re-join the main flight loop at the
+ JMP MAL1               \ Jump to MAL1 to rejoin the main flight loop at the
                         \ start of the ship analysis loop
 
 \ ******************************************************************************
@@ -41272,11 +41272,8 @@ ENDIF
 \   X                   The space view to set:
 \
 \                         * 0 = front
-\
 \                         * 1 = rear
-\
 \                         * 2 = left
-\
 \                         * 3 = right
 \
 \ Other entry points:
