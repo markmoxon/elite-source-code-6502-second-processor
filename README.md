@@ -306,7 +306,19 @@ By default the build process builds the SNG45 variant, but you can build a speci
 
 ### Building the SNG45 variant
 
-You can add `variant=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 variant, though that's the default value so it isn't necessary.
+You can add `variant=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 variant, though that's the default value so it isn't necessary. In other words, you can build it like this:
+
+```
+make.bat encrypt verify variant=sng45
+```
+
+or this on a Mac or Linux:
+
+```
+make encrypt verify variant=sng45
+```
+
+This will produce a file called `elite-6502sp-sng45.NES` in the `5-compiled-game-discs` folder that contains the SNG45 variant.
 
 The verification checksums for this version are as follows:
 
