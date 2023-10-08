@@ -53,7 +53,7 @@ See the [introduction](#introduction) for more information, or jump straight int
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
 
-You can build the fully functioning game from this source. [Three variants](#building-different-variants-of-6502-second-processor-elite) are currently supported: the Acornsoft SNG45 release, the Executive version, and the version produced by the original source discs.
+You can build the fully functioning game from this source. [Three variants](#building-different-variants-of-6502-second-processor-elite) are currently supported: the Acornsoft SNG45 variant, the Executive version, and the version produced by the original source discs.
 
 It is a companion to the [bbcelite.com website](https://www.bbcelite.com), which contains all the code from this repository, but laid out in a much more human-friendly fashion. The links at the top of this page will take you to repositories for the other versions of Elite that are covered by this project.
 
@@ -296,7 +296,7 @@ Note that you should manually choose the correct platform in b2 (I intentionally
 
 This repository contains the source code for three different variants of 6502 Second Processor Elite:
 
-* The Acornsoft SNG45 release, which was the first appearence of 6502 Second Processor Elite, and the one included on all subsequent discs
+* The Acornsoft SNG45 variant, which was the first appearence of 6502 Second Processor Elite, and the one included on all subsequent discs
 
 * The variant produced by the source disc from Ian Bell's personal website, which was never released
 
