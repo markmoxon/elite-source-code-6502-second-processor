@@ -125,7 +125,7 @@ ENDIF
 \       Type: Variable
 \   Category: Screen mode
 \    Summary: VDU commands for setting the square mode 1 screen
-\  Deep dive: The split-screen mode
+\  Deep dive: The split-screen mode in BBC Micro Elite
 \             Drawing monochrome pixels in mode 4
 \
 \ ------------------------------------------------------------------------------
