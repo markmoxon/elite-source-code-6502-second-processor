@@ -37543,6 +37543,8 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      0096
 .SCH
      0097
+.TINA
+     0B00
 .TABLE
      2300
 .log
