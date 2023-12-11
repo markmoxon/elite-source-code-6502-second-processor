@@ -27,12 +27,15 @@ FOR P = 0 TO 2 STEP 2
 P%=CODE
 [OPT P
 SEI
+JSR ldaF4               \\ LDA &F4 \\ Store &F4 on stack
+PHA
 LDY #15                 \\ Unique values (-1) to find
 TYA                     \\ A can start anywhere less than 256-64 as it just needs to allow for enough numbers not to clash with rom, tst and uninitialised tst values
 .next_val
 LDX #15                 \\ Sideways bank
 ADC #1                  \\ Will inc mostly by 2, but doesn't matter
 .next_slot
+JSR stxF4               \\ STX &F4
 JSR stxRomSel           \\ STX RomSel
 JSR cmpTstaddr          \\ CMP tstaddr
 BEQ next_val
@@ -47,6 +50,7 @@ DEY
 BPL next_val
 LDX #0                  \\ Try to swap each rom value with a unique test value
 .swap
+JSR stxF4               \\ STX &F4
 JSR stxRomSel           \\ STX RomSel set RomSel as it will be needed to read, but is also sometimes used to select write
 LDA unique,X
 JSR staTstaddr          \\ STA tstaddr
@@ -56,6 +60,7 @@ BNE swap
 LDY #16                 \\ Count matching values and restore old values - reverse order to swapping is safe
 LDX #15
 .tst_restore
+JSR stxF4               \\ STX &F4
 JSR stxRomSel           \\ STX RomSel
 JSR ldaTstaddr          \\ LDA tstaddr
 CMP unique,X            \\ If it has changed, but is not this value, it will be picked up in a later bank
@@ -68,8 +73,9 @@ STX values,Y
 DEX
 BPL tst_restore
 STY values
-JSR ldaF4      \\ LDA &F4
-JSR staRomSel  \\ STA RomSelrestore original ROM
+PLA                     \\ Restore original value of &F4
+JSR staF4               \\ STA &F4
+JSR staRomSel           \\ STA RomSel \\ Restore original ROM
 CLI
 RTS
 
@@ -185,6 +191,20 @@ PLA:TAX
 PLA
 RTS
 
+.stxF4                  \\ STX &F4 in I/O
+STX f4Block+4
+PHA
+TXA:PHA
+TYA:PHA
+LDA #6
+LDX #f4Block MOD256
+LDY #f4Block DIV256
+JSR &FFF1
+PLA:TAY
+PLA:TAX
+PLA
+RTS
+
 .staFE30                \\ STA &FE30 in I/O
 STA fe30Block+4
 LDA #6
@@ -204,8 +224,8 @@ JMP &FFF1
 JSR ldaF4
 PHA
 LDA bank
-JSR staFE30
 JSR staF4
+JSR staFE30
 .SR1
 LDY #0
 LDA (fromAddr),Y
