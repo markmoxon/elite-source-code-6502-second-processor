@@ -545,7 +545,7 @@ ENDIF
 \
 \       Name: TVT3
 \       Type: Variable
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: Palette data for the mode 1 part of the screen (the top part)
 \
 \ ------------------------------------------------------------------------------
@@ -1146,7 +1146,7 @@ ENDIF
 \
 \       Name: DODIALS
 \       Type: Subroutine
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: Implement the #DODIALS <rows> command (show or hide the dashboard)
 \
 \ ------------------------------------------------------------------------------
@@ -1305,7 +1305,7 @@ ENDIF
 \
 \       Name: DOCOL
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Text
 \    Summary: Implement the #SETCOL <colour> command (set the current colour)
 \
 \ ------------------------------------------------------------------------------
@@ -6727,7 +6727,7 @@ ENDMACRO
 \
 \       Name: WSCAN
 \       Type: Subroutine
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: Implement the #wscn command (wait for the vertical sync)
 \
 \ ------------------------------------------------------------------------------
@@ -6804,7 +6804,7 @@ ENDMACRO
 \
 \       Name: cls
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Drawing the screen
 \    Summary: Clear the top part of the screen and draw a white border
 \
 \ ******************************************************************************
@@ -7346,7 +7346,7 @@ ENDMACRO
 \
 \       Name: TTX66
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Drawing the screen
 \    Summary: Clear the top part of the screen and draw a white border
 \
 \ ------------------------------------------------------------------------------
@@ -7612,7 +7612,7 @@ ENDMACRO
 \
 \       Name: CLYNS
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Drawing the screen
 \    Summary: Implement the #clyns command (clear the bottom of the screen)
 \
 \ ******************************************************************************
@@ -8407,7 +8407,7 @@ ENDMACRO
 \
 \       Name: TVT1
 \       Type: Variable
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: Palette data for the mode 2 part of the screen (the dashboard)
 \
 \ ------------------------------------------------------------------------------
@@ -8549,7 +8549,7 @@ ENDMACRO
 \
 \       Name: IRQ1
 \       Type: Subroutine
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: The main screen-mode interrupt handler (IRQ1V points here)
 \  Deep dive: The split-screen mode in BBC Micro Elite
 \
@@ -8703,7 +8703,7 @@ ENDMACRO
 \
 \       Name: SETVDU19
 \       Type: Subroutine
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: Implement the #SETVDU19 <offset> command (change mode 1 palette)
 \
 \ ------------------------------------------------------------------------------
