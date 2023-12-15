@@ -78,11 +78,6 @@
  RDCHV = &0210          \ The RDCHV vector that we intercept to add validation
                         \ when reading characters using OSRDCH
 
- Tina = &0B00           \ The address of the code block for the TINA command,
-                        \ which should start with "TINA" and then be followed by
-                        \ code that executes on the I/O processor before the
-                        \ main game code terminates
-
  VIA = &FE00            \ Memory-mapped space for accessing internal hardware,
                         \ such as the video ULA, 6845 CRTC and 6522 VIAs (also
                         \ known as SHEILA)
@@ -239,10 +234,37 @@
 
 \ ******************************************************************************
 \
+\       Name: TINA
+\       Type: Workspace
+\    Address: &0B00-&0BFF
+\   Category: Workspaces
+\    Summary: The code block for the TINA hook
+\  Deep dive: The TINA hook
+\
+\ ------------------------------------------------------------------------------
+\
+\ To use the TINA hook, this workspace should start with "TINA" and then be
+\ followed by code that executes on the I/O processor before the main game code
+\ terminates.
+\
+\ Other entry points:
+\
+\   TINA+4              The code to run if the TINA hook is enabled
+\
+\ ******************************************************************************
+
+ ORG &0B00
+
+.TINA
+
+ SKIP 4
+
+\ ******************************************************************************
+\
 \       Name: TABLE
 \       Type: Variable
 \   Category: Drawing lines
-\    Summary: The line buffer for line data transmited from the parasite
+\    Summary: The line buffer for line data transmitted from the parasite
 \
 \ ------------------------------------------------------------------------------
 \
@@ -288,7 +310,7 @@
 \
 \ The Executive version uses a different font to the standard OS, which is
 \ included in the P.FONTEX.bin file. This means all in-game text uses this new
-\ font, which is based on the 1960s Westminster font. Ths font style is similar
+\ font, which is based on the 1960s Westminster font. The font style is similar
 \ to the machine-readable font on cheques, and is in a style that we would now
 \ call "retro-futuristic" (though presumably it was just "futuristic" back in
 \ 1984).
@@ -342,7 +364,7 @@ IF _MATCH_ORIGINAL_BINARIES
 
 ELSE
 
-  SKIP 1
+ SKIP 1
 
  FOR I%, 1, 255
 
@@ -391,7 +413,7 @@ IF _MATCH_ORIGINAL_BINARIES
 
 ELSE
 
-  SKIP 1
+ SKIP 1
 
  FOR I%, 1, 255
 
@@ -441,10 +463,12 @@ ELSE
   B% = INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
 
   IF B% = 256
-   EQUB B%+1
+   N% = B%+1
   ELSE
-   EQUB B%
+   N% = B%
   ENDIF
+
+  EQUB N%
 
  NEXT
 
@@ -489,10 +513,12 @@ ELSE
   B% = INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
 
   IF B% = 256
-   EQUB B%+1
+   N% = B%+1
   ELSE
-   EQUB B%
+   N% = B%
   ENDIF
+
+  EQUB N%
 
  NEXT
 
@@ -549,7 +575,7 @@ ENDIF
 \ ------------------------------------------------------------------------------
 \
 \ The following table contains four different mode 1 palettes, each of which
-\ sets a four-colour palatte for the top part of the screen. Mode 1 supports
+\ sets a four-colour palette for the top part of the screen. Mode 1 supports
 \ four colours on-screen and in Elite colour 0 is always set to black, so each
 \ of the palettes in this table defines the three other colours (1 to 3).
 \
@@ -1025,8 +1051,8 @@ ENDIF
  STA notours+2
 
  LDA #LO(NWOSWD)        \ Disable interrupts and set WORDV to NWOSWD, so calls
- SEI                    \ calls to OSWORD are now handled by NWOSWD, which lets
- STA WORDV              \ us implement all our custom OSWORD commands
+ SEI                    \ to OSWORD are now handled by NWOSWD, which lets us
+ STA WORDV              \ implement all our custom OSWORD commands
  LDA #HI(NWOSWD)
  STA WORDV+1
 
@@ -1035,24 +1061,27 @@ ENDIF
  LDA #&FF               \ Set the text and graphics colour to cyan
  STA COL
 
- LDA Tina               \ If the contents of locations &0B00 to &0B03 are "TINA"
+ LDA TINA               \ If the contents of locations TINA to TINA+3 are "TINA"
  CMP #'T'               \ then keep going, otherwise jump to PUTBACK to point
  BNE PUTBACK            \ WRCHV to USOSWRCH, and then end the program, as from
- LDA Tina+1             \ now on the handlers pointed to by the vectors will
+ LDA TINA+1             \ now on the handlers pointed to by the vectors will
  CMP #'I'               \ handle everything
  BNE PUTBACK
- LDA Tina+2
+ LDA TINA+2
  CMP #'N'
  BNE PUTBACK
- LDA Tina+3
+ LDA TINA+3
  CMP #'A'
  BNE PUTBACK
 
- JSR Tina+4             \ &0B00 to &0B03 contains "TINA", so call the subroutine
-                        \ at &0B04. This allows us to add a hook to the startup
-                        \ process by populating page &B with TINA plus the code
-                        \ for a subroutine, and it will be called just before
-                        \ the setup code terminates on the I/O processor
+ JSR TINA+4             \ TINA to TINA+3 contains the string "TINA", so call the
+                        \ subroutine at TINA+4
+                        \
+                        \ This allows us to add a code hook into the start-up
+                        \ process by populating the TINW workspace at &0B00 with
+                        \ "TINA" followed by the code for a subroutine, and it
+                        \ will be called just before the setup code terminates
+                        \ on the I/O processor
 
                         \ Fall through into PUTBACK to point WRCHV to USOSWRCH,
                         \ and then end the program, as from now on the handlers
@@ -1947,7 +1976,7 @@ ENDIF
  INC SC+1               \ the high byte of SC(1 0), as this means we just moved
                         \ into the right half of the screen row
 
- LDA CTWOS+2,X          \ Refetch the mode 2 1-pixel byte, as we just overwrote
+ LDA CTWOS+2,X          \ Re-fetch the mode 2 1-pixel byte, as we just overwrote
                         \ A (the byte will still be the fifth or sixth byte from
                         \ the table, which is correct as we want to draw the
                         \ leftmost pixel in the next character along as the
@@ -2784,7 +2813,7 @@ ENDIF
  CLC                    \ Clear the C flag so it doesn't affect the additions
                         \ below
 
- BEQ LI120+6            \ If R = 2, jump to LI120+6 to to skip the first three
+ BEQ LI120+6            \ If R = 2, jump to LI120+6 to skip the first three
                         \ pixels but plot the last one
 
  BNE LI130+6            \ If we get here then R must be 3, so jump to LI130+6 to
@@ -3091,7 +3120,7 @@ ENDIF
  CLC                    \ Clear the C flag so it doesn't affect the additions
                         \ below
 
- BEQ LI220+6            \ If R = 2, jump to LI220+6 to to skip the first three
+ BEQ LI220+6            \ If R = 2, jump to LI220+6 to skip the first three
                         \ pixels but plot the last one
 
  BNE LI230+6            \ If we get here then R must be 3, so jump to LI230+6 to
@@ -4755,11 +4784,11 @@ ENDIF
 .HL1
 
  TXA                    \ Set T = bits 2-7 of X1, which will contain the
- AND #%11111100         \ the character number of the start of the line * 4
+ AND #%11111100         \ character number of the start of the line * 4
  STA T
 
  LDA X2                 \ Set A = bits 2-7 of X2, which will contain the
- AND #%11111100         \ the character number of the end of the line * 4
+ AND #%11111100         \ character number of the end of the line * 4
 
  SEC                    \ Set A = A - T, which will contain the number of
  SBC T                  \ character blocks we need to fill - 1 * 4
@@ -4921,8 +4950,9 @@ ENDIF
                         \   A       = %11111100
                         \   T AND A = %00111100
                         \
-                        \ so if we stick T AND A in screen memory, that's what
-                        \ we do here, setting A = A AND T
+                        \ So we can stick T AND A in screen memory to get the
+                        \ line we want, which is what we do here by setting
+                        \ A = A AND T
 
  AND S                  \ Apply the pixel mask in A to the four-pixel block of
                         \ coloured pixels in S, so we now know which bits to set
@@ -5080,8 +5110,8 @@ ENDIF
 \ It can draw two types of dot, depending on bits 0-2 of the dot's distance:
 \
 \   * Draw the dot using the dot's distance to determine both the dot's colour
-\     and size. This draws a a 1-pixel dot, 2-pixel dash or 4-pixel square in
-\     a colour that's determined by the distance (as per the colour table in
+\     and size. This draws a 1-pixel dot, 2-pixel dash or 4-pixel square in a
+\     colour that's determined by the distance (as per the colour table in
 \     PXCL). These kinds of dot are sent by the PIXEL3 routine in the parasite.
 \
 \   * Draw the dot using the dot's distance to determine the dot's size, either
@@ -5198,7 +5228,7 @@ ENDIF
  BMI PX3                \ greater than 127, jump to PX3 to plot a 1-pixel dot
 
  CMP #80                \ If the pixel's ZZ distance is < 80, then the dot is
- BCC PX2                \ pretty close, so jump to PX2 to to draw a four-pixel
+ BCC PX2                \ pretty close, so jump to PX2 to draw a four-pixel
                         \ square
 
  LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
@@ -5349,7 +5379,7 @@ ENDIF
  LDA P                  \ Fetch the pixel's distance into P
 
  CMP #80                \ If the pixel's ZZ distance is >= 80, then the dot is
- BCS PX6                \ a medium distance away, so jump to PX6 to to draw a
+ BCS PX6                \ a medium distance away, so jump to PX6 to draw a
                         \ single pixel
 
  LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
@@ -5543,7 +5573,7 @@ ENDIF
 
  ORA T                  \ If argument A was negative (and therefore S was also
                         \ negative) then make sure result A is negative by
-                        \ OR-ing the result with the sign bit from argument A
+                        \ OR'ing the result with the sign bit from argument A
                         \ (which we stored in T)
 
  RTS                    \ Return from the subroutine
@@ -5570,9 +5600,8 @@ ENDIF
 
                         \ At this point we have |A P| - |S R| in (A X), so we
                         \ need to check whether the subtraction above was the
-                        \ the right way round (i.e. that we subtracted the
-                        \ smaller absolute value from the larger absolute
-                        \ value)
+                        \ right way round (i.e. that we subtracted the smaller
+                        \ absolute value from the larger absolute value)
 
  BCS MU9                \ If |A| >= |S|, our subtraction was the right way
                         \ round, so jump to MU9 to set the sign
@@ -5593,7 +5622,7 @@ ENDIF
                         \ the correct addition)
 
  LDA #0                 \ Set A = 0 - A, which we can do this time using a
- SBC U                  \ a subtraction with the C flag clear
+ SBC U                  \ subtraction with the C flag clear
 
  ORA #%10000000         \ We now set the sign bit of A, so that the EOR on the
                         \ next line will give the result the opposite sign to
@@ -5715,7 +5744,7 @@ ENDIF
  LDA #%01000000         \ Now to draw the same line but from the right edge of
                         \ the screen, so set a pixel mask in A to check the
                         \ second pixel of the last byte, so we skip the 2-pixel
-                        \ scren border at the right edge of the screen
+                        \ screen border at the right edge of the screen
 
  LDY #248               \ Set Y = 248 so the call to HAS3 starts drawing the
                         \ line in the last byte of the screen row, at the right
@@ -5882,9 +5911,11 @@ ENDIF
 \
 \ This routine draws a line to the right, starting with the third pixel of the
 \ pixel row at screen address SC(1 0), and aborting if we bump into something
-\ that's already on-screen. HAL2 draws from the left edge of the screen to the
-\ halfway point, and then HAL3 takes over to draw from the halfway point across
-\ the right half of the screen.
+\ that's already on-screen.
+\
+\ HAL2 draws from the left edge of the screen to the halfway point, and then
+\ HAL3 takes over to draw from the halfway point across the right half of the
+\ screen.
 \
 \ ******************************************************************************
 
@@ -5943,7 +5974,17 @@ ENDIF
                         \ character block in this page of memory, so increment
                         \ the high byte of SC(1 0) in SC+1 to point to the next
                         \ page (i.e. the right half of this screen row) and fall
-                        \ into HAL3 to repeat the performamce
+                        \ into HAL3 to repeat the performance
+
+\ ******************************************************************************
+\
+\       Name: HAL3
+\       Type: Subroutine
+\   Category: Ship hangar
+\    Summary: Draw a hangar background line from left to right, stopping when it
+\             bumps into existing on-screen content
+\
+\ ******************************************************************************
 
 .HAL3
 
@@ -6445,6 +6486,8 @@ ENDMACRO
  LDX #1                 \ Call OSBYTE with A = 128 to fetch the 16-bit value
  LDA #128               \ from ADC channel 1 (the joystick X value), returning
  JSR OSBYTE             \ the value in (Y X)
+                        \
+                        \   * Channel 1 is the x-axis: 0 = right, 65520 = left
 
  TYA                    \ Copy Y to A, so the result is now in (A X)
 
@@ -6454,6 +6497,8 @@ ENDMACRO
  LDX #2                 \ Call OSBYTE with A = 128 to fetch the 16-bit value
  LDA #128               \ from ADC channel 2 (the joystick Y value), returning
  JSR OSBYTE             \ the value in (Y X)
+                        \
+                        \   * Channel 2 is the y-axis: 0 = down,  65520 = up
 
  TYA                    \ Copy Y to A, so the result is now in (A X)
 
@@ -6553,7 +6598,7 @@ ENDMACRO
 \
 \                         * All others: Call the standard OSWORD routine
 \
-\  (Y X)                The address of the associated OSWORD parameter block
+\   (Y X)               The address of the associated OSWORD parameter block
 \
 \ Other entry points:
 \
@@ -7286,7 +7331,7 @@ ENDMACRO
                         \ contents, then it's reversible (so reprinting the
                         \ same character in the same place will revert the
                         \ screen to what it looked like before we printed
-                        \ anything); this means that printing a white pixel on
+                        \ anything); this means that printing a white pixel
                         \ onto a white background results in a black pixel, but
                         \ that's a small price to pay for easily erasable text
 
@@ -7296,7 +7341,7 @@ ENDMACRO
                         \ We now repeat the process for the second batch of four
                         \ pixels in this character row
 
- LDA (Q),Y              \ Fetch the the bitmap for the Y-th row of the character
+ LDA (Q),Y              \ Fetch the bitmap for the Y-th row of the character
                         \ again
 
  AND #%00001111         \ This time we extract the low nibble of the character
@@ -7372,6 +7417,10 @@ ENDMACRO
 \ Clear the top part of the screen (the space view) and draw a white border
 \ along the top and sides.
 \
+\ Other entry points:
+\
+\   BOX                 Just draw the white border along the top and sides
+\
 \ ******************************************************************************
 
 .TTX66
@@ -7388,7 +7437,7 @@ ENDMACRO
                         \ memory
 
  CPX #&70               \ Loop back to keep clearing character rows until we
- BNE BOL1               \ have cleared up to &7000, which is where the dashoard
+ BNE BOL1               \ have cleared up to &7000, which is where the dashboard
                         \ starts
 
 .BOX
@@ -7503,7 +7552,7 @@ ENDMACRO
 \                       the zero-fill
 \
 \   Y                   The offset from (X SC) where we start zeroing, counting
-\                       up to to &FF
+\                       up to &FF
 \
 \   SC                  The low byte (i.e. the offset into the page) of the
 \                       starting point of the zero-fill
@@ -7755,9 +7804,11 @@ ENDMACRO
 
  LDA DELTA              \ Fetch our ship's speed into A, in the range 0-40
 
- JSR DIL-1              \ Draw the speed indicator using a range of 0-31, and
-                        \ increment SC to point to the next indicator (the roll
-                        \ indicator)
+\LSR A                  \ Draw the speed indicator using a range of 0-31, and
+ JSR DIL-1              \ increment SC to point to the next indicator (the roll
+                        \ indicator). The LSR is commented out as it isn't
+                        \ required with a call to DIL-1, so perhaps this was
+                        \ originally a call to DIL that got optimised
 
 \ ******************************************************************************
 \
@@ -8424,7 +8475,7 @@ ENDMACRO
 \
 \ ------------------------------------------------------------------------------
 \
-\ This palette is applied in the IRQ1 routine. If we have an eacape pod fitted,
+\ This palette is applied in the IRQ1 routine. If we have an escape pod fitted,
 \ then the first byte is changed to &30, which maps logical colour 3 to actual
 \ colour 0 (black) instead of colour 4 (blue).
 \
@@ -8555,7 +8606,7 @@ ENDMACRO
 
  protlen = end65C02 - do65C02
 
- CPU 0                  \ Switch back to normal 6502 asembly
+ CPU 0                  \ Switch back to normal 6502 assembly
 
 \ ******************************************************************************
 \
@@ -8563,12 +8614,12 @@ ENDMACRO
 \       Type: Subroutine
 \   Category: Screen mode
 \    Summary: The main screen-mode interrupt handler (IRQ1V points here)
-\  Deep dive: The split-screen mode
+\  Deep dive: The split-screen mode in BBC Micro Elite
 \
 \ ------------------------------------------------------------------------------
 \
 \ The main interrupt handler, which implements Elite's split-screen mode (see
-\ the deep dive on "The split-screen mode" for details).
+\ the deep dive on "The split-screen mode in BBC Micro Elite" for details).
 \
 \ IRQ1V is set to point to IRQ1 by the loading process.
 \
