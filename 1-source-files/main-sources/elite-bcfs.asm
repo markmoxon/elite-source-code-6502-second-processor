@@ -55,8 +55,8 @@
 \
 \ ******************************************************************************
 
- CODE% = &1000          \ The address where the the main game code file (P.CODE)
-                        \ is run in the parasite
+ CODE% = &1000          \ The address where the main game code file (P.CODE) is
+                        \ run in the parasite
 
  LOAD% = &1000          \ The load address of the main game code file, which is
                         \ the same as the load address as it doesn't get moved

@@ -125,7 +125,7 @@ ENDIF
 \       Type: Variable
 \   Category: Screen mode
 \    Summary: VDU commands for setting the square mode 1 screen
-\  Deep dive: The split-screen mode
+\  Deep dive: The split-screen mode in BBC Micro Elite
 \             Drawing monochrome pixels in mode 4
 \
 \ ------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ ENDIF
  EQUB 0, 0, 0           \
  EQUB 0, 0, 0           \ This is the "vertical sync position" register, which
                         \ defines the row number where the vertical sync pulse
-                        \ is fired. This is aleady set to 34 for mode 1 and 2,
+                        \ is fired. This is already set to 34 for mode 1 and 2,
                         \ so I'm not sure what this VDU sequence does,
                         \ especially as the register number has bit 7 set (it's
                         \ &87 rather than 7). More investigation needed!
@@ -273,8 +273,8 @@ ENDIF
 \
 \ The following macro is used to define the four sound envelopes used in the
 \ game. It uses OSWORD 8 to create an envelope using the 14 parameters in the
-\ the I%-th block of 14 bytes at location E%. This OSWORD call is the same as
-\ BBC BASIC's ENVELOPE command.
+\ I%-th block of 14 bytes at location E%. This OSWORD call is the same as BBC
+\ BASIC's ENVELOPE command.
 \
 \ See variable E% for more details of the envelopes themselves.
 \
@@ -565,10 +565,10 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: PLL1
+\       Name: PLL1 (Part 1 of 3)
 \       Type: Subroutine
 \   Category: Drawing planets
-\    Summary: Draw Saturn on the loading screen
+\    Summary: Draw Saturn on the loading screen (draw the planet)
 \  Deep dive: Drawing Saturn on the loading screen
 \
 \ ******************************************************************************
@@ -694,6 +694,16 @@ ENDIF
 
  BNE PLL1               \ Loop back to PLL1 until CNT+1 = 0
 
+\ ******************************************************************************
+\
+\       Name: PLL1 (Part 2 of 3)
+\       Type: Subroutine
+\   Category: Drawing planets
+\    Summary: Draw Saturn on the loading screen (draw the stars)
+\  Deep dive: Drawing Saturn on the loading screen
+\
+\ ******************************************************************************
+
                         \ The following loop iterates CNT2(1 0) times, i.e. &1DD
                         \ or 477 times, and draws the background stars on the
                         \ loading screen
@@ -749,6 +759,16 @@ ENDIF
  DEC CNT2+1             \ Decrement the counter in CNT2+1 (the high byte)
 
  BNE PLL2               \ Loop back to PLL2 until CNT2+1 = 0
+
+\ ******************************************************************************
+\
+\       Name: PLL1 (Part 3 of 3)
+\       Type: Subroutine
+\   Category: Drawing planets
+\    Summary: Draw Saturn on the loading screen (draw the rings)
+\  Deep dive: Drawing Saturn on the loading screen
+\
+\ ******************************************************************************
 
                         \ The following loop iterates CNT3(1 0) times, i.e. &333
                         \ or 819 times, and draws the rings around the loading
@@ -834,8 +854,8 @@ ENDIF
  CMP #16                \ If A >= 16, skip to PL1 to plot the pixel
  BCS PL1
 
- LDA ZP                 \ If ZP is positive (i.e. r5 < 128), jump down to PLC3 to
- BPL PLC3               \ skip to the next pixel
+ LDA ZP                 \ If ZP is positive (i.e. r5 < 128), jump down to PLC3
+ BPL PLC3               \ to skip to the next pixel
 
 .PL1
 
@@ -868,8 +888,8 @@ ENDIF
                         \   r6 = random number from 0 to 255
                         \   r7 = r5, squashed into -32 to 31
                         \
-                        \   x = r5 + r7
-                        \   y = r5
+                        \   x = r6 + r7
+                        \   y = r6
                         \
                         \   32 <= ((r6 + r7)^2 + r5^2 + r6^2) / 256 < 80
                         \
@@ -894,7 +914,7 @@ ENDIF
 \
 \       Name: DORND
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Maths (Arithmetic)
 \    Summary: Generate random numbers
 \  Deep dive: Generating random numbers
 \             Fixing ship positions

@@ -1,14 +1,14 @@
 # Fully documented source code for Elite on the BBC Micro with a 6502 Second Processor
 
-[BBC Micro (cassette)](https://github.com/markmoxon/cassette-elite-beebasm) | [BBC Micro (disc)](https://github.com/markmoxon/disc-elite-beebasm) | **6502 Second Processor** | [BBC Master](https://github.com/markmoxon/master-elite-beebasm) | [Acorn Electron](https://github.com/markmoxon/electron-elite-beebasm) | [Elite-A](https://github.com/markmoxon/elite-a-beebasm)
+[BBC Micro (cassette)](https://github.com/markmoxon/cassette-elite-beebasm) | [BBC Micro (disc)](https://github.com/markmoxon/disc-elite-beebasm) | **6502 Second Processor** | [BBC Master](https://github.com/markmoxon/master-elite-beebasm) | [Acorn Electron](https://github.com/markmoxon/electron-elite-beebasm) | [Elite-A](https://github.com/markmoxon/elite-a-beebasm) | [NES](https://github.com/markmoxon/nes-elite-beebasm)
 
 ![Screenshot of 6502 Second Processor Elite on the BBC Micro](https://www.bbcelite.com/images/github/Elite-Tube.png)
 
-This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
+This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained. It is literally the original source code, just heavily documented.
 
 It is a companion to the [bbcelite.com website](https://www.bbcelite.com).
 
-See the [introduction](#introduction) for more information.
+See the [introduction](#introduction) for more information, or jump straight into the [documented source code](1-source-files/main-sources).
 
 ## Contents
 
@@ -53,7 +53,7 @@ See the [introduction](#introduction) for more information.
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
 
-You can build the fully functioning game from this source. [Three variants](#building-different-variants-of-6502-second-processor-elite) are currently supported: the Acornsoft SNG45 release, the Executive version, and the version produced by the original source discs.
+You can build the fully functioning game from this source. [Three variants](#building-different-variants-of-6502-second-processor-elite) are currently supported: the Acornsoft SNG45 variant, the Executive version, and the version produced by the original source discs.
 
 It is a companion to the [bbcelite.com website](https://www.bbcelite.com), which contains all the code from this repository, but laid out in a much more human-friendly fashion. The links at the top of this page will take you to repositories for the other versions of Elite that are covered by this project.
 
@@ -296,7 +296,7 @@ Note that you should manually choose the correct platform in b2 (I intentionally
 
 This repository contains the source code for three different variants of 6502 Second Processor Elite:
 
-* The Acornsoft SNG45 release, which was the first appearence of 6502 Second Processor Elite, and the one included on all subsequent discs
+* The Acornsoft SNG45 variant, which was the first appearence of 6502 Second Processor Elite, and the one included on all subsequent discs
 
 * The variant produced by the source disc from Ian Bell's personal website, which was never released
 
@@ -306,9 +306,45 @@ By default the build process builds the SNG45 variant, but you can build a speci
 
 ### Building the SNG45 variant
 
-You can add `variant=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 variant, though that's the default value so it isn't necessary.
+You can add `variant=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 variant, though that's the default value so it isn't necessary. In other words, you can build it like this:
 
-The verification checksums for this version are shown above.
+```
+make.bat encrypt verify variant=sng45
+```
+
+or this on a Mac or Linux:
+
+```
+make encrypt verify variant=sng45
+```
+
+This will produce a file called `elite-6502sp-sng45.NES` in the `5-compiled-game-discs` folder that contains the SNG45 variant.
+
+The verification checksums for this version are as follows:
+
+```
+Results for variant: sng45
+[--originals--]  [---output----]
+Checksum   Size  Checksum   Size  Match  Filename
+-----------------------------------------------------------
+ffdb229a    788  ffdb229a    788   Yes   ELITE.bin
+e78cb0cf   5769  e78cb0cf   5769   Yes   ELITEa.bin
+a95bc864   2666  a95bc864   2666   Yes   ELTA.bin
+99c700a0   3096  99c700a0   3096   Yes   ELTB.bin
+681bae80   3290  681bae80   3290   Yes   ELTC.bin
+c395ca71   3336  c395ca71   3336   Yes   ELTD.bin
+a315bf38   2708  a315bf38   2708   Yes   ELTE.bin
+5fc1be4a   3957  5fc1be4a   3957   Yes   ELTF.bin
+6ced0040   3582  6ced0040   3582   Yes   ELTG.bin
+c34e877a   1427  c34e877a   1427   Yes   ELTH.bin
+6e59d3e2   1411  6e59d3e2   1411   Yes   ELTI.bin
+a5dfbfdd   3586  a5dfbfdd   3586   Yes   ELTJ.bin
+ee25ce2a   6454  ee25ce2a   6454   Yes   I.CODE.bin
+9b6480bb  38799  9b6480bb  38799   Yes   P.CODE.bin
+5cfd1851  38799  5cfd1851  38799   Yes   P.CODE.unprot.bin
+2580d019   8460  2580d019   8460   Yes   SHIPS.bin
+fc481d3e   1024  fc481d3e   1024   Yes   WORDS.bin
+```
 
 ### Building the source disc variant
 
@@ -420,7 +456,7 @@ The source files on the source disc do not build as they are; some massaging is 
 
 ### Producing byte-accurate binaries
 
-The `4-reference-binaries/<variant>/workspaces` folders (where `<variant>` is the variant) contain binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either intialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `4-reference-binaries/<variant>/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
+The `4-reference-binaries/<variant>/workspaces` folders (where `<variant>` is the variant) contain binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either initialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `4-reference-binaries/<variant>/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
 
 Here's an example of how these binaries are included, in this case for the `LBUF` workspace in the `ELTB` section:
 
@@ -439,7 +475,7 @@ IF _MATCH_ORIGINAL_BINARIES
 
 ELSE
 
-  SKIP 256
+ SKIP 256
 
 ENDIF
 ```
