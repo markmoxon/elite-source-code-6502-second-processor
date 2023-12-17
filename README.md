@@ -456,31 +456,76 @@ The source files on the source disc do not build as they are; some massaging is 
 
 ### Producing byte-accurate binaries
 
-The `4-reference-binaries/<variant>/workspaces` folders (where `<variant>` is the variant) contain binary files that match the workspaces in the original game binaries (a workspace being a block of memory, such as `LBUF` or `LSX2`). Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either initialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project, and that's what the binaries in the `4-reference-binaries/<variant>/workspaces` folder are for. These binaries are only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
+Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either initialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project. Workspace noise is only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
 
-Here's an example of how these binaries are included, in this case for the `LBUF` workspace in the `ELTB` section:
+Here's an example of how workspace noise is included, from the start of the ELITE G file in elite-source.asm:
 
 ```
-.LBUF
-
 IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ELTB-LBUF.bin"
+
+  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+  EQUB &FD, &08, &60, &A6, &83, &20, &68, &4B   \ unused and just contain random
+  EQUB &A6, &83, &4C, &D6, &12, &20, &C6, &4C   \ workspace noise left over from
+  EQUB &20, &76, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+  EQUB &08, &20, &82, &45, &A9, &06, &85, &4A
+  EQUB &A9, &81, &4C, &C1, &44, &A2, &FF, &E8
+  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+  EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
+  EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
+  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+  EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
+  EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
+  EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
+  EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &62
+  EQUB &45, &A9, &C8, &20, &C7, &57, &A4, &97
+  EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
+  EQUB &1F, &D0, &08, &AD, &A4, &08, &09
+
  ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ELTB-LBUF.bin"
+
+  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+  EQUB &FD, &08, &60, &A6, &83, &20, &8D, &4B   \ unused and just contain random
+  EQUB &A6, &83, &4C, &D8, &12, &20, &EB, &4C   \ workspace noise left over from
+  EQUB &20, &9B, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+  EQUB &08, &20, &A7, &45, &A9, &06, &85, &4A
+  EQUB &A9, &81, &4C, &E6, &44, &A2, &FF, &E8
+  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+  EQUB &F6, &8A, &0A, &A8, &B9, &86, &1A, &85
+  EQUB &05, &B9, &87, &1A, &85, &06, &A0, &20
+  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+  EQUB &97, &90
+
  ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ELTB-LBUF.bin"
+
+  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+  EQUB &FD, &08, &60, &A6, &83, &20, &62, &4B   \ unused and just contain random
+  EQUB &A6, &83, &4C, &D6, &12, &20, &C0, &4C   \ workspace noise left over from
+  EQUB &20, &70, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+  EQUB &08, &20, &7C, &45, &A9, &06, &85, &4A
+  EQUB &A9, &81, &4C, &BB, &44, &A2, &FF, &E8
+  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+  EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
+  EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
+  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+  EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
+  EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
+  EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
+  EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &5C
+  EQUB &45, &A9, &C8, &20, &BE, &57, &A4, &97
+  EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
+  EQUB &1F, &D0, &08, &AD, &A4, &08, &09, &02
+  EQUB &8D, &A4, &08, &E0, &0F, &F0, &08, &E0
+
  ENDIF
 
 ELSE
 
- SKIP 256
+ ALIGN 256              \ Align the log tables so they start on page boundaries
 
 ENDIF
 ```
-
-Note that the log tables in both the `ELTG` and `I.CODE` sections of the source are also included in the `workspaces` folder. This is because BBC BASIC calculates slightly different values for these tables compared to those calculated by BeebAsm. The `encrypt` target therefore loads the original BBC Micro versions of these log tables using the same approach as above, to ensure the output matches the originals, while the `build` target sticks with BeebAsm's built-in `LOG()` function and generates the tables as part of the build process.
 
 ---
 

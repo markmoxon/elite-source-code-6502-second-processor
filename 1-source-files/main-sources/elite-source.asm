@@ -2236,13 +2236,15 @@ ENDIF
 
 IF _SNG45
 
- EQUB 0, 0              \ These bytes appear to be unused and just contain noise
- EQUB &E4, &63, &A5
+ EQUB &00, &00          \ These bytes appear to be unused and just contain
+ EQUB &E4, &63          \ random workspace noise left over from the BBC Micro
+ EQUB &A5               \ assembly process
 
 ELIF _EXECUTIVE
 
- EQUB 0, 0              \ These bytes appear to be unused and just contain noise
- EQUB &A5
+ EQUB &00, &00          \ These bytes appear to be unused and just contain
+ EQUB &A5               \ random workspace noise left over from the BBC Micro
+                        \ assembly process
 
 ELIF _SOURCE_DISC
 
@@ -7324,15 +7326,115 @@ ENDIF
 IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ELTA-LSX2.bin"
+
+  EQUB &16, &01, &0E, &77, &1F, &16, &AD, &77   \ These bytes appear to be
+  EQUB &A0, &A1, &77, &1C, &12, &12, &07, &94   \ unused and just contain random
+  EQUB &C4, &44, &B5, &B9, &10, &18, &1E, &13   \ workspace noise left over from
+  EQUB &04, &77, &18, &11, &11, &77, &E4, &05   \ the BBC Micro assembly process
+  EQUB &77, &16, &04, &04, &77, &8E, &03, &77
+  EQUB &A7, &77, &13, &12, &12, &07, &77, &04
+  EQUB &07, &16, &BE, &77, &11, &AA, &77, &B8
+  EQUB &19, &0E, &77, &0E, &12, &B9, &04, &77
+  EQUB &B4, &00, &79, &77, &44, &00, &12, &1B
+  EQUB &1B, &77, &C4, &04, &8C, &02, &16, &AC
+  EQUB &88, &77, &1F, &16, &04, &77, &14, &1F
+  EQUB &A8, &10, &AB, &9B, &8E, &05, &77, &15
+  EQUB &18, &0E, &04, &77, &B9, &12, &77, &A5
+  EQUB &16, &13, &0E, &77, &11, &AA, &87, &07
+  EQUB &02, &04, &1F, &77, &05, &1E, &10, &1F
+  EQUB &03, &9E, &C4, &1F, &18, &1A, &12, &77
+  EQUB &04, &0E, &04, &03, &12, &1A, &77, &18
+  EQUB &11, &77, &B5, &18, &8D, &77, &1A, &18
+  EQUB &B5, &A3, &04, &9B, &4F, &5E, &49, &4A
+  EQUB &1E, &5A, &77, &1F, &16, &AD, &77, &18
+  EQUB &15, &03, &16, &A7, &93, &C4, &13, &12
+  EQUB &11, &A1, &BE, &77, &07, &AE, &19, &04
+  EQUB &77, &11, &AA, &77, &B5, &12, &1E, &05
+  EQUB &77, &44, &1F, &1E, &AD, &77, &44, &00
+  EQUB &AA, &1B, &13, &04, &9B, &C4, &A0, &8A
+  EQUB &B2, &04, &77, &1C, &B4, &00, &77, &00
+  EQUB &12, &70, &AD, &77, &10, &18, &03, &77
+  EQUB &BC, &1A, &12, &B5, &94, &15, &02, &03
+  EQUB &77, &B4, &03, &77, &00, &1F, &A2, &9B
+  EQUB &1E, &11, &77, &44, &1E, &77, &03, &AF
+  EQUB &19, &04, &1A, &8C, &77, &C4, &07, &AE
+  EQUB &19, &04, &9E, &8E, &05, &77, &15, &16
+
  ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ELTA-LSX2.bin"
+
+  EQUB &C4, &44, &B5, &B9, &10, &18, &1E, &13   \ These bytes appear to be
+  EQUB &04, &77, &18, &11, &11, &77, &E4, &05   \ unused and just contain random
+  EQUB &77, &16, &04, &04, &77, &8E, &03, &77   \ workspace noise left over from
+  EQUB &A7, &77, &13, &12, &12, &07, &77, &04   \ the BBC Micro assembly process
+  EQUB &07, &16, &BE, &77, &11, &AA, &77, &B8
+  EQUB &19, &0E, &77, &0E, &12, &B9, &04, &77
+  EQUB &B4, &00, &79, &77, &44, &00, &12, &1B
+  EQUB &1B, &77, &C4, &04, &8C, &02, &16, &AC
+  EQUB &88, &77, &1F, &16, &04, &77, &14, &1F
+  EQUB &A8, &10, &AB, &9B, &8E, &05, &77, &15
+  EQUB &18, &0E, &04, &77, &B9, &12, &77, &A5
+  EQUB &16, &13, &0E, &77, &11, &AA, &87, &07
+  EQUB &02, &04, &1F, &77, &05, &1E, &10, &1F
+  EQUB &03, &9E, &C4, &1F, &18, &1A, &12, &77
+  EQUB &04, &0E, &04, &03, &12, &1A, &77, &18
+  EQUB &11, &77, &B5, &18, &8D, &77, &1A, &18
+  EQUB &B5, &A3, &04, &9B, &4F, &5E, &49, &4A
+  EQUB &1E, &5A, &77, &1F, &16, &AD, &77, &18
+  EQUB &15, &03, &16, &A7, &93, &C4, &13, &12
+  EQUB &11, &A1, &BE, &77, &07, &AE, &19, &04
+  EQUB &77, &11, &AA, &77, &B5, &12, &1E, &05
+  EQUB &77, &44, &1F, &1E, &AD, &77, &44, &00
+  EQUB &AA, &1B, &13, &04, &9B, &C4, &A0, &8A
+  EQUB &B2, &04, &77, &1C, &B4, &00, &77, &00
+  EQUB &12, &70, &AD, &77, &10, &18, &03, &77
+  EQUB &BC, &1A, &12, &B5, &94, &15, &02, &03
+  EQUB &77, &B4, &03, &77, &00, &1F, &A2, &9B
+  EQUB &1E, &11, &77, &44, &1E, &77, &03, &AF
+  EQUB &19, &04, &1A, &8C, &77, &C4, &07, &AE
+  EQUB &19, &04, &9E, &8E, &05, &77, &15, &16
+  EQUB &8D, &77, &88, &77, &44, &BD, &A5, &AF
+  EQUB &77, &B5, &12, &0E, &70, &1B, &1B, &77
+
  ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ELTA-LSX2.bin"
+
+  EQUB &16, &01, &0E, &77, &1F, &16, &AD, &77   \ These bytes appear to be
+  EQUB &A0, &A1, &77, &1C, &12, &12, &07, &94   \ unused and just contain random
+  EQUB &C4, &44, &B5, &B9, &10, &18, &1E, &13   \ workspace noise left over from
+  EQUB &04, &77, &18, &11, &11, &77, &E4, &05   \ the BBC Micro assembly process
+  EQUB &77, &16, &04, &04, &77, &8E, &03, &77
+  EQUB &A7, &77, &13, &12, &12, &07, &77, &04
+  EQUB &07, &16, &BE, &77, &11, &AA, &77, &B8
+  EQUB &19, &0E, &77, &0E, &12, &B9, &04, &77
+  EQUB &B4, &00, &79, &77, &44, &00, &12, &1B
+  EQUB &1B, &77, &C4, &04, &8C, &02, &16, &AC
+  EQUB &88, &77, &1F, &16, &04, &77, &14, &1F
+  EQUB &A8, &10, &AB, &9B, &8E, &05, &77, &15
+  EQUB &18, &0E, &04, &77, &B9, &12, &77, &A5
+  EQUB &16, &13, &0E, &77, &11, &AA, &87, &07
+  EQUB &02, &04, &1F, &77, &05, &1E, &10, &1F
+  EQUB &03, &9E, &C4, &1F, &18, &1A, &12, &77
+  EQUB &04, &0E, &04, &03, &12, &1A, &77, &18
+  EQUB &11, &77, &B5, &18, &8D, &77, &1A, &18
+  EQUB &B5, &A3, &04, &9B, &4F, &5E, &49, &4A
+  EQUB &1E, &5A, &77, &1F, &16, &AD, &77, &18
+  EQUB &15, &03, &16, &A7, &93, &C4, &13, &12
+  EQUB &11, &A1, &BE, &77, &07, &AE, &19, &04
+  EQUB &77, &11, &AA, &77, &B5, &12, &1E, &05
+  EQUB &77, &44, &1F, &1E, &AD, &77, &44, &00
+  EQUB &AA, &1B, &13, &04, &9B, &C4, &A0, &8A
+  EQUB &B2, &04, &77, &1C, &B4, &00, &77, &00
+  EQUB &12, &70, &AD, &77, &10, &18, &03, &77
+  EQUB &BC, &1A, &12, &B5, &94, &15, &02, &03
+  EQUB &77, &B4, &03, &77, &00, &1F, &A2, &9B
+  EQUB &1E, &11, &77, &44, &1E, &77, &03, &AF
+  EQUB &19, &04, &1A, &8C, &77, &C4, &07, &AE
+  EQUB &19, &04, &9E, &8E, &05, &77, &15, &16
+
  ENDIF
 
+ 
 ELSE
-
+ 
  SKIP 256               \ The ball line heap for storing x-coordinates (see the
                         \ deep dive on "The ball line heap" for details)
 
@@ -7353,11 +7455,110 @@ ENDIF
 IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ELTA-LSY2.bin"
+
+  EQUB &8D, &77, &88, &77, &44, &BD, &A5, &AF   \ These bytes appear to be
+  EQUB &77, &B5, &12, &0E, &70, &1B, &1B, &77   \ unused and just contain random
+  EQUB &A7, &03, &A3, &BE, &07, &03, &77, &C4   \ workspace noise left over from
+  EQUB &03, &05, &A8, &04, &1A, &1E, &04, &04   \ the BBC Micro assembly process
+  EQUB &1E, &88, &79, &77, &44, &1E, &77, &19
+  EQUB &12, &AB, &87, &98, &9E, &B8, &1C, &12
+  EQUB &77, &C4, &05, &02, &19, &9B, &E4, &70
+  EQUB &A5, &77, &12, &B2, &14, &03, &AB, &9B
+  EQUB &C4, &07, &AE, &19, &04, &77, &16, &A5
+  EQUB &77, &02, &19, &1E, &07, &02, &1B, &8D
+  EQUB &77, &14, &18, &13, &93, &00, &1E, &B5
+  EQUB &A7, &77, &C3, &03, &05, &A8, &04, &1A
+  EQUB &1E, &04, &04, &1E, &88, &9B, &5F, &E4
+  EQUB &77, &00, &8B, &1B, &77, &A0, &77, &07
+  EQUB &16, &1E, &13, &9B, &77, &77, &77, &77
+  EQUB &44, &10, &18, &18, &13, &77, &1B, &02
+  EQUB &14, &1C, &77, &CD, &83, &4F, &57, &4E
+  EQUB &5E, &4A, &49, &5F, &59, &5A, &44, &00
+  EQUB &12, &1B, &1B, &77, &13, &88, &12, &77
+  EQUB &CD, &9B, &E4, &77, &1F, &16, &AD, &77
+  EQUB &8D, &05, &01, &93, &02, &04, &77, &00
+  EQUB &12, &1B, &1B, &E5, &00, &12, &77, &04
+  EQUB &1F, &B3, &1B, &77, &A5, &1A, &12, &1A
+  EQUB &15, &A3, &9B, &00, &12, &77, &13, &1E
+  EQUB &13, &77, &B4, &03, &77, &12, &0F, &07
+  EQUB &12, &14, &03, &77, &C4, &44, &B5, &B9
+  EQUB &10, &18, &1E, &13, &04, &9E, &11, &A7
+  EQUB &13, &77, &8E, &03, &77, &16, &15, &8E
+  EQUB &03, &77, &E4, &9B, &11, &AA, &77, &C4
+  EQUB &1A, &18, &1A, &A1, &03, &77, &07, &B2
+  EQUB &16, &8D, &77, &16, &14, &BE, &07, &03
+  EQUB &77, &C3, &44, &19, &16, &01, &0E, &77
+
  ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ELTA-LSY2.bin"
+
+  EQUB &A7, &03, &A3, &BE, &07, &03, &77, &C4   \ These bytes appear to be
+  EQUB &03, &05, &A8, &04, &1A, &1E, &04, &04   \ unused and just contain random
+  EQUB &1E, &88, &79, &77, &44, &1E, &77, &19   \ workspace noise left over from
+  EQUB &12, &AB, &87, &98, &9E, &B8, &1C, &12   \ the BBC Micro assembly process
+  EQUB &77, &C4, &05, &02, &19, &9B, &E4, &70
+  EQUB &A5, &77, &12, &B2, &14, &03, &AB, &9B
+  EQUB &C4, &07, &AE, &19, &04, &77, &16, &A5
+  EQUB &77, &02, &19, &1E, &07, &02, &1B, &8D
+  EQUB &77, &14, &18, &13, &93, &00, &1E, &B5
+  EQUB &A7, &77, &C3, &03, &05, &A8, &04, &1A
+  EQUB &1E, &04, &04, &1E, &88, &9B, &5F, &E4
+  EQUB &77, &00, &8B, &1B, &77, &A0, &77, &07
+  EQUB &16, &1E, &13, &9B, &77, &77, &77, &77
+  EQUB &44, &10, &18, &18, &13, &77, &1B, &02
+  EQUB &14, &1C, &77, &CD, &83, &4F, &57, &4E
+  EQUB &5E, &4A, &49, &5F, &59, &5A, &44, &00
+  EQUB &12, &1B, &1B, &77, &13, &88, &12, &77
+  EQUB &CD, &9B, &E4, &77, &1F, &16, &AD, &77
+  EQUB &8D, &05, &01, &93, &02, &04, &77, &00
+  EQUB &12, &1B, &1B, &E5, &00, &12, &77, &04
+  EQUB &1F, &B3, &1B, &77, &A5, &1A, &12, &1A
+  EQUB &15, &A3, &9B, &00, &12, &77, &13, &1E
+  EQUB &13, &77, &B4, &03, &77, &12, &0F, &07
+  EQUB &12, &14, &03, &77, &C4, &44, &B5, &B9
+  EQUB &10, &18, &1E, &13, &04, &9E, &11, &A7
+  EQUB &13, &77, &8E, &03, &77, &16, &15, &8E
+  EQUB &03, &77, &E4, &9B, &11, &AA, &77, &C4
+  EQUB &1A, &18, &1A, &A1, &03, &77, &07, &B2
+  EQUB &16, &8D, &77, &16, &14, &BE, &07, &03
+  EQUB &77, &C3, &44, &19, &16, &01, &0E, &77
+  EQUB &51, &25, &52, &77, &16, &04, &77, &07
+  EQUB &16, &0E, &1A, &A1, &03, &83, &4F, &57
+
  ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ELTA-LSY2.bin"
+
+  EQUB &8D, &77, &88, &77, &44, &BD, &A5, &AF   \ These bytes appear to be
+  EQUB &77, &B5, &12, &0E, &70, &1B, &1B, &77   \ unused and just contain random
+  EQUB &A7, &03, &A3, &BE, &07, &03, &77, &C4   \ workspace noise left over from
+  EQUB &03, &05, &A8, &04, &1A, &1E, &04, &04   \ the BBC Micro assembly process
+  EQUB &1E, &88, &79, &77, &44, &1E, &77, &19
+  EQUB &12, &AB, &87, &98, &9E, &B8, &1C, &12
+  EQUB &77, &C4, &05, &02, &19, &9B, &E4, &70
+  EQUB &A5, &77, &12, &B2, &14, &03, &AB, &9B
+  EQUB &C4, &07, &AE, &19, &04, &77, &16, &A5
+  EQUB &77, &02, &19, &1E, &07, &02, &1B, &8D
+  EQUB &77, &14, &18, &13, &93, &00, &1E, &B5
+  EQUB &A7, &77, &C3, &03, &05, &A8, &04, &1A
+  EQUB &1E, &04, &04, &1E, &88, &9B, &5F, &E4
+  EQUB &77, &00, &8B, &1B, &77, &A0, &77, &07
+  EQUB &16, &1E, &13, &9B, &77, &77, &77, &77
+  EQUB &44, &10, &18, &18, &13, &77, &1B, &02
+  EQUB &14, &1C, &77, &CD, &83, &4F, &57, &4E
+  EQUB &5E, &4A, &49, &5F, &59, &5A, &44, &00
+  EQUB &12, &1B, &1B, &77, &13, &88, &12, &77
+  EQUB &CD, &9B, &E4, &77, &1F, &16, &AD, &77
+  EQUB &8D, &05, &01, &93, &02, &04, &77, &00
+  EQUB &12, &1B, &1B, &E5, &00, &12, &77, &04
+  EQUB &1F, &B3, &1B, &77, &A5, &1A, &12, &1A
+  EQUB &15, &A3, &9B, &00, &12, &77, &13, &1E
+  EQUB &13, &77, &B4, &03, &77, &12, &0F, &07
+  EQUB &12, &14, &03, &77, &C4, &44, &B5, &B9
+  EQUB &10, &18, &1E, &13, &04, &9E, &11, &A7
+  EQUB &13, &77, &8E, &03, &77, &16, &15, &8E
+  EQUB &03, &77, &E4, &9B, &11, &AA, &77, &C4
+  EQUB &1A, &18, &1A, &A1, &03, &77, &07, &B2
+  EQUB &16, &8D, &77, &16, &14, &BE, &07, &03
+  EQUB &77, &C3, &44, &19, &16, &01, &0E, &77
+
  ENDIF
 
 ELSE
@@ -7679,7 +7880,35 @@ IF _MATCH_ORIGINAL_BINARIES
   EQUB 10
   EQUB 13
 
-  INCBIN "4-reference-binaries/sng45/workspaces/ELTB-LBUF.bin"
+  EQUB &00, &A5, &05, &65, &02, &CD, &8E, &81   \ These bytes appear to be
+  EQUB &D0, &FC, &34, &75, &54, &07, &65, &23   \ unused and just contain random
+  EQUB &45, &00, &8D, &20, &DE, &10, &20, &57   \ workspace noise left over from
+  EQUB &81, &20, &DB, &6B, &4C, &8E, &50, &EA   \ the BBC Micro assembly process
+  EQUB &A0, &00, &84, &05, &A2, &13, &86, &06
+  EQUB &98, &51, &05, &49, &75, &91, &05, &88
+  EQUB &D0, &F4, &E8, &E0, &A0, &D0, &EF, &4C
+  EQUB &7B, &11, &20, &79, &4C, &20, &EE, &2C
+  EQUB &64, &7C, &64, &2E, &9C, &93, &08, &A9
+  EQUB &FF, &8D, &F1, &08, &8D, &F2, &08, &8D
+  EQUB &F3, &08, &20, &B2, &26, &A0, &2C, &20
+  EQUB &61, &6D, &AD, &A4, &08, &29, &03, &D0
+  EQUB &0E, &AD, &EC, &08, &F0, &54, &AD, &B3
+  EQUB &08, &4A, &D0, &4E, &4C, &C2, &32, &C9
+  EQUB &03, &D0, &03, &4C, &AE, &32, &AD, &B3
+  EQUB &08, &C9, &02, &D0, &3D, &AD, &A4, &08
+  EQUB &29, &0F, &C9, &02, &D0, &0A, &AD, &EC
+  EQUB &08, &C9, &05, &90, &2D, &4C, &7C, &32
+  EQUB &C9, &06, &D0, &11, &AD, &A5, &08, &C9
+  EQUB &D7, &D0, &1F, &AD, &A6, &08, &C9, &54
+  EQUB &D0, &18, &4C, &8C, &32, &C9, &0A, &D0
+  EQUB &11, &AD, &A5, &08, &C9, &3F, &D0, &0A
+  EQUB &AD, &A6, &08, &C9, &48, &D0, &03, &4C
+  EQUB &9A, &32, &4C, &0B, &51, &A9, &ED, &78
+  EQUB &8D, &02, &02, &A9, &4F, &8D, &03, &02
+  EQUB &58, &60, &AD, &00, &82, &85, &00, &AE
+  EQUB &98, &08, &20, &4C, &31, &20, &4C, &31
+  EQUB &8A, &49, &80, &A8, &29, &80, &85, &31
+  EQUB &8E, &98, &08, &49
 
  ELIF _EXECUTIVE
 
@@ -7687,7 +7916,35 @@ IF _MATCH_ORIGINAL_BINARIES
   EQUB 10
   EQUB 13
 
-  INCBIN "4-reference-binaries/executive/workspaces/ELTB-LBUF.bin"
+  EQUB &00, &A5, &05, &65, &02, &CD, &E6, &82   \ These bytes appear to be
+  EQUB &D0, &FC, &34, &75, &54, &07, &65, &23   \ unused and just contain random
+  EQUB &45, &00, &8D, &20, &E0, &10, &20, &AF   \ workspace noise left over from
+  EQUB &82, &20, &DB, &6B, &4C, &B3, &50, &EA   \ the BBC Micro assembly process
+  EQUB &A0, &00, &84, &05, &A2, &13, &86, &06
+  EQUB &98, &51, &05, &49, &75, &91, &05, &88
+  EQUB &D0, &F4, &E8, &E0, &A0, &D0, &EF, &4C
+  EQUB &7D, &11, &20, &9E, &4C, &20, &0A, &2D
+  EQUB &64, &7C, &64, &2E, &9C, &93, &08, &A9
+  EQUB &FF, &8D, &F1, &08, &8D, &F2, &08, &8D
+  EQUB &F3, &08, &20, &CE, &26, &A0, &2C, &20
+  EQUB &61, &6D, &AD, &A4, &08, &29, &03, &D0
+  EQUB &0E, &AD, &EC, &08, &F0, &54, &AD, &B3
+  EQUB &08, &4A, &D0, &4E, &4C, &D8, &32, &C9
+  EQUB &03, &D0, &03, &4C, &C4, &32, &AD, &B3
+  EQUB &08, &C9, &02, &D0, &3D, &AD, &A4, &08
+  EQUB &29, &0F, &C9, &02, &D0, &0A, &AD, &EC
+  EQUB &08, &C9, &05, &90, &2D, &4C, &92, &32
+  EQUB &C9, &06, &D0, &11, &AD, &A5, &08, &C9
+  EQUB &D7, &D0, &1F, &AD, &A6, &08, &C9, &54
+  EQUB &D0, &18, &4C, &A2, &32, &C9, &0A, &D0
+  EQUB &11, &AD, &A5, &08, &C9, &3F, &D0, &0A
+  EQUB &AD, &A6, &08, &C9, &48, &D0, &03, &4C
+  EQUB &B0, &32, &4C, &3E, &51, &A9, &12, &78
+  EQUB &8D, &02, &02, &A9, &50, &8D, &03, &02
+  EQUB &58, &60, &AD, &00, &85, &85, &00, &AE
+  EQUB &98, &08, &20, &68, &31, &20, &68, &31
+  EQUB &8A, &49, &80, &A8, &29, &80, &85, &31
+  EQUB &8E, &98
 
  ELIF _SOURCE_DISC
 
@@ -7695,13 +7952,41 @@ IF _MATCH_ORIGINAL_BINARIES
   EQUB 10
   EQUB 13
 
-  INCBIN "4-reference-binaries/source-disc/workspaces/ELTB-LBUF.bin"
+  EQUB &00, &A5, &05, &65, &02, &CD, &AF, &81   \ These bytes appear to be
+  EQUB &D0, &FC, &34, &75, &54, &07, &65, &23   \ unused and just contain random
+  EQUB &45, &00, &8D, &20, &DE, &10, &20, &78   \ workspace noise left over from
+  EQUB &81, &20, &DB, &6B, &4C, &88, &50, &EA   \ the BBC Micro assembly process
+  EQUB &A0, &00, &84, &05, &A2, &13, &86, &06
+  EQUB &98, &51, &05, &49, &75, &91, &05, &88
+  EQUB &D0, &F4, &E8, &E0, &A0, &D0, &EF, &4C
+  EQUB &7B, &11, &20, &73, &4C, &20, &EE, &2C
+  EQUB &64, &7C, &64, &2E, &9C, &93, &08, &A9
+  EQUB &FF, &8D, &F1, &08, &8D, &F2, &08, &8D
+  EQUB &F3, &08, &20, &B2, &26, &A0, &2C, &20
+  EQUB &61, &6D, &AD, &A4, &08, &29, &03, &D0
+  EQUB &0E, &AD, &EC, &08, &F0, &54, &AD, &B3
+  EQUB &08, &4A, &D0, &4E, &4C, &BC, &32, &C9
+  EQUB &03, &D0, &03, &4C, &A8, &32, &AD, &B3
+  EQUB &08, &C9, &02, &D0, &3D, &AD, &A4, &08
+  EQUB &29, &0F, &C9, &02, &D0, &0A, &AD, &EC
+  EQUB &08, &C9, &05, &90, &2D, &4C, &76, &32
+  EQUB &C9, &06, &D0, &11, &AD, &A5, &08, &C9
+  EQUB &D7, &D0, &1F, &AD, &A6, &08, &C9, &54
+  EQUB &D0, &18, &4C, &86, &32, &C9, &0A, &D0
+  EQUB &11, &AD, &A5, &08, &C9, &3F, &D0, &0A
+  EQUB &AD, &A6, &08, &C9, &48, &D0, &03, &4C
+  EQUB &94, &32, &4C, &05, &51, &A9, &E7, &78
+  EQUB &8D, &02, &02, &A9, &4F, &8D, &03, &02
+  EQUB &58, &60, &AD, &00, &82, &85, &00, &AE
+  EQUB &98, &08, &20, &4C, &31, &20, &4C, &31
+  EQUB &8A, &49, &80, &A8, &29, &80, &85, &31
+  EQUB &8E, &98, &08, &49
 
  ENDIF
 
 ELSE
 
- SKIP 256
+ SKIP 256               \ The line buffer to send with this command
 
 ENDIF
 
@@ -7996,16 +8281,115 @@ ENDIF
 IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ELTB-HBUF.bin"
+
+  EQUB &D7, &08, &F0, &0F, &A0, &0C, &20, &62   \ These bytes appear to be
+  EQUB &45, &A9, &28, &20, &C3, &55, &A9, &00   \ unused and just contain random
+  EQUB &8D, &90, &08, &A5, &44, &10, &12, &AD   \ workspace noise left over from
+  EQUB &4B, &08, &F0, &0D, &AE, &D7, &08, &F0   \ the BBC Micro assembly process
+  EQUB &08, &8D, &90, &08, &A0, &0F, &20, &91
+  EQUB &45, &AD, &4D, &08, &F0, &07, &A5, &44
+  EQUB &30, &3F, &20, &E1, &2B, &AD, &49, &08
+  EQUB &F0, &03, &0E, &CE, &08, &AD, &51, &08
+  EQUB &F0, &05, &A9, &00, &8D, &8B, &08, &AD
+  EQUB &4A, &08, &2D, &D2, &08, &F0, &08, &AD
+  EQUB &8D, &08, &D0, &03, &4C, &F0, &25, &AD
+  EQUB &4F, &08, &F0, &03, &20, &14, &55, &AD
+  EQUB &4E, &08, &2D, &CC, &08, &F0, &0A, &A5
+  EQUB &2F, &D0, &06, &CE, &8C, &08, &20, &70
+  EQUB &45, &AD, &50, &08, &2D, &D0, &08, &F0
+  EQUB &03, &8D, &8B, &08, &A9, &00, &85, &43
+  EQUB &85, &7D, &A5, &7C, &4A, &66, &7D, &4A
+  EQUB &66, &7D, &85, &7E, &AD, &92, &08, &D0
+  EQUB &2E, &AD, &48, &08, &F0, &29, &AD, &93
+  EQUB &08, &C9, &F2, &B0, &22, &AE, &91, &08
+  EQUB &BD, &B4, &08, &F0, &1A, &48, &29, &7F
+  EQUB &85, &43, &8D, &8F, &08, &A9, &00, &20
+  EQUB &C3, &55, &20, &CF, &31, &68, &10, &02
+  EQUB &A9, &00, &29, &FA, &8D, &92, &08, &A2
+  EQUB &00, &86, &83, &BD, &52, &08, &D0, &03
+  EQUB &4C, &96, &14, &85, &8B, &20, &6C, &44
+  EQUB &A0, &24, &B1, &1F, &99, &45, &00, &88
+  EQUB &10, &F8, &A5, &8B, &30, &27, &0A, &A8
+  EQUB &B9, &FE, &CF, &85, &1D, &B9, &FF, &CF
+  EQUB &85, &1E, &AD, &CE, &08, &10, &16, &C0
+  EQUB &04, &F0, &12, &C0, &3E, &B0, &0E, &A5
+  EQUB &64, &29, &20, &D0, &08, &06, &64, &38
+
  ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ELTB-HBUF.bin"
+
+  EQUB &08, &2D, &D7, &08, &F0, &0F, &A0, &0C   \ These bytes appear to be
+  EQUB &20, &87, &45, &A9, &28, &20, &F8, &55   \ unused and just contain random
+  EQUB &A9, &00, &8D, &90, &08, &A5, &44, &10   \ workspace noise left over from
+  EQUB &12, &AD, &4B, &08, &F0, &0D, &AE, &D7   \ the BBC Micro assembly process
+  EQUB &08, &F0, &08, &8D, &90, &08, &A0, &0F
+  EQUB &20, &B6, &45, &AD, &4D, &08, &F0, &07
+  EQUB &A5, &44, &30, &3F, &20, &FD, &2B, &AD
+  EQUB &49, &08, &F0, &03, &0E, &CE, &08, &AD
+  EQUB &51, &08, &F0, &05, &A9, &00, &8D, &8B
+  EQUB &08, &AD, &4A, &08, &2D, &D2, &08, &F0
+  EQUB &08, &AD, &8D, &08, &D0, &03, &4C, &0C
+  EQUB &26, &AD, &4F, &08, &F0, &03, &20, &44
+  EQUB &55, &AD, &4E, &08, &2D, &CC, &08, &F0
+  EQUB &0A, &A5, &2F, &D0, &06, &CE, &8C, &08
+  EQUB &20, &95, &45, &AD, &50, &08, &2D, &D0
+  EQUB &08, &F0, &03, &8D, &8B, &08, &A9, &00
+  EQUB &85, &43, &85, &7D, &A5, &7C, &4A, &66
+  EQUB &7D, &4A, &66, &7D, &85, &7E, &AD, &92
+  EQUB &08, &D0, &2E, &AD, &48, &08, &F0, &29
+  EQUB &AD, &93, &08, &C9, &F2, &B0, &22, &AE
+  EQUB &91, &08, &BD, &B4, &08, &F0, &1A, &48
+  EQUB &29, &7F, &85, &43, &8D, &8F, &08, &A9
+  EQUB &00, &20, &F8, &55, &20, &EB, &31, &68
+  EQUB &10, &02, &A9, &00, &29, &FA, &8D, &92
+  EQUB &08, &A2, &00, &86, &83, &BD, &52, &08
+  EQUB &D0, &03, &4C, &98, &14, &85, &8B, &20
+  EQUB &91, &44, &A0, &24, &B1, &1F, &99, &45
+  EQUB &00, &88, &10, &F8, &A5, &8B, &30, &27
+  EQUB &0A, &A8, &B9, &FE, &CF, &85, &1D, &B9
+  EQUB &FF, &CF, &85, &1E, &AD, &CE, &08, &10
+  EQUB &16, &C0, &04, &F0, &12, &C0, &3E, &B0
+  EQUB &0E, &A5, &64, &29, &20, &D0, &08, &06
+
  ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ELTB-HBUF.bin"
+
+  EQUB &D7, &08, &F0, &0F, &A0, &0C, &20, &5C   \ These bytes appear to be
+  EQUB &45, &A9, &28, &20, &BA, &55, &A9, &00   \ unused and just contain random
+  EQUB &8D, &90, &08, &A5, &44, &10, &12, &AD   \ workspace noise left over from
+  EQUB &4B, &08, &F0, &0D, &AE, &D7, &08, &F0   \ the BBC Micro assembly process
+  EQUB &08, &8D, &90, &08, &A0, &0F, &20, &8B
+  EQUB &45, &AD, &4D, &08, &F0, &07, &A5, &44
+  EQUB &30, &3F, &20, &E1, &2B, &AD, &49, &08
+  EQUB &F0, &03, &0E, &CE, &08, &AD, &51, &08
+  EQUB &F0, &05, &A9, &00, &8D, &8B, &08, &AD
+  EQUB &4A, &08, &2D, &D2, &08, &F0, &08, &AD
+  EQUB &8D, &08, &D0, &03, &4C, &F0, &25, &AD
+  EQUB &4F, &08, &F0, &03, &20, &0B, &55, &AD
+  EQUB &4E, &08, &2D, &CC, &08, &F0, &0A, &A5
+  EQUB &2F, &D0, &06, &CE, &8C, &08, &20, &6A
+  EQUB &45, &AD, &50, &08, &2D, &D0, &08, &F0
+  EQUB &03, &8D, &8B, &08, &A9, &00, &85, &43
+  EQUB &85, &7D, &A5, &7C, &4A, &66, &7D, &4A
+  EQUB &66, &7D, &85, &7E, &AD, &92, &08, &D0
+  EQUB &2E, &AD, &48, &08, &F0, &29, &AD, &93
+  EQUB &08, &C9, &F2, &B0, &22, &AE, &91, &08
+  EQUB &BD, &B4, &08, &F0, &1A, &48, &29, &7F
+  EQUB &85, &43, &8D, &8F, &08, &A9, &00, &20
+  EQUB &BA, &55, &20, &CF, &31, &68, &10, &02
+  EQUB &A9, &00, &29, &FA, &8D, &92, &08, &A2
+  EQUB &00, &86, &83, &BD, &52, &08, &D0, &03
+  EQUB &4C, &96, &14, &85, &8B, &20, &66, &44
+  EQUB &A0, &24, &B1, &1F, &99, &45, &00, &88
+  EQUB &10, &F8, &A5, &8B, &30, &27, &0A, &A8
+  EQUB &B9, &FE, &CF, &85, &1D, &B9, &FF, &CF
+  EQUB &85, &1E, &AD, &CE, &08, &10, &16, &C0
+  EQUB &04, &F0, &12, &C0, &3E, &B0, &0E, &A5
+  EQUB &64, &29, &20, &D0, &08, &06, &64, &38
+
  ENDIF
 
 ELSE
 
- SKIP 256
+ SKIP 256               \ The horizontal line buffer to send with this command
 
 ENDIF
 
@@ -8381,11 +8765,110 @@ ENDIF
 IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ELTB-PBUF.bin"
+
+  EQUB &20, &79, &55, &06, &64, &38, &66, &64   \ These bytes appear to be
+  EQUB &D0, &17, &A9, &01, &85, &7C, &A9, &05   \ unused and just contain random
+  EQUB &D0, &09, &06, &64, &38, &66, &64, &A5   \ workspace noise left over from
+  EQUB &68, &38, &6A, &20, &1E, &44, &20, &79   \ the BBC Micro assembly process
+  EQUB &55, &A5, &69, &10, &03, &20, &8C, &6D
+  EQUB &A5, &86, &D0, &6D, &20, &FD, &6B, &20
+  EQUB &7A, &2B, &90, &62, &AD, &90, &08, &F0
+  EQUB &0A, &20, &82, &55, &A6, &83, &A0, &03
+  EQUB &20, &64, &45, &A5, &43, &F0, &4F, &A2
+  EQUB &0F, &20, &A5, &55, &A5, &8B, &C9, &02
+  EQUB &F0, &3F, &C9, &1F, &90, &0A, &A5, &43
+  EQUB &C9, &17, &D0, &35, &46, &43, &46, &43
+  EQUB &A5, &68, &38, &E5, &43, &B0, &28, &06
+  EQUB &64, &38, &66, &64, &A5, &8B, &C9, &07
+  EQUB &D0, &10, &A5, &43, &C9, &32, &D0, &0A
+  EQUB &20, &24, &4D, &A2, &08, &29, &03, &20
+  EQUB &E4, &15, &A0, &04, &20, &D7, &15, &A0
+  EQUB &05, &20, &D7, &15, &20, &96, &55, &85
+  EQUB &68, &A5, &8B, &20, &00, &2C, &20, &4E
+  EQUB &60, &A0, &23, &A5, &68, &91, &1F, &A5
+  EQUB &69, &30, &2D, &A5, &64, &10, &2C, &29
+  EQUB &20, &F0, &28, &A5, &69, &29, &40, &0D
+  EQUB &D8, &08, &8D, &D8, &08, &AD, &96, &08
+  EQUB &0D, &8D, &08, &D0, &13, &A0, &0A, &B1
+  EQUB &1D, &F0, &0D, &AA, &C8, &B1, &1D, &A8
+  EQUB &20, &08, &3E, &A9, &00, &20, &C7, &57
+  EQUB &4C, &0F, &4B, &A5, &8B, &30, &05, &20
+  EQUB &D8, &4F, &90, &F4, &A0, &1F, &A5, &64
+  EQUB &91, &1F, &A6, &83, &E8, &4C, &D6, &12
+  EQUB &AD, &CE, &08, &10, &10, &0E, &CE, &08
+  EQUB &20, &FC, &6D, &A9, &83, &20, &EE, &FF
+  EQUB &A9, &30, &20, &EE, &FF, &A5, &89, &29
+
  ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ELTB-PBUF.bin"
+
+  EQUB &29, &50, &20, &A9, &55, &06, &64, &38   \ These bytes appear to be
+  EQUB &66, &64, &D0, &17, &A9, &01, &85, &7C   \ unused and just contain random
+  EQUB &A9, &05, &D0, &09, &06, &64, &38, &66   \ workspace noise left over from
+  EQUB &64, &A5, &68, &38, &6A, &20, &43, &44   \ the BBC Micro assembly process
+  EQUB &20, &A9, &55, &A5, &69, &10, &03, &20
+  EQUB &8C, &6D, &A5, &86, &D0, &6D, &20, &FD
+  EQUB &6B, &20, &96, &2B, &90, &62, &AD, &90
+  EQUB &08, &F0, &0A, &20, &B2, &55, &A6, &83
+  EQUB &A0, &03, &20, &89, &45, &A5, &43, &F0
+  EQUB &4F, &A2, &0F, &20, &DA, &55, &A5, &8B
+  EQUB &C9, &02, &F0, &3F, &C9, &1F, &90, &0A
+  EQUB &A5, &43, &C9, &17, &D0, &35, &46, &43
+  EQUB &46, &43, &A5, &68, &38, &E5, &43, &B0
+  EQUB &28, &06, &64, &38, &66, &64, &A5, &8B
+  EQUB &C9, &07, &D0, &10, &A5, &43, &C9, &32
+  EQUB &D0, &0A, &20, &49, &4D, &A2, &08, &29
+  EQUB &03, &20, &EB, &15, &A0, &04, &20, &DE
+  EQUB &15, &A0, &05, &20, &DE, &15, &20, &CB
+  EQUB &55, &85, &68, &A5, &8B, &20, &1C, &2C
+  EQUB &20, &4E, &60, &A0, &23, &A5, &68, &91
+  EQUB &1F, &A5, &69, &30, &2D, &A5, &64, &10
+  EQUB &2C, &29, &20, &F0, &28, &A5, &69, &29
+  EQUB &40, &0D, &D8, &08, &8D, &D8, &08, &AD
+  EQUB &96, &08, &0D, &8D, &08, &D0, &13, &A0
+  EQUB &0A, &B1, &1D, &F0, &0D, &AA, &C8, &B1
+  EQUB &1D, &A8, &20, &2D, &3E, &A9, &00, &20
+  EQUB &FC, &57, &4C, &34, &4B, &A5, &8B, &30
+  EQUB &05, &20, &FD, &4F, &90, &F4, &A0, &1F
+  EQUB &A5, &64, &91, &1F, &A6, &83, &E8, &4C
+  EQUB &D8, &12, &AD, &CE, &08, &10, &10, &0E
+  EQUB &CE, &08, &20, &FC, &6D, &A9, &83, &20
+  EQUB &EE, &FF, &A9, &30, &20, &EE, &FF, &A5
+
  ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ELTB-PBUF.bin"
+
+  EQUB &20, &70, &55, &06, &64, &38, &66, &64   \ These bytes appear to be
+  EQUB &D0, &17, &A9, &01, &85, &7C, &A9, &05   \ unused and just contain random
+  EQUB &D0, &09, &06, &64, &38, &66, &64, &A5   \ workspace noise left over from
+  EQUB &68, &38, &6A, &20, &18, &44, &20, &70   \ the BBC Micro assembly process
+  EQUB &55, &A5, &69, &10, &03, &20, &8C, &6D
+  EQUB &A5, &86, &D0, &6D, &20, &FD, &6B, &20
+  EQUB &7A, &2B, &90, &62, &AD, &90, &08, &F0
+  EQUB &0A, &20, &79, &55, &A6, &83, &A0, &03
+  EQUB &20, &5E, &45, &A5, &43, &F0, &4F, &A2
+  EQUB &0F, &20, &9C, &55, &A5, &8B, &C9, &02
+  EQUB &F0, &3F, &C9, &1F, &90, &0A, &A5, &43
+  EQUB &C9, &17, &D0, &35, &46, &43, &46, &43
+  EQUB &A5, &68, &38, &E5, &43, &B0, &28, &06
+  EQUB &64, &38, &66, &64, &A5, &8B, &C9, &07
+  EQUB &D0, &10, &A5, &43, &C9, &32, &D0, &0A
+  EQUB &20, &1E, &4D, &A2, &08, &29, &03, &20
+  EQUB &E4, &15, &A0, &04, &20, &D7, &15, &A0
+  EQUB &05, &20, &D7, &15, &20, &8D, &55, &85
+  EQUB &68, &A5, &8B, &20, &00, &2C, &20, &4E
+  EQUB &60, &A0, &23, &A5, &68, &91, &1F, &A5
+  EQUB &69, &30, &2D, &A5, &64, &10, &2C, &29
+  EQUB &20, &F0, &28, &A5, &69, &29, &40, &0D
+  EQUB &D8, &08, &8D, &D8, &08, &AD, &96, &08
+  EQUB &0D, &8D, &08, &D0, &13, &A0, &0A, &B1
+  EQUB &1D, &F0, &0D, &AA, &C8, &B1, &1D, &A8
+  EQUB &20, &02, &3E, &A9, &00, &20, &BE, &57
+  EQUB &4C, &09, &4B, &A5, &8B, &30, &05, &20
+  EQUB &D2, &4F, &90, &F4, &A0, &1F, &A5, &64
+  EQUB &91, &1F, &A6, &83, &E8, &4C, &D6, &12
+  EQUB &AD, &CE, &08, &10, &10, &0E, &CE, &08
+  EQUB &20, &FC, &6D, &A9, &83, &20, &EE, &FF
+  EQUB &A9, &30, &20, &EE, &FF, &A5, &89, &29
+
  ENDIF
 
 ELSE
@@ -35656,11 +36139,60 @@ ENDMACRO
 IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ELTG-align.bin"
+
+  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+  EQUB &FD, &08, &60, &A6, &83, &20, &68, &4B   \ unused and just contain random
+  EQUB &A6, &83, &4C, &D6, &12, &20, &C6, &4C   \ workspace noise left over from
+  EQUB &20, &76, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+  EQUB &08, &20, &82, &45, &A9, &06, &85, &4A
+  EQUB &A9, &81, &4C, &C1, &44, &A2, &FF, &E8
+  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+  EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
+  EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
+  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+  EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
+  EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
+  EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
+  EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &62
+  EQUB &45, &A9, &C8, &20, &C7, &57, &A4, &97
+  EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
+  EQUB &1F, &D0, &08, &AD, &A4, &08, &09
+
  ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ELTG-align.bin"
+
+  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+  EQUB &FD, &08, &60, &A6, &83, &20, &8D, &4B   \ unused and just contain random
+  EQUB &A6, &83, &4C, &D8, &12, &20, &EB, &4C   \ workspace noise left over from
+  EQUB &20, &9B, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+  EQUB &08, &20, &A7, &45, &A9, &06, &85, &4A
+  EQUB &A9, &81, &4C, &E6, &44, &A2, &FF, &E8
+  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+  EQUB &F6, &8A, &0A, &A8, &B9, &86, &1A, &85
+  EQUB &05, &B9, &87, &1A, &85, &06, &A0, &20
+  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+  EQUB &97, &90
+
  ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ELTG-align.bin"
+
+  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+  EQUB &FD, &08, &60, &A6, &83, &20, &62, &4B   \ unused and just contain random
+  EQUB &A6, &83, &4C, &D6, &12, &20, &C0, &4C   \ workspace noise left over from
+  EQUB &20, &70, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+  EQUB &08, &20, &7C, &45, &A9, &06, &85, &4A
+  EQUB &A9, &81, &4C, &BB, &44, &A2, &FF, &E8
+  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+  EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
+  EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
+  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+  EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
+  EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
+  EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
+  EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &5C
+  EQUB &45, &A9, &C8, &20, &BE, &57, &A4, &97
+  EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
+  EQUB &1F, &D0, &08, &AD, &A4, &08, &09, &02
+  EQUB &8D, &A4, &08, &E0, &0F, &F0, &08, &E0
+
  ENDIF
 
 ELSE
@@ -35697,13 +36229,59 @@ ENDIF
 IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ELTG-log.bin"
+
+  EQUB &02             \ This byte appears to be unused and just contains
+                       \ random workspace noise left over from the BBC Micro
+                       \ assembly process
+
  ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ELTG-log.bin"
+
+  EQUB &DC             \ This byte appears to be unused and just contains
+                       \ random workspace noise left over from the BBC Micro
+                       \ assembly process
+
  ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ELTG-log.bin"
+
+  EQUB &03             \ This byte appears to be unused and just contains
+                       \ random workspace noise left over from the BBC Micro
+                       \ assembly process
+
  ENDIF
 
+ EQUB &00, &20, &32, &40, &4A, &52, &59
+ EQUB &5F, &65, &6A, &6E, &72, &76, &79, &7D
+ EQUB &80, &82, &85, &87, &8A, &8C, &8E, &90
+ EQUB &92, &94, &96, &98, &99, &9B, &9D, &9E
+ EQUB &A0, &A1, &A2, &A4, &A5, &A6, &A7, &A9
+ EQUB &AA, &AB, &AC, &AD, &AE, &AF, &B0, &B1
+ EQUB &B2, &B3, &B4, &B5, &B6, &B7, &B8, &B9
+ EQUB &B9, &BA, &BB, &BC, &BD, &BD, &BE, &BF
+ EQUB &BF, &C0, &C1, &C2, &C2, &C3, &C4, &C4
+ EQUB &C5, &C6, &C6, &C7, &C7, &C8, &C9, &C9
+ EQUB &CA, &CA, &CB, &CC, &CC, &CD, &CD, &CE
+ EQUB &CE, &CF, &CF, &D0, &D0, &D1, &D1, &D2
+ EQUB &D2, &D3, &D3, &D4, &D4, &D5, &D5, &D5
+ EQUB &D6, &D6, &D7, &D7, &D8, &D8, &D9, &D9
+ EQUB &D9, &DA, &DA, &DB, &DB, &DB, &DC, &DC
+ EQUB &DD, &DD, &DD, &DE, &DE, &DE, &DF, &DF
+ EQUB &E0, &E0, &E0, &E1, &E1, &E1, &E2, &E2
+ EQUB &E2, &E3, &E3, &E3, &E4, &E4, &E4, &E5
+ EQUB &E5, &E5, &E6, &E6, &E6, &E7, &E7, &E7
+ EQUB &E7, &E8, &E8, &E8, &E9, &E9, &E9, &EA
+ EQUB &EA, &EA, &EA, &EB, &EB, &EB, &EC, &EC
+ EQUB &EC, &EC, &ED, &ED, &ED, &ED, &EE, &EE
+ EQUB &EE, &EE, &EF, &EF, &EF, &EF, &F0, &F0
+ EQUB &F0, &F1, &F1, &F1, &F1, &F1, &F2, &F2
+ EQUB &F2, &F2, &F3, &F3, &F3, &F3, &F4, &F4
+ EQUB &F4, &F4, &F5, &F5, &F5, &F5, &F5, &F6
+ EQUB &F6, &F6, &F6, &F7, &F7, &F7, &F7, &F7
+ EQUB &F8, &F8, &F8, &F8, &F9, &F9, &F9, &F9
+ EQUB &F9, &FA, &FA, &FA, &FA, &FA, &FB, &FB
+ EQUB &FB, &FB, &FB, &FC, &FC, &FC, &FC, &FC
+ EQUB &FD, &FD, &FD, &FD, &FD, &FD, &FE, &FE
+ EQUB &FE, &FE, &FE, &FF, &FF, &FF, &FF, &FF
+
+ 
 ELSE
 
  SKIP 1
@@ -35738,13 +36316,59 @@ ENDIF
 IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ELTG-logL.bin"
+
+  EQUB &99             \ This byte appears to be unused and just contains
+                       \ random workspace noise left over from the BBC Micro
+                       \ assembly process
+
  ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ELTG-logL.bin"
+
+  EQUB &08             \ This byte appears to be unused and just contains
+                       \ random workspace noise left over from the BBC Micro
+                       \ assembly process
+
  ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ELTG-logL.bin"
+
+  EQUB &85             \ This byte appears to be unused and just contains
+                       \ random workspace noise left over from the BBC Micro
+                       \ assembly process
+
  ENDIF
 
+ EQUB &00, &00, &B8, &00, &4D, &B8, &D5
+ EQUB &FF, &70, &4D, &B3, &B8, &6A, &D5, &05
+ EQUB &00, &CC, &70, &EF, &4D, &8D, &B3, &C1
+ EQUB &B8, &9A, &6A, &28, &D5, &74, &05, &88
+ EQUB &00, &6B, &CC, &23, &70, &B3, &EF, &22
+ EQUB &4D, &71, &8D, &A3, &B3, &BD, &C1, &BF
+ EQUB &B8, &AB, &9A, &84, &6A, &4B, &28, &00
+ EQUB &D5, &A7, &74, &3E, &05, &C8, &88, &45
+ EQUB &FF, &B7, &6B, &1D, &CC, &79, &23, &CA
+ EQUB &70, &13, &B3, &52, &EF, &89, &22, &B8
+ EQUB &4D, &E0, &71, &00, &8D, &19, &A3, &2C
+ EQUB &B3, &39, &BD, &3F, &C1, &40, &BF, &3C
+ EQUB &B8, &32, &AB, &23, &9A, &10, &84, &F7
+ EQUB &6A, &DB, &4B, &BA, &28, &94, &00, &6B
+ EQUB &D5, &3E, &A7, &0E, &74, &DA, &3E, &A2
+ EQUB &05, &67, &C8, &29, &88, &E7, &45, &A3
+ EQUB &00, &5B, &B7, &11, &6B, &C4, &1D, &75
+ EQUB &CC, &23, &79, &CE, &23, &77, &CA, &1D
+ EQUB &70, &C1, &13, &63, &B3, &03, &52, &A1
+ EQUB &EF, &3C, &89, &D6, &22, &6D, &B8, &03
+ EQUB &4D, &96, &E0, &28, &71, &B8, &00, &47
+ EQUB &8D, &D4, &19, &5F, &A3, &E8, &2C, &70
+ EQUB &B3, &F6, &39, &7B, &BD, &FE, &3F, &80
+ EQUB &C1, &01, &40, &80, &BF, &FD, &3C, &7A
+ EQUB &B8, &F5, &32, &6F, &AB, &E7, &23, &5F
+ EQUB &9A, &D5, &10, &4A, &84, &BE, &F7, &31
+ EQUB &6A, &A2, &DB, &13, &4B, &82, &BA, &F1
+ EQUB &28, &5E, &94, &CB, &00, &36, &6B, &A0
+ EQUB &D5, &0A, &3E, &73, &A7, &DA, &0E, &41
+ EQUB &74, &A7, &DA, &0C, &3E, &70, &A2, &D3
+ EQUB &05, &36, &67, &98, &C8, &F8, &29, &59
+ EQUB &88, &B8, &E7, &16, &45, &74, &A3, &D1
+
+ 
 ELSE
 
  SKIP 1
