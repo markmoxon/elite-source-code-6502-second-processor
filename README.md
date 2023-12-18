@@ -29,9 +29,9 @@ See the [introduction](#introduction) for more information, or jump straight int
 * [Building Elite from the source](#building-elite-from-the-source)
 
   * [Requirements](#requirements)
-  * [Build targets](#build-targets)
   * [Windows](#windows)
   * [Mac and Linux](#mac-and-linux)
+  * [Build options](#build-options)
   * [Updating the checksum scripts if you change the code](#updating-the-checksum-scripts-if-you-change-the-code)
   * [Verifying the output](#verifying-the-output)
   * [Log files](#log-files)
@@ -149,6 +149,8 @@ For more information on the music, see the [hacks section of the accompanying we
 
 ## Building Elite from the source
 
+Builds are supported for both Windows and Mac/Linux systems. In all cases the build process is defined in the `Makefile` provided.
+
 ### Requirements
 
 You will need the following to build 6502 Second Processor Elite from the source:
@@ -161,31 +163,14 @@ You will need the following to build 6502 Second Processor Elite from the source
 
 Let's look at how to build 6502 Second Processor Elite from the source.
 
-### Build targets
-
-There are two main build targets available. They are:
-
-* `build` - An unencrypted version
-* `encrypt` - An encrypted version that includes the same obfuscation as the released version of the game
-
-The unencrypted version should be more useful for anyone who wants to make modifications to the game code. It includes a default commander with lots of cash and equipment, which makes it easier to test the game. As this target produces unencrypted files, the binaries produced will be quite different to the binaries on the original source disc, which are encrypted.
-
-The encrypted version contains an obfuscated version of the game binary, along with the standard default commander.
-
-Builds are supported for both Windows and Mac/Linux systems. In all cases the build process is defined in the `Makefile` provided.
-
 ### Windows
 
-For Windows users, there is a batch file called `make.bat` to which you can pass one of the build targets above. Before this will work, you should edit the batch file and change the values of the `BEEBASM` and `PYTHON` variables to point to the locations of your `beebasm.exe` and `python.exe` executables. You also need to change directory to the repository folder (i.e. the same folder as `make.bat`).
+For Windows users, there is a batch file called `make.bat` which you can use to build the game. Before this will work, you should edit the batch file and change the values of the `BEEBASM` and `PYTHON` variables to point to the locations of your `beebasm.exe` and `python.exe` executables. You also need to change directory to the repository folder (i.e. the same folder as `make.bat`).
 
-All being well, doing one of the following:
-
-```
-make.bat build
-```
+All being well, entering the following into a command window:
 
 ```
-make.bat encrypt
+make.bat
 ```
 
 will produce a file called `elite-6502sp-sng45.ssd` in the `5-compiled-game-discs` folder that contains the SNG45 variant, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
@@ -194,17 +179,41 @@ will produce a file called `elite-6502sp-sng45.ssd` in the `5-compiled-game-disc
 
 The build process uses a standard GNU `Makefile`, so you just need to install `make` if your system doesn't already have it. If BeebAsm or Python are not on your path, then you can either fix this, or you can edit the `Makefile` and change the `BEEBASM` and `PYTHON` variables in the first two lines to point to their locations. You also need to change directory to the repository folder (i.e. the same folder as `Makefile`).
 
-All being well, doing one of the following:
+All being well, entering the following into a terminal window:
 
 ```
-make build
-```
-
-```
-make encrypt
+make
 ```
 
 will produce a file called `elite-6502sp-sng45.ssd` in the `5-compiled-game-discs` folder that contains the SNG45 variant, which you can then load into an emulator, or into a real BBC Micro using a device like a Gotek.
+
+### Build options
+
+By default the build process will create a typical Elite game disc with a standard commander and verified binaries. There are various arguments you can pass to the build to change how it works. They are:
+
+* `variant=<name>` - Build the specified variant:
+
+  * `variant=sng45` (default)
+  * `variant=source-disc`
+  * `variant=executive`
+
+* `commander=max` - Start with a maxed-out commander
+
+* `encrypt=no` - Disable encryption and checksum routines
+
+* `match=no` - Do not attempt to match the original game binaries (i.e. omit workspace noise)
+
+* `verify=no` - Disable crc32 verification of the game binaries
+
+So, for example:
+
+`make variant=source-disc commander=max encrypt=no match=no verify=no`
+
+will build an unencrypted source disc variant with a maxed-out commander, no workspace noise and no crc32 verification.
+
+The unencrypted version should be more useful for anyone who wants to make modifications to the game code. As this argument produces unencrypted files, the binaries produced will be quite different to the binaries on the original source disc, which are encrypted.
+
+See below for more on the verification process.
 
 ### Updating the checksum scripts if you change the code
 
@@ -214,35 +223,11 @@ To fix this, you may need to update some of the hard-coded addresses in the chec
 
 ### Verifying the output
 
-The build process also supports a verification target that prints out checksums of all the generated files, along with the checksums of the files from the original sources.
-
-You can run this verification step on its own, or you can run it once a build has finished. To run it on its own, use the following command on Windows:
-
-```
-make.bat verify
-```
-
-or on Mac/Linux:
-
-```
-make verify
-```
-
-To run a build and then verify the results, you can add two targets, like this on Windows:
-
-```
-make.bat encrypt verify
-```
-
-or this on Mac/Linux:
-
-```
-make encrypt verify
-```
+The default build process prints out checksums of all the generated files, along with the checksums of the files from the original sources. You can disable verification by passing `verify=no` to the build.
 
 The Python script `crc32.py` in the `2-build-files` folder does the actual verification, and shows the checksums and file sizes of both sets of files, alongside each other, and with a Match column that flags any discrepancies. If you are building an unencrypted set of files then there will be lots of differences, while the encrypted files should match.
 
-The binaries in the `4-reference-binaries` folder were taken straight from the [6502 Second Processor sources disc image](http://www.elitehomepage.org/archive/a/a5022201.zip), while those in the `3-assembled-output` folder are produced by the build process. For example, if you don't make any changes to the code and build the project with `make encrypt verify`, then this is the output of the verification process:
+The binaries in the `4-reference-binaries` folder were taken straight from the [6502 Second Processor sources disc image](http://www.elitehomepage.org/archive/a/a5022201.zip), while those in the `3-assembled-output` folder are produced by the build process. For example, if you don't make any changes to the code and build the project with `make`, then this is the output of the verification process:
 
 ```
 Results for variant: sng45
@@ -278,17 +263,19 @@ During compilation, details of every step are output in a file called `compile.t
 
 For users of the excellent [b2 emulator](https://github.com/tom-seddon/b2), you can include the build parameter `b2` to automatically load and boot the assembled disc image in b2. The b2 emulator must be running for this to work.
 
-For example, to build, verify and load into b2, you can do this on Windows:
+For example, to build, verify and load the game into b2, you can do this on Windows:
 
 ```
-make.bat encrypt verify b2
+make.bat all b2
 ```
 
 or this on Mac/Linux:
 
 ```
-make encrypt verify b2
+make all b2
 ```
+
+If you omit the `all` target then b2 will start up with the results of the last successful build.
 
 Note that you should manually choose the correct platform in b2 (I intentionally haven't automated this part to make it easier to test across multiple platforms).
 
@@ -309,13 +296,13 @@ By default the build process builds the SNG45 variant, but you can build a speci
 You can add `variant=sng45` to produce the `elite-6502sp-sng45.ssd` file that contains the SNG45 variant, though that's the default value so it isn't necessary. In other words, you can build it like this:
 
 ```
-make.bat encrypt verify variant=sng45
+make.bat variant=sng45
 ```
 
 or this on a Mac or Linux:
 
 ```
-make encrypt verify variant=sng45
+make variant=sng45
 ```
 
 This will produce a file called `elite-6502sp-sng45.NES` in the `5-compiled-game-discs` folder that contains the SNG45 variant.
@@ -351,13 +338,13 @@ fc481d3e   1024  fc481d3e   1024   Yes   WORDS.bin
 You can build the source disc variant by appending `variant=source-disc` to the `make` command, like this on Windows:
 
 ```
-make.bat encrypt verify variant=source-disc
+make.bat variant=source-disc
 ```
 
 or this on a Mac or Linux:
 
 ```
-make encrypt verify variant=source-disc
+make variant=source-disc
 ```
 
 This will produce a file called `elite-6502sp-from-source-disc.ssd` in the `5-compiled-game-discs` folder that contains the source disc variant.
@@ -393,13 +380,13 @@ a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
 You can build the Executive version by appending `variant=executive` to the `make` command, like this on Windows:
 
 ```
-make.bat encrypt verify variant=executive
+make.bat variant=executive
 ```
 
 or this on a Mac or Linux:
 
 ```
-make encrypt verify variant=executive
+make variant=executive
 ```
 
 This will produce a file called `elite-6502sp-executive.ssd` in the `5-compiled-game-discs` folder that contains the Executive version.
@@ -457,6 +444,8 @@ The source files on the source disc do not build as they are; some massaging is 
 ### Producing byte-accurate binaries
 
 Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either initialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project. Workspace noise is only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
+
+You can disable the production of byte-accurate binaries by passing `match=no` to the build. This will omit most workspace noise, leaving workspaces initialised with zeroes instead.
 
 Here's an example of how workspace noise is included, from the start of the ELITE G file in elite-source.asm:
 

@@ -56,9 +56,8 @@
 
 IF _SNG45 OR _SOURCE_DISC
 
- Q% = _REMOVE_CHECKSUMS \ Set Q% to TRUE to max out the default commander, FALSE
-                        \ for the standard default commander (this is set to
-                        \ TRUE if checksums are disabled, just for convenience)
+ Q% = _MAX_COMMANDER    \ Set Q% to TRUE to max out the default commander, FALSE
+                        \ for the standard default commander
 
 ELIF _EXECUTIVE
 
@@ -36230,21 +36229,21 @@ IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
 
-  EQUB &02             \ This byte appears to be unused and just contains
-                       \ random workspace noise left over from the BBC Micro
-                       \ assembly process
+  EQUB &02              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
 
  ELIF _EXECUTIVE
 
-  EQUB &DC             \ This byte appears to be unused and just contains
-                       \ random workspace noise left over from the BBC Micro
-                       \ assembly process
+  EQUB &DC              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
 
  ELIF _SOURCE_DISC
 
-  EQUB &03             \ This byte appears to be unused and just contains
-                       \ random workspace noise left over from the BBC Micro
-                       \ assembly process
+  EQUB &03              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
 
  ENDIF
 
@@ -36281,7 +36280,6 @@ IF _MATCH_ORIGINAL_BINARIES
  EQUB &FD, &FD, &FD, &FD, &FD, &FD, &FE, &FE
  EQUB &FE, &FE, &FE, &FF, &FF, &FF, &FF, &FF
 
- 
 ELSE
 
  SKIP 1
@@ -36317,21 +36315,21 @@ IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
 
-  EQUB &99             \ This byte appears to be unused and just contains
-                       \ random workspace noise left over from the BBC Micro
-                       \ assembly process
+  EQUB &99              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
 
  ELIF _EXECUTIVE
 
-  EQUB &08             \ This byte appears to be unused and just contains
-                       \ random workspace noise left over from the BBC Micro
-                       \ assembly process
+  EQUB &08              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
 
  ELIF _SOURCE_DISC
 
-  EQUB &85             \ This byte appears to be unused and just contains
-                       \ random workspace noise left over from the BBC Micro
-                       \ assembly process
+  EQUB &85              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
 
  ENDIF
 
@@ -36368,7 +36366,6 @@ IF _MATCH_ORIGINAL_BINARIES
  EQUB &05, &36, &67, &98, &C8, &F8, &29, &59
  EQUB &88, &B8, &E7, &16, &45, &74, &A3, &D1
 
- 
 ELSE
 
  SKIP 1
