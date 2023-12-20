@@ -247,6 +247,8 @@
 \ followed by code that executes on the I/O processor before the main game code
 \ terminates.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Other entry points:
 \
 \   TINA+4              The code to run if the TINA hook is enabled
@@ -1257,6 +1259,8 @@ ENDIF
 \ The vector can be reset to USOSWRCH by calling the PUTBACK routine, which is
 \ done at the end of all of the routines that are pointed to by JMPTAB.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The character to print:
@@ -1328,10 +1332,14 @@ ENDIF
 \ the dashboard reappear, as the dashboard's screen memory doesn't get touched
 \ by this process.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The number of text rows to display on the screen (24
 \                       will hide the dashboard, 31 will make it reappear)
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -1370,6 +1378,8 @@ ENDIF
 \
 \ See p.379 of the Advanced User Guide for an explanation of palette bytes.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The new value of SHEILA &21
@@ -1395,6 +1405,8 @@ ENDIF
 \
 \ This routine is run when the parasite sends a #DOHFX <flag> command. It
 \ updates the hyperspace effect flag in HFX.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -1427,6 +1439,8 @@ ENDIF
 \ allows us to enable and disable interrupts. It is used for enabling and
 \ disabling the keyboard interrupt.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The new value of the interrupt enable register (IER)
@@ -1452,6 +1466,8 @@ ENDIF
 \
 \ This routine is run when the parasite sends a #DOCATF <flag> command. It
 \ updates the disc catalogue flag in CATF.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -1482,6 +1498,8 @@ ENDIF
 \ This routine is run when the parasite sends a #SETCOL <colour> command. It
 \ updates the current colour in COL.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The new colour
@@ -1507,6 +1525,8 @@ ENDIF
 \
 \ This routine is run when the parasite sends a #DOSVN <flag> command. It
 \ updates the "save in progress" flag in svn
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -1560,6 +1580,8 @@ ENDIF
 \ Arguments:
 \
 \   A                   The character to print on the printer and screen
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -1979,6 +2001,8 @@ ENDIF
 \
 \ Draw a double-height mode 2 dot (2 pixels high, 2 pixels wide).
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   X1                  The screen pixel x-coordinate of the bottom-left corner
@@ -2011,6 +2035,8 @@ ENDIF
 \ ------------------------------------------------------------------------------
 \
 \ Draw a single-height mode 2 dash (1 pixel high, 2 pixels wide).
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -2124,6 +2150,8 @@ ENDIF
 \ This routine is run when the parasite sends a #onescan command with parameters
 \ in the block at OSSC(1 0). It draws a ship on the 3D scanner. The parameters
 \ match those put into the SCANpars block in the parasite.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -2320,6 +2348,8 @@ ENDIF
 \ These get added to the TABLE buffer, and when the parasite has sent all the
 \ coordinates, we draw the line.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The number of points in the new line + 1
@@ -2363,6 +2393,8 @@ ENDIF
 \ sent, and will be preceded by a dummy pair of coordinates where the Y2 value
 \ is 255, which is not in the space view (as the maximum y-coordinate in the
 \ space view is 191). Laser lines are drawn in red.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -2605,6 +2637,8 @@ ENDIF
 \
 \ This routine draws a line from (X1, Y1) to (X2, Y2). It has multiple stages.
 \ This stage calculates the line deltas.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -4791,6 +4825,8 @@ ENDIF
 \
 \ We do not draw a pixel at the right end of the line.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   OSSC(1 0)           A parameter block as follows:
@@ -4814,6 +4850,8 @@ ENDIF
 \                         * Byte #7 = The y-coordinate of the second line
 \
 \                       and so on
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -5241,6 +5279,8 @@ ENDIF
 \
 \ The parameters match those put into the PBUF/pixbl block in the parasite.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   OSSC(1 0)           A parameter block as follows:
@@ -5591,6 +5631,8 @@ ENDIF
 \ read characters from the input stream, and bolts on logic to check for valid
 \ and invalid characters.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Returns:
 \
 \   A                   The character that is read:
@@ -5791,6 +5833,8 @@ ENDIF
 \ already on-screen. For the horizontal lines, when there are multiple ships in
 \ the hangar, this also means drawing lines between the ships, as well as in
 \ from each side.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -6234,6 +6278,8 @@ ENDIF
 \ This uses the same shift-and-subtract algorithm as TIS2, but this time we
 \ keep the remainder.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Returns:
 \
 \   C flag              The C flag is cleared
@@ -6342,6 +6388,8 @@ ENDIF
 \   A                   The internal number of the key to check (see p.142 of
 \                       the Advanced User Guide for a list of internal key
 \                       numbers)
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -6471,9 +6519,13 @@ ENDMACRO
 \ Finally, the joystick is read for X, Y and fire button values. The rotation
 \ value is also read from the Bitstik.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   OSSC                The address of the table in which to log the key presses
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -6710,6 +6762,8 @@ ENDMACRO
 \ WORDV is set to point to this routine in the STARTUP routine that runs when
 \ the I/O processor code first loads.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The OSWORD call to perform:
@@ -6719,6 +6773,8 @@ ENDMACRO
 \                         * All others: Call the standard OSWORD routine
 \
 \   (Y X)               The address of the associated OSWORD parameter block
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -6797,6 +6853,8 @@ ENDMACRO
 \ missile bar. The parameters match those put into the msbpars block in the
 \ parasite.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   OSSC(1 0)           A parameter block as follows:
@@ -6814,6 +6872,8 @@ ENDMACRO
 \                           * #YELLOW2 = yellow/white (armed)
 \
 \                           * #GREEN2 = green (disarmed)
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -6950,6 +7010,8 @@ ENDMACRO
 \ in the block at OSSC(1 0). It scans the keyboard to see if the specified key
 \ is being pressed.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   OSSC(1 0)           A parameter block as follows:
@@ -6958,6 +7020,8 @@ ENDMACRO
 \
 \                       See p.142 of the Advanced User Guide for a list of
 \                       internal key numbers
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -7032,6 +7096,8 @@ ENDMACRO
 \ Calls to OSWRCH will end up here when A is not in the range 128-147, as those
 \ are reserved for the special jump table OSWRCH commands.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The character to be printed. Can be one of the
@@ -7056,6 +7122,8 @@ ENDMACRO
 \
 \   YC                  Contains the line number to print on (the y-coordinate)
 \
+\ ------------------------------------------------------------------------------
+\
 \ Returns:
 \
 \   A                   A is preserved
@@ -7063,6 +7131,8 @@ ENDMACRO
 \   X                   X is preserved
 \
 \   Y                   Y is preserved
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -7537,6 +7607,8 @@ ENDMACRO
 \ Clear the top part of the screen (the space view) and draw a white border
 \ along the top and sides.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Other entry points:
 \
 \   BOX                 Just draw the white border along the top and sides
@@ -7666,6 +7738,8 @@ ENDMACRO
 \
 \ Zero-fill from address (X SC) + Y to (X SC) + &FF.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   X                   The high byte (i.e. the page) of the starting point of
@@ -7676,6 +7750,8 @@ ENDMACRO
 \
 \   SC                  The low byte (i.e. the offset into the page) of the
 \                       starting point of the zero-fill
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -7716,6 +7792,8 @@ ENDMACRO
 \ This routine is run when the parasite sends a #SETXC <column> command. It
 \ updates the text cursor x-coordinate (i.e. the text column) in XC.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The text column
@@ -7741,6 +7819,8 @@ ENDMACRO
 \
 \ This routine is run when the parasite sends a #SETYC <row> command. It updates
 \ the text cursor y-coordinate (i.e. the text row) in YC.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -8235,6 +8315,8 @@ ENDMACRO
 \ The values returned are #GREEN2 for green and #RED2 for red. These are mode 2
 \ bytes that contain 2 pixels, with the colour of each pixel given in four bits.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Returns:
 \
 \   A                   The colour to use for indicators with dangerous values
@@ -8279,6 +8361,8 @@ ENDMACRO
 \ called. For the default entry point of DILX, the range is 0-255 (as the value
 \ passed in A is one byte). The other entry points are shown below.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The value to be shown on the indicator (so the larger
@@ -8297,6 +8381,8 @@ ENDMACRO
 \
 \   SC(1 0)             The screen address of the first character block in the
 \                       indicator
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -8478,11 +8564,15 @@ ENDMACRO
 \ the vertical bar never appears in the leftmost position (though it does appear
 \ in the rightmost).
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The offset of the vertical bar to show in the indicator,
 \                       from 0 at the far left, to 8 in the middle, and 15 at
 \                       the far right
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -8743,6 +8833,8 @@ ENDMACRO
 \
 \ IRQ1V is set to point to IRQ1 by the loading process.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Other entry points:
 \
 \   VNT3+1              Changing this byte modifies the palette-loading
@@ -8897,6 +8989,8 @@ ENDMACRO
 \ palette that's applied to the top part of the screen (the four-colour mode 1
 \ part). The parameter is the offset within the TVT3 palette block of the
 \ desired palette.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
