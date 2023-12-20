@@ -223,6 +223,8 @@
 \ followed by code that executes on the I/O processor before the main game code
 \ terminates.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Other entry points:
 \
 \   TINA+4              The code to run if the TINA hook is enabled
@@ -331,12 +333,57 @@ ENDIF
 IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ICODE-log.bin"
+
+  EQUB &18              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
+
  ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ICODE-log.bin"
+
+  EQUB &FF              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
+
  ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ICODE-log.bin"
+
+  EQUB &8E              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
+
  ENDIF
+
+ EQUB &00, &20, &32, &40, &4A, &52, &59
+ EQUB &5F, &65, &6A, &6E, &72, &76, &79, &7D
+ EQUB &80, &82, &85, &87, &8A, &8C, &8E, &90
+ EQUB &92, &94, &96, &98, &99, &9B, &9D, &9E
+ EQUB &A0, &A1, &A2, &A4, &A5, &A6, &A7, &A9
+ EQUB &AA, &AB, &AC, &AD, &AE, &AF, &B0, &B1
+ EQUB &B2, &B3, &B4, &B5, &B6, &B7, &B8, &B9
+ EQUB &B9, &BA, &BB, &BC, &BD, &BD, &BE, &BF
+ EQUB &BF, &C0, &C1, &C2, &C2, &C3, &C4, &C4
+ EQUB &C5, &C6, &C6, &C7, &C7, &C8, &C9, &C9
+ EQUB &CA, &CA, &CB, &CC, &CC, &CD, &CD, &CE
+ EQUB &CE, &CF, &CF, &D0, &D0, &D1, &D1, &D2
+ EQUB &D2, &D3, &D3, &D4, &D4, &D5, &D5, &D5
+ EQUB &D6, &D6, &D7, &D7, &D8, &D8, &D9, &D9
+ EQUB &D9, &DA, &DA, &DB, &DB, &DB, &DC, &DC
+ EQUB &DD, &DD, &DD, &DE, &DE, &DE, &DF, &DF
+ EQUB &E0, &E0, &E0, &E1, &E1, &E1, &E2, &E2
+ EQUB &E2, &E3, &E3, &E3, &E4, &E4, &E4, &E5
+ EQUB &E5, &E5, &E6, &E6, &E6, &E7, &E7, &E7
+ EQUB &E7, &E8, &E8, &E8, &E9, &E9, &E9, &EA
+ EQUB &EA, &EA, &EA, &EB, &EB, &EB, &EC, &EC
+ EQUB &EC, &EC, &ED, &ED, &ED, &ED, &EE, &EE
+ EQUB &EE, &EE, &EF, &EF, &EF, &EF, &F0, &F0
+ EQUB &F0, &F1, &F1, &F1, &F1, &F1, &F2, &F2
+ EQUB &F2, &F2, &F3, &F3, &F3, &F3, &F4, &F4
+ EQUB &F4, &F4, &F5, &F5, &F5, &F5, &F5, &F6
+ EQUB &F6, &F6, &F6, &F7, &F7, &F7, &F7, &F7
+ EQUB &F8, &F8, &F8, &F8, &F9, &F9, &F9, &F9
+ EQUB &F9, &FA, &FA, &FA, &FA, &FA, &FB, &FB
+ EQUB &FB, &FB, &FB, &FC, &FC, &FC, &FC, &FC
+ EQUB &FD, &FD, &FD, &FD, &FD, &FD, &FE, &FE
+ EQUB &FE, &FE, &FE, &FF, &FF, &FF, &FF, &FF
 
 ELSE
 
@@ -344,9 +391,7 @@ ELSE
 
  FOR I%, 1, 255
 
-  B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
-
-  EQUB B% DIV 256
+  EQUB INT(&2000 * LOG(I%) / LOG(2) + 0.5) DIV 256
 
  NEXT
 
@@ -380,12 +425,57 @@ ENDIF
 IF _MATCH_ORIGINAL_BINARIES
 
  IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ICODE-logL.bin"
+
+  EQUB &86              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
+
  ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ICODE-logL.bin"
+
+  EQUB &FF              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
+
  ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ICODE-logL.bin"
+
+  EQUB &00              \ This byte appears to be unused and just contains
+                        \ random workspace noise left over from the BBC Micro
+                        \ assembly process
+
  ENDIF
+
+ EQUB &00, &00, &B8, &00, &4D, &B8, &D5
+ EQUB &FF, &70, &4D, &B3, &B8, &6A, &D5, &05
+ EQUB &00, &CC, &70, &EF, &4D, &8D, &B3, &C1
+ EQUB &B8, &9A, &6A, &28, &D5, &74, &05, &88
+ EQUB &00, &6B, &CC, &23, &70, &B3, &EF, &22
+ EQUB &4D, &71, &8D, &A3, &B3, &BD, &C1, &BF
+ EQUB &B8, &AB, &9A, &84, &6A, &4B, &28, &00
+ EQUB &D5, &A7, &74, &3E, &05, &C8, &88, &45
+ EQUB &FF, &B7, &6B, &1D, &CC, &79, &23, &CA
+ EQUB &70, &13, &B3, &52, &EF, &89, &22, &B8
+ EQUB &4D, &E0, &71, &00, &8D, &19, &A3, &2C
+ EQUB &B3, &39, &BD, &3F, &C1, &40, &BF, &3C
+ EQUB &B8, &32, &AB, &23, &9A, &10, &84, &F7
+ EQUB &6A, &DB, &4B, &BA, &28, &94, &00, &6B
+ EQUB &D5, &3E, &A7, &0E, &74, &DA, &3E, &A2
+ EQUB &05, &67, &C8, &29, &88, &E7, &45, &A3
+ EQUB &00, &5B, &B7, &11, &6B, &C4, &1D, &75
+ EQUB &CC, &23, &79, &CE, &23, &77, &CA, &1D
+ EQUB &70, &C1, &13, &63, &B3, &03, &52, &A1
+ EQUB &EF, &3C, &89, &D6, &22, &6D, &B8, &03
+ EQUB &4D, &96, &E0, &28, &71, &B8, &00, &47
+ EQUB &8D, &D4, &19, &5F, &A3, &E8, &2C, &70
+ EQUB &B3, &F6, &39, &7B, &BD, &FE, &3F, &80
+ EQUB &C1, &01, &40, &80, &BF, &FD, &3C, &7A
+ EQUB &B8, &F5, &32, &6F, &AB, &E7, &23, &5F
+ EQUB &9A, &D5, &10, &4A, &84, &BE, &F7, &31
+ EQUB &6A, &A2, &DB, &13, &4B, &82, &BA, &F1
+ EQUB &28, &5E, &94, &CB, &00, &36, &6B, &A0
+ EQUB &D5, &0A, &3E, &73, &A7, &DA, &0E, &41
+ EQUB &74, &A7, &DA, &0C, &3E, &70, &A2, &D3
+ EQUB &05, &36, &67, &98, &C8, &F8, &29, &59
+ EQUB &88, &B8, &E7, &16, &45, &74, &A3, &D1
 
 ELSE
 
@@ -393,9 +483,7 @@ ELSE
 
  FOR I%, 1, 255
 
-  B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
-
-  EQUB B% MOD 256
+  EQUB INT(&2000 * LOG(I%) / LOG(2) + 0.5) MOD 256
 
  NEXT
 
@@ -424,27 +512,44 @@ ENDIF
 
 IF _MATCH_ORIGINAL_BINARIES
 
- IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ICODE-antilog.bin"
- ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ICODE-antilog.bin"
- ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ICODE-antilog.bin"
- ENDIF
+ EQUB &01, &01, &01, &01, &01, &01, &01, &01
+ EQUB &01, &01, &01, &01, &01, &01, &01, &01
+ EQUB &01, &01, &01, &01, &01, &01, &01, &01
+ EQUB &01, &01, &01, &01, &01, &01, &01, &01
+ EQUB &02, &02, &02, &02, &02, &02, &02, &02
+ EQUB &02, &02, &02, &02, &02, &02, &02, &02
+ EQUB &02, &02, &02, &03, &03, &03, &03, &03
+ EQUB &03, &03, &03, &03, &03, &03, &03, &03
+ EQUB &04, &04, &04, &04, &04, &04, &04, &04
+ EQUB &04, &04, &04, &05, &05, &05, &05, &05
+ EQUB &05, &05, &05, &06, &06, &06, &06, &06
+ EQUB &06, &06, &07, &07, &07, &07, &07, &07
+ EQUB &08, &08, &08, &08, &08, &08, &09, &09
+ EQUB &09, &09, &09, &0A, &0A, &0A, &0A, &0B
+ EQUB &0B, &0B, &0B, &0C, &0C, &0C, &0C, &0D
+ EQUB &0D, &0D, &0E, &0E, &0E, &0E, &0F, &0F
+ EQUB &10, &10, &10, &11, &11, &11, &12, &12
+ EQUB &13, &13, &13, &14, &14, &15, &15, &16
+ EQUB &16, &17, &17, &18, &18, &19, &19, &1A
+ EQUB &1A, &1B, &1C, &1C, &1D, &1D, &1E, &1F
+ EQUB &20, &20, &21, &22, &22, &23, &24, &25
+ EQUB &26, &26, &27, &28, &29, &2A, &2B, &2C
+ EQUB &2D, &2E, &2F, &30, &31, &32, &33, &34
+ EQUB &35, &36, &38, &39, &3A, &3B, &3D, &3E
+ EQUB &40, &41, &42, &44, &45, &47, &48, &4A
+ EQUB &4C, &4D, &4F, &51, &52, &54, &56, &58
+ EQUB &5A, &5C, &5E, &60, &62, &64, &67, &69
+ EQUB &6B, &6D, &70, &72, &75, &77, &7A, &7D
+ EQUB &80, &82, &85, &88, &8B, &8E, &91, &94
+ EQUB &98, &9B, &9E, &A2, &A5, &A9, &AD, &B1
+ EQUB &B5, &B8, &BD, &C1, &C5, &C9, &CE, &D2
+ EQUB &D7, &DB, &E0, &E5, &EA, &EF, &F5, &FA
 
 ELSE
 
  FOR I%, 0, 255
 
-  B% = INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
-
-  IF B% = 256
-   N% = B%+1
-  ELSE
-   N% = B%
-  ENDIF
-
-  EQUB N%
+  EQUB INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
 
  NEXT
 
@@ -474,27 +579,44 @@ ENDIF
 
 IF _MATCH_ORIGINAL_BINARIES
 
- IF _SNG45
-  INCBIN "4-reference-binaries/sng45/workspaces/ICODE-antilogODD.bin"
- ELIF _EXECUTIVE
-  INCBIN "4-reference-binaries/executive/workspaces/ICODE-antilogODD.bin"
- ELIF _SOURCE_DISC
-  INCBIN "4-reference-binaries/source-disc/workspaces/ICODE-antilogODD.bin"
- ENDIF
+ EQUB &01, &01, &01, &01, &01, &01, &01, &01
+ EQUB &01, &01, &01, &01, &01, &01, &01, &01
+ EQUB &01, &01, &01, &01, &01, &01, &01, &01
+ EQUB &01, &01, &01, &01, &01, &01, &01, &01
+ EQUB &02, &02, &02, &02, &02, &02, &02, &02
+ EQUB &02, &02, &02, &02, &02, &02, &02, &02
+ EQUB &02, &02, &02, &03, &03, &03, &03, &03
+ EQUB &03, &03, &03, &03, &03, &03, &03, &03
+ EQUB &04, &04, &04, &04, &04, &04, &04, &04
+ EQUB &04, &04, &05, &05, &05, &05, &05, &05
+ EQUB &05, &05, &05, &06, &06, &06, &06, &06
+ EQUB &06, &06, &07, &07, &07, &07, &07, &07
+ EQUB &08, &08, &08, &08, &08, &09, &09, &09
+ EQUB &09, &09, &0A, &0A, &0A, &0A, &0A, &0B
+ EQUB &0B, &0B, &0B, &0C, &0C, &0C, &0D, &0D
+ EQUB &0D, &0D, &0E, &0E, &0E, &0F, &0F, &0F
+ EQUB &10, &10, &10, &11, &11, &12, &12, &12
+ EQUB &13, &13, &14, &14, &14, &15, &15, &16
+ EQUB &16, &17, &17, &18, &18, &19, &1A, &1A
+ EQUB &1B, &1B, &1C, &1D, &1D, &1E, &1E, &1F
+ EQUB &20, &21, &21, &22, &23, &24, &24, &25
+ EQUB &26, &27, &28, &29, &29, &2A, &2B, &2C
+ EQUB &2D, &2E, &2F, &30, &31, &32, &34, &35
+ EQUB &36, &37, &38, &3A, &3B, &3C, &3D, &3F
+ EQUB &40, &42, &43, &45, &46, &48, &49, &4B
+ EQUB &4C, &4E, &50, &52, &53, &55, &57, &59
+ EQUB &5B, &5D, &5F, &61, &63, &65, &68, &6A
+ EQUB &6C, &6F, &71, &74, &76, &79, &7B, &7E
+ EQUB &81, &84, &87, &8A, &8D, &90, &93, &96
+ EQUB &99, &9D, &A0, &A4, &A7, &AB, &AF, &B3
+ EQUB &B6, &BA, &BF, &C3, &C7, &CB, &D0, &D4
+ EQUB &D9, &DE, &E3, &E8, &ED, &F2, &F7, &FD
 
 ELSE
 
  FOR I%, 0, 255
 
-  B% = INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
-
-  IF B% = 256
-   N% = B%+1
-  ELSE
-   N% = B%
-  ENDIF
-
-  EQUB N%
+  EQUB INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
 
  NEXT
 
@@ -545,7 +667,7 @@ ENDIF
 \
 \       Name: TVT3
 \       Type: Variable
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: Palette data for the mode 1 part of the screen (the top part)
 \
 \ ------------------------------------------------------------------------------
@@ -1088,6 +1210,8 @@ ENDIF
 \ The vector can be reset to USOSWRCH by calling the PUTBACK routine, which is
 \ done at the end of all of the routines that are pointed to by JMPTAB.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The character to print:
@@ -1146,7 +1270,7 @@ ENDIF
 \
 \       Name: DODIALS
 \       Type: Subroutine
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: Implement the #DODIALS <rows> command (show or hide the dashboard)
 \
 \ ------------------------------------------------------------------------------
@@ -1159,10 +1283,14 @@ ENDIF
 \ the dashboard reappear, as the dashboard's screen memory doesn't get touched
 \ by this process.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The number of text rows to display on the screen (24
 \                       will hide the dashboard, 31 will make it reappear)
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -1201,6 +1329,8 @@ ENDIF
 \
 \ See p.379 of the Advanced User Guide for an explanation of palette bytes.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The new value of SHEILA &21
@@ -1226,6 +1356,8 @@ ENDIF
 \
 \ This routine is run when the parasite sends a #DOHFX <flag> command. It
 \ updates the hyperspace effect flag in HFX.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -1258,6 +1390,8 @@ ENDIF
 \ allows us to enable and disable interrupts. It is used for enabling and
 \ disabling the keyboard interrupt.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The new value of the interrupt enable register (IER)
@@ -1284,6 +1418,8 @@ ENDIF
 \ This routine is run when the parasite sends a #DOCATF <flag> command. It
 \ updates the disc catalogue flag in CATF.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The new value of the disc catalogue flag:
@@ -1305,13 +1441,15 @@ ENDIF
 \
 \       Name: DOCOL
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Text
 \    Summary: Implement the #SETCOL <colour> command (set the current colour)
 \
 \ ------------------------------------------------------------------------------
 \
 \ This routine is run when the parasite sends a #SETCOL <colour> command. It
 \ updates the current colour in COL.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -1338,6 +1476,8 @@ ENDIF
 \
 \ This routine is run when the parasite sends a #DOSVN <flag> command. It
 \ updates the "save in progress" flag in svn
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -1391,6 +1531,8 @@ ENDIF
 \ Arguments:
 \
 \   A                   The character to print on the printer and screen
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -1810,6 +1952,8 @@ ENDIF
 \
 \ Draw a double-height mode 2 dot (2 pixels high, 2 pixels wide).
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   X1                  The screen pixel x-coordinate of the bottom-left corner
@@ -1842,6 +1986,8 @@ ENDIF
 \ ------------------------------------------------------------------------------
 \
 \ Draw a single-height mode 2 dash (1 pixel high, 2 pixels wide).
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -1955,6 +2101,8 @@ ENDIF
 \ This routine is run when the parasite sends a #onescan command with parameters
 \ in the block at OSSC(1 0). It draws a ship on the 3D scanner. The parameters
 \ match those put into the SCANpars block in the parasite.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -2151,6 +2299,8 @@ ENDIF
 \ These get added to the TABLE buffer, and when the parasite has sent all the
 \ coordinates, we draw the line.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The number of points in the new line + 1
@@ -2194,6 +2344,8 @@ ENDIF
 \ sent, and will be preceded by a dummy pair of coordinates where the Y2 value
 \ is 255, which is not in the space view (as the maximum y-coordinate in the
 \ space view is 191). Laser lines are drawn in red.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -2436,6 +2588,8 @@ ENDIF
 \
 \ This routine draws a line from (X1, Y1) to (X2, Y2). It has multiple stages.
 \ This stage calculates the line deltas.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -4622,6 +4776,8 @@ ENDIF
 \
 \ We do not draw a pixel at the right end of the line.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   OSSC(1 0)           A parameter block as follows:
@@ -4645,6 +4801,8 @@ ENDIF
 \                         * Byte #7 = The y-coordinate of the second line
 \
 \                       and so on
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -5072,6 +5230,8 @@ ENDIF
 \
 \ The parameters match those put into the PBUF/pixbl block in the parasite.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   OSSC(1 0)           A parameter block as follows:
@@ -5422,6 +5582,8 @@ ENDIF
 \ read characters from the input stream, and bolts on logic to check for valid
 \ and invalid characters.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Returns:
 \
 \   A                   The character that is read:
@@ -5622,6 +5784,8 @@ ENDIF
 \ already on-screen. For the horizontal lines, when there are multiple ships in
 \ the hangar, this also means drawing lines between the ships, as well as in
 \ from each side.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -6065,6 +6229,8 @@ ENDIF
 \ This uses the same shift-and-subtract algorithm as TIS2, but this time we
 \ keep the remainder.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Returns:
 \
 \   C flag              The C flag is cleared
@@ -6173,6 +6339,8 @@ ENDIF
 \   A                   The internal number of the key to check (see p.142 of
 \                       the Advanced User Guide for a list of internal key
 \                       numbers)
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -6302,9 +6470,13 @@ ENDMACRO
 \ Finally, the joystick is read for X, Y and fire button values. The rotation
 \ value is also read from the Bitstik.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   OSSC                The address of the table in which to log the key presses
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -6527,6 +6699,8 @@ ENDMACRO
 \ WORDV is set to point to this routine in the STARTUP routine that runs when
 \ the I/O processor code first loads.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The OSWORD call to perform:
@@ -6536,6 +6710,8 @@ ENDMACRO
 \                         * All others: Call the standard OSWORD routine
 \
 \   (Y X)               The address of the associated OSWORD parameter block
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -6614,6 +6790,8 @@ ENDMACRO
 \ missile bar. The parameters match those put into the msbpars block in the
 \ parasite.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   OSSC(1 0)           A parameter block as follows:
@@ -6631,6 +6809,8 @@ ENDMACRO
 \                           * #YELLOW2 = yellow/white (armed)
 \
 \                           * #GREEN2 = green (disarmed)
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -6727,7 +6907,7 @@ ENDMACRO
 \
 \       Name: WSCAN
 \       Type: Subroutine
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: Implement the #wscn command (wait for the vertical sync)
 \
 \ ------------------------------------------------------------------------------
@@ -6767,6 +6947,8 @@ ENDMACRO
 \ in the block at OSSC(1 0). It scans the keyboard to see if the specified key
 \ is being pressed.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   OSSC(1 0)           A parameter block as follows:
@@ -6775,6 +6957,8 @@ ENDMACRO
 \
 \                       See p.142 of the Advanced User Guide for a list of
 \                       internal key numbers
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -6804,7 +6988,7 @@ ENDMACRO
 \
 \       Name: cls
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Drawing the screen
 \    Summary: Clear the top part of the screen and draw a white border
 \
 \ ******************************************************************************
@@ -6849,6 +7033,8 @@ ENDMACRO
 \ Calls to OSWRCH will end up here when A is not in the range 128-147, as those
 \ are reserved for the special jump table OSWRCH commands.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The character to be printed. Can be one of the
@@ -6873,6 +7059,8 @@ ENDMACRO
 \
 \   YC                  Contains the line number to print on (the y-coordinate)
 \
+\ ------------------------------------------------------------------------------
+\
 \ Returns:
 \
 \   A                   A is preserved
@@ -6880,6 +7068,8 @@ ENDMACRO
 \   X                   X is preserved
 \
 \   Y                   Y is preserved
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -7346,13 +7536,15 @@ ENDMACRO
 \
 \       Name: TTX66
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Drawing the screen
 \    Summary: Clear the top part of the screen and draw a white border
 \
 \ ------------------------------------------------------------------------------
 \
 \ Clear the top part of the screen (the space view) and draw a white border
 \ along the top and sides.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -7483,6 +7675,8 @@ ENDMACRO
 \
 \ Zero-fill from address (X SC) + Y to (X SC) + &FF.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   X                   The high byte (i.e. the page) of the starting point of
@@ -7493,6 +7687,8 @@ ENDMACRO
 \
 \   SC                  The low byte (i.e. the offset into the page) of the
 \                       starting point of the zero-fill
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -7533,6 +7729,8 @@ ENDMACRO
 \ This routine is run when the parasite sends a #SETXC <column> command. It
 \ updates the text cursor x-coordinate (i.e. the text column) in XC.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The text column
@@ -7558,6 +7756,8 @@ ENDMACRO
 \
 \ This routine is run when the parasite sends a #SETYC <row> command. It updates
 \ the text cursor y-coordinate (i.e. the text row) in YC.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \
@@ -7612,7 +7812,7 @@ ENDMACRO
 \
 \       Name: CLYNS
 \       Type: Subroutine
-\   Category: Utility routines
+\   Category: Drawing the screen
 \    Summary: Implement the #clyns command (clear the bottom of the screen)
 \
 \ ******************************************************************************
@@ -8052,6 +8252,8 @@ ENDMACRO
 \ The values returned are #GREEN2 for green and #RED2 for red. These are mode 2
 \ bytes that contain 2 pixels, with the colour of each pixel given in four bits.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Returns:
 \
 \   A                   The colour to use for indicators with dangerous values
@@ -8096,6 +8298,8 @@ ENDMACRO
 \ called. For the default entry point of DILX, the range is 0-255 (as the value
 \ passed in A is one byte). The other entry points are shown below.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The value to be shown on the indicator (so the larger
@@ -8114,6 +8318,8 @@ ENDMACRO
 \
 \   SC(1 0)             The screen address of the first character block in the
 \                       indicator
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -8295,11 +8501,15 @@ ENDMACRO
 \ the vertical bar never appears in the leftmost position (though it does appear
 \ in the rightmost).
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   A                   The offset of the vertical bar to show in the indicator,
 \                       from 0 at the far left, to 8 in the middle, and 15 at
 \                       the far right
+\
+\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -8407,7 +8617,7 @@ ENDMACRO
 \
 \       Name: TVT1
 \       Type: Variable
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: Palette data for the mode 2 part of the screen (the dashboard)
 \
 \ ------------------------------------------------------------------------------
@@ -8549,7 +8759,7 @@ ENDMACRO
 \
 \       Name: IRQ1
 \       Type: Subroutine
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: The main screen-mode interrupt handler (IRQ1V points here)
 \  Deep dive: The split-screen mode in BBC Micro Elite
 \
@@ -8559,6 +8769,8 @@ ENDMACRO
 \ the deep dive on "The split-screen mode in BBC Micro Elite" for details).
 \
 \ IRQ1V is set to point to IRQ1 by the loading process.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
@@ -8703,7 +8915,7 @@ ENDMACRO
 \
 \       Name: SETVDU19
 \       Type: Subroutine
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: Implement the #SETVDU19 <offset> command (change mode 1 palette)
 \
 \ ------------------------------------------------------------------------------
@@ -8714,6 +8926,8 @@ ENDMACRO
 \ palette that's applied to the top part of the screen (the four-colour mode 1
 \ part). The parameter is the offset within the TVT3 palette block of the
 \ desired palette.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \

@@ -123,7 +123,7 @@ ENDIF
 \
 \       Name: B%
 \       Type: Variable
-\   Category: Screen mode
+\   Category: Drawing the screen
 \    Summary: VDU commands for setting the square mode 1 screen
 \  Deep dive: The split-screen mode in BBC Micro Elite
 \             Drawing monochrome pixels in mode 4
@@ -1043,6 +1043,8 @@ ENDIF
 \ screen (the four-colour mode 1 space view).
 \
 \ See the PIXEL routine in the main game code for more details.
+\
+\ ------------------------------------------------------------------------------
 \
 \ Arguments:
 \

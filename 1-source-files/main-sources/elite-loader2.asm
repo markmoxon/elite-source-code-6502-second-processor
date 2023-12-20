@@ -101,6 +101,8 @@
 \ It is used to move the component parts of the loading screen into screen
 \ memory, such as the dashboard background and Acornsoft copyright message.
 \
+\ ------------------------------------------------------------------------------
+\
 \ Arguments:
 \
 \   S%                  The source address of the block to move
