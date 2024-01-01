@@ -101,31 +101,15 @@
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code added for music: ---------------------->
+                        \ --- Mod: Code removed for music: -------------------->
+
+\ORG &0080
+
+                        \ --- And replaced by: -------------------------------->
 
  ORG &0070
 
-.musicWorkspace
-
- SKIP 8                 \ Storage for the music player, &0092 to &0099 inclusive
-
-.musicRomNumber
-
- SKIP 1                 \ The bank number of the sideways ROM slot containing
-                        \ the music player at &009A
-
-.musicStatus
-
- SKIP 1                 \ A flag to determine whether to play the currently
-                        \ selected music:
-                        \
-                        \   * 0 = do not play the music
-                        \
-                        \   * Non-zero = do play the music
-
-                        \ --- End of added code ------------------------------->
-
- ORG &0080
+                        \ --- End of replacement ------------------------------>
 
 .ZP
 
@@ -176,6 +160,30 @@
                         \ called with OSSC(1 0) pointing to the OSWORD parameter
                         \ block (i.e. OSSC(1 0) = (Y X) from the original call
                         \ in the I/O processor)
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+ ORG &0086
+
+.musicWorkspace
+
+ SKIP 8                 \ Storage for the music player, &0092 to &0099 inclusive
+
+.musicRomNumber
+
+ SKIP 1                 \ The bank number of the sideways ROM slot containing
+                        \ the music player at &009A
+
+.musicStatus
+
+ SKIP 1                 \ A flag to determine whether to play the currently
+                        \ selected music:
+                        \
+                        \   * 0 = do not play the music
+                        \
+                        \   * Non-zero = do play the music
+
+                        \ --- End of added code ------------------------------->
 
  ORG &0090
 

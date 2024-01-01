@@ -40262,32 +40262,32 @@ ships = &85F7
 P% = &A7F7 
 S.P.CODE &1000 &A7F7  &1000 &1000 
 Saving file '3-assembled-output/P.CODE.unprot.bin'
-.musicWorkspace
-     0070
-.musicRomNumber
-     0078
-.musicStatus
-     0079
 .ZP
-     0080
+     0070
 .P
-     0080
+     0070
 .Q
-     0081
+     0071
 .R
-     0082
+     0072
 .S
-     0083
+     0073
 .T
-     0084
+     0074
 .SWAP
-     0085
+     0075
 .T1
-     0086
+     0076
 .COL
-     0087
+     0077
 .OSSC
-     0088
+     0078
+.musicWorkspace
+     0086
+.musicRomNumber
+     008E
+.musicStatus
+     008F
 .XX15
      0090
 .X1
@@ -41789,7 +41789,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2CFA   8D 0D 02   STA &020D
      2CFD   58         CLI
      2CFE   A9 FF      LDA #&FF
-     2D00   85 87      STA &87
+     2D00   85 77      STA &77
      2D02   AD 00 0B   LDA &0B00
      2D05   C9 54      CMP #&54
      2D07   D0 18      BNE &2D21
@@ -41844,7 +41844,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2D62   8D 4D 2C   STA &2C4D
      2D65   4C 21 2D   JMP &2D21
 .DOCOL
-     2D68   85 87      STA &87
+     2D68   85 77      STA &77
      2D6A   4C 21 2D   JMP &2D21
 .DOSVN
      2D6D   8D 47 2C   STA &2C47
@@ -41964,14 +41964,14 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2E1F   FF
 .DOT
      2E20   A0 02      LDY #&02
-     2E22   B1 88      LDA (&88),Y
+     2E22   B1 78      LDA (&78),Y
      2E24   85 90      STA &90
      2E26   C8         INY
-     2E27   B1 88      LDA (&88),Y
+     2E27   B1 78      LDA (&78),Y
      2E29   85 91      STA &91
      2E2B   C8         INY
-     2E2C   B1 88      LDA (&88),Y
-     2E2E   85 87      STA &87
+     2E2C   B1 78      LDA (&78),Y
+     2E2E   85 77      STA &77
      2E30   C9 3F      CMP #&3F
      2E32   D0 05      BNE &2E39
 .CPIX4
@@ -41996,7 +41996,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2E53   29 02      AND #&02
      2E55   AA         TAX
      2E56   BD 53 2F   LDA &2F53,X
-     2E59   25 87      AND &87
+     2E59   25 77      AND &77
      2E5B   51 96      EOR (&96),Y
      2E5D   91 96      STA (&96),Y
      2E5F   BD 55 2F   LDA &2F55,X
@@ -42008,32 +42008,32 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2E6C   E6 97      INC &97
      2E6E   BD 55 2F   LDA &2F55,X
 .CP1
-     2E71   25 87      AND &87
+     2E71   25 77      AND &77
      2E73   51 96      EOR (&96),Y
      2E75   91 96      STA (&96),Y
      2E77   60         RTS
 .SC48
      2E78   A0 04      LDY #&04
-     2E7A   B1 88      LDA (&88),Y
-     2E7C   85 87      STA &87
+     2E7A   B1 78      LDA (&78),Y
+     2E7C   85 77      STA &77
      2E7E   C8         INY
-     2E7F   B1 88      LDA (&88),Y
+     2E7F   B1 78      LDA (&78),Y
      2E81   85 90      STA &90
      2E83   C8         INY
-     2E84   B1 88      LDA (&88),Y
+     2E84   B1 78      LDA (&78),Y
      2E86   85 91      STA &91
      2E88   20 34 2E   JSR &2E34
      2E8B   BD 55 2F   LDA &2F55,X
-     2E8E   25 87      AND &87
+     2E8E   25 77      AND &77
      2E90   85 90      STA &90
-     2E92   84 81      STY &81
+     2E92   84 71      STY &71
      2E94   A0 02      LDY #&02
-     2E96   B1 88      LDA (&88),Y
+     2E96   B1 78      LDA (&78),Y
      2E98   0A         ASL A
      2E99   C8         INY
-     2E9A   B1 88      LDA (&88),Y
+     2E9A   B1 78      LDA (&78),Y
      2E9C   F0 17      BEQ &2EB5
-     2E9E   A4 81      LDY &81
+     2E9E   A4 71      LDY &71
      2EA0   AA         TAX
      2EA1   90 13      BCC &2EB6
 .VLL1
@@ -42099,9 +42099,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2F0C   85 92      STA &92
      2F0E   B9 03 23   LDA &2303,Y
      2F11   85 93      STA &93
-     2F13   84 86      STY &86
+     2F13   84 76      STY &76
      2F15   20 65 2F   JSR &2F65
-     2F18   A5 86      LDA &86
+     2F18   A5 76      LDA &76
      2F1A   18         CLC
      2F1B   69 04      ADC #&04
 .Ivedonealaser
@@ -42111,10 +42111,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .DRLR1
      2F23   4C 21 2D   JMP &2D21
 .doalaser
-     2F26   A5 87      LDA &87
+     2F26   A5 77      LDA &77
      2F28   48         PHA
      2F29   A9 F0      LDA #&F0
-     2F2B   85 87      STA &87
+     2F2B   85 77      STA &77
      2F2D   AD 04 23   LDA &2304
      2F30   85 90      STA &90
      2F32   AD 05 23   LDA &2305
@@ -42125,7 +42125,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2F3F   85 93      STA &93
      2F41   20 65 2F   JSR &2F65
      2F44   68         PLA
-     2F45   85 87      STA &87
+     2F45   85 77      STA &77
      2F47   A9 08      LDA #&08
      2F49   D0 D2      BNE &2F1D
 .TWOS
@@ -42149,14 +42149,14 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2F59   A6 90      LDX &90
      2F5B   84 93      STY &93
      2F5D   C8         INY
-     2F5E   84 81      STY &81
-     2F60   A5 87      LDA &87
+     2F5E   84 71      STY &71
+     2F60   A5 77      LDA &77
      2F62   4C 9B 35   JMP &359B
 .LOIN
      2F65   A9 80      LDA #&80
-     2F67   85 83      STA &83
+     2F67   85 73      STA &73
      2F69   0A         ASL A
-     2F6A   85 85      STA &85
+     2F6A   85 75      STA &75
      2F6C   A5 92      LDA &92
      2F6E   E5 90      SBC &90
      2F70   B0 05      BCS &2F77
@@ -42164,7 +42164,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2F74   69 01      ADC #&01
      2F76   38         SEC
 .LI1
-     2F77   85 80      STA &80
+     2F77   85 70      STA &70
      2F79   A5 93      LDA &93
      2F7B   E5 91      SBC &91
      2F7D   F0 DA      BEQ &2F59
@@ -42172,15 +42172,15 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2F81   49 FF      EOR #&FF
      2F83   69 01      ADC #&01
 .LI2
-     2F85   85 81      STA &81
-     2F87   C5 80      CMP &80
+     2F85   85 71      STA &71
+     2F87   C5 70      CMP &70
      2F89   90 03      BCC &2F8E
      2F8B   4C 95 31   JMP &3195
 .STPX
      2F8E   A6 90      LDX &90
      2F90   E4 92      CPX &92
      2F92   90 11      BCC &2FA5
-     2F94   C6 85      DEC &85
+     2F94   C6 75      DEC &75
      2F96   A5 92      LDA &92
      2F98   85 90      STA &90
      2F9A   86 92      STX &92
@@ -42204,17 +42204,17 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2FB9   E6 97      INC &97
      2FBB   8A         TXA
      2FBC   29 03      AND #&03
-     2FBE   85 82      STA &82
-     2FC0   A6 81      LDX &81
+     2FBE   85 72      STA &72
+     2FC0   A6 71      LDX &71
      2FC2   F0 22      BEQ &2FE6
      2FC4   BD 00 28   LDA &2800,X
-     2FC7   A6 80      LDX &80
+     2FC7   A6 70      LDX &70
      2FC9   38         SEC
      2FCA   FD 00 28   SBC &2800,X
      2FCD   30 1B      BMI &2FEA
-     2FCF   A6 81      LDX &81
+     2FCF   A6 71      LDX &71
      2FD1   BD 00 27   LDA &2700,X
-     2FD4   A6 80      LDX &80
+     2FD4   A6 70      LDX &70
      2FD6   FD 00 27   SBC &2700,X
      2FD9   B0 07      BCS &2FE2
      2FDB   AA         TAX
@@ -42227,16 +42227,16 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2FE6   A9 00      LDA #&00
      2FE8   F0 10      BEQ &2FFA
 .LIlog4
-     2FEA   A6 81      LDX &81
+     2FEA   A6 71      LDX &71
      2FEC   BD 00 27   LDA &2700,X
-     2FEF   A6 80      LDX &80
+     2FEF   A6 70      LDX &70
      2FF1   FD 00 27   SBC &2700,X
      2FF4   B0 EC      BCS &2FE2
      2FF6   AA         TAX
      2FF7   BD 00 2A   LDA &2A00,X
 .LIlog6
-     2FFA   85 81      STA &81
-     2FFC   A6 80      LDX &80
+     2FFA   85 71      STA &71
+     2FFC   A6 70      LDX &70
      2FFE   F0 4D      BEQ &304D
      3000   E8         INX
      3001   A5 93      LDA &93
@@ -42244,20 +42244,20 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3005   90 03      BCC &300A
      3007   4C C8 30   JMP &30C8
      300A   A9 88      LDA #&88
-     300C   25 87      AND &87
+     300C   25 77      AND &77
      300E   8D 47 30   STA &3047
      3011   A9 44      LDA #&44
-     3013   25 87      AND &87
+     3013   25 77      AND &77
      3015   8D 5C 30   STA &305C
      3018   A9 22      LDA #&22
-     301A   25 87      AND &87
+     301A   25 77      AND &77
      301C   8D 71 30   STA &3071
      301F   A9 11      LDA #&11
-     3021   25 87      AND &87
+     3021   25 77      AND &77
      3023   8D 86 30   STA &3086
-     3026   A5 85      LDA &85
+     3026   A5 75      LDA &75
      3028   F0 0D      BEQ &3037
-     302A   A5 82      LDA &82
+     302A   A5 72      LDA &72
      302C   F0 1E      BEQ &304C
      302E   C9 02      CMP #&02
      3030   90 2F      BCC &3061
@@ -42266,7 +42266,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3035   D0 54      BNE &308B
 .LI190
      3037   CA         DEX
-     3038   A5 82      LDA &82
+     3038   A5 72      LDA &72
      303A   F0 0A      BEQ &3046
      303C   C9 02      CMP #&02
      303E   90 1B      BCC &305B
@@ -42280,9 +42280,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      304C   CA         DEX
 .LIEXS
      304D   F0 78      BEQ &30C7
-     304F   A5 83      LDA &83
-     3051   65 81      ADC &81
-     3053   85 83      STA &83
+     304F   A5 73      LDA &73
+     3051   65 71      ADC &71
+     3053   85 73      STA &73
      3055   90 04      BCC &305B
      3057   18         CLC
      3058   88         DEY
@@ -42293,9 +42293,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      305F   91 96      STA (&96),Y
      3061   CA         DEX
      3062   F0 63      BEQ &30C7
-     3064   A5 83      LDA &83
-     3066   65 81      ADC &81
-     3068   85 83      STA &83
+     3064   A5 73      LDA &73
+     3066   65 71      ADC &71
+     3068   85 73      STA &73
      306A   90 04      BCC &3070
      306C   18         CLC
      306D   88         DEY
@@ -42306,9 +42306,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3074   91 96      STA (&96),Y
      3076   CA         DEX
      3077   F0 4E      BEQ &30C7
-     3079   A5 83      LDA &83
-     307B   65 81      ADC &81
-     307D   85 83      STA &83
+     3079   A5 73      LDA &73
+     307B   65 71      ADC &71
+     307D   85 73      STA &73
      307F   90 04      BCC &3085
      3081   18         CLC
      3082   88         DEY
@@ -42317,9 +42317,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3085   A9 11      LDA #&11
      3087   51 96      EOR (&96),Y
      3089   91 96      STA (&96),Y
-     308B   A5 83      LDA &83
-     308D   65 81      ADC &81
-     308F   85 83      STA &83
+     308B   A5 73      LDA &73
+     308D   65 71      ADC &71
+     308F   85 73      STA &73
      3091   90 04      BCC &3097
      3093   18         CLC
      3094   88         DEY
@@ -42358,16 +42358,16 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      30C7   60         RTS
 .DOWN
      30C8   A9 88      LDA #&88
-     30CA   25 87      AND &87
+     30CA   25 77      AND &77
      30CC   8D 14 31   STA &3114
      30CF   A9 44      LDA #&44
-     30D1   25 87      AND &87
+     30D1   25 77      AND &77
      30D3   8D 29 31   STA &3129
      30D6   A9 22      LDA #&22
-     30D8   25 87      AND &87
+     30D8   25 77      AND &77
      30DA   8D 3E 31   STA &313E
      30DD   A9 11      LDA #&11
-     30DF   25 87      AND &87
+     30DF   25 77      AND &77
      30E1   8D 53 31   STA &3153
      30E4   A5 96      LDA &96
      30E6   E9 F8      SBC #&F8
@@ -42378,9 +42378,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      30F0   98         TYA
      30F1   49 F8      EOR #&F8
      30F3   A8         TAY
-     30F4   A5 85      LDA &85
+     30F4   A5 75      LDA &75
      30F6   F0 0D      BEQ &3105
-     30F8   A5 82      LDA &82
+     30F8   A5 72      LDA &72
      30FA   F0 1D      BEQ &3119
      30FC   C9 02      CMP #&02
      30FE   90 2E      BCC &312E
@@ -42389,7 +42389,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3103   D0 53      BNE &3158
 .LI191
      3105   CA         DEX
-     3106   A5 82      LDA &82
+     3106   A5 72      LDA &72
      3108   F0 09      BEQ &3113
      310A   C9 02      CMP #&02
      310C   90 1A      BCC &3128
@@ -42402,9 +42402,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3117   91 96      STA (&96),Y
      3119   CA         DEX
      311A   F0 AB      BEQ &30C7
-     311C   A5 83      LDA &83
-     311E   65 81      ADC &81
-     3120   85 83      STA &83
+     311C   A5 73      LDA &73
+     311E   65 71      ADC &71
+     3120   85 73      STA &73
      3122   90 04      BCC &3128
      3124   18         CLC
      3125   C8         INY
@@ -42415,9 +42415,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      312C   91 96      STA (&96),Y
      312E   CA         DEX
      312F   F0 96      BEQ &30C7
-     3131   A5 83      LDA &83
-     3133   65 81      ADC &81
-     3135   85 83      STA &83
+     3131   A5 73      LDA &73
+     3133   65 71      ADC &71
+     3135   85 73      STA &73
      3137   90 04      BCC &313D
      3139   18         CLC
      313A   C8         INY
@@ -42428,9 +42428,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3141   91 96      STA (&96),Y
      3143   CA         DEX
      3144   F0 4E      BEQ &3194
-     3146   A5 83      LDA &83
-     3148   65 81      ADC &81
-     314A   85 83      STA &83
+     3146   A5 73      LDA &73
+     3148   65 71      ADC &71
+     314A   85 73      STA &73
      314C   90 04      BCC &3152
      314E   18         CLC
      314F   C8         INY
@@ -42439,9 +42439,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3152   A9 11      LDA #&11
      3154   51 96      EOR (&96),Y
      3156   91 96      STA (&96),Y
-     3158   A5 83      LDA &83
-     315A   65 81      ADC &81
-     315C   85 83      STA &83
+     3158   A5 73      LDA &73
+     315A   65 71      ADC &71
+     315C   85 73      STA &73
      315E   90 04      BCC &3164
      3160   18         CLC
      3161   C8         INY
@@ -42484,7 +42484,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3198   A6 90      LDX &90
      319A   C4 93      CPY &93
      319C   B0 10      BCS &31AE
-     319E   C6 85      DEC &85
+     319E   C6 75      DEC &75
      31A0   A5 92      LDA &92
      31A2   85 90      STA &90
      31A4   86 92      STX &92
@@ -42506,17 +42506,17 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      31BE   29 03      AND #&03
      31C0   AA         TAX
      31C1   BD 4B 2F   LDA &2F4B,X
-     31C4   85 82      STA &82
-     31C6   A6 80      LDX &80
+     31C4   85 72      STA &72
+     31C6   A6 70      LDX &70
      31C8   F0 34      BEQ &31FE
      31CA   BD 00 28   LDA &2800,X
-     31CD   A6 81      LDX &81
+     31CD   A6 71      LDX &71
      31CF   38         SEC
      31D0   FD 00 28   SBC &2800,X
      31D3   30 17      BMI &31EC
-     31D5   A6 80      LDX &80
+     31D5   A6 70      LDX &70
      31D7   BD 00 27   LDA &2700,X
-     31DA   A6 81      LDX &81
+     31DA   A6 71      LDX &71
      31DC   FD 00 27   SBC &2700,X
      31DF   B0 07      BCS &31E8
      31E1   AA         TAX
@@ -42526,17 +42526,17 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      31E8   A9 FF      LDA #&FF
      31EA   D0 10      BNE &31FC
 .LIloG
-     31EC   A6 80      LDX &80
+     31EC   A6 70      LDX &70
      31EE   BD 00 27   LDA &2700,X
-     31F1   A6 81      LDX &81
+     31F1   A6 71      LDX &71
      31F3   FD 00 27   SBC &2700,X
      31F6   B0 F0      BCS &31E8
      31F8   AA         TAX
      31F9   BD 00 2A   LDA &2A00,X
 .LIlog2
-     31FC   85 80      STA &80
+     31FC   85 70      STA &70
 .LIfudge
-     31FE   A6 81      LDX &81
+     31FE   A6 71      LDX &71
      3200   F0 0B      BEQ &320D
      3202   E8         INX
      3203   A5 92      LDA &92
@@ -42546,7 +42546,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      320A   4C C6 33   JMP &33C6
 .LIEX7
      320D   60         RTS
-     320E   A5 85      LDA &85
+     320E   A5 75      LDA &75
      3210   F0 33      BEQ &3245
      3212   98         TYA
      3213   29 07      AND #&07
@@ -42595,10 +42595,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3268   F0 16      BEQ &3280
      326A   4C C2 32   JMP &32C2
 .LI310
-     326D   46 82      LSR &82
+     326D   46 72      LSR &72
      326F   90 65      BCC &32D6
      3271   A9 88      LDA #&88
-     3273   85 82      STA &82
+     3273   85 72      STA &72
      3275   A5 96      LDA &96
      3277   69 07      ADC #&07
      3279   85 96      STA &96
@@ -42608,10 +42608,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .LI301S
      3280   90 54      BCC &32D6
 .LI311
-     3282   46 82      LSR &82
+     3282   46 72      LSR &72
      3284   90 64      BCC &32EA
      3286   A9 88      LDA #&88
-     3288   85 82      STA &82
+     3288   85 72      STA &72
      328A   A5 96      LDA &96
      328C   69 07      ADC #&07
      328E   85 96      STA &96
@@ -42621,10 +42621,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .LI302S
      3295   90 53      BCC &32EA
 .LI312
-     3297   46 82      LSR &82
+     3297   46 72      LSR &72
      3299   90 63      BCC &32FE
      329B   A9 88      LDA #&88
-     329D   85 82      STA &82
+     329D   85 72      STA &72
      329F   A5 96      LDA &96
      32A1   69 07      ADC #&07
      32A3   85 96      STA &96
@@ -42634,10 +42634,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .LI303S
      32AA   90 52      BCC &32FE
 .LI313
-     32AC   46 82      LSR &82
+     32AC   46 72      LSR &72
      32AE   90 62      BCC &3312
      32B0   A9 88      LDA #&88
-     32B2   85 82      STA &82
+     32B2   85 72      STA &72
      32B4   A5 96      LDA &96
      32B6   69 07      ADC #&07
      32B8   85 96      STA &96
@@ -42649,92 +42649,92 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .LIEX3
      32C1   60         RTS
 .LI300
-     32C2   A5 82      LDA &82
-     32C4   25 87      AND &87
+     32C2   A5 72      LDA &72
+     32C4   25 77      AND &77
      32C6   51 96      EOR (&96),Y
      32C8   91 96      STA (&96),Y
      32CA   CA         DEX
      32CB   F0 F4      BEQ &32C1
      32CD   88         DEY
-     32CE   A5 83      LDA &83
-     32D0   65 80      ADC &80
-     32D2   85 83      STA &83
+     32CE   A5 73      LDA &73
+     32D0   65 70      ADC &70
+     32D2   85 73      STA &73
      32D4   B0 97      BCS &326D
 .LI301
-     32D6   A5 82      LDA &82
-     32D8   25 87      AND &87
+     32D6   A5 72      LDA &72
+     32D8   25 77      AND &77
      32DA   51 96      EOR (&96),Y
      32DC   91 96      STA (&96),Y
      32DE   CA         DEX
      32DF   F0 E0      BEQ &32C1
      32E1   88         DEY
-     32E2   A5 83      LDA &83
-     32E4   65 80      ADC &80
-     32E6   85 83      STA &83
+     32E2   A5 73      LDA &73
+     32E4   65 70      ADC &70
+     32E6   85 73      STA &73
      32E8   B0 98      BCS &3282
 .LI302
-     32EA   A5 82      LDA &82
-     32EC   25 87      AND &87
+     32EA   A5 72      LDA &72
+     32EC   25 77      AND &77
      32EE   51 96      EOR (&96),Y
      32F0   91 96      STA (&96),Y
      32F2   CA         DEX
      32F3   F0 CC      BEQ &32C1
      32F5   88         DEY
-     32F6   A5 83      LDA &83
-     32F8   65 80      ADC &80
-     32FA   85 83      STA &83
+     32F6   A5 73      LDA &73
+     32F8   65 70      ADC &70
+     32FA   85 73      STA &73
      32FC   B0 99      BCS &3297
 .LI303
-     32FE   A5 82      LDA &82
-     3300   25 87      AND &87
+     32FE   A5 72      LDA &72
+     3300   25 77      AND &77
      3302   51 96      EOR (&96),Y
      3304   91 96      STA (&96),Y
      3306   CA         DEX
      3307   F0 B8      BEQ &32C1
      3309   88         DEY
-     330A   A5 83      LDA &83
-     330C   65 80      ADC &80
-     330E   85 83      STA &83
+     330A   A5 73      LDA &73
+     330C   65 70      ADC &70
+     330E   85 73      STA &73
      3310   B0 9A      BCS &32AC
 .LI304
-     3312   A5 82      LDA &82
-     3314   25 87      AND &87
+     3312   A5 72      LDA &72
+     3314   25 77      AND &77
      3316   51 96      EOR (&96),Y
      3318   91 96      STA (&96),Y
      331A   CA         DEX
      331B   F0 69      BEQ &3386
      331D   88         DEY
-     331E   A5 83      LDA &83
-     3320   65 80      ADC &80
-     3322   85 83      STA &83
+     331E   A5 73      LDA &73
+     3320   65 70      ADC &70
+     3322   85 73      STA &73
      3324   B0 61      BCS &3387
 .LI305
-     3326   A5 82      LDA &82
-     3328   25 87      AND &87
+     3326   A5 72      LDA &72
+     3328   25 77      AND &77
      332A   51 96      EOR (&96),Y
      332C   91 96      STA (&96),Y
      332E   CA         DEX
      332F   F0 55      BEQ &3386
      3331   88         DEY
-     3332   A5 83      LDA &83
-     3334   65 80      ADC &80
-     3336   85 83      STA &83
+     3332   A5 73      LDA &73
+     3334   65 70      ADC &70
+     3336   85 73      STA &73
      3338   B0 62      BCS &339C
 .LI306
-     333A   A5 82      LDA &82
-     333C   25 87      AND &87
+     333A   A5 72      LDA &72
+     333C   25 77      AND &77
      333E   51 96      EOR (&96),Y
      3340   91 96      STA (&96),Y
      3342   CA         DEX
      3343   F0 41      BEQ &3386
      3345   88         DEY
-     3346   A5 83      LDA &83
-     3348   65 80      ADC &80
-     334A   85 83      STA &83
+     3346   A5 73      LDA &73
+     3348   65 70      ADC &70
+     334A   85 73      STA &73
      334C   B0 63      BCS &33B1
 .LI307
-     334E   A5 82      LDA &82
-     3350   25 87      AND &87
+     334E   A5 72      LDA &72
+     3350   25 77      AND &77
      3352   51 96      EOR (&96),Y
      3354   91 96      STA (&96),Y
      3356   CA         DEX
@@ -42742,16 +42742,16 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3359   C6 97      DEC &97
      335B   C6 97      DEC &97
      335D   A0 07      LDY #&07
-     335F   A5 83      LDA &83
-     3361   65 80      ADC &80
-     3363   85 83      STA &83
+     335F   A5 73      LDA &73
+     3361   65 70      ADC &70
+     3363   85 73      STA &73
      3365   B0 03      BCS &336A
      3367   4C C2 32   JMP &32C2
-     336A   46 82      LSR &82
+     336A   46 72      LSR &72
      336C   B0 03      BCS &3371
      336E   4C C2 32   JMP &32C2
      3371   A9 88      LDA #&88
-     3373   85 82      STA &82
+     3373   85 72      STA &72
      3375   A5 96      LDA &96
      3377   69 07      ADC #&07
      3379   85 96      STA &96
@@ -42763,10 +42763,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .LIEX4
      3386   60         RTS
 .LI314
-     3387   46 82      LSR &82
+     3387   46 72      LSR &72
      3389   90 9B      BCC &3326
      338B   A9 88      LDA #&88
-     338D   85 82      STA &82
+     338D   85 72      STA &72
      338F   A5 96      LDA &96
      3391   69 07      ADC #&07
      3393   85 96      STA &96
@@ -42775,10 +42775,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3399   18         CLC
      339A   90 8A      BCC &3326
 .LI315
-     339C   46 82      LSR &82
+     339C   46 72      LSR &72
      339E   90 9A      BCC &333A
      33A0   A9 88      LDA #&88
-     33A2   85 82      STA &82
+     33A2   85 72      STA &72
      33A4   A5 96      LDA &96
      33A6   69 07      ADC #&07
      33A8   85 96      STA &96
@@ -42787,10 +42787,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      33AE   18         CLC
      33AF   90 89      BCC &333A
 .LI316
-     33B1   46 82      LSR &82
+     33B1   46 72      LSR &72
      33B3   90 99      BCC &334E
      33B5   A9 88      LDA #&88
-     33B7   85 82      STA &82
+     33B7   85 72      STA &72
      33B9   A5 96      LDA &96
      33BB   69 07      ADC #&07
      33BD   85 96      STA &96
@@ -42799,7 +42799,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      33C3   18         CLC
      33C4   90 88      BCC &334E
 .LFT
-     33C6   A5 85      LDA &85
+     33C6   A5 75      LDA &75
      33C8   F0 33      BEQ &33FD
      33CA   98         TYA
      33CB   29 07      AND #&07
@@ -42848,10 +42848,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3420   F0 16      BEQ &3438
      3422   4C 7A 34   JMP &347A
 .LI410
-     3425   06 82      ASL &82
+     3425   06 72      ASL &72
      3427   90 65      BCC &348E
      3429   A9 11      LDA #&11
-     342B   85 82      STA &82
+     342B   85 72      STA &72
      342D   A5 96      LDA &96
      342F   E9 08      SBC #&08
      3431   85 96      STA &96
@@ -42861,10 +42861,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .LI401S
      3438   90 54      BCC &348E
 .LI411
-     343A   06 82      ASL &82
+     343A   06 72      ASL &72
      343C   90 64      BCC &34A2
      343E   A9 11      LDA #&11
-     3440   85 82      STA &82
+     3440   85 72      STA &72
      3442   A5 96      LDA &96
      3444   E9 08      SBC #&08
      3446   85 96      STA &96
@@ -42874,10 +42874,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .LI402S
      344D   90 53      BCC &34A2
 .LI412
-     344F   06 82      ASL &82
+     344F   06 72      ASL &72
      3451   90 63      BCC &34B6
      3453   A9 11      LDA #&11
-     3455   85 82      STA &82
+     3455   85 72      STA &72
      3457   A5 96      LDA &96
      3459   E9 08      SBC #&08
      345B   85 96      STA &96
@@ -42887,10 +42887,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .LI403S
      3462   90 52      BCC &34B6
 .LI413
-     3464   06 82      ASL &82
+     3464   06 72      ASL &72
      3466   90 62      BCC &34CA
      3468   A9 11      LDA #&11
-     346A   85 82      STA &82
+     346A   85 72      STA &72
      346C   A5 96      LDA &96
      346E   E9 08      SBC #&08
      3470   85 96      STA &96
@@ -42902,92 +42902,92 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .LIEX5
      3479   60         RTS
 .LI400
-     347A   A5 82      LDA &82
-     347C   25 87      AND &87
+     347A   A5 72      LDA &72
+     347C   25 77      AND &77
      347E   51 96      EOR (&96),Y
      3480   91 96      STA (&96),Y
      3482   CA         DEX
      3483   F0 F4      BEQ &3479
      3485   88         DEY
-     3486   A5 83      LDA &83
-     3488   65 80      ADC &80
-     348A   85 83      STA &83
+     3486   A5 73      LDA &73
+     3488   65 70      ADC &70
+     348A   85 73      STA &73
      348C   B0 97      BCS &3425
 .LI401
-     348E   A5 82      LDA &82
-     3490   25 87      AND &87
+     348E   A5 72      LDA &72
+     3490   25 77      AND &77
      3492   51 96      EOR (&96),Y
      3494   91 96      STA (&96),Y
      3496   CA         DEX
      3497   F0 E0      BEQ &3479
      3499   88         DEY
-     349A   A5 83      LDA &83
-     349C   65 80      ADC &80
-     349E   85 83      STA &83
+     349A   A5 73      LDA &73
+     349C   65 70      ADC &70
+     349E   85 73      STA &73
      34A0   B0 98      BCS &343A
 .LI402
-     34A2   A5 82      LDA &82
-     34A4   25 87      AND &87
+     34A2   A5 72      LDA &72
+     34A4   25 77      AND &77
      34A6   51 96      EOR (&96),Y
      34A8   91 96      STA (&96),Y
      34AA   CA         DEX
      34AB   F0 CC      BEQ &3479
      34AD   88         DEY
-     34AE   A5 83      LDA &83
-     34B0   65 80      ADC &80
-     34B2   85 83      STA &83
+     34AE   A5 73      LDA &73
+     34B0   65 70      ADC &70
+     34B2   85 73      STA &73
      34B4   B0 99      BCS &344F
 .LI403
-     34B6   A5 82      LDA &82
-     34B8   25 87      AND &87
+     34B6   A5 72      LDA &72
+     34B8   25 77      AND &77
      34BA   51 96      EOR (&96),Y
      34BC   91 96      STA (&96),Y
      34BE   CA         DEX
      34BF   F0 B8      BEQ &3479
      34C1   88         DEY
-     34C2   A5 83      LDA &83
-     34C4   65 80      ADC &80
-     34C6   85 83      STA &83
+     34C2   A5 73      LDA &73
+     34C4   65 70      ADC &70
+     34C6   85 73      STA &73
      34C8   B0 9A      BCS &3464
 .LI404
-     34CA   A5 82      LDA &82
-     34CC   25 87      AND &87
+     34CA   A5 72      LDA &72
+     34CC   25 77      AND &77
      34CE   51 96      EOR (&96),Y
      34D0   91 96      STA (&96),Y
      34D2   CA         DEX
      34D3   F0 66      BEQ &353B
      34D5   88         DEY
-     34D6   A5 83      LDA &83
-     34D8   65 80      ADC &80
-     34DA   85 83      STA &83
+     34D6   A5 73      LDA &73
+     34D8   65 70      ADC &70
+     34DA   85 73      STA &73
      34DC   B0 5E      BCS &353C
 .LI405
-     34DE   A5 82      LDA &82
-     34E0   25 87      AND &87
+     34DE   A5 72      LDA &72
+     34E0   25 77      AND &77
      34E2   51 96      EOR (&96),Y
      34E4   91 96      STA (&96),Y
      34E6   CA         DEX
      34E7   F0 52      BEQ &353B
      34E9   88         DEY
-     34EA   A5 83      LDA &83
-     34EC   65 80      ADC &80
-     34EE   85 83      STA &83
+     34EA   A5 73      LDA &73
+     34EC   65 70      ADC &70
+     34EE   85 73      STA &73
      34F0   B0 5F      BCS &3551
 .LI406
-     34F2   A5 82      LDA &82
-     34F4   25 87      AND &87
+     34F2   A5 72      LDA &72
+     34F4   25 77      AND &77
      34F6   51 96      EOR (&96),Y
      34F8   91 96      STA (&96),Y
      34FA   CA         DEX
      34FB   F0 3E      BEQ &353B
      34FD   88         DEY
-     34FE   A5 83      LDA &83
-     3500   65 80      ADC &80
-     3502   85 83      STA &83
+     34FE   A5 73      LDA &73
+     3500   65 70      ADC &70
+     3502   85 73      STA &73
      3504   B0 60      BCS &3566
 .LI407
-     3506   A5 82      LDA &82
-     3508   25 87      AND &87
+     3506   A5 72      LDA &72
+     3508   25 77      AND &77
      350A   51 96      EOR (&96),Y
      350C   91 96      STA (&96),Y
      350E   CA         DEX
@@ -42995,16 +42995,16 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3511   C6 97      DEC &97
      3513   C6 97      DEC &97
      3515   A0 07      LDY #&07
-     3517   A5 83      LDA &83
-     3519   65 80      ADC &80
-     351B   85 83      STA &83
+     3517   A5 73      LDA &73
+     3519   65 70      ADC &70
+     351B   85 73      STA &73
      351D   B0 03      BCS &3522
      351F   4C 7A 34   JMP &347A
-     3522   06 82      ASL &82
+     3522   06 72      ASL &72
      3524   B0 03      BCS &3529
      3526   4C 7A 34   JMP &347A
      3529   A9 11      LDA #&11
-     352B   85 82      STA &82
+     352B   85 72      STA &72
      352D   A5 96      LDA &96
      352F   E9 08      SBC #&08
      3531   85 96      STA &96
@@ -43015,10 +43015,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .LIEX6
      353B   60         RTS
 .LI414
-     353C   06 82      ASL &82
+     353C   06 72      ASL &72
      353E   90 9E      BCC &34DE
      3540   A9 11      LDA #&11
-     3542   85 82      STA &82
+     3542   85 72      STA &72
      3544   A5 96      LDA &96
      3546   E9 08      SBC #&08
      3548   85 96      STA &96
@@ -43027,10 +43027,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      354E   18         CLC
      354F   90 8D      BCC &34DE
 .LI415
-     3551   06 82      ASL &82
+     3551   06 72      ASL &72
      3553   90 9D      BCC &34F2
      3555   A9 11      LDA #&11
-     3557   85 82      STA &82
+     3557   85 72      STA &72
      3559   A5 96      LDA &96
      355B   E9 08      SBC #&08
      355D   85 96      STA &96
@@ -43039,10 +43039,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3563   18         CLC
      3564   90 8C      BCC &34F2
 .LI416
-     3566   06 82      ASL &82
+     3566   06 72      ASL &72
      3568   90 9C      BCC &3506
      356A   A9 11      LDA #&11
-     356C   85 82      STA &82
+     356C   85 72      STA &72
      356E   A5 96      LDA &96
      3570   E9 08      SBC #&08
      3572   85 96      STA &96
@@ -43052,26 +43052,26 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3579   4C 06 35   JMP &3506
 .HLOIN
      357C   A0 00      LDY #&00
-     357E   B1 88      LDA (&88),Y
-     3580   85 81      STA &81
+     357E   B1 78      LDA (&78),Y
+     3580   85 71      STA &71
      3582   C8         INY
      3583   C8         INY
 .HLLO
-     3584   B1 88      LDA (&88),Y
+     3584   B1 78      LDA (&78),Y
      3586   85 90      STA &90
      3588   AA         TAX
      3589   C8         INY
-     358A   B1 88      LDA (&88),Y
+     358A   B1 78      LDA (&78),Y
      358C   85 92      STA &92
      358E   C8         INY
-     358F   B1 88      LDA (&88),Y
+     358F   B1 78      LDA (&78),Y
      3591   85 91      STA &91
      3593   84 93      STY &93
      3595   29 03      AND #&03
      3597   A8         TAY
      3598   B9 4E 36   LDA &364E,Y
 .HLOIN3
-     359B   85 83      STA &83
+     359B   85 73      STA &73
      359D   E4 92      CPX &92
      359F   F0 69      BEQ &360A
      35A1   90 07      BCC &35AA
@@ -43096,20 +43096,20 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .HL1
      35C1   8A         TXA
      35C2   29 FC      AND #&FC
-     35C4   85 84      STA &84
+     35C4   85 74      STA &74
      35C6   A5 92      LDA &92
      35C8   29 FC      AND #&FC
      35CA   38         SEC
-     35CB   E5 84      SBC &84
+     35CB   E5 74      SBC &74
      35CD   F0 46      BEQ &3615
      35CF   4A         LSR A
      35D0   4A         LSR A
-     35D1   85 82      STA &82
+     35D1   85 72      STA &72
      35D3   A5 90      LDA &90
      35D5   29 03      AND #&03
      35D7   AA         TAX
      35D8   BD 4A 36   LDA &364A,X
-     35DB   25 83      AND &83
+     35DB   25 73      AND &73
      35DD   51 96      EOR (&96),Y
      35DF   91 96      STA (&96),Y
      35E1   98         TYA
@@ -43117,12 +43117,12 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      35E4   A8         TAY
      35E5   B0 53      BCS &363A
 .HL8
-     35E7   A6 82      LDX &82
+     35E7   A6 72      LDX &72
      35E9   CA         DEX
      35EA   F0 10      BEQ &35FC
      35EC   18         CLC
 .HLL1
-     35ED   A5 83      LDA &83
+     35ED   A5 73      LDA &73
      35EF   51 96      EOR (&96),Y
      35F1   91 96      STA (&96),Y
      35F3   98         TYA
@@ -43137,13 +43137,13 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      35FE   29 03      AND #&03
      3600   AA         TAX
      3601   BD 46 36   LDA &3646,X
-     3604   25 83      AND &83
+     3604   25 73      AND &73
      3606   51 96      EOR (&96),Y
      3608   91 96      STA (&96),Y
 .HL6
      360A   A4 93      LDY &93
      360C   C8         INY
-     360D   C4 81      CPY &81
+     360D   C4 71      CPY &71
      360F   F0 03      BEQ &3614
      3611   4C 84 35   JMP &3584
      3614   60         RTS
@@ -43152,18 +43152,18 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3617   29 03      AND #&03
      3619   AA         TAX
      361A   BD 4A 36   LDA &364A,X
-     361D   85 84      STA &84
+     361D   85 74      STA &74
      361F   A5 92      LDA &92
      3621   29 03      AND #&03
      3623   AA         TAX
      3624   BD 46 36   LDA &3646,X
-     3627   25 84      AND &84
-     3629   25 83      AND &83
+     3627   25 74      AND &74
+     3629   25 73      AND &73
      362B   51 96      EOR (&96),Y
      362D   91 96      STA (&96),Y
      362F   A4 93      LDY &93
      3631   C8         INY
-     3632   C4 81      CPY &81
+     3632   C4 71      CPY &71
      3634   F0 03      BEQ &3639
      3636   4C 84 35   JMP &3584
      3639   60         RTS
@@ -43192,24 +43192,24 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3651   5A
 .PIXEL
      3652   A0 00      LDY #&00
-     3654   B1 88      LDA (&88),Y
-     3656   85 81      STA &81
+     3654   B1 78      LDA (&78),Y
+     3656   85 71      STA &71
      3658   C8         INY
      3659   C8         INY
 .PXLO
-     365A   B1 88      LDA (&88),Y
-     365C   85 80      STA &80
+     365A   B1 78      LDA (&78),Y
+     365C   85 70      STA &70
      365E   29 07      AND #&07
      3660   F0 70      BEQ &36D2
      3662   AA         TAX
      3663   BD 1B 37   LDA &371B,X
-     3666   85 83      STA &83
+     3666   85 73      STA &73
      3668   C8         INY
-     3669   B1 88      LDA (&88),Y
+     3669   B1 78      LDA (&78),Y
      366B   AA         TAX
      366C   C8         INY
-     366D   B1 88      LDA (&88),Y
-     366F   84 86      STY &86
+     366D   B1 78      LDA (&78),Y
+     366F   84 76      STY &76
      3671   A8         TAY
      3672   B9 00 2B   LDA &2B00,Y
      3675   85 97      STA &97
@@ -43225,53 +43225,53 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3685   8A         TXA
      3686   29 03      AND #&03
      3688   AA         TAX
-     3689   A5 80      LDA &80
+     3689   A5 70      LDA &70
      368B   30 34      BMI &36C1
      368D   C9 50      CMP #&50
      368F   90 11      BCC &36A2
      3691   BD 4F 2F   LDA &2F4F,X
-     3694   25 83      AND &83
+     3694   25 73      AND &73
      3696   51 96      EOR (&96),Y
      3698   91 96      STA (&96),Y
-     369A   A4 86      LDY &86
+     369A   A4 76      LDY &76
      369C   C8         INY
-     369D   C4 81      CPY &81
+     369D   C4 71      CPY &71
      369F   D0 B9      BNE &365A
      36A1   60         RTS
 .PX2
      36A2   BD 4F 2F   LDA &2F4F,X
-     36A5   25 83      AND &83
+     36A5   25 73      AND &73
      36A7   51 96      EOR (&96),Y
      36A9   91 96      STA (&96),Y
      36AB   88         DEY
      36AC   10 02      BPL &36B0
      36AE   A0 01      LDY #&01
      36B0   BD 4F 2F   LDA &2F4F,X
-     36B3   25 83      AND &83
+     36B3   25 73      AND &73
      36B5   51 96      EOR (&96),Y
      36B7   91 96      STA (&96),Y
-     36B9   A4 86      LDY &86
+     36B9   A4 76      LDY &76
      36BB   C8         INY
-     36BC   C4 81      CPY &81
+     36BC   C4 71      CPY &71
      36BE   D0 9A      BNE &365A
      36C0   60         RTS
 .PX3
      36C1   BD 4B 2F   LDA &2F4B,X
-     36C4   25 83      AND &83
+     36C4   25 73      AND &73
      36C6   51 96      EOR (&96),Y
      36C8   91 96      STA (&96),Y
-     36CA   A4 86      LDY &86
+     36CA   A4 76      LDY &76
      36CC   C8         INY
-     36CD   C4 81      CPY &81
+     36CD   C4 71      CPY &71
      36CF   D0 89      BNE &365A
      36D1   60         RTS
 .PX5
      36D2   C8         INY
-     36D3   B1 88      LDA (&88),Y
+     36D3   B1 78      LDA (&78),Y
      36D5   AA         TAX
      36D6   C8         INY
-     36D7   B1 88      LDA (&88),Y
-     36D9   84 86      STY &86
+     36D7   B1 78      LDA (&78),Y
+     36D9   84 76      STY &76
      36DB   A8         TAY
      36DC   B9 00 2B   LDA &2B00,Y
      36DF   85 97      STA &97
@@ -43287,7 +43287,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      36EF   8A         TXA
      36F0   29 03      AND #&03
      36F2   AA         TAX
-     36F3   A5 80      LDA &80
+     36F3   A5 70      LDA &70
      36F5   C9 50      CMP #&50
      36F7   B0 0E      BCS &3707
      36F9   BD 4F 2F   LDA &2F4F,X
@@ -43302,9 +43302,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      370A   29 FA      AND #&FA
      370C   51 96      EOR (&96),Y
      370E   91 96      STA (&96),Y
-     3710   A4 86      LDY &86
+     3710   A4 76      LDY &76
      3712   C8         INY
-     3713   C4 81      CPY &81
+     3713   C4 71      CPY &71
      3715   F0 03      BEQ &371A
      3717   4C 5A 36   JMP &365A
      371A   60         RTS
@@ -43335,28 +43335,28 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      373A   18         CLC
      373B   60         RTS
 .ADD
-     373C   85 86      STA &86
+     373C   85 76      STA &76
      373E   29 80      AND #&80
-     3740   85 84      STA &84
-     3742   45 83      EOR &83
+     3740   85 74      STA &74
+     3742   45 73      EOR &73
      3744   30 0D      BMI &3753
-     3746   A5 82      LDA &82
+     3746   A5 72      LDA &72
      3748   18         CLC
-     3749   65 80      ADC &80
+     3749   65 70      ADC &70
      374B   AA         TAX
-     374C   A5 83      LDA &83
-     374E   65 86      ADC &86
-     3750   05 84      ORA &84
+     374C   A5 73      LDA &73
+     374E   65 76      ADC &76
+     3750   05 74      ORA &74
      3752   60         RTS
 .MU8
-     3753   A5 83      LDA &83
+     3753   A5 73      LDA &73
      3755   29 7F      AND #&7F
      3757   8D 43 2C   STA &2C43
-     375A   A5 80      LDA &80
+     375A   A5 70      LDA &70
      375C   38         SEC
-     375D   E5 82      SBC &82
+     375D   E5 72      SBC &72
      375F   AA         TAX
-     3760   A5 86      LDA &86
+     3760   A5 76      LDA &76
      3762   29 7F      AND #&7F
      3764   ED 43 2C   SBC &2C43
      3767   B0 10      BCS &3779
@@ -43369,35 +43369,35 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3774   ED 43 2C   SBC &2C43
      3777   09 80      ORA #&80
 .MU9
-     3779   45 84      EOR &84
+     3779   45 74      EOR &74
      377B   60         RTS
 .HANGER
      377C   A2 02      LDX #&02
 .HAL1
-     377E   86 84      STX &84
+     377E   86 74      STX &74
      3780   A9 82      LDA #&82
-     3782   86 81      STX &81
+     3782   86 71      STX &71
      3784   20 54 38   JSR &3854
-     3787   A5 80      LDA &80
+     3787   A5 70      LDA &70
      3789   18         CLC
      378A   69 60      ADC #&60
      378C   A8         TAY
      378D   B9 00 2B   LDA &2B00,Y
      3790   85 97      STA &97
-     3792   85 82      STA &82
-     3794   A5 80      LDA &80
+     3792   85 72      STA &72
+     3794   A5 70      LDA &70
      3796   29 07      AND #&07
      3798   85 96      STA &96
      379A   A0 00      LDY #&00
      379C   20 08 38   JSR &3808
-     379F   A4 82      LDY &82
+     379F   A4 72      LDY &72
      37A1   C8         INY
      37A2   84 97      STY &97
      37A4   A9 40      LDA #&40
      37A6   A0 F8      LDY #&F8
      37A8   20 3D 38   JSR &383D
      37AB   A0 02      LDY #&02
-     37AD   B1 88      LDA (&88),Y
+     37AD   B1 78      LDA (&78),Y
      37AF   A8         TAY
      37B0   F0 10      BEQ &37C2
      37B2   A0 00      LDY #&00
@@ -43408,19 +43408,19 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      37BD   A9 10      LDA #&10
      37BF   20 3D 38   JSR &383D
 .HA2
-     37C2   A6 84      LDX &84
+     37C2   A6 74      LDX &74
      37C4   E8         INX
      37C5   E0 0D      CPX #&0D
      37C7   90 B5      BCC &377E
      37C9   A9 3C      LDA #&3C
-     37CB   85 83      STA &83
+     37CB   85 73      STA &73
      37CD   A9 10      LDA #&10
      37CF   A2 40      LDX #&40
-     37D1   86 82      STX &82
+     37D1   86 72      STX &72
 .HAL6
-     37D3   A6 82      LDX &82
+     37D3   A6 72      LDX &72
      37D5   86 97      STX &97
-     37D7   85 84      STA &84
+     37D7   85 74      STA &74
      37D9   29 FC      AND #&FC
      37DB   85 96      STA &96
      37DD   A2 88      LDX #&88
@@ -43441,12 +43441,12 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      37F6   A0 00      LDY #&00
      37F8   F0 E7      BEQ &37E1
 .HA6
-     37FA   A5 84      LDA &84
+     37FA   A5 74      LDA &74
      37FC   18         CLC
      37FD   69 10      ADC #&10
      37FF   90 02      BCC &3803
-     3801   E6 82      INC &82
-     3803   C6 83      DEC &83
+     3801   E6 72      INC &72
+     3803   C6 73      DEC &73
      3805   D0 CC      BNE &37D3
 .HA3
      3807   60         RTS
@@ -43505,17 +43505,17 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
 .DVID4
      3854   A2 08      LDX #&08
      3856   0A         ASL A
-     3857   85 80      STA &80
+     3857   85 70      STA &70
      3859   A9 00      LDA #&00
 .DVL4
      385B   2A         ROL A
      385C   B0 04      BCS &3862
-     385E   C5 81      CMP &81
+     385E   C5 71      CMP &71
      3860   90 02      BCC &3864
 .DV8
-     3862   E5 81      SBC &81
+     3862   E5 71      SBC &71
 .DV5
-     3864   26 80      ROL &80
+     3864   26 70      ROL &70
      3866   CA         DEX
      3867   D0 F2      BNE &385B
      3869   60         RTS
@@ -43571,7 +43571,7 @@ End macro DKS4
      38B6   A9 00      LDA #&00
      38B8   69 FF      ADC #&FF
      38BA   49 FF      EOR #&FF
-     38BC   91 88      STA (&88),Y
+     38BC   91 78      STA (&78),Y
      38BE   88         DEY
      38BF   C0 02      CPY #&02
      38C1   D0 D8      BNE &389B
@@ -43598,28 +43598,28 @@ End macro DKS4
 .DK1
      38E5   D8         CLD
      38E6   49 80      EOR #&80
-     38E8   91 88      STA (&88),Y
+     38E8   91 78      STA (&78),Y
      38EA   A2 01      LDX #&01
      38EC   A9 80      LDA #&80
      38EE   20 F4 FF   JSR &FFF4
      38F1   98         TYA
      38F2   A0 0A      LDY #&0A
-     38F4   91 88      STA (&88),Y
+     38F4   91 78      STA (&78),Y
      38F6   A2 02      LDX #&02
      38F8   A9 80      LDA #&80
      38FA   20 F4 FF   JSR &FFF4
      38FD   98         TYA
      38FE   A0 0B      LDY #&0B
-     3900   91 88      STA (&88),Y
+     3900   91 78      STA (&78),Y
      3902   A2 03      LDX #&03
      3904   A9 80      LDA #&80
      3906   20 F4 FF   JSR &FFF4
      3909   98         TYA
      390A   A0 0C      LDY #&0C
-     390C   91 88      STA (&88),Y
+     390C   91 78      STA (&78),Y
      390E   A0 0E      LDY #&0E
      3910   AD 40 FE   LDA &FE40
-     3913   91 88      STA (&88),Y
+     3913   91 78      STA (&78),Y
 .DK2
      3915   60         RTS
 .OSWVECS
@@ -43647,8 +43647,8 @@ End macro DKS4
      393F   30 24      BMI &3965
      3941   C9 F0      CMP #&F0
      3943   90 20      BCC &3965
-     3945   86 88      STX &88
-     3947   84 89      STY &89
+     3945   86 78      STX &78
+     3947   84 79      STY &79
      3949   48         PHA
      394A   E9 F0      SBC #&F0
      394C   0A         ASL A
@@ -43657,31 +43657,31 @@ End macro DKS4
      3951   8D 5D 39   STA &395D
      3954   BD 17 39   LDA &3917,X
      3957   8D 5E 39   STA &395E
-     395A   A6 88      LDX &88
+     395A   A6 78      LDX &78
 .JSRV
      395C   20 FC FF   JSR &FFFC
      395F   68         PLA
-     3960   A6 88      LDX &88
-     3962   A4 89      LDY &89
+     3960   A6 78      LDX &78
+     3962   A4 79      LDY &79
 .SAFE
      3964   60         RTS
 .notours
      3965   4C FC FF   JMP &FFFC
 .MSBAR
      3968   A0 02      LDY #&02
-     396A   B1 88      LDA (&88),Y
+     396A   B1 78      LDA (&78),Y
      396C   0A         ASL A
      396D   0A         ASL A
      396E   0A         ASL A
      396F   0A         ASL A
-     3970   85 84      STA &84
+     3970   85 74      STA &74
      3972   A9 61      LDA #&61
-     3974   E5 84      SBC &84
+     3974   E5 74      SBC &74
      3976   85 96      STA &96
      3978   A9 7C      LDA #&7C
      397A   85 97      STA &97
      397C   A0 03      LDY #&03
-     397E   B1 88      LDA (&88),Y
+     397E   B1 78      LDA (&78),Y
      3980   A0 05      LDY #&05
 .MBL1
      3982   91 96      STA (&96),Y
@@ -43709,7 +43709,7 @@ End macro DKS4
      39A4   60         RTS
 .DODKS4
      39A5   A0 02      LDY #&02
-     39A7   B1 88      LDA (&88),Y
+     39A7   B1 78      LDA (&78),Y
 Macro DKS4:
      39A9   A2 03      LDX #&03
      39AB   78         SEI
@@ -43722,7 +43722,7 @@ Macro DKS4:
      39BC   8E 40 FE   STX &FE40
      39BF   58         CLI
 End macro DKS4
-     39C0   91 88      STA (&88),Y
+     39C0   91 78      STA (&78),Y
      39C2   60         RTS
 .cls
      39C3   20 AF 3A   JSR &3AAF
@@ -43767,8 +43767,8 @@ End macro DKS4
      3A08   0A         ASL A
      3A09   90 01      BCC &3A0C
      3A0B   E8         INX
-     3A0C   85 81      STA &81
-     3A0E   86 82      STX &82
+     3A0C   85 71      STA &71
+     3A0E   86 72      STX &72
      3A10   AD 40 2C   LDA &2C40
      3A13   AE 4D 2C   LDX &2C4D
      3A16   F0 08      BEQ &3A20
@@ -43813,12 +43813,12 @@ End macro DKS4
      3A5D   A5 96      LDA &96
      3A5F   18         CLC
      3A60   69 08      ADC #&08
-     3A62   85 83      STA &83
+     3A62   85 73      STA &73
      3A64   A5 97      LDA &97
-     3A66   85 84      STA &84
+     3A66   85 74      STA &74
      3A68   A0 07      LDY #&07
 .RRL1
-     3A6A   B1 81      LDA (&81),Y
+     3A6A   B1 71      LDA (&71),Y
      3A6C   29 F0      AND #&F0
      3A6E   8D 43 2C   STA &2C43
      3A71   4A         LSR A
@@ -43826,10 +43826,10 @@ End macro DKS4
      3A73   4A         LSR A
      3A74   4A         LSR A
      3A75   0D 43 2C   ORA &2C43
-     3A78   25 87      AND &87
+     3A78   25 77      AND &77
      3A7A   51 96      EOR (&96),Y
      3A7C   91 96      STA (&96),Y
-     3A7E   B1 81      LDA (&81),Y
+     3A7E   B1 71      LDA (&71),Y
      3A80   29 0F      AND #&0F
      3A82   8D 43 2C   STA &2C43
      3A85   0A         ASL A
@@ -43837,9 +43837,9 @@ End macro DKS4
      3A87   0A         ASL A
      3A88   0A         ASL A
      3A89   0D 43 2C   ORA &2C43
-     3A8C   25 87      AND &87
-     3A8E   51 83      EOR (&83),Y
-     3A90   91 83      STA (&83),Y
+     3A8C   25 77      AND &77
+     3A8E   51 73      EOR (&73),Y
+     3A90   91 73      STA (&73),Y
      3A92   88         DEY
      3A93   10 D5      BPL &3A6A
 .RR4
@@ -43869,7 +43869,7 @@ End macro DKS4
      3AB7   D0 F8      BNE &3AB1
 .BOX
      3AB9   A9 0F      LDA #&0F
-     3ABB   85 87      STA &87
+     3ABB   85 77      STA &77
      3ABD   A0 01      LDY #&01
      3ABF   8C 41 2C   STY &2C41
      3AC2   A0 0B      LDY #&0B
@@ -43920,7 +43920,7 @@ End macro DKS4
      3B13   A0 02      LDY #&02
 .SMEPRTL
      3B15   B9 D8 3C   LDA &3CD8,Y
-     3B18   91 88      STA (&88),Y
+     3B18   91 78      STA (&78),Y
      3B1A   C8         INY
      3B1B   C0 26      CPY #&26
      3B1D   90 F6      BCC &3B15
@@ -43962,14 +43962,14 @@ End macro DKS4
      3B5C   8E 4F 2C   STX &2C4F
      3B5F   8D 4E 2C   STA &2C4E
      3B62   A9 0E      LDA #&0E
-     3B64   85 86      STA &86
+     3B64   85 76      STA &76
      3B66   AD 57 2C   LDA &2C57
      3B69   20 3D 3C   JSR &3C3D
      3B6C   A9 00      LDA #&00
-     3B6E   85 82      STA &82
-     3B70   85 80      STA &80
+     3B6E   85 72      STA &72
+     3B70   85 70      STA &70
      3B72   A9 08      LDA #&08
-     3B74   85 83      STA &83
+     3B74   85 73      STA &73
      3B76   AD 53 2C   LDA &2C53
      3B79   4A         LSR A
      3B7A   4A         LSR A
@@ -43988,7 +43988,7 @@ End macro DKS4
      3B9B   8E 4E 2C   STX &2C4E
      3B9E   8D 4F 2C   STA &2C4F
      3BA1   A2 03      LDX #&03
-     3BA3   86 86      STX &86
+     3BA3   86 76      STX &76
 .DLL23
      3BA5   94 90      STY &90,X
      3BA7   CA         DEX
@@ -43997,26 +43997,26 @@ End macro DKS4
      3BAC   AD 52 2C   LDA &2C52
      3BAF   4A         LSR A
      3BB0   4A         LSR A
-     3BB1   85 81      STA &81
+     3BB1   85 71      STA &71
 .DLL24
      3BB3   38         SEC
      3BB4   E9 10      SBC #&10
      3BB6   90 0D      BCC &3BC5
-     3BB8   85 81      STA &81
+     3BB8   85 71      STA &71
      3BBA   A9 10      LDA #&10
      3BBC   95 90      STA &90,X
-     3BBE   A5 81      LDA &81
+     3BBE   A5 71      LDA &71
      3BC0   CA         DEX
      3BC1   10 F0      BPL &3BB3
      3BC3   30 04      BMI &3BC9
 .DLL26
-     3BC5   A5 81      LDA &81
+     3BC5   A5 71      LDA &71
      3BC7   95 90      STA &90,X
 .DLL9
      3BC9   B9 90 00   LDA &0090,Y
-     3BCC   84 80      STY &80
+     3BCC   84 70      STY &70
      3BCE   20 3E 3C   JSR &3C3E
-     3BD1   A4 80      LDY &80
+     3BD1   A4 70      LDY &70
      3BD3   C8         INY
      3BD4   C0 04      CPY #&04
      3BD6   D0 F1      BNE &3BC9
@@ -44037,13 +44037,13 @@ End macro DKS4
      3BFD   8E 4F 2C   STX &2C4F
      3C00   8D 4E 2C   STA &2C4E
      3C03   A2 0B      LDX #&0B
-     3C05   86 86      STX &86
+     3C05   86 76      STX &76
      3C07   AD 5E 2C   LDA &2C5E
      3C0A   20 3A 3C   JSR &3C3A
      3C0D   AD 5D 2C   LDA &2C5D
      3C10   20 3A 3C   JSR &3C3A
      3C13   A9 F0      LDA #&F0
-     3C15   85 86      STA &86
+     3C15   85 76      STA &76
      3C17   A9 0F      LDA #&0F
      3C19   8D 4E 2C   STA &2C4E
      3C1C   8D 4F 2C   STA &2C4F
@@ -44068,28 +44068,28 @@ End macro DKS4
      3C3C   4A         LSR A
      3C3D   4A         LSR A
 .DIL
-     3C3E   85 81      STA &81
+     3C3E   85 71      STA &71
      3C40   A2 FF      LDX #&FF
-     3C42   86 82      STX &82
-     3C44   C5 86      CMP &86
+     3C42   86 72      STX &72
+     3C44   C5 76      CMP &76
      3C46   B0 05      BCS &3C4D
      3C48   AD 4F 2C   LDA &2C4F
      3C4B   D0 03      BNE &3C50
 .DL30
      3C4D   AD 4E 2C   LDA &2C4E
 .DL31
-     3C50   85 87      STA &87
+     3C50   85 77      STA &77
      3C52   A0 02      LDY #&02
      3C54   A2 07      LDX #&07
 .DL1
-     3C56   A5 81      LDA &81
+     3C56   A5 71      LDA &71
      3C58   C9 02      CMP #&02
      3C5A   90 1A      BCC &3C76
      3C5C   E9 02      SBC #&02
-     3C5E   85 81      STA &81
-     3C60   A5 82      LDA &82
+     3C5E   85 71      STA &71
+     3C60   A5 72      LDA &72
 .DL5
-     3C62   25 87      AND &87
+     3C62   25 77      AND &77
      3C64   91 96      STA (&96),Y
      3C66   C8         INY
      3C67   91 96      STA (&96),Y
@@ -44104,18 +44104,18 @@ End macro DKS4
      3C74   10 E0      BPL &3C56
 .DL2
      3C76   49 01      EOR #&01
-     3C78   85 81      STA &81
-     3C7A   A5 82      LDA &82
+     3C78   85 71      STA &71
+     3C7A   A5 72      LDA &72
 .DL3
      3C7C   0A         ASL A
      3C7D   29 AA      AND #&AA
-     3C7F   C6 81      DEC &81
+     3C7F   C6 71      DEC &71
      3C81   10 F9      BPL &3C7C
      3C83   48         PHA
      3C84   A9 00      LDA #&00
-     3C86   85 82      STA &82
+     3C86   85 72      STA &72
      3C88   A9 63      LDA #&63
-     3C8A   85 81      STA &81
+     3C8A   85 71      STA &71
      3C8C   68         PLA
      3C8D   4C 62 3C   JMP &3C62
 .DL6
@@ -44125,20 +44125,20 @@ End macro DKS4
      3C94   60         RTS
 .DIL2
      3C95   A0 01      LDY #&01
-     3C97   85 81      STA &81
+     3C97   85 71      STA &71
 .DLL10
      3C99   38         SEC
-     3C9A   A5 81      LDA &81
+     3C9A   A5 71      LDA &71
      3C9C   E9 02      SBC #&02
      3C9E   B0 0D      BCS &3CAD
      3CA0   A9 FF      LDA #&FF
-     3CA2   A6 81      LDX &81
-     3CA4   85 81      STA &81
+     3CA2   A6 71      LDX &71
+     3CA4   85 71      STA &71
      3CA6   BD 53 2F   LDA &2F53,X
      3CA9   29 3F      AND #&3F
      3CAB   D0 04      BNE &3CB1
 .DLL11
-     3CAD   85 81      STA &81
+     3CAD   85 71      STA &71
      3CAF   A9 00      LDA #&00
 .DLL12
      3CB1   91 96      STA (&96),Y
@@ -44244,7 +44244,7 @@ End macro DKS4
      3D53   4C 21 2D   JMP &2D21
 .IRQMusic
      3D56   8D 45 FE   STA &FE45
-     3D59   A5 79      LDA &79
+     3D59   A5 8F      LDA &8F
      3D5B   F0 04      BEQ &3D61
      3D5D   D8         CLD
      3D5E   20 67 3D   JSR &3D67
@@ -44254,7 +44254,7 @@ End macro DKS4
      3D64   8D 76 3D   STA &3D76
      3D67   A5 F4      LDA &F4
      3D69   48         PHA
-     3D6A   A5 78      LDA &78
+     3D6A   A5 8E      LDA &8E
      3D6C   85 F4      STA &F4
      3D6E   8D 30 FE   STA &FE30
      3D71   98         TYA
@@ -44276,19 +44276,19 @@ End macro DKS4
      3D85   4C 64 3D   JMP &3D64
 .MusicCommand
      3D88   A0 02      LDY #&02
-     3D8A   B1 88      LDA (&88),Y
+     3D8A   B1 78      LDA (&78),Y
      3D8C   20 64 3D   JSR &3D64
      3D8F   A9 06      LDA #&06
      3D91   8D 76 3D   STA &3D76
      3D94   60         RTS
 .SetMusicStatus
      3D95   A0 02      LDY #&02
-     3D97   B1 88      LDA (&88),Y
-     3D99   85 79      STA &79
+     3D97   B1 78      LDA (&78),Y
+     3D99   85 8F      STA &8F
      3D9B   60         RTS
 .ProcessOptions
      3D9C   A0 02      LDY #&02
-     3D9E   B1 88      LDA (&88),Y
+     3D9E   B1 78      LDA (&78),Y
      3DA0   AA         TAX
      3DA1   A9 0C      LDA #&0C
      3DA3   20 64 3D   JSR &3D64
@@ -44306,7 +44306,7 @@ End macro DKS4
      3DB9   60         RTS
 .SetSoundOption
      3DBA   A0 02      LDY #&02
-     3DBC   B1 88      LDA (&88),Y
+     3DBC   B1 78      LDA (&78),Y
      3DBE   8D C2 3D   STA &3DC2
      3DC1   60         RTS
 .DNOIZ

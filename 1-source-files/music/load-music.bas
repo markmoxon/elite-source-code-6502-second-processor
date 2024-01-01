@@ -3,8 +3,8 @@ tstaddr = &8008
 values = &90
 unique = &80
 RomSel = &FE30
-romNumber = &0078 : REM Set to address of .musicRomNumber
-fromAddr = &80    : REM We can reuse unique block by this point
+romNumber = &8E : REM Set to address of .musicRomNumber
+fromAddr = &80  : REM We can reuse unique block by this point
 
 PRINT"Acornsoft Elite... with music!"
 PRINT"=============================="
@@ -285,6 +285,11 @@ REM IF N% > 0 THEN FOR X% = ?&90 TO 15 : PRINT;" ";X%?&90; : NEXT
 CALL setRomNumber : REM STORE RAM BANK USED SOMEWHERE IN ZERO PAGE
 PRINT'"Loading music into RAM bank ";?bank;"...";
 *LOAD MUSIC 4000
+P%=&400F
+[OPT 0
+.addrDNOIZ      EQUW &3DC2
+.addrplay1      EQUW &3D75+1
+]
 !&80=&4000 : CALL SRLOAD : REM Load ROM image into the correct bank in I/O
 PRINT CHR$130;"OK"
 PRINT'"Press any key to play Elite";

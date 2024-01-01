@@ -71,4 +71,4 @@ ENDIF
 
  PUTFILE "1-source-files/boot-files/$.!BOOT.bin", "!BOOT", &FFFFFF, &FFFFFF
  PUTBASIC "1-source-files/music/load-music.bas", "ELITEM"
- PUTFILE "1-source-files/music/elite-music-6502sp.rom", "MUSIC", &FF8000, &FF8000
+ PUTFILE "1-source-files/music/elite-music.rom", "MUSIC", &FF8000, &FF8000
