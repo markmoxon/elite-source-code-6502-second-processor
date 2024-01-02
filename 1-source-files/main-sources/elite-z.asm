@@ -6753,9 +6753,13 @@ ENDMACRO
 
  EQUW SAFE              \            255 (&FF)    15 = Do nothing
 
- EQUW SAFE              \ These addresses are never used and have no effect, as
- EQUW SAFE              \ they are out of range for one-byte OSWORD numbers
- EQUW SAFE
+                        \ --- Mod: Code removed for music: -------------------->
+
+\EQUW SAFE              \ These addresses are never used and have no effect, as
+\EQUW SAFE              \ they are out of range for one-byte OSWORD numbers
+\EQUW SAFE
+
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \
@@ -6808,6 +6812,9 @@ ENDMACRO
 
  CMP #7                 \ If this is not a SOUND command, jump to notSound
  BNE notSound
+
+ LDA DNOIZ              \ If this is a SOUND command and sounds are disabled,
+ BNE SAFE               \ jump to SAFE
 
  STX OSSC               \ Store (Y X) in OSCC
  STY OSSC+1
