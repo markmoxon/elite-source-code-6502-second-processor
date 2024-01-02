@@ -6790,10 +6790,69 @@ ENDMACRO
 \
 \ ******************************************************************************
 
+                        \ --- Mod: Code added for music: ---------------------->
+
+.SFX
+
+ EQUB 0                 \ For storing new &F1 and &F4 volumes
+ EQUB 0
+
+                        \ --- End of added code ------------------------------->
+
 .NWOSWD
 
  BIT svn                \ If bit 7 of svn is set, jump to notours to process
  BMI notours            \ this call with the standard OSWORD handler
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+ CMP #7                 \ If this is not a SOUND command, jump to notSound
+ BNE notSound
+
+ STX OSSC               \ Store (Y X) in OSCC
+ STY OSSC+1
+
+ LDY #2                 \ Fetch byte #2 from the parameter block (the volume)
+ LDA (OSSC),Y
+
+ BPL notVolume          \ If this is an envelope, jump to notVolume
+
+ LDA NWOSWD-2           \ If the new volume is zero, jump to zeroVolume
+ BEQ zeroVolume
+
+ CMP #&F1               \ If this is not volume &F1, jump to notF4
+ BNE notF1
+
+ LDA NWOSWD-2           \ Load the new volume for &F1, which is put into
+ STA (OSSC),Y           \ NWOSWD-2 by the music ROM, and update the block
+
+ JMP notVolume          \ Process this call with the standard OSWORD handler
+
+.notF1
+
+ LDA NWOSWD-1           \ Load the new volume for &F4, which is put into
+ STA (OSSC),Y           \ NWOSWD-1 by the music ROM, and update the block
+
+ JMP notVolume          \ Process this call with the standard OSWORD handler
+
+.zeroVolume
+
+ STA (OSSC),Y           \ Zero both bytes of the volume
+ INY
+ STA (OSSC),Y
+
+.notVolume
+
+ LDA #7                 \ Set OSWORD 7 registers
+ LDX OSSC
+ LDY OSSC+1
+
+ JMP notours            \ Process this call with the standard OSWORD handler
+
+.notSound
+
+                        \ --- End of added code ------------------------------->
+
 
  CMP #240               \ If A < 240, this is not a special jump command call,
  BCC notours            \ so jump to notours to pass it to the standard OSWORD

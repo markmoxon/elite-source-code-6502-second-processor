@@ -76,7 +76,7 @@ if release == 1:
 elif release == 2:
     # SNG45
     g = 0x10D1
-    f = 0x818F - 1
+    f = 0x81F7 - 1
 elif release == 3:
     # Executive
     g = 0x10D3
