@@ -1104,9 +1104,6 @@ ENDIF
  LDA #0                 \ Select the title music
  JSR PlayMusic
 
- LDA #6                 \ Modify the PlayMusic routine so it plays music on the
- STA play1+1            \ next call
-
  SEI                    \ Disable interrupts so we can update the interrupt
                         \ handler
 
@@ -1216,6 +1213,13 @@ ENDIF
                         \ Fall through into PUTBACK to point WRCHV to USOSWRCH,
                         \ and then end the program, as from now on the handlers
                         \ pointed to by the vectors will handle everything
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+ LDA #6                 \ Modify the PlayMusic routine so it plays music on the
+ STA play1+1            \ next call
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \

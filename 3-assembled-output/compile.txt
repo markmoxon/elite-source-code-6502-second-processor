@@ -41745,64 +41745,64 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2C92   8D 25 37   STA &3725
      2C95   A9 00      LDA #&00
      2C97   20 9A 3D   JSR &3D9A
-     2C9A   A9 06      LDA #&06
-     2C9C   8D AC 3D   STA &3DAC
-     2C9F   78         SEI
-     2CA0   A9 4C      LDA #&4C
-     2CA2   8D 68 3D   STA &3D68
-     2CA5   A9 8C      LDA #&8C
-     2CA7   8D 69 3D   STA &3D69
-     2CAA   A9 3D      LDA #&3D
-     2CAC   8D 6A 3D   STA &3D6A
-     2CAF   58         CLI
-     2CB0   A9 00      LDA #&00
-     2CB2   8D F8 3D   STA &3DF8
-     2CB5   A9 23      LDA #&23
-     2CB7   78         SEI
-     2CB8   8D 10 02   STA &0210
-     2CBB   A9 37      LDA #&37
-     2CBD   8D 11 02   STA &0211
-     2CC0   A9 39      LDA #&39
-     2CC2   8D 4E FE   STA &FE4E
-     2CC5   A9 7F      LDA #&7F
-     2CC7   8D 6E FE   STA &FE6E
-     2CCA   AD 04 02   LDA &0204
-     2CCD   8D 4A 2C   STA &2C4A
-     2CD0   AD 05 02   LDA &0205
-     2CD3   8D 4B 2C   STA &2C4B
-     2CD6   A9 34      LDA #&34
-     2CD8   8D 04 02   STA &0204
-     2CDB   A9 3D      LDA #&3D
-     2CDD   8D 05 02   STA &0205
-     2CE0   A9 39      LDA #&39
-     2CE2   8D 45 FE   STA &FE45
-     2CE5   58         CLI
+     2C9A   78         SEI
+     2C9B   A9 4C      LDA #&4C
+     2C9D   8D 68 3D   STA &3D68
+     2CA0   A9 8C      LDA #&8C
+     2CA2   8D 69 3D   STA &3D69
+     2CA5   A9 3D      LDA #&3D
+     2CA7   8D 6A 3D   STA &3D6A
+     2CAA   58         CLI
+     2CAB   A9 00      LDA #&00
+     2CAD   8D F8 3D   STA &3DF8
+     2CB0   A9 23      LDA #&23
+     2CB2   78         SEI
+     2CB3   8D 10 02   STA &0210
+     2CB6   A9 37      LDA #&37
+     2CB8   8D 11 02   STA &0211
+     2CBB   A9 39      LDA #&39
+     2CBD   8D 4E FE   STA &FE4E
+     2CC0   A9 7F      LDA #&7F
+     2CC2   8D 6E FE   STA &FE6E
+     2CC5   AD 04 02   LDA &0204
+     2CC8   8D 4A 2C   STA &2C4A
+     2CCB   AD 05 02   LDA &0205
+     2CCE   8D 4B 2C   STA &2C4B
+     2CD1   A9 34      LDA #&34
+     2CD3   8D 04 02   STA &0204
+     2CD6   A9 3D      LDA #&3D
+     2CD8   8D 05 02   STA &0205
+     2CDB   A9 39      LDA #&39
+     2CDD   8D 45 FE   STA &FE45
+     2CE0   58         CLI
 .NOINT
-     2CE6   AD 0C 02   LDA &020C
-     2CE9   8D 9C 39   STA &399C
-     2CEC   AD 0D 02   LDA &020D
-     2CEF   8D 9D 39   STA &399D
-     2CF2   A9 38      LDA #&38
-     2CF4   78         SEI
-     2CF5   8D 0C 02   STA &020C
-     2CF8   A9 39      LDA #&39
-     2CFA   8D 0D 02   STA &020D
-     2CFD   58         CLI
-     2CFE   A9 FF      LDA #&FF
-     2D00   85 77      STA &77
-     2D02   AD 00 0B   LDA &0B00
-     2D05   C9 54      CMP #&54
-     2D07   D0 18      BNE &2D21
-     2D09   AD 01 0B   LDA &0B01
-     2D0C   C9 49      CMP #&49
-     2D0E   D0 11      BNE &2D21
-     2D10   AD 02 0B   LDA &0B02
-     2D13   C9 4E      CMP #&4E
-     2D15   D0 0A      BNE &2D21
-     2D17   AD 03 0B   LDA &0B03
-     2D1A   C9 41      CMP #&41
-     2D1C   D0 03      BNE &2D21
-     2D1E   20 04 0B   JSR &0B04
+     2CE1   AD 0C 02   LDA &020C
+     2CE4   8D 9C 39   STA &399C
+     2CE7   AD 0D 02   LDA &020D
+     2CEA   8D 9D 39   STA &399D
+     2CED   A9 38      LDA #&38
+     2CEF   78         SEI
+     2CF0   8D 0C 02   STA &020C
+     2CF3   A9 39      LDA #&39
+     2CF5   8D 0D 02   STA &020D
+     2CF8   58         CLI
+     2CF9   A9 FF      LDA #&FF
+     2CFB   85 77      STA &77
+     2CFD   AD 00 0B   LDA &0B00
+     2D00   C9 54      CMP #&54
+     2D02   D0 1D      BNE &2D21
+     2D04   AD 01 0B   LDA &0B01
+     2D07   C9 49      CMP #&49
+     2D09   D0 16      BNE &2D21
+     2D0B   AD 02 0B   LDA &0B02
+     2D0E   C9 4E      CMP #&4E
+     2D10   D0 0F      BNE &2D21
+     2D12   AD 03 0B   LDA &0B03
+     2D15   C9 41      CMP #&41
+     2D17   D0 08      BNE &2D21
+     2D19   20 04 0B   JSR &0B04
+     2D1C   A9 06      LDA #&06
+     2D1E   8D AC 3D   STA &3DAC
 .PUTBACK
      2D21   A9 80      LDA #&80
 .USOSWRCH
