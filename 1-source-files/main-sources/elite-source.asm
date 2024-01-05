@@ -32059,8 +32059,6 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ ------------------------------------------------------------------------------
-\
 \ Other entry points:
 \
 \   QU5                 Restart the game using the last saved commander without
@@ -32733,8 +32731,6 @@ ENDIF
 \
 \ If ESCAPE is pressed or a blank name is entered, then an empty string is
 \ returned.
-\
-\ ------------------------------------------------------------------------------
 \
 \ Returns:
 \
@@ -33810,8 +33806,6 @@ ENDIF
 \       Type: Subroutine
 \   Category: Maths (Geometry)
 \    Summary: Calculate the vector to the planet and store it in XX15
-\
-\ ------------------------------------------------------------------------------
 \
 \ ------------------------------------------------------------------------------
 \
@@ -39712,8 +39706,6 @@ ENDIF
 \
 \ This part adds all the visible edges to the ship line heap, so we can draw
 \ them in part 12.
-\
-\ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
