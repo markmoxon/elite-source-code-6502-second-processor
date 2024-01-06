@@ -50,17 +50,17 @@ if release == 1:
     # Source disc variant
     s = 0x106A                  # S%
     g = 0x10D1                  # G%
-    f = 0x81C6                  # F%
+    f = 0x81F8                  # F%
 elif release == 2:
     # SNG45 variant
     s = 0x106A                  # S%
     g = 0x10D1                  # G%
-    f = 0x81A5                  # F%
+    f = 0x81FB                  # F%
 elif release == 3:
     # Executive variant
     s = 0x106C                  # S%
     g = 0x10D3                  # G%
-    f = 0x82FD                  # F%
+    f = 0x8353                  # F%
 
 # Load assembled code file for P.CODE
 

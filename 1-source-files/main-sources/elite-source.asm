@@ -12737,6 +12737,14 @@ ENDIF
  LDA #&0B               \ Set the ship line heap pointer in INWK(34 33) to point
  STA INWK+34            \ to &0B00
 
+                        \ --- Mod: Code added for red enemy lasers: ----------->
+
+ LDY #2                 \ Set the Y2 coordinate of the laser line in the ship
+ LDA #255               \ line heap to 255 so there is no laser line
+ STA (INWK+33),Y
+
+                        \ --- End of added code ------------------------------->
+
  JSR DORND              \ We now perform a random number of small angle (3.6
  STA XSAV               \ degree) rotations to spin the ship on the deck while
                         \ keeping it flat on the deck (a bit like spinning a
@@ -26574,6 +26582,14 @@ ENDIF
  LDA INWK+34            \ heap (i.e. INWK+33) in SLSP, doing both the high and
  STA SLSP+1             \ low bytes
 
+                        \ --- Mod: Code added for red enemy lasers: ----------->
+
+ LDY #2                 \ Set the Y2 coordinate of the laser line in the ship
+ LDA #255               \ line heap to 255 so there is no laser line
+ STA (INWK+33),Y
+
+                        \ --- End of added code ------------------------------->
+
 .NW6
 
  LDY #14                \ Fetch ship blueprint byte #14, which contains the
@@ -36925,25 +36941,32 @@ IF _MATCH_ORIGINAL_BINARIES
   EQUB &97, &90
 
  ELIF _SOURCE_DISC
+                        \ --- Mod: Code removed for red enemy lasers: --------->
 
-  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
-  EQUB &FD, &08, &60, &A6, &83, &20, &62, &4B   \ unused and just contain random
-  EQUB &A6, &83, &4C, &D6, &12, &20, &C0, &4C   \ workspace noise left over from
-  EQUB &20, &70, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
-  EQUB &08, &20, &7C, &45, &A9, &06, &85, &4A
-  EQUB &A9, &81, &4C, &BB, &44, &A2, &FF, &E8
-  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
-  EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
-  EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
-  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
-  EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
-  EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
-  EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
-  EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &5C
-  EQUB &45, &A9, &C8, &20, &BE, &57, &A4, &97
-  EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
-  EQUB &1F, &D0, &08, &AD, &A4, &08, &09, &02
-  EQUB &8D, &A4, &08, &E0, &0F, &F0, &08, &E0
+\ EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+\ EQUB &FD, &08, &60, &A6, &83, &20, &62, &4B   \ unused and just contain random
+\ EQUB &A6, &83, &4C, &D6, &12, &20, &C0, &4C   \ workspace noise left over from
+\ EQUB &20, &70, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+\ EQUB &08, &20, &7C, &45, &A9, &06, &85, &4A
+\ EQUB &A9, &81, &4C, &BB, &44, &A2, &FF, &E8
+\ EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+\ EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
+\ EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
+\ EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+\ EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
+\ EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
+\ EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
+\ EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &5C
+\ EQUB &45, &A9, &C8, &20, &BE, &57, &A4, &97
+\ EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
+\ EQUB &1F, &D0, &08, &AD, &A4, &08, &09, &02
+\ EQUB &8D, &A4, &08, &E0, &0F, &F0, &08, &E0
+
+                        \ --- And replaced by: -------------------------------->
+
+  ALIGN 256             \ Align the log tables so they start on page boundaries
+
+                        \ --- End of replacement ------------------------------>
 
  ENDIF
 
@@ -37980,6 +38003,7 @@ ENDIF
                         \ distance if it turns out to be visible on-screen
 
                         \ --- Mod: Code added for flicker-free ships: --------->
+                        \ --- Mod: Code added for red enemy lasers: ----------->
 
                         \ We now set things up for smooth ship plotting, by
                         \ setting the following:
@@ -37991,10 +38015,13 @@ ENDIF
                         \            ship that's currently on-screen (or 0 if
                         \            there is no ship currently on-screen)
 
- LDY #1                 \ Set LSNUM = 1, the offset of the first set of line
- STY LSNUM              \ coordinates in the ship line heap
+ LDY #5                 \ Set LSNUM = 5, the offset of the first set of line
+ STY LSNUM              \ coordinates in the ship line heap, after the four
+                        \ coordinates for the laser line
 
- DEY                    \ Decrement Y to 0
+ LDY #0                 \ Set Y to 0
+
+                        \ --- End of added code ------------------------------->
 
  LDA #%00001000         \ If bit 3 of the ship's byte #31 is set, then the ship
  BIT INWK+31            \ is currently being drawn on-screen, so skip the
@@ -39836,6 +39863,50 @@ ENDIF
 
                         \ --- End of replacement ------------------------------>
 
+                        \ --- Mod: Code added for red enemy lasers: ----------->
+
+                        \ We now need to check whether there is a laser line
+                        \ on-screen, and if so remove it
+
+ LDY #1                 \ Set X1 to the first coordinate on the ship line heap,
+ LDA (XX19),Y           \ which is the start of the laser line
+ STA X1
+
+ INY                    \ Increment the index to point to the Y1 coordinate
+
+ LDA (XX19),Y           \ Set Y1 to the first coordinate on the ship line heap
+ STA Y1                 \ which is the start of the laser line
+
+ CMP #255               \ If the Y1 coordinate is 255 then there is no laser
+ BEQ noLaserLine        \ line currently on-screen, so jump to noLaserLine to
+                        \ skip the removal of the old line
+
+ LDA #255               \ Set the Y2 coordinate of the laser line in the ship
+ STA (XX19),Y           \ line heap to 255 to remove the laser line from the
+                        \ heap
+
+ INY                    \ Increment the index to point to the X2 coordinate
+
+ LDA (XX19),Y           \ Set X2 to the second coordinate on the ship line heap,
+ STA X2                 \ which is the end of the laser line
+
+ INY                    \ Increment the index to point to the Y2 coordinate
+
+ LDA (XX19),Y           \ Set Y2 to the second coordinate on the ship line heap,
+ STA Y2                 \ which is the end of the laser line
+
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
+
+ JSR LL30               \ Draw the old laser line to remove it from the screen
+
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is cyan in the space view
+
+.noLaserLine
+
+                        \ --- End of added code ------------------------------->
+
  BIT XX1+31             \ If bit 6 of the ship's byte #31 is clear, then the
  BVC LL170              \ ship is not firing its lasers, so jump to LL170 to
                         \ skip the drawing of laser lines
@@ -39918,6 +39989,7 @@ ENDIF
                         \ in the ship line heap
 
                         \ --- Mod: Code removed for flicker-free ships: ------->
+                        \ --- Mod: Code removed for red enemy lasers: --------->
 
 \LDA U                  \ Fetch the ship line heap pointer, which points to the
 \                       \ next free byte on the heap, into A
@@ -39956,9 +40028,35 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- JSR LSPUT              \ Draw the laser line using smooth animation, by first
-                        \ drawing the new laser line and then erasing the
-                        \ corresponding old line from the screen
+                        \ If we get here then there is a laser line, so now we
+                        \ store it and draw it
+
+ LDY #1                 \ Store X1 as the first coordinate on the ship line heap
+ LDA X1
+ STA (XX19),Y
+
+ INY                    \ Increment the index to point to the Y1 coordinate
+
+ LDA Y1                 \ Store Y1 as the first coordinate on the ship line heap
+ STA (XX19),Y
+
+ INY                    \ Increment the index to point to the X2 coordinate
+
+ LDA X2                 \ Store X2 as the second coordinate on the ship line
+ STA (XX19),Y           \ heap
+
+ INY                    \ Increment the index to point to the Y2 coordinate
+
+ LDA Y2                 \ Store Y2 as the second coordinate on the ship line
+ STA (XX19),Y           \ heap
+
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
+
+ JSR LL30               \ Draw the new laser line
+
+ LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is cyan in the space view
 
                         \ --- End of replacement ------------------------------>
 
@@ -40516,7 +40614,7 @@ ENDIF
 
  PLP                    \ Restore the result of the comparison above, so if the
  BCS LL82               \ original value of LSNUM >= LSNUM2, then we have
-                        \ alreadyredrawn all the lines from the old ship's line
+                        \ already redrawn all the lines from the old ship's line
                         \ heap, so return from the subroutine (as LL82 contains
                         \ an RTS)
 
