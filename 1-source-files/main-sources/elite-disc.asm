@@ -66,3 +66,9 @@ ELSE
 ENDIF
 
  PUTFILE "3-assembled-output/README.txt", "README", &FFFFFF, &FFFFFF
+
+ PUTFILE "1-source-files/other-files/E.MAX.bin", "E.MAX", &000000, &000000
+
+ PUTFILE "1-source-files/boot-files/$.!BOOT.bin", "!BOOT", &FFFFFF, &FFFFFF
+ PUTBASIC "1-source-files/music/load-music.bas", "ELITEM"
+ PUTFILE "1-source-files/music/elite-music.rom", "MUSIC", &FF8000, &FF8000

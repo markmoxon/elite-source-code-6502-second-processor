@@ -4210,6 +4210,12 @@ ENDIF
 
 .DOENTRY
 
+                        \ --- Mod: Code added for music: ---------------------->
+
+ JSR StopMusic          \ Stop any music that is currently playing
+
+                        \ --- End of added code ------------------------------->
+
  JSR RES2               \ Reset a number of flight variables and workspaces
 
  JSR LAUN               \ Show the space station docking tunnel
@@ -4712,6 +4718,12 @@ ENDIF
  LDA #0                 \ The "cancel docking computer" key is bring pressed,
  STA auto               \ so turn it off by setting auto to 0
 
+                        \ --- Mod: Code added for music: ---------------------->
+
+ JSR StopMusic          \ Stop any music that is currently playing
+
+                        \ --- End of added code ------------------------------->
+
 .MA78
 
  LDA KY13               \ If ESCAPE is being pressed and we have an escape pod
@@ -4760,6 +4772,13 @@ ENDIF
 
  STA auto               \ Set auto to the non-zero value of A, so the docking
                         \ computer is activated
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+ JSR SetMusicStatus     \ Set the status flag to a non-zero value to indicate we
+                        \ are playing music, so the docking music starts playing
+
+                        \ --- End of added code ------------------------------->
 
 .MA68
 
@@ -5245,6 +5264,12 @@ ENDIF
 .GOIN
 
                         \ If we arrive here, we just docked successfully
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+ JSR StopMusic          \ Stop any music that is currently playing
+
+                        \ --- End of added code ------------------------------->
 
  JMP DOENTRY            \ Go to the docking bay (i.e. show the ship hangar)
 
@@ -32364,6 +32389,17 @@ ENDIF
  LDA #3                 \ Move the text cursor to column 3
  JSR DOXC
 
+                        \ --- Mod: Code added for music: ---------------------->
+
+ LDA #0                 \ Select the title music
+ JSR PlayMusic
+
+ LDA #&FF               \ Set the status flag to a non-zero value to indicate
+ JSR SetMusicStatus     \ we are playing music, so the title music starts
+                        \ playing
+
+                        \ --- End of added code ------------------------------->
+
  LDX #3                 \ Set X = 3 for the call to FX200
 
  JSR FX200              \ Disable the ESCAPE key and clear memory if the BREAK
@@ -32424,6 +32460,12 @@ ENDIF
  LDX #ASP               \ token 7 ("PRESS SPACE OR FIRE,{single cap}COMMANDER.
  JSR TITLE              \ {cr}{cr}"), returning with the internal number of the
                         \ key pressed in A
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+ JSR StopMusic          \ Stop the title music
+
+                        \ --- End of added code ------------------------------->
 
  JSR ping               \ Set the target system coordinates (QQ9, QQ10) to the
                         \ current system coordinates (QQ0, QQ1) we just loaded
@@ -33525,6 +33567,12 @@ ENDIF
 \ ******************************************************************************
 
 .SVE
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+ JSR StopMusic          \ Stop any music that is currently playing
+
+                        \ --- End of added code ------------------------------->
 
  JSR ZEBC               \ Call ZEBC to zero-fill pages &B and &C
 
@@ -35615,6 +35663,13 @@ ENDIF
  LDA #0                 \ "S" is being pressed, so set DNOIZ to 0 to turn the
  STA DNOIZ              \ sound on
 
+                        \ --- Mod: Code added for music: ---------------------->
+
+ JSR SetSoundOption     \ Send the new value of DNOIZ to the I/O Processor so it
+                        \ can apply the setting to music
+
+                        \ --- End of added code ------------------------------->
+
 .DK6
 
  LDY #&40               \ We now want to loop through the keys that toggle
@@ -35650,7 +35705,20 @@ ENDIF
  STX DNOIZ              \ "Q" is being pressed, so set DNOIZ to X, which is
                         \ non-zero (&10), so this will turn the sound off
 
+                        \ --- Mod: Code added for music: ---------------------->
+
+ TXA                    \ Send the new value of DNOIZ to the I/O Processor so it
+ JSR SetSoundOption     \ can apply the setting to music
+
+                        \ --- End of added code ------------------------------->
+
 .DK7
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+ JSR ProcessOptions     \ Process the music-related options
+
+                        \ --- End of added code ------------------------------->
 
  CPX #&70               \ If ESCAPE is not being pressed, skip over the next
  BNE P%+5               \ instruction
@@ -36904,45 +36972,174 @@ ENDMACRO
  CODE_G% = P%
  LOAD_G% = LOAD% + P% - CODE%
 
-IF _MATCH_ORIGINAL_BINARIES
+\ ******************************************************************************
+\
+\       Name: musicBuff
+\       Type: Variable
+\   Category: Universe editor
+\    Summary: Buffer for music OSWORD calls
+\
+\ ******************************************************************************
 
- IF _SNG45
+                        \ --- Mod: Code added for music: ---------------------->
 
-  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
-  EQUB &FD, &08, &60, &A6, &83, &20, &68, &4B   \ unused and just contain random
-  EQUB &A6, &83, &4C, &D6, &12, &20, &C6, &4C   \ workspace noise left over from
-  EQUB &20, &76, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
-  EQUB &08, &20, &82, &45, &A9, &06, &85, &4A
-  EQUB &A9, &81, &4C, &C1, &44, &A2, &FF, &E8
-  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
-  EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
-  EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
-  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
-  EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
-  EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
-  EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
-  EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &62
-  EQUB &45, &A9, &C8, &20, &C7, &57, &A4, &97
-  EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
-  EQUB &1F, &D0, &08, &AD, &A4, &08, &09
+.musicBuff
 
- ELIF _EXECUTIVE
+ EQUB 3                 \ The number of bytes to transmit with this command
 
-  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
-  EQUB &FD, &08, &60, &A6, &83, &20, &8D, &4B   \ unused and just contain random
-  EQUB &A6, &83, &4C, &D8, &12, &20, &EB, &4C   \ workspace noise left over from
-  EQUB &20, &9B, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
-  EQUB &08, &20, &A7, &45, &A9, &06, &85, &4A
-  EQUB &A9, &81, &4C, &E6, &44, &A2, &FF, &E8
-  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
-  EQUB &F6, &8A, &0A, &A8, &B9, &86, &1A, &85
-  EQUB &05, &B9, &87, &1A, &85, &06, &A0, &20
-  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
-  EQUB &97, &90
+ EQUB 2                 \ The number of bytes to receive with this command
 
- ELIF _SOURCE_DISC
-                        \ --- Mod: Code removed for red enemy lasers: --------->
+ EQUB 0                 \ The parameter to send
 
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: StopMusic
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Stop any music that is currently playing
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.StopMusic
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #250               \ Set A = 250 for the StopMusic OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to
+                        \ stop the music, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: PlayMusic
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Send a music command to the I/O Processor
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.PlayMusic
+
+ STA musicBuff+2        \ Store the paramater to send in the musicBuff block
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #251               \ Set A = 251 for the PlayMusic OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to
+                        \ play the music, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetMusicStatus
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Update the music status flag in the I/O Processor
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.SetMusicStatus
+
+ STA musicBuff+2        \ Store the paramater to send in the musicBuff block
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #252               \ Set A = 252 for the PlayMusic OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to
+                        \ set the status, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ProcessOptions
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Process music-related options in the I/O Processor
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.ProcessOptions
+
+ PHX                    \ Store the value of X on the stack
+
+ STX musicBuff+2        \ Store the paramater to send in the musicBuff block
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #253               \ Set A = 253 for the ProcessOptions OSWORD call
+
+ JSR OSWORD             \ Send an OSWORD command to the I/O processor to
+                        \ process the music-related option keys
+
+ PLX                    \ Retrieve the value of X from the stack
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+                        \ --- Mod: Code removed for Compendium: --------------->
+
+\IF _MATCH_ORIGINAL_BINARIES
+\
+\IF _SNG45
+\
+\ EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+\ EQUB &FD, &08, &60, &A6, &83, &20, &68, &4B   \ unused and just contain random
+\ EQUB &A6, &83, &4C, &D6, &12, &20, &C6, &4C   \ workspace noise left over from
+\ EQUB &20, &76, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+\ EQUB &08, &20, &82, &45, &A9, &06, &85, &4A
+\ EQUB &A9, &81, &4C, &C1, &44, &A2, &FF, &E8
+\ EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+\ EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
+\ EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
+\ EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+\ EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
+\ EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
+\ EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
+\ EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &62
+\ EQUB &45, &A9, &C8, &20, &C7, &57, &A4, &97
+\ EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
+\ EQUB &1F, &D0, &08, &AD, &A4, &08, &09
+\
+\ELIF _EXECUTIVE
+\
+\ EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+\ EQUB &FD, &08, &60, &A6, &83, &20, &8D, &4B   \ unused and just contain random
+\ EQUB &A6, &83, &4C, &D8, &12, &20, &EB, &4C   \ workspace noise left over from
+\ EQUB &20, &9B, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+\ EQUB &08, &20, &A7, &45, &A9, &06, &85, &4A
+\ EQUB &A9, &81, &4C, &E6, &44, &A2, &FF, &E8
+\ EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+\ EQUB &F6, &8A, &0A, &A8, &B9, &86, &1A, &85
+\ EQUB &05, &B9, &87, &1A, &85, &06, &A0, &20
+\ EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+\ EQUB &97, &90
+\
+\ELIF _SOURCE_DISC
+\
 \ EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
 \ EQUB &FD, &08, &60, &A6, &83, &20, &62, &4B   \ unused and just contain random
 \ EQUB &A6, &83, &4C, &D6, &12, &20, &C0, &4C   \ workspace noise left over from
@@ -36961,20 +37158,20 @@ IF _MATCH_ORIGINAL_BINARIES
 \ EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
 \ EQUB &1F, &D0, &08, &AD, &A4, &08, &09, &02
 \ EQUB &8D, &A4, &08, &E0, &0F, &F0, &08, &E0
+\
+\ENDIF
+\
+\ELSE
+\
+\ALIGN 256              \ Align the log tables so they start on page boundaries
+\
+\ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
-  ALIGN 256             \ Align the log tables so they start on page boundaries
-
-                        \ --- End of replacement ------------------------------>
-
- ENDIF
-
-ELSE
-
  ALIGN 256              \ Align the log tables so they start on page boundaries
 
-ENDIF
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -50175,6 +50372,37 @@ ENDIF
                         \ all of them
 
  RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: SetSoundOption
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Update the DNOIZ status flag in the I/O Processor
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.SetSoundOption
+
+ PHX                    \ Store the value of X on the stack
+
+ STA musicBuff+2        \ Store the paramater to send in the musicBuff block
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #254               \ Set A = 254 for the SetSoundOption OSWORD call
+
+ JSR OSWORD             \ Send an OSWORD command to the I/O processor to
+                        \ set the sound option
+
+ PLX                    \ Retrieve the value of X from the stack
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \

@@ -1,33 +1,7 @@
 BEEBASM?=beebasm
 PYTHON?=python
 
-# A make command with no arguments will build the SNG45 variant with
-# encrypted binaries, checksums enabled, the standard commander and
-# crc32 verification of the game binaries
-#
-# Optional arguments for the make command are:
-#
-#   variant=<release>   Build the specified variant:
-#
-#                         sng45 (default)
-#                         source-disc
-#                         executive
-#
-#   commander=max       Start with a maxed-out commander
-#
-#   encrypt=no          Disable encryption and checksum routines
-#
-#   match=no            Do not attempt to match the original game binaries
-#                       (i.e. omit workspace noise)
-#
-#   verify=no           Disable crc32 verification of the game binaries
-#
-# So, for example:
-#
-#   make variant=source-disc commander=max encrypt=no match=no verify=no
-#
-# will build an unencrypted source disc variant with a maxed-out commander,
-# no workspace noise and no crc32 verification
+# Music is only supported in the SNG45 variant
 
 ifeq ($(commander), max)
   max-commander=TRUE
@@ -49,19 +23,9 @@ else
   match-original-binaries=TRUE
 endif
 
-ifeq ($(variant), source-disc)
-  variant-number=1
-  folder=/source-disc
-  suffix=-flicker-free-from-source-disc
-else ifeq ($(variant), executive)
-  variant-number=3
-  folder=/executive
-  suffix=-flicker-free-executive
-else
-  variant-number=2
-  folder=/sng45
-  suffix=-flicker-free-sng45
-endif
+variant-number=2
+folder=/sng45
+suffix=-elite-compendium-sng45
 
 .PHONY:all
 all:
@@ -77,7 +41,7 @@ all:
 	$(BEEBASM) -i 1-source-files/main-sources/elite-loader2.asm -v >> 3-assembled-output/compile.txt
 	$(BEEBASM) -i 1-source-files/main-sources/elite-readme.asm -v >> 3-assembled-output/compile.txt
 	$(PYTHON) 2-build-files/elite-checksum.py $(unencrypt) -rel$(variant-number)
-	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp$(suffix).ssd -boot ELITE -title "E L I T E"
+	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp$(suffix).ssd -opt 3 -title "E L I T E"
 ifneq ($(verify), no)
 	@$(PYTHON) 2-build-files/crc32.py 4-reference-binaries$(folder) 3-assembled-output
 endif

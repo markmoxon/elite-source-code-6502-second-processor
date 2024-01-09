@@ -1,11 +1,13 @@
 
 ---------------------------------------
-Acornsoft Elite (flicker-free version)
+Acornsoft Elite (Compendium version)
 
-Version: BBC with 6502 Second Processor
-Variant: Acornsoft SNG45 release
-Product: Acornsoft SNG45
-         Acornsoft SNG47
+For the BBC Micro with 16K sideways RAM
+and 6502 Second Processor
+
+Based on the Acornsoft SNG45 release
+of Elite by Ian Bell and David Braben
+Copyright (c) Acornsoft 1985
 
 Contains the flicker-free ship drawing
 routines from the BBC Master version,
@@ -14,8 +16,20 @@
 Contains flicker-free planet drawing
 routines by Mark Moxon
 
+Sound routines by Kieran Connell and
+Simon Morris
+
+Original music by Aidan Bell and Julie
+Dunn (c) D. Braben and I. Bell 1985,
+ported from the C64 by Negative Charge
+
+Elite integration by Mark Moxon
+
+Sideways RAM detection and loading
+routines by Tricky and J.G.Harston
+
 See www.bbcelite.com for details
 
-Build: 2024-01-06 17:20:36
+Build: 2024-01-09 09:54:58
 ---------------------------------------
 
