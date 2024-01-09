@@ -30983,7 +30983,19 @@ ENDIF
 
 .TT100
 
+                        \ --- Mod: Code added for speed control: -------------->
+
+ JSR RestartSync        \ Restart the sync counter
+
+                        \ --- End of added code ------------------------------->
+
  JSR M%                 \ Call M% to iterate through the main flight loop
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+ JSR WaitForSync        \ Wait for the sync counter to count down
+
+                        \ --- End of added code ------------------------------->
 
  DEC DLY                \ Decrement the delay counter in DLY, so any in-flight
                         \ messages get removed once the counter reaches zero
@@ -37030,7 +37042,7 @@ ENDMACRO
 
 .PlayMusic
 
- STA musicBuff+2        \ Store the paramater to send in the musicBuff block
+ STA musicBuff+2        \ Store the parameter to send in the musicBuff block
 
  LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
  LDY #HI(musicBuff)     \ block
@@ -37056,7 +37068,7 @@ ENDMACRO
 
 .SetMusicStatus
 
- STA musicBuff+2        \ Store the paramater to send in the musicBuff block
+ STA musicBuff+2        \ Store the parameter to send in the musicBuff block
 
  LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
  LDY #HI(musicBuff)     \ block
@@ -37084,7 +37096,7 @@ ENDMACRO
 
  PHX                    \ Store the value of X on the stack
 
- STX musicBuff+2        \ Store the paramater to send in the musicBuff block
+ STX musicBuff+2        \ Store the parameter to send in the musicBuff block
 
  LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
  LDY #HI(musicBuff)     \ block
@@ -50388,7 +50400,7 @@ ENDIF
 
  PHX                    \ Store the value of X on the stack
 
- STA musicBuff+2        \ Store the paramater to send in the musicBuff block
+ STA musicBuff+2        \ Store the parameter to send in the musicBuff block
 
  LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
  LDY #HI(musicBuff)     \ block
@@ -54032,6 +54044,59 @@ ENDMACRO
  EQUB &20, &FD
  EQUB &B8, &90
  EQUB &01, &60
+
+\ ******************************************************************************
+\
+\       Name: RestartSync
+\       Type: Subroutine
+\   Category: Main loop
+\    Summary: Restart the sync counter
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.RestartSync
+
+ STZ musicBuff+2        \ Set the parameter to zero to restart the sync counter
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
+                        \ the sync counter, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: WaitForSync
+\       Type: Subroutine
+\   Category: Main loop
+\    Summary: Pause until the sync counter reaches zero
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.WaitForSync
+
+ LDA #1
+ STA musicBuff+2        \ Set the parameter to zero to restart the sync counter
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
+                        \ the sync counter, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
