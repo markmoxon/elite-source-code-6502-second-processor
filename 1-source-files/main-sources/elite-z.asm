@@ -43,7 +43,9 @@
                         \ --- Mod: Code added for speed control: -------------->
 
  SPEED = 2              \ The minimum number of vertical syncs we want to spend
-                        \ in the main loop (there are 50 per second)
+                        \ in the main flight loop (there are 50 per second)
+                        \
+                        \ Higher figure = slower game speed
 
                         \ --- End of added code ------------------------------->
 

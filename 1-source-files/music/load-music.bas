@@ -6,8 +6,8 @@ RomSel = &FE30
 romNumber = &8E : REM Set to address of .musicRomNumber
 fromAddr = &80  : REM We can reuse unique block by this point
 
-PRINT"Elite for 6502SP (Compendium version)"
-PRINT"====================================="
+PRINT"6502 co-pro Elite (Compendium version)"
+PRINT"======================================"
 PRINT'"Based on the Acornsoft SNG45 release"
 PRINT"of Elite by Ian Bell and David Braben"
 PRINT"Copyright (c) Acornsoft 1985"
