@@ -44396,7 +44396,7 @@ End macro DKS4
      3E05   F0 08      BEQ &3E0F
      3E07   4C 0A 3E   JMP &3E0A
 .StartMainLoop
-     3E0A   A9 02      LDA #&02
+     3E0A   A9 03      LDA #&03
      3E0C   85 7A      STA &7A
      3E0E   60         RTS
 .SlowDownMainLoop
