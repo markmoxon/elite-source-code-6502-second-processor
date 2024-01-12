@@ -8543,7 +8543,7 @@ Saving file '3-assembled-output/ELTB.bin'
      3284   D0 38      BNE &32BE
      3286   A5 90      LDA &90
      3288   10 34      BPL &32BE
-     328A   A0 00      LDY #&00
+     328A   A0 19      LDY #&19
 .PDL1
      328C   B9 00 7F   LDA &7F00,Y
      328F   C5 87      CMP &87

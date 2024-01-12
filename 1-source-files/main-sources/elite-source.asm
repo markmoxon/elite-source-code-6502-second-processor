@@ -188,10 +188,27 @@ ENDIF
  WHITE2  = %00111111    \ Two mode 2 pixels of colour 7    (white)
  STRIPE  = %00100011    \ Two mode 2 pixels of colour 5, 1 (magenta/red)
 
- NRU% = 0               \ The number of planetary systems with extended system
-                        \ description overrides in the RUTOK table. The value of
-                        \ this variable is 0 in the original source, but this
-                        \ appears to be a bug, as it should really be 26
+                        \ --- Mod: Code removed for bug fixes: ---------------->
+
+\NRU% = 0               \ The number of planetary systems with extended system
+\                       \ description overrides in the RUTOK table
+\                       \
+\                       \ NRU% is set to 0 in the original source, but this is a
+\                       \ bug, as it should match the number of entries in the
+\                       \ RUGAL table
+\                       \
+\                       \ This bug causes the Data on System screen to crash the
+\                       \ game for a small number of systems - for example, the
+\                       \ game will freeze if you bring up the Data on System
+\                       \ screen after docking at Biarge in the first galaxy
+\                       \ during the Constrictor mission
+
+                        \ --- And replaced by: -------------------------------->
+
+ NRU% = 25              \ The number of planetary systems with extended system
+                        \ description overrides in the RUTOK table
+
+                        \ --- End of replacement ------------------------------>
 
  RE = &23               \ The obfuscation byte used to hide the recursive tokens
                         \ table from crackers viewing the binary code
