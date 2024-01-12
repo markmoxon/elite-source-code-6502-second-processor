@@ -192,8 +192,8 @@ ENDIF
                         \ description overrides in the RUTOK table
                         \
                         \ NRU% is set to 0 in the original source, but this is a
-                        \ bug, as it should be 26 (as in the other versions of
-                        \ enhanced Elite)
+                        \ bug, as it should match the number of entries in the
+                        \ RUGAL table
                         \
                         \ This bug causes the Data on System screen to crash the
                         \ game for a small number of systems - for example, the
