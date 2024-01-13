@@ -65,5 +65,7 @@ ELSE
  ENDIF
 ENDIF
 
+ PUTFILE "1-source-files/other-files/E.MAX.bin", "MAX", &000000, &000000
+
  PUTFILE "1-source-files/boot-files/ELITESP.bin", "ELITESP", &FFFFFF, &FFFFFF
  PUTFILE "3-assembled-output/README.txt", "README", &FFFFFF, &FFFFFF
