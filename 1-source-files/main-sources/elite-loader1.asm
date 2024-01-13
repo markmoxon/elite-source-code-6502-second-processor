@@ -62,7 +62,15 @@
 \
 \ ******************************************************************************
 
- ORG &0090
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\ORG &0090
+
+                        \ --- And replaced by: -------------------------------->
+
+ ORG &0070
+
+                        \ --- End of replacement ------------------------------>
 
 .ZP
 
@@ -1283,8 +1291,17 @@ ENDIF
 
 .MESS1
 
+                        \ --- Mod: Code removed for Econet: ------------------->
+
  EQUS "DIR E"
- EQUB 13
+\EQUB 13
+
+                        \ --- And replaced by: -------------------------------->
+
+\EQUS "DIR $.Elite"     \ Change to the Elite folder in the user's home
+ EQUB 13                \ directory on the network
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -1298,8 +1315,16 @@ ENDIF
 
 .MESS2
 
- EQUS "R.I.ELITEa"      \ This is short for "*RUN I.ELITEa"
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\EQUS "R.I.ELITEa"      \ This is short for "*RUN I.ELITEa"
+\EQUB 13
+                        \ --- And replaced by: -------------------------------->
+
+
+ EQUS "R.IELITE"        \ This is short for "*RUN IELITE"
  EQUB 13
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \

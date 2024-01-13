@@ -63,7 +63,16 @@
 \
 \ ******************************************************************************
 
- ORG &0090
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\ORG &0090
+
+                        \ --- And replaced by: -------------------------------->
+
+ ORG &0070
+
+                        \ --- End of replacement ------------------------------>
+
 
 .Z1
 
@@ -187,8 +196,17 @@ ENDMACRO
 
 .MESS2
 
- EQUS "R.I.CODE"        \ This is short for "*RUN I.CODE"
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\EQUS "R.I.CODE"        \ This is short for "*RUN I.CODE"
+\EQUB 13
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUS "R.ICODE"         \ This is short for "*RUN ICODE"
  EQUB 13
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -202,8 +220,17 @@ ENDMACRO
 
 .MESS3
 
- EQUS "R.P.CODE"        \ This is short for "*RUN P.CODE"
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\EQUS "R.P.CODE"        \ This is short for "*RUN P.CODE"
+\EQUB 13
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUS "R.PCODE"         \ This is short for "*RUN PCODE"
  EQUB 13
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \

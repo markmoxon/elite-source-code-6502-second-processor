@@ -101,7 +101,16 @@
 \
 \ ******************************************************************************
 
- ORG &0080
+
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\ORG &0080
+
+                        \ --- And replaced by: -------------------------------->
+
+ ORG &0070
+
+                        \ --- End of replacement ------------------------------>
 
 .ZP
 
@@ -153,7 +162,11 @@
                         \ block (i.e. OSSC(1 0) = (Y X) from the original call
                         \ in the I/O processor)
 
- ORG &0090
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\ORG &0090
+
+                        \ --- End of removed code ----------------------------->
 
 .XX15
 
