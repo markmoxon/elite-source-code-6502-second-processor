@@ -38,9 +38,9 @@
  _EXECUTIVE             = (_VARIANT = 3)
 
 IF _SNG45 OR _EXECUTIVE
- PUTFILE "3-assembled-output/ELITE.bin", "ELITE6", &FF1FDC, &FF2085
+ PUTFILE "3-assembled-output/ELITE.bin", "ELITE65", &FF1FDC, &FF2085
 ELIF _SOURCE_DISC
- PUTFILE "3-assembled-output/ELITE.bin", "ELITE6", &FF2000, &FF2085
+ PUTFILE "3-assembled-output/ELITE.bin", "ELITE65", &FF2000, &FF2085
 ENDIF
 
  PUTFILE "3-assembled-output/ELITEa.bin", "IELITE", &FF2000, &FF2000

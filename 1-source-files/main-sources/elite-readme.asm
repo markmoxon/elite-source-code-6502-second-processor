@@ -67,9 +67,11 @@ ENDIF
  EQUS "Econet conversion by Mark Moxon"
  EQUB 10, 13
  EQUB 10, 13
- EQUS "Copy ELITE6, ICODE, IELITE & PCODE into"
+ EQUS "Copy ELITESP, ELITE65, ICODE, IELITE"
  EQUB 10, 13
- EQUS "the $.LIBRARY directory on the server"
+ EQUS "and PCODE into the $.LIBRARY directory"
+ EQUB 10, 13
+ EQUS " on the server"
  EQUB 10, 13
  EQUB 10, 13
  EQUS "Create a directory called $.Elite in"

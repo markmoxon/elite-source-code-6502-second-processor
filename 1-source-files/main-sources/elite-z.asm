@@ -84,6 +84,12 @@
 
  NVOSWRCH = &FFCB       \ The address for the non-vectored OSWRCH routine
 
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ OSCLI = &FFF7          \ The address for the OSCLI routine
+
+                        \ --- End of added code ------------------------------->
+
  OSWRCH = &FFEE         \ The address for the OSWRCH routine
  OSBYTE = &FFF4         \ The address for the OSBYTE routine
  OSWORD = &FFF1         \ The address for the OSWORD routine
@@ -1169,6 +1175,16 @@ ENDIF
                         \ will be called just before the setup code terminates
                         \ on the I/O processor
 
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ LDX #LO(MESS1)         \ Set (Y X) to point to MESS1 ("DIR $.Elite")
+ LDY #HI(MESS1)
+ 
+ JSR OSCLI              \ Call OSCLI to run the OS command in MESS1, which
+                        \ changes the disc directory to $.Elite
+
+                        \ --- End of added code ------------------------------->
+
                         \ Fall through into PUTBACK to point WRCHV to USOSWRCH,
                         \ and then end the program, as from now on the handlers
                         \ pointed to by the vectors will handle everything
@@ -1278,6 +1294,24 @@ ENDIF
 
  JMP TT26               \ Jump to TT26 to print the character in A, returning
                         \ from the subroutine using a tail call
+
+\ ******************************************************************************
+\
+\       Name: MESS1
+\       Type: Variable
+\   Category: Loader
+\    Summary: The OS command string for changing the disc directory to $.Elite
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for Econet: --------------------->
+
+.MESS1
+ EQUS "DIR E      "
+\ EQUS "DIR $.Elite"     \ Change to the Elite folder in the user's home
+ EQUB 13                \ directory on the network
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \

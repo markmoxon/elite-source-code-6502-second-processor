@@ -3382,9 +3382,23 @@ ENDIF
 
  SKIP 1                 \ The y-coordinate of the tip of the laser line
 
-.XX24
+                        \ --- Mod: Code removed for Econet: ------------------->
 
- SKIP 1                 \ This byte appears to be unused
+\.XX24
+\
+\SKIP 1                 \ This byte appears to be unused
+
+
+                        \ --- And replaced by: -------------------------------->
+
+.NMI
+
+ SKIP 1                 \ Used to store the ID of the current owner of the NMI
+                        \ workspace in the NMICLAIM routine, so we can hand it
+                        \ back to them in the NMIRELEASE routine once we are
+                        \ done using it
+
+                        \ --- End of replacement ------------------------------>
 
 .ALTIT
 
@@ -4123,6 +4137,13 @@ ENDIF
 
  JSR Checksum           \ Checksum the code from &1000 to &9FFF and check it
                         \ against S%-1
+
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ JSR NMICLAIM           \ Claim the NMI workspace (&00A0 to &00A7) from the MOS
+                        \ so the game can use it
+
+                        \ --- End of added code ------------------------------->
 
  JMP BEGIN              \ Jump to BEGIN to start the game
 
@@ -33462,6 +33483,13 @@ ENDIF
  LDA #255               \ Set the SVN flag to 255 to indicate that disc access
  JSR DODOSVN            \ is in progress
 
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ JSR NMIRELEASE         \ Release the NMI workspace (&00A0 to &00A7) so the MOS
+                        \ can use it
+
+                        \ --- End of added code ------------------------------->
+
  PLA                    \ Restore A from the stack
 
  LDX #INWK              \ Store a pointer to INWK at the start of the block at
@@ -33474,6 +33502,13 @@ ENDIF
  JSR OSFILE             \ Call OSFILE to do the file operation specified in
                         \ &0C00 (i.e. save or load a file depending on the value
                         \ of A)
+
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ JSR NMICLAIM           \ Claim the NMI workspace (&00A0 to &00A7) from the MOS
+                        \ so the game can use it
+
+                        \ --- End of added code ------------------------------->
 
  JSR CLDELAY            \ Pause for 1280 empty loops
 
@@ -35479,11 +35514,25 @@ ENDIF
  BPL savscl             \ Loop back for the next byte until we have copied all
                         \ 18 bytes
 
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ JSR NMIRELEASE         \ Release the NMI workspace (&00A0 to &00A7) so the MOS
+                        \ can use it
+
+                        \ --- End of added code ------------------------------->
+
  LDX #LO(oscobl)        \ Set (Y X) to point to the oscobl parameter block
  LDY #HI(oscobl)
 
  LDA #0                 \ Call OSFILE with A = 0 to save a file containing the
  JSR OSFILE             \ screen memory from &4000 to &7FFF
+
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ JSR NMICLAIM           \ Claim the NMI workspace (&00A0 to &00A7) from the MOS
+                        \ so the game can use it
+
+                        \ --- End of added code ------------------------------->
 
  INC scname+11          \ Increment the screenshot number in the filename at
                         \ scname, so ":0.X.SCREEN1" becomes ":0.X.SCREEN2" and
@@ -36622,70 +36671,129 @@ ENDMACRO
  CODE_G% = P%
  LOAD_G% = LOAD% + P% - CODE%
 
-IF _MATCH_ORIGINAL_BINARIES
+\ ******************************************************************************
+\
+\       Name: NMIRELEASE
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Release the NMI workspace (&00A0 to &00A7) so the MOS can use it
+\             and store the top part of zero page in the the buffer at &3000
+\
+\ ******************************************************************************
 
- IF _SNG45
+                        \ --- Mod: Code added for Econet: --------------------->
 
-  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
-  EQUB &FD, &08, &60, &A6, &83, &20, &68, &4B   \ unused and just contain random
-  EQUB &A6, &83, &4C, &D6, &12, &20, &C6, &4C   \ workspace noise left over from
-  EQUB &20, &76, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
-  EQUB &08, &20, &82, &45, &A9, &06, &85, &4A
-  EQUB &A9, &81, &4C, &C1, &44, &A2, &FF, &E8
-  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
-  EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
-  EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
-  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
-  EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
-  EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
-  EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
-  EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &62
-  EQUB &45, &A9, &C8, &20, &C7, &57, &A4, &97
-  EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
-  EQUB &1F, &D0, &08, &AD, &A4, &08, &09
+.NMIRELEASE
 
- ELIF _EXECUTIVE
+ LDA #143               \ Call OSBYTE 143 to issue a paged ROM service call of
+ LDX #&B                \ type &B with Y set to the previous NMI owner's ID.
+ LDY NMI                \ This releases the NMI workspace back to the original
+ JMP OSBYTE             \ owner, from whom we claimed the workspace in the
+                        \ NMICLAIM routine, and returns from the subroutine
+                        \ using a tail call
 
-  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
-  EQUB &FD, &08, &60, &A6, &83, &20, &8D, &4B   \ unused and just contain random
-  EQUB &A6, &83, &4C, &D8, &12, &20, &EB, &4C   \ workspace noise left over from
-  EQUB &20, &9B, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
-  EQUB &08, &20, &A7, &45, &A9, &06, &85, &4A
-  EQUB &A9, &81, &4C, &E6, &44, &A2, &FF, &E8
-  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
-  EQUB &F6, &8A, &0A, &A8, &B9, &86, &1A, &85
-  EQUB &05, &B9, &87, &1A, &85, &06, &A0, &20
-  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
-  EQUB &97, &90
+                        \ --- End of added code ------------------------------->
 
- ELIF _SOURCE_DISC
+\ ******************************************************************************
+\
+\       Name: NMICLAIM
+\       Type: Subroutine
+\   Category: Utility routines
+\    Summary: Claim the NMI workspace (&00A0 to &00A7) back from the MOS so the
+\             game can use it once again
+\
+\ ******************************************************************************
 
-  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
-  EQUB &FD, &08, &60, &A6, &83, &20, &62, &4B   \ unused and just contain random
-  EQUB &A6, &83, &4C, &D6, &12, &20, &C0, &4C   \ workspace noise left over from
-  EQUB &20, &70, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
-  EQUB &08, &20, &7C, &45, &A9, &06, &85, &4A
-  EQUB &A9, &81, &4C, &BB, &44, &A2, &FF, &E8
-  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
-  EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
-  EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
-  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
-  EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
-  EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
-  EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
-  EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &5C
-  EQUB &45, &A9, &C8, &20, &BE, &57, &A4, &97
-  EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
-  EQUB &1F, &D0, &08, &AD, &A4, &08, &09, &02
-  EQUB &8D, &A4, &08, &E0, &0F, &F0, &08, &E0
+                        \ --- Mod: Code added for Econet: --------------------->
 
- ENDIF
+.NMICLAIM
 
-ELSE
+ LDA #143               \ Call OSBYTE 143 to issue a paged ROM service call of
+ LDX #&C                \ type &C with argument &FF, which is the "NMI claim"
+ LDY #&FF               \ service call that asks the current user of the NMI
+ JSR OSBYTE             \ space to clear it out
+
+ STY NMI                \ Save the returned value of Y in NMI, as it contains
+                        \ the filing system ID of the previous claimant of the
+                        \ NMI, which we need to restore once we have finished
+                        \ using the NMI workspace
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\IF _MATCH_ORIGINAL_BINARIES
+\
+\IF _SNG45
+\
+\ EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+\ EQUB &FD, &08, &60, &A6, &83, &20, &68, &4B   \ unused and just contain random
+\ EQUB &A6, &83, &4C, &D6, &12, &20, &C6, &4C   \ workspace noise left over from
+\ EQUB &20, &76, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+\ EQUB &08, &20, &82, &45, &A9, &06, &85, &4A
+\ EQUB &A9, &81, &4C, &C1, &44, &A2, &FF, &E8
+\ EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+\ EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
+\ EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
+\ EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+\ EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
+\ EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
+\ EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
+\ EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &62
+\ EQUB &45, &A9, &C8, &20, &C7, &57, &A4, &97
+\ EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
+\ EQUB &1F, &D0, &08, &AD, &A4, &08, &09
+\
+\ELIF _EXECUTIVE
+\
+\ EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+\ EQUB &FD, &08, &60, &A6, &83, &20, &8D, &4B   \ unused and just contain random
+\ EQUB &A6, &83, &4C, &D8, &12, &20, &EB, &4C   \ workspace noise left over from
+\ EQUB &20, &9B, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+\ EQUB &08, &20, &A7, &45, &A9, &06, &85, &4A
+\ EQUB &A9, &81, &4C, &E6, &44, &A2, &FF, &E8
+\ EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+\ EQUB &F6, &8A, &0A, &A8, &B9, &86, &1A, &85
+\ EQUB &05, &B9, &87, &1A, &85, &06, &A0, &20
+\ EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+\ EQUB &97, &90
+\
+\ELIF _SOURCE_DISC
+\
+\ EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+\ EQUB &FD, &08, &60, &A6, &83, &20, &62, &4B   \ unused and just contain random
+\ EQUB &A6, &83, &4C, &D6, &12, &20, &C0, &4C   \ workspace noise left over from
+\ EQUB &20, &70, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+\ EQUB &08, &20, &7C, &45, &A9, &06, &85, &4A
+\ EQUB &A9, &81, &4C, &BB, &44, &A2, &FF, &E8
+\ EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+\ EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
+\ EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
+\ EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+\ EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
+\ EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
+\ EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
+\ EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &5C
+\ EQUB &45, &A9, &C8, &20, &BE, &57, &A4, &97
+\ EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
+\ EQUB &1F, &D0, &08, &AD, &A4, &08, &09, &02
+\ EQUB &8D, &A4, &08, &E0, &0F, &F0, &08, &E0
+\
+\ENDIF
+\
+\ELSE
+\
+\ALIGN 256              \ Align the log tables so they start on page boundaries
+\
+\ENDIF
+
+                        \ --- And replaced by: -------------------------------->
 
  ALIGN 256              \ Align the log tables so they start on page boundaries
 
-ENDIF
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \

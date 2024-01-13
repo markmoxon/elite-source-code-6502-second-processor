@@ -558,11 +558,15 @@ ENDIF
  FNE 2
  FNE 3
 
- LDX #LO(MESS1)         \ Set (Y X) to point to MESS1 ("DIR E")
- LDY #HI(MESS1)
+                        \ --- Mod: Code removed for Econet: ------------------->
 
- JSR OSCLI              \ Call OSCLI to run the OS command in MESS1, which
+\LDX #LO(MESS1)         \ Set (Y X) to point to MESS1 ("DIR E")
+\LDY #HI(MESS1)
+\
+\JSR OSCLI              \ Call OSCLI to run the OS command in MESS1, which
                         \ changes the disc directory to E
+
+                        \ --- End of removed code ----------------------------->
 
  LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("R.I.ELITEa")
  LDY #HI(MESS2)
@@ -570,6 +574,8 @@ ENDIF
  JMP OSCLI              \ Call OSCLI to run the OS command in MESS2, which *RUNs
                         \ the second loader in I.ELITEa, returning from the
                         \ subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -1293,12 +1299,12 @@ ENDIF
 
                         \ --- Mod: Code removed for Econet: ------------------->
 
- EQUS "DIR E"
+\EQUS "DIR E"
 \EQUB 13
 
                         \ --- And replaced by: -------------------------------->
 
-\EQUS "DIR $.Elite"     \ Change to the Elite folder in the user's home
+ EQUS "DIR $.Elite"     \ Change to the Elite folder in the user's home
  EQUB 13                \ directory on the network
 
                         \ --- End of replacement ------------------------------>
