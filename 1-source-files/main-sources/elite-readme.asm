@@ -71,7 +71,7 @@ ENDIF
  EQUB 10, 13
  EQUS "and PCODE into the $.LIBRARY directory"
  EQUB 10, 13
- EQUS " on the server"
+ EQUS "on the server"
  EQUB 10, 13
  EQUB 10, 13
  EQUS "Create a directory called $.Elite in"
