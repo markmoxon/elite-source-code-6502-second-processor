@@ -1297,17 +1297,8 @@ ENDIF
 
 .MESS1
 
-                        \ --- Mod: Code removed for Econet: ------------------->
-
-\EQUS "DIR E"
-\EQUB 13
-
-                        \ --- And replaced by: -------------------------------->
-
- EQUS "DIR $.Elite"     \ Change to the Elite folder in the user's home
- EQUB 13                \ directory on the network
-
-                        \ --- End of replacement ------------------------------>
+ EQUS "DIR E"
+ EQUB 13
 
 \ ******************************************************************************
 \
@@ -1328,7 +1319,7 @@ ENDIF
                         \ --- And replaced by: -------------------------------->
 
 
- EQUS "R.IELITE"        \ This is short for "*RUN IELITE"
+ EQUS "R.ELTIE"         \ This is short for "*RUN ELTIE"
  EQUB 13
                         \ --- End of replacement ------------------------------>
 

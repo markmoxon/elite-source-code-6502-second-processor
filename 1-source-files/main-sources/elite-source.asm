@@ -33006,22 +33006,26 @@ ENDIF
 
 .CATS
 
- JSR GTDRV              \ Get an ASCII disc drive number from the keyboard in A,
-                        \ setting the C flag if an invalid drive number was
-                        \ entered
+                        \ --- Mod: Code removed for Econet: ------------------->
 
- BCS DELT-1             \ If the C flag is set, then an invalid drive number was
-                        \ entered, so return from the subroutine (as DELT-1
-                        \ contains an RTS)
+\JSR GTDRV              \ Get an ASCII disc drive number from the keyboard in A,
+\                       \ setting the C flag if an invalid drive number was
+\                       \ entered
+\
+\BCS DELT-1             \ If the C flag is set, then an invalid drive number was
+\                       \ entered, so return from the subroutine (as DELT-1
+\                       \ contains an RTS)
+\
+\STA CTLI+1             \ Store the drive number in the second byte of the
+\                       \ command string at CTLI, so it overwrites the "0" in
+\                       \ ".0" with the drive number to catalogue
+\
+\STA DTW7               \ Store the drive number in DTW7, so printing extended
+\                       \ token 4 will show the correct drive number (as token 4
+\                       \ contains the {drive number} jump code, which calls
+\                       \ MT16 to print the character in DTW7)
 
- STA CTLI+1             \ Store the drive number in the second byte of the
-                        \ command string at CTLI, so it overwrites the "0" in
-                        \ ".0" with the drive number to catalogue
-
- STA DTW7               \ Store the drive number in DTW7, so printing extended
-                        \ token 4 will show the correct drive number (as token 4
-                        \ contains the {drive number} jump code, which calls
-                        \ MT16 to print the character in DTW7)
+                        \ --- End of removed code ----------------------------->
 
  LDA #4                 \ Print extended token 4, which clears the screen and
  JSR DETOK              \ prints the boxed-out title "DRIVE {drive number}
@@ -33462,20 +33466,24 @@ ENDIF
 
 .QUS1
 
- PHA                    \ Store A on the stack so we can restore it after the
-                        \ call to GTDRV
+                        \ --- Mod: Code removed for Econet: ------------------->
 
- JSR GTDRV              \ Get an ASCII disc drive number from the keyboard in A,
-                        \ setting the C flag if an invalid drive number was
-                        \ entered
+\PHA                    \ Store A on the stack so we can restore it after the
+\                       \ call to GTDRV
+\
+\JSR GTDRV              \ Get an ASCII disc drive number from the keyboard in A,
+\                       \ setting the C flag if an invalid drive number was
+\                       \ entered
+\
+\STA INWK+1             \ Store the ASCII drive number in INWK+1, which is the
+\                       \ drive character of the filename string ":0.E."
+\
+\PLA                    \ Restore A from the stack
+\
+\BCS QUR                \ If the C flag is set, then an invalid drive number was
+\                       \ entered, so jump to QUR to return from the subroutine
 
- STA INWK+1             \ Store the ASCII drive number in INWK+1, which is the
-                        \ drive character of the filename string ":0.E."
-
- PLA                    \ Restore A from the stack
-
- BCS QUR                \ If the C flag is set, then an invalid drive number was
-                        \ entered, so jump to QUR to return from the subroutine
+                        \ --- End of removed code ----------------------------->
 
  PHA                    \ Store A on the stack so we can restore it after the
                         \ call to DODOSVN
@@ -33492,9 +33500,19 @@ ENDIF
 
  PLA                    \ Restore A from the stack
 
- LDX #INWK              \ Store a pointer to INWK at the start of the block at
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\LDX #INWK              \ Store a pointer to INWK at the start of the block at
+\STX &0C00              \ &0C00, storing #INWK in the low byte because INWK is
+\                       \ in zero page
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDX #INWK+5            \ Store a pointer to INWK at the start of the block at
  STX &0C00              \ &0C00, storing #INWK in the low byte because INWK is
                         \ in zero page
+
+                        \ --- End of replacement ------------------------------>
 
  LDX #0                 \ Set (Y X) = &0C00
  LDY #&C
@@ -36015,7 +36033,15 @@ ENDMACRO
 
 .oscobl
 
+                        \ --- Mod: Code removed for Econet: ------------------->
+
  EQUW scname            \ The address of the filename to save
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUW scname+5          \ The address of the filename to save
+
+                        \ --- End of replacement ------------------------------>
 
  EQUD &FFFF4000         \ Load address of the saved file
 

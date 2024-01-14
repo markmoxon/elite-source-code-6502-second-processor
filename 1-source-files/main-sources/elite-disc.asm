@@ -38,30 +38,30 @@
  _EXECUTIVE             = (_VARIANT = 3)
 
 IF _SNG45 OR _EXECUTIVE
- PUTFILE "3-assembled-output/ELITE.bin", "ELITE65", &FF1FDC, &FF2085
+ PUTFILE "3-assembled-output/ELITE.bin", "ELTSP", &FF1FDC, &FF2085
 ELIF _SOURCE_DISC
- PUTFILE "3-assembled-output/ELITE.bin", "ELITE65", &FF2000, &FF2085
+ PUTFILE "3-assembled-output/ELITE.bin", "ELTSP", &FF2000, &FF2085
 ENDIF
 
- PUTFILE "3-assembled-output/ELITEa.bin", "IELITE", &FF2000, &FF2000
+ PUTFILE "3-assembled-output/ELITEa.bin", "ELTIE", &FF2000, &FF2000
 
 IF _SNG45 OR _SOURCE_DISC
- PUTFILE "3-assembled-output/I.CODE.bin", "ICODE", &FF2400, &FF2C89
+ PUTFILE "3-assembled-output/I.CODE.bin", "ELTIC", &FF2400, &FF2C89
 ELIF _EXECUTIVE
- PUTFILE "3-assembled-output/I.CODE.bin", "ICODE", &032400, &032C89
+ PUTFILE "3-assembled-output/I.CODE.bin", "ELTIC", &032400, &032C89
 ENDIF
 
 IF _REMOVE_CHECKSUMS
  IF _SNG45 OR _SOURCE_DISC
-  PUTFILE "3-assembled-output/P.CODE.bin", "PCODE", &001000, &0010D1
+  PUTFILE "3-assembled-output/P.CODE.bin", "ELTPC", &001000, &0010D1
  ELIF _EXECUTIVE
-  PUTFILE "3-assembled-output/P.CODE.bin", "PCODE", &001000, &0010D3
+  PUTFILE "3-assembled-output/P.CODE.bin", "ELTPC", &001000, &0010D3
  ENDIF
 ELSE
  IF _SNG45 OR _SOURCE_DISC
-  PUTFILE "3-assembled-output/P.CODE.bin", "PCODE", &001000, &00106A
+  PUTFILE "3-assembled-output/P.CODE.bin", "ELTPC", &001000, &00106A
  ELIF _EXECUTIVE
-  PUTFILE "3-assembled-output/P.CODE.bin", "PCODE", &001000, &00106C
+  PUTFILE "3-assembled-output/P.CODE.bin", "ELTPC", &001000, &00106C
  ENDIF
 ENDIF
 

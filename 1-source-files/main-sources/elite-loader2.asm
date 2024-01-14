@@ -203,7 +203,7 @@ ENDMACRO
 
                         \ --- And replaced by: -------------------------------->
 
- EQUS "R.ICODE"         \ This is short for "*RUN ICODE"
+ EQUS "R.ELTIC"         \ This is short for "*RUN ELTIC"
  EQUB 13
 
                         \ --- End of replacement ------------------------------>
@@ -227,7 +227,7 @@ ENDMACRO
 
                         \ --- And replaced by: -------------------------------->
 
- EQUS "R.PCODE"         \ This is short for "*RUN PCODE"
+ EQUS "R.ELTPC"         \ This is short for "*RUN ELTPC"
  EQUB 13
 
                         \ --- End of replacement ------------------------------>

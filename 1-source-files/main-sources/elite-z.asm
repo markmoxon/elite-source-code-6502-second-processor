@@ -1177,11 +1177,17 @@ ENDIF
 
                         \ --- Mod: Code added for Econet: --------------------->
 
- LDX #LO(MESS1)         \ Set (Y X) to point to MESS1 ("DIR $.Elite")
+ LDX #LO(MESS1)         \ Set (Y X) to point to MESS1 ("DIR")
  LDY #HI(MESS1)
- 
+
  JSR OSCLI              \ Call OSCLI to run the OS command in MESS1, which
-                        \ changes the disc directory to $.Elite
+                        \ changes the directory to the user's main directory
+
+ LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("DIR ELITE")
+ LDY #HI(MESS2)
+
+ JSR OSCLI              \ Call OSCLI to run the OS command in MESS2, which
+                        \ changes the directory to ELITE
 
                         \ --- End of added code ------------------------------->
 
@@ -1300,15 +1306,34 @@ ENDIF
 \       Name: MESS1
 \       Type: Variable
 \   Category: Loader
-\    Summary: The OS command string for changing the disc directory to $.Elite
+\    Summary: The OS command string for changing the directory to the user's
+\             main directory
 \
 \ ******************************************************************************
 
                         \ --- Mod: Code added for Econet: --------------------->
 
 .MESS1
- EQUS "DIR E      "
-\ EQUS "DIR $.Elite"     \ Change to the Elite folder in the user's home
+
+ EQUS "DIR"             \ Change to the user's main directory on the network
+ EQUB 13
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: MESS2
+\       Type: Variable
+\   Category: Loader
+\    Summary: The OS command string for changing the disc directory to ELITE
+\
+\ ******************************************************************************
+
+.MESS2
+
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ EQUS "DIR ELITE"       \ Change to the ELITE folder in the user's main
  EQUB 13                \ directory on the network
 
                         \ --- End of added code ------------------------------->
