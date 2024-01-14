@@ -32964,8 +32964,17 @@ ENDIF
 
 .CTLI
 
- EQUS ".0"              \ The "0" part of the string is overwritten with the
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\EQUS ".0"              \ The "0" part of the string is overwritten with the
+\EQUB 13                \ actual drive number by the CATS routine
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUS ". "              \ The "0" part of the string is overwritten with the
  EQUB 13                \ actual drive number by the CATS routine
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -32978,8 +32987,17 @@ ENDIF
 
 .DELI
 
- EQUS "DELETE:0.E.1234567"
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\EQUS "DELETE:0.E.1234567"
+\EQUB 13
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUS "DELETE     1234567"
  EQUB 13
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
