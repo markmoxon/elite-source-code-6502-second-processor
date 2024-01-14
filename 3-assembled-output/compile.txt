@@ -44685,3 +44685,18 @@ Saving file '3-assembled-output/ELITEa.bin'
      0243   0D
      0244   2D 2D 2D ...
 Saving file '3-assembled-output/README.txt'
+.ENTRY
+     2000   A2 0E      LDX #&0E
+     2002   A0 20      LDY #&20
+     2004   20 F7 FF   JSR &FFF7
+     2007   A2 1C      LDX #&1C
+     2009   A0 20      LDY #&20
+     200B   4C F7 FF   JMP &FFF7
+.MESS1
+     200E   44 49 52 ...
+     201B   0D
+.MESS2
+     201C   52 55 4E ...
+     2025   0D
+S.ELITE &2000  &2026  &2000  &2000 
+Saving file '3-assembled-output/ELITESP.bin'
