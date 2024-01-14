@@ -12967,7 +12967,7 @@ Saving file '3-assembled-output/ELTE.bin'
      528F   D0 FB      BNE &528C
      5291   60         RTS
 .CTLI
-     5292   2E 30 
+     5292   2E 20 
      5294   0D
 .DELI
      5295   44 45 4C ...
