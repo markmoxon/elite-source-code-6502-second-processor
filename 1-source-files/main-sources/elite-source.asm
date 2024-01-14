@@ -3382,23 +3382,9 @@ ENDIF
 
  SKIP 1                 \ The y-coordinate of the tip of the laser line
 
-                        \ --- Mod: Code removed for Econet: ------------------->
+.XX24
 
-\.XX24
-\
-\SKIP 1                 \ This byte appears to be unused
-
-
-                        \ --- And replaced by: -------------------------------->
-
-.NMI
-
- SKIP 1                 \ Used to store the ID of the current owner of the NMI
-                        \ workspace in the NMICLAIM routine, so we can hand it
-                        \ back to them in the NMIRELEASE routine once we are
-                        \ done using it
-
-                        \ --- End of replacement ------------------------------>
+ SKIP 1                 \ This byte appears to be unused
 
 .ALTIT
 
@@ -4140,14 +4126,60 @@ ENDIF
 
                         \ --- Mod: Code added for Econet: --------------------->
 
- JSR NMICLAIM           \ Claim the NMI workspace (&00A0 to &00A7) from the MOS
-                        \ so the game can use it
+ LDX #LO(MESS1)         \ Set (Y X) to point to MESS1 ("DIR")
+ LDY #HI(MESS1)
+
+ JSR OSCLI              \ Call OSCLI to run the OS command in MESS1, which
+                        \ changes the directory to the user's main directory
+
+ LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("DIR ELITE")
+ LDY #HI(MESS2)
+
+ JSR OSCLI              \ Call OSCLI to run the OS command in MESS2, which
+                        \ changes the directory to ELITE
 
                         \ --- End of added code ------------------------------->
 
  JMP BEGIN              \ Jump to BEGIN to start the game
 
  NOP                    \ This instruction is not used
+
+\ ******************************************************************************
+\
+\       Name: MESS1
+\       Type: Variable
+\   Category: Loader
+\    Summary: The OS command string for changing the directory to the user's
+\             main directory
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for Econet: --------------------->
+
+.MESS1
+
+ EQUS "DIR"             \ Change to the user's main directory on the network
+ EQUB 13
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: MESS2
+\       Type: Variable
+\   Category: Loader
+\    Summary: The OS command string for changing the disc directory to ELITE
+\
+\ ******************************************************************************
+
+.MESS2
+
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ EQUS "DIR ELITE"       \ Change to the ELITE folder in the user's main
+ EQUB 13                \ directory on the network
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -32971,8 +33003,8 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- EQUS ". "              \ The "0" part of the string is overwritten with the
- EQUB 13                \ actual drive number by the CATS routine
+ EQUS "."               \ The "0" part of the string has been removed
+ EQUB 13                \
 
                         \ --- End of replacement ------------------------------>
 
@@ -32994,7 +33026,7 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- EQUS "DELETE     1234567"
+ EQUS "DELETE   E.1234567"
  EQUB 13
 
                         \ --- End of replacement ------------------------------>
@@ -33099,18 +33131,22 @@ ENDIF
 
 .DELT
 
- JSR CATS               \ Call CATS to ask for a drive number (or a directory
-                        \ name on the Master Compact) and catalogue that disc
-                        \ or directory
+                        \ --- Mod: Code removed for Econet: ------------------->
 
- BCS SVE                \ If the C flag is set then an invalid drive number was
-                        \ entered as part of the catalogue process, so jump to
-                        \ SVE to display the disc access menu
+\JSR CATS               \ Call CATS to ask for a drive number (or a directory
+\                       \ name on the Master Compact) and catalogue that disc
+\                       \ or directory
+\
+\BCS SVE                \ If the C flag is set then an invalid drive number was
+\                       \ entered as part of the catalogue process, so jump to
+\                       \ SVE to display the disc access menu
+\
+\LDA CTLI+1             \ The call to CATS above put the drive number into
+\STA DELI+7             \ CTLI+1, so copy the drive number into DELI+7 so that
+\                       \ the drive number in the "DELETE:0.E.1234567" string
+\                       \ gets updated (i.e. the number after the colon)
 
- LDA CTLI+1             \ The call to CATS above put the drive number into
- STA DELI+7             \ CTLI+1, so copy the drive number into DELI+7 so that
-                        \ the drive number in the "DELETE:0.E.1234567" string
-                        \ gets updated (i.e. the number after the colon)
+                        \ --- End of removed code ----------------------------->
 
  LDA #9                 \ Print extended token 9 ("{clear bottom of screen}FILE
  JSR DETOK              \ TO DELETE?")
@@ -33509,13 +33545,6 @@ ENDIF
  LDA #255               \ Set the SVN flag to 255 to indicate that disc access
  JSR DODOSVN            \ is in progress
 
-                        \ --- Mod: Code added for Econet: --------------------->
-
- JSR NMIRELEASE         \ Release the NMI workspace (&00A0 to &00A7) so the MOS
-                        \ can use it
-
-                        \ --- End of added code ------------------------------->
-
  PLA                    \ Restore A from the stack
 
                         \ --- Mod: Code removed for Econet: ------------------->
@@ -33538,13 +33567,6 @@ ENDIF
  JSR OSFILE             \ Call OSFILE to do the file operation specified in
                         \ &0C00 (i.e. save or load a file depending on the value
                         \ of A)
-
-                        \ --- Mod: Code added for Econet: --------------------->
-
- JSR NMICLAIM           \ Claim the NMI workspace (&00A0 to &00A7) from the MOS
-                        \ so the game can use it
-
-                        \ --- End of added code ------------------------------->
 
  JSR CLDELAY            \ Pause for 1280 empty loops
 
@@ -35550,25 +35572,11 @@ ENDIF
  BPL savscl             \ Loop back for the next byte until we have copied all
                         \ 18 bytes
 
-                        \ --- Mod: Code added for Econet: --------------------->
-
- JSR NMIRELEASE         \ Release the NMI workspace (&00A0 to &00A7) so the MOS
-                        \ can use it
-
-                        \ --- End of added code ------------------------------->
-
  LDX #LO(oscobl)        \ Set (Y X) to point to the oscobl parameter block
  LDY #HI(oscobl)
 
  LDA #0                 \ Call OSFILE with A = 0 to save a file containing the
  JSR OSFILE             \ screen memory from &4000 to &7FFF
-
-                        \ --- Mod: Code added for Econet: --------------------->
-
- JSR NMICLAIM           \ Claim the NMI workspace (&00A0 to &00A7) from the MOS
-                        \ so the game can use it
-
-                        \ --- End of added code ------------------------------->
 
  INC scname+11          \ Increment the screenshot number in the filename at
                         \ scname, so ":0.X.SCREEN1" becomes ":0.X.SCREEN2" and
@@ -36714,57 +36722,6 @@ ENDMACRO
 
  CODE_G% = P%
  LOAD_G% = LOAD% + P% - CODE%
-
-\ ******************************************************************************
-\
-\       Name: NMIRELEASE
-\       Type: Subroutine
-\   Category: Utility routines
-\    Summary: Release the NMI workspace (&00A0 to &00A7) so the MOS can use it
-\             and store the top part of zero page in the the buffer at &3000
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for Econet: --------------------->
-
-.NMIRELEASE
-
- LDA #143               \ Call OSBYTE 143 to issue a paged ROM service call of
- LDX #&B                \ type &B with Y set to the previous NMI owner's ID.
- LDY NMI                \ This releases the NMI workspace back to the original
- JMP OSBYTE             \ owner, from whom we claimed the workspace in the
-                        \ NMICLAIM routine, and returns from the subroutine
-                        \ using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: NMICLAIM
-\       Type: Subroutine
-\   Category: Utility routines
-\    Summary: Claim the NMI workspace (&00A0 to &00A7) back from the MOS so the
-\             game can use it once again
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for Econet: --------------------->
-
-.NMICLAIM
-
- LDA #143               \ Call OSBYTE 143 to issue a paged ROM service call of
- LDX #&C                \ type &C with argument &FF, which is the "NMI claim"
- LDY #&FF               \ service call that asks the current user of the NMI
- JSR OSBYTE             \ space to clear it out
-
- STY NMI                \ Save the returned value of Y in NMI, as it contains
-                        \ the filing system ID of the previous claimant of the
-                        \ NMI, which we need to restore once we have finished
-                        \ using the NMI workspace
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
 
                         \ --- Mod: Code removed for Econet: ------------------->
 

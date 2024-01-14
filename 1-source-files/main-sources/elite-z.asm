@@ -1175,22 +1175,6 @@ ENDIF
                         \ will be called just before the setup code terminates
                         \ on the I/O processor
 
-                        \ --- Mod: Code added for Econet: --------------------->
-
- LDX #LO(MESS1)         \ Set (Y X) to point to MESS1 ("DIR")
- LDY #HI(MESS1)
-
- JSR OSCLI              \ Call OSCLI to run the OS command in MESS1, which
-                        \ changes the directory to the user's main directory
-
- LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("DIR ELITE")
- LDY #HI(MESS2)
-
- JSR OSCLI              \ Call OSCLI to run the OS command in MESS2, which
-                        \ changes the directory to ELITE
-
-                        \ --- End of added code ------------------------------->
-
                         \ Fall through into PUTBACK to point WRCHV to USOSWRCH,
                         \ and then end the program, as from now on the handlers
                         \ pointed to by the vectors will handle everything
@@ -1300,43 +1284,6 @@ ENDIF
 
  JMP TT26               \ Jump to TT26 to print the character in A, returning
                         \ from the subroutine using a tail call
-
-\ ******************************************************************************
-\
-\       Name: MESS1
-\       Type: Variable
-\   Category: Loader
-\    Summary: The OS command string for changing the directory to the user's
-\             main directory
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for Econet: --------------------->
-
-.MESS1
-
- EQUS "DIR"             \ Change to the user's main directory on the network
- EQUB 13
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: MESS2
-\       Type: Variable
-\   Category: Loader
-\    Summary: The OS command string for changing the disc directory to ELITE
-\
-\ ******************************************************************************
-
-.MESS2
-
-                        \ --- Mod: Code added for Econet: --------------------->
-
- EQUS "DIR ELITE"       \ Change to the ELITE folder in the user's main
- EQUB 13                \ directory on the network
-
-                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
