@@ -59,18 +59,18 @@
 
 .ENTRY
 
- LDX #LO(MESS1)         \ Set (Y X) to point to MESS1 ("DIR E")
+ LDX #LO(MESS1)         \ Set (Y X) to point to MESS1 ("DIR $.LIBRARY")
  LDY #HI(MESS1)
 
- JSR OSCLI              \ Call OSCLI to run the OS command in MESS1, which
-                        \ changes the disc directory to E
+ JSR OSCLI              \ Call OSCLI to run the OS command in MESS1 to change
+                        \ to the library folder
 
- LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("R.I.ELITEa")
+ LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("RUN ELTSP")
  LDY #HI(MESS2)
 
  JMP OSCLI              \ Call OSCLI to run the OS command in MESS2, which *RUNs
-                        \ the second loader in I.ELITEa, returning from the
-                        \ subroutine using a tail call
+                        \ the game in ELTSP, returning from the subroutine using
+                        \ a tail call
 
 \ ******************************************************************************
 \
