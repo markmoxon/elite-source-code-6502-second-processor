@@ -44647,56 +44647,8 @@ Saving file '3-assembled-output/ELITEa.bin'
      00EE   0D
      00EF   0A
      00F0   0D
-     00F1   43 6F 70 ...
-     0115   0A
-     0116   0D
-     0117   61 6E 64 ...
-     013D   0A
-     013E   0D
-     013F   6F 6E 20 ...
-     014C   0A
-     014D   0D
-     014E   0A
-     014F   0D
-     0150   43 72 65 ...
-     0174   0A
-     0175   0D
-     0176   74 68 65 ...
-     0199   0A
-     019A   0D
-     019B   74 68 65 ...
-     01B0   0A
-     01B1   0D
-     01B2   0A
-     01B3   0D
-     01B4   55 73 65 ...
-     01DB   0A
-     01DC   0D
-     01DD   61 6E 64 ...
-     01FE   0A
-     01FF   0D
-     0200   69 6E 74 ...
-     021E   0A
-     021F   0D
-     0220   0A
-     0221   0D
-     0222   53 65 65 ...
-     0242   0A
-     0243   0D
-     0244   2D 2D 2D ...
+     00F1   53 65 65 ...
+     0111   0A
+     0112   0D
+     0113   2D 2D 2D ...
 Saving file '3-assembled-output/README.txt'
-.ENTRY
-     2000   A2 0E      LDX #&0E
-     2002   A0 20      LDY #&20
-     2004   20 F7 FF   JSR &FFF7
-     2007   A2 1C      LDX #&1C
-     2009   A0 20      LDY #&20
-     200B   4C F7 FF   JMP &FFF7
-.MESS1
-     200E   44 49 52 ...
-     201B   0D
-.MESS2
-     201C   52 55 4E ...
-     2025   0D
-S.ELITE &2000  &2026  &2000  &2000 
-Saving file '3-assembled-output/ELITESP.bin'
