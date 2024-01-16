@@ -33131,12 +33131,12 @@ ENDIF
 
 .DELT
 
+ JSR CATS               \ Call CATS to ask for a drive number (or a directory
+                        \ name on the Master Compact) and catalogue that disc
+                        \ or directory
+ 
                         \ --- Mod: Code removed for Econet: ------------------->
 
-\JSR CATS               \ Call CATS to ask for a drive number (or a directory
-\                       \ name on the Master Compact) and catalogue that disc
-\                       \ or directory
-\
 \BCS SVE                \ If the C flag is set then an invalid drive number was
 \                       \ entered as part of the catalogue process, so jump to
 \                       \ SVE to display the disc access menu
@@ -45456,7 +45456,15 @@ ENDMACRO
  ETOK 200
  EQUB VE
 
- EJMP 21                \ Token 9:      "{clear bottom of screen}
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\EJMP 21                \ Token 9:      "{clear bottom of screen}
+
+                        \ --- And replaced by: -------------------------------->
+
+ EJMP 19                \ Token 9:      "{single cap}
+
+                        \ --- End of replacement ------------------------------>
  ECHR 'F'               \                FILE TO DELETE?"
  ECHR 'I'               \
  ETWO 'L', 'E'          \ Encoded as:   "{21}FI<229>[201]DEL<221>E?"
