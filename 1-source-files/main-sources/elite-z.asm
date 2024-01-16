@@ -7107,10 +7107,27 @@ ENDMACRO
 
  TAY                    \ Set Y = the character to be printed
 
- BEQ RR4S               \ If the character is zero, which is typically a string
-                        \ terminator character, jump down to RR4 (via the JMP in
-                        \ RR4S) to restore the registers and return from the
-                        \ subroutine using a tail call
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\BEQ RR4S               \ If the character is zero, which is typically a string
+\                       \ terminator character, jump down to RR4 (via the JMP in
+\                       \ RR4S) to restore the registers and return from the
+\                       \ subroutine using a tail call
+
+                        \ --- And replaced by: -------------------------------->
+
+ BEQ RR4S               \ If the character to be printed is 0 or >= 128, jump to
+ BMI RR4S               \ RR4S (via the JMP in RR4S) to restore the registers
+                        \ and return from the subroutine using a tail call
+
+.RRNEW
+
+ LDX CATF               \ If CATF <> 0, skip the following two instructions, as
+ BNE P%+6               \ we are printing a disc catalogue and we don't want any
+                        \ control characters lurking in the catalogue to trigger
+                        \ the screen clearing routine
+
+                        \ --- End of replacement ------------------------------>
 
  CMP #11                \ If this is control code 11 (clear screen), jump to cls
  BEQ cls                \ to clear the top part of the screen, draw a white
@@ -7271,23 +7288,43 @@ ENDMACRO
  LDX CATF               \ If CATF = 0, jump to RR5, otherwise we are printing a
  BEQ RR5                \ disc catalogue
 
- CPY #' '               \ If the character we want to print in Y is a space,
- BNE RR5                \ jump to RR5
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\CPY #' '               \ If the character we want to print in Y is a space,
+\BNE RR5                \ jump to RR5
+\
+\                       \ If we get here, then CATF is non-zero, so we are
+\                       \ printing a disc catalogue and we are not printing a
+\                       \ space, so we drop column 17 from the output so the
+\                       \ catalogue will fit on-screen (column 17 is a blank
+\                       \ column in the middle of the catalogue, between the
+\                       \ two lists of filenames, so it can be dropped without
+\                       \ affecting the layout). Without this, the catalogue
+\                       \ would be one character too wide for the square screen
+\                       \ mode (it's 34 characters wide, while the screen mode
+\                       \ is only 33 characters across)
+\
+\CMP #17                \ If A = 17, i.e. the text cursor is in column 17, jump
+\BEQ RR4                \ to RR4 to restore the registers and return from the
+\                       \ subroutine, thus omitting this column
+
+                        \ --- And replaced by: -------------------------------->
+
+ CMP #21                \ If A < 21, i.e. the text cursor is in column 0-20,
+ BCC RR5                \ jump to RR5 to skip the following
 
                         \ If we get here, then CATF is non-zero, so we are
-                        \ printing a disc catalogue and we are not printing a
-                        \ space, so we drop column 17 from the output so the
-                        \ catalogue will fit on-screen (column 17 is a blank
-                        \ column in the middle of the catalogue, between the
-                        \ two lists of filenames, so it can be dropped without
-                        \ affecting the layout). Without this, the catalogue
-                        \ would be one character too wide for the square screen
-                        \ mode (it's 34 characters wide, while the screen mode
-                        \ is only 33 characters across)
+                        \ printing a disc catalogue and we have reached column
+                        \ 21, so we move to the start of the next line so the
+                        \ catalogue line-wraps to fit within the bounds of the
+                        \ screen
 
- CMP #17                \ If A = 17, i.e. the text cursor is in column 17, jump
- BEQ RR4                \ to RR4 to restore the registers and return from the
-                        \ subroutine, thus omitting this column
+ INC YC                 \ More the text cursor down a line
+
+ LDA #1                 \ Move the text cursor to column 1
+ STA XC
+
+                        \ --- End of replacement ------------------------------>
 
 .RR5
 
@@ -7375,8 +7412,35 @@ ENDMACRO
 
  PHA                    \ Store A on the stack so we can retrieve it below
 
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ LDA CATF               \ If CATF = 0, skip the next few instructions, as we are
+ BEQ skipReturn         \ not printing a disc catalogue
+
+ LDA #&49               \ Set A to the internal key number for RETURN
+
+.checkReturn
+
+ DKS4                   \ Include macro DKS4 to check whether the key in A is
+                        \ being pressed, and if it is, set bit 7 of A
+
+ TAX
+ BPL checkReturn        \ We have just printed the disc catalogue, so wait until
+                        \ RETURN is pressed, looping indefinitely until it gets
+                        \ tapped
+
+.skipReturn
+                        \ --- End of added code ------------------------------->
+
  JSR TTX66              \ Otherwise we are off the bottom of the screen, so
                         \ clear the screen and draw a white border
+
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ LDA #CYAN              \ Set the text and graphics colour to cyan
+ STA COL
+
+                        \ --- End of added code ------------------------------->
 
  LDA #1                 \ Move the text cursor to column 1, row 1
  STA XC
@@ -7390,9 +7454,16 @@ ENDMACRO
                         \ this has no effect, as the following call to RR4 does
                         \ the exact same thing
 
- JMP RR4                \ And restore the registers and return from the
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\JMP RR4                \ And restore the registers and return from the
                         \ subroutine
 
+                        \ --- And replaced by: -------------------------------->
+
+ JMP RRNEW              \ Jump back to RRNEW to print the character
+
+                        \ --- End of replacement ------------------------------>
 .RR3
 
                         \ A contains the value of YC - the screen row where we
