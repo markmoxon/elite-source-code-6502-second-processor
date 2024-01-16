@@ -45396,14 +45396,29 @@ ENDMACRO
  ECHR ':'
  EQUB VE
 
- ETOK 150               \ Token 4:      "{clear screen}
- ETOK 151               \                {draw box around title}
- ECHR ' '               \                {all caps}
- EJMP 16                \                {tab 6}DRIVE {drive number} CATALOGUE
- ETOK 152               \                {crlf}
- ETWO '-', '-'          \               "
- EQUB VE                \
-                        \ Encoded as:   "[150][151] {16}[152]<215>"
+                        \ --- Mod: Code removed for Econet: ------------------->
+
+\ETOK 150               \ Token 4:      "{clear screen}
+\ETOK 151               \                {draw box around title}
+\ECHR ' '               \                {all caps}
+\EJMP 16                \                {tab 6}DRIVE {drive number} CATALOGUE
+\ETOK 152               \                {crlf}
+\ETWO '-', '-'          \               "
+\EQUB VE                \
+\                       \ Encoded as:   "[150][151] {16}[152]<215>"
+
+                        \ --- And replaced by: -------------------------------->
+
+ ETOK 150               \ Token 3:      "{clear screen}
+ ECHR ' '               \                    CATALOGUE
+ ECHR ' '               \                {crlf}
+ ECHR ' '               \               "
+ ETOK 152               \
+ ETWO '-', '-'          \ Encoded as:   "[150]   [152]<215>"
+ EQUB VE
+
+                        \ --- End of replacement ------------------------------>
+
 
  ETOK 176               \ Token 5:      "{lower case}
  ERND 18                \                {justify}

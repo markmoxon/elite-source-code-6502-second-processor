@@ -18379,15 +18379,15 @@ End macro ECHR
 Macro ETOK:
      73ED   C1
 End macro ETOK
-Macro ETOK:
-     73EE   C0
-End macro ETOK
+Macro ECHR:
+     73EE   77
+End macro ECHR
 Macro ECHR:
      73EF   77
 End macro ECHR
-Macro EJMP:
-     73F0   47
-End macro EJMP
+Macro ECHR:
+     73F0   77
+End macro ECHR
 Macro ETOK:
      73F1   CF
 End macro ETOK
