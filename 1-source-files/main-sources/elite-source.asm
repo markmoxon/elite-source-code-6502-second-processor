@@ -25965,7 +25965,7 @@ ENDIF
  LDX #LO(DOTpars)       \ Set (Y X) to point to the parameter block below
  LDY #HI(DOTpars)
 
- LDA #DOdot             \ Send a #DODKS4 command to the I/O processor to draw
+ LDA #DOdot             \ Send a #DOdot command to the I/O processor to draw
  JMP OSWORD             \ the dash on-screen, returning from the subroutine
                         \ using a tail call
 
