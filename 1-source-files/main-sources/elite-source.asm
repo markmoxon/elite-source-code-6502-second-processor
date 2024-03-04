@@ -80,28 +80,51 @@ ENDIF
  NTY = 34               \ The number of different ship types
 
  MSL = 1                \ Ship type for a missile
+
  SST = 2                \ Ship type for a Coriolis space station
+
  ESC = 3                \ Ship type for an escape pod
+
  PLT = 4                \ Ship type for an alloy plate
+
  OIL = 5                \ Ship type for a cargo canister
+
  AST = 7                \ Ship type for an asteroid
+
  SPL = 8                \ Ship type for a splinter
+
  SHU = 9                \ Ship type for a Shuttle
+
  CYL = 11               \ Ship type for a Cobra Mk III
+
  ANA = 14               \ Ship type for an Anaconda
+
  HER = 15               \ Ship type for a rock hermit (asteroid)
+
  COPS = 16              \ Ship type for a Viper
+
  SH3 = 17               \ Ship type for a Sidewinder
+
  KRA = 19               \ Ship type for a Krait
+
  ADA = 20               \ Ship type for an Adder
+
  WRM = 23               \ Ship type for a Worm
+
  CYL2 = 24              \ Ship type for a Cobra Mk III (pirate)
+
  ASP = 25               \ Ship type for an Asp Mk II
+
  THG = 29               \ Ship type for a Thargoid
+
  TGL = 30               \ Ship type for a Thargon
+
  CON = 31               \ Ship type for a Constrictor
+
  LGO = 32               \ Ship type for the Elite logo
+
  COU = 33               \ Ship type for a Cougar
+
  DOD = 34               \ Ship type for a Dodecahedron ("Dodo") space station
 
  JL = ESC               \ Junk is defined as starting from the escape pod
@@ -130,62 +153,107 @@ ENDIF
                         \ handle and display system errors
 
  OSWRCH = &FFEE         \ The address for the OSWRCH routine
+
  OSBYTE = &FFF4         \ The address for the OSBYTE routine
+
  OSWORD = &FFF1         \ The address for the OSWORD routine
+
  OSFILE = &FFDD         \ The address for the OSFILE routine
+
  OSCLI = &FFF7          \ The address for the OSCLI routine
 
  DOFE21 = 131           \ The OSWRCH number for the #DOFE21 command
+
  DOhfx = 132            \ The OSWRCH number for the #DOhfx command
+
  SETXC = 133            \ The OSWRCH number for the #SETXC command
+
  SETYC = 134            \ The OSWRCH number for the #SETYC command
+
  clyns = 135            \ The OSWRCH number for the #clyns command
+
  RDPARAMS = 136         \ The OSWRCH number for the #RDPARAMS command
+
  DODIALS = 138          \ The OSWRCH number for the #DODIALS command
+
  VIAE = 139             \ The OSWRCH number for the #VIAE command
+
  DOBULB = 140           \ The OSWRCH number for the #DOBULB command
+
  DOCATF = 141           \ The OSWRCH number for the #DOCATF command
+
  SETCOL = 142           \ The OSWRCH number for the #SETCOL command
+
  SETVDU19 = 143         \ The OSWRCH number for the #SETVDU19 command
+
  DOsvn = 144            \ The OSWRCH number for the #DOsvn command
+
  printcode = 146        \ The OSWRCH number for the #printcode command
+
  prilf = 147            \ The OSWRCH number for the #prilf command
 
  DOmsbar = 242          \ The OSWORD number for the #DOmsbar command
+
  wscn = 243             \ The OSWORD number for the #wscn command
+
  onescan = 244          \ The OSWORD number for the #onescan command
+
  DOdot = 245            \ The OSWORD number for the #DOdot command
+
  DODKS4 = 246           \ The OSWORD number for the #DODKS4 command
 
  X = 128                \ The centre x-coordinate of the 256 x 192 space view
+
  Y = 96                 \ The centre y-coordinate of the 256 x 192 space view
 
  f0 = &20               \ Internal key number for red key f0 (Launch, Front)
+
  f1 = &71               \ Internal key number for red key f1 (Buy Cargo, Rear)
+
  f2 = &72               \ Internal key number for red key f2 (Sell Cargo, Left)
+
  f3 = &73               \ Internal key number for red key f3 (Equip Ship, Right)
+
  f4 = &14               \ Internal key number for red key f4 (Long-range Chart)
+
  f5 = &74               \ Internal key number for red key f5 (Short-range Chart)
+
  f6 = &75               \ Internal key number for red key f6 (Data on System)
+
  f7 = &16               \ Internal key number for red key f7 (Market Price)
+
  f8 = &76               \ Internal key number for red key f8 (Status Mode)
+
  f9 = &77               \ Internal key number for red key f9 (Inventory)
 
  YELLOW  = %00001111    \ Four mode 1 pixels of colour 1 (yellow)
+
  RED     = %11110000    \ Four mode 1 pixels of colour 2 (red, magenta or white)
+
  CYAN    = %11111111    \ Four mode 1 pixels of colour 3 (cyan or white)
+
  GREEN   = %10101111    \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
+
  WHITE   = %11111010    \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+
  MAGENTA = RED          \ Four mode 1 pixels of colour 2 (red, magenta or white)
+
  DUST    = WHITE        \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
 
  RED2    = %00000011    \ Two mode 2 pixels of colour 1    (red)
+
  GREEN2  = %00001100    \ Two mode 2 pixels of colour 2    (green)
+
  YELLOW2 = %00001111    \ Two mode 2 pixels of colour 3    (yellow)
+
  BLUE2   = %00110000    \ Two mode 2 pixels of colour 4    (blue)
+
  MAG2    = %00110011    \ Two mode 2 pixels of colour 5    (magenta)
+
  CYAN2   = %00111100    \ Two mode 2 pixels of colour 6    (cyan)
+
  WHITE2  = %00111111    \ Two mode 2 pixels of colour 7    (white)
+
  STRIPE  = %00100011    \ Two mode 2 pixels of colour 5, 1 (magenta/red)
 
  NRU% = 0               \ The number of planetary systems with extended system
