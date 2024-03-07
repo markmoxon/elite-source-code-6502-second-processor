@@ -40,6 +40,20 @@
 \
 \ ******************************************************************************
 
+IF _SNG45 OR _EXECUTIVE
+
+ CODE% = &1FDC          \ The address where the code will be run
+
+ LOAD% = &1FDC          \ The address where the code will be loaded
+
+ELIF _SOURCE_DISC
+
+ CODE% = &2000          \ The address where the code will be run
+
+ LOAD% = &2000          \ The address where the code will be loaded
+
+ENDIF
+
  N% = 77                \ N% is set to the number of bytes in the VDU table, so
                         \ we can loop through them in the loader below
 
@@ -48,8 +62,11 @@
                         \ known as SHEILA)
 
  OSWRCH = &FFEE         \ The address for the OSWRCH routine
+
  OSBYTE = &FFF4         \ The address for the OSBYTE routine
+
  OSWORD = &FFF1         \ The address for the OSWORD routine
+
  OSCLI = &FFF7          \ The address for the OSCLI routine
 
 \ ******************************************************************************
@@ -89,18 +106,6 @@
 \ ELITE LOADER
 \
 \ ******************************************************************************
-
-IF _SNG45 OR _EXECUTIVE
-
- CODE% = &1FDC
- LOAD% = &1FDC
-
-ELIF _SOURCE_DISC
-
- CODE% = &2000
- LOAD% = &2000
-
-ENDIF
 
  ORG CODE%
 

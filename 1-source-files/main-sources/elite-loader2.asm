@@ -48,6 +48,10 @@
 \
 \ ******************************************************************************
 
+ CODE% = &2000          \ The address where the code will be run
+
+ LOAD% = &2000          \ The address where the code will be loaded
+
  D% = &D000             \ The address where the ship blueprints get moved to
                         \ after loading, so they go from &D000 to &F200
 
@@ -78,9 +82,6 @@
 \ ELITE LOADER
 \
 \ ******************************************************************************
-
- CODE% = &2000
- LOAD% = &2000
 
  ORG CODE%
 

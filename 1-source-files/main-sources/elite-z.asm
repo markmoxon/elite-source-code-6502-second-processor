@@ -40,6 +40,10 @@
 \
 \ ******************************************************************************
 
+ CODE% = &2400          \ The assembly address of the main I/O processor code
+
+ LOAD% = &2400          \ The load address of the main I/O processor code
+
  VSCAN = 57             \ Defines the split position in the split-screen mode
 
  Y = 96                 \ The centre y-coordinate of the 256 x 192 space view
@@ -102,10 +106,6 @@
  OSBYTE = &FFF4         \ The address for the OSBYTE routine
 
  OSWORD = &FFF1         \ The address for the OSWORD routine
-
- CODE% = &2400          \ The assembly address of the main I/O processor code
-
- LOAD% = &2400          \ The load address of the main I/O processor code
 
 \ ******************************************************************************
 \
