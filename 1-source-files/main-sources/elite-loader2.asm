@@ -13,7 +13,7 @@
 \ in the documentation are entirely my fault
 \
 \ The terminology and notations used in this commentary are explained at
-\ https://www.bbcelite.com/about_site/terminology_used_in_this_commentary.html
+\ https://www.bbcelite.com/terminology
 \
 \ The deep dive articles referred to in this commentary can be found at
 \ https://www.bbcelite.com/deep_dives
@@ -47,6 +47,10 @@
 \ Configuration variables
 \
 \ ******************************************************************************
+
+ CODE% = &2000          \ The address where the code will be run
+
+ LOAD% = &2000          \ The address where the code will be loaded
 
  D% = &D000             \ The address where the ship blueprints get moved to
                         \ after loading, so they go from &D000 to &F200
@@ -87,9 +91,6 @@
 \ ELITE LOADER
 \
 \ ******************************************************************************
-
- CODE% = &2000
- LOAD% = &2000
 
  ORG CODE%
 
