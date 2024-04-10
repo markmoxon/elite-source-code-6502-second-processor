@@ -3312,7 +3312,7 @@ ENDIF
  ADC Q
  STA S
 
- BCC LI210              \ If the addition didn't overflow, jump to L2110
+ BCC LI210              \ If the addition didn't overflow, jump to LI210
 
  CLC                    \ Otherwise we just overflowed, so clear the C flag and
  INY                    \ increment Y to move to the pixel line below

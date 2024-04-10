@@ -315,7 +315,7 @@ or this on a Mac or Linux:
 make variant=sng45
 ```
 
-This will produce a file called `elite-6502sp-sng45.NES` in the `5-compiled-game-discs` folder that contains the SNG45 variant.
+This will produce a file called `elite-6502sp-sng45.ssd` in the `5-compiled-game-discs` folder that contains the SNG45 variant.
 
 The verification checksums for this version are as follows:
 
