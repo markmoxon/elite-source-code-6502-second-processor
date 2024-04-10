@@ -306,5 +306,5 @@ ENDIF
 \ ******************************************************************************
 
  PRINT "P% = ", ~P%
- PRINT "S.P.CODE ", ~LOAD%, ~(F% + &0400 + &2200), " ", ~LOAD%, ~LOAD%
- SAVE "3-assembled-output/P.CODE.unprot.bin", CODE%, (F% + &0400 + &2200), LOAD%
+ PRINT "S.P.CODE ", ~LOAD%, ~(F% + &0400 + &2800), " ", ~LOAD%, ~LOAD%
+ SAVE "3-assembled-output/P.CODE.unprot.bin", CODE%, (F% + &0400 + &2800), LOAD%

@@ -35511,6 +35511,21 @@ ENDIF
  JSR RDKEY              \ Scan the keyboard for a key press and return the
                         \ internal key number in X (or 0 for no key press)
 
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ CPX #&55               \ If "N" is not being pressed, skip to skipNetwork
+ BNE skipNetwork
+
+ JSR GetNetworkDetails  \ Get the network and station numbers for the scoreboard
+                        \ server
+
+ LDX #&59               \ Set X to the key number for DELETE, so we exit the
+                        \ pause below
+
+.skipNetwork
+
+                        \ --- End of added code ------------------------------->
+
  CPX #&51               \ If "S" is not being pressed, skip to DK6
  BNE DK6
 
@@ -49588,8 +49603,17 @@ ENDIF
 
  JSR mvblock            \ Call mvblock to copy the recursive tokens
 
+                        \ --- Mod: Code removed for Scoreboard: --------------->
+
                         \ And then we copy the &22 pages of ship blueprints from
                         \ F% + &0400 to D%
+
+                        \ --- And replaced by: -------------------------------->
+
+                        \ And then we copy the &28 pages of ship blueprints from
+                        \ F% + &0400 to D%
+
+                        \ --- End of replacement ------------------------------>
 
  LDA #LO(F%)            \ Set V(1 0) = F% + &0400
  STA V
@@ -49601,7 +49625,15 @@ ENDIF
  LDA #HI(D%)
  STA SC+1
 
+                        \ --- Mod: Code removed for Scoreboard: --------------->
+
  LDX #&22               \ Set X = &22 to act as a counter for copying &22 pages
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDX #&28               \ Set X = &28 to act as a counter for copying &28 pages
+
+                        \ --- End of replacement ------------------------------>
 
                         \ Fall through into mvblock to copy the ship blueprints
 
@@ -53259,6 +53291,341 @@ ENDMACRO
  EQUB &20, &FD
  EQUB &B8, &90
  EQUB &01, &60
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+\ ******************************************************************************
+\
+\       Name: Econet variables
+\       Type: Workspace
+\   Category: Econet
+\    Summary: Variables used in Econet Elite
+\
+\ ******************************************************************************
+
+.scorePort
+
+ SKIP 1                 \ The Econet port on which to talk to the scoreboard
+                        \ machine
+                        \
+                        \ If this is zero, the network is disabled and no
+                        \ commander data is transmitted
+
+.scoreStation
+
+ SKIP 1                 \ The Econet station number of the scoreboard machine
+
+.scoreNetwork
+
+ SKIP 1                 \ The Econet network number of the scoreboard machine
+
+.cmdrStation
+
+ SKIP 1                 \ The Econet station number of the commander's machine
+                        \ (i.e. this machine)
+
+.cmdrNetwork
+
+ SKIP 1                 \ The Econet network number of the commander's machine
+                        \ (i.e. this machine)
+
+.oswordBlock
+
+ SKIP 12                \ The OSWORD block to use for network calls
+
+.transmitBuffer
+
+ SKIP 16                \ A buffer to hold the data we want to transmit to the
+                        \ scoreboard machine in the format:
+                        \
+                        \   * Bytes #0-7 = commander's name, terminated by a
+                        \                  carriage return
+                        \
+                        \   * Byte #8 = commander's Econet network number
+                        \
+                        \   * Byte #9 = commander's Econet station number
+                        \
+                        \   * Bytes #10-11 = commander's combat rank
+                        \
+                        \   * Bytes #12-15 = commander's cash pot
+                        \
+                        \ Combat rank and cash pot are stored with the low byte
+                        \ first (unlike the way that cash is stored in the game)
+
+.endBuffer
+
+\ ******************************************************************************
+\
+\       Name: SendOverEconet
+\       Type: Subroutine
+\   Category: Econet
+\    Summary: Send data over the Econet
+\
+\ ******************************************************************************
+
+.SendOverEconet
+
+ LDX #LO(oswordBlock)   \ Set (Y X) to the address of the OSWORD parameter block
+ LDY #HI(oswordBlock)
+
+ JSR OSWORD             \ Call OSWORD with the command number from the stack
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: GetCmdrNetwork
+\       Type: Subroutine
+\   Category: Econet
+\    Summary: Read the local network and station numbers and store them in
+\             cmdrNetwork and cmdrStation
+\
+\ ******************************************************************************
+
+.GetCmdrNetwork
+
+ LDA #8                 \ Set the function number for the OSWORD call to 8 in
+ STA oswordBlock        \ the first byte of the OSWORD parameter block (this
+                        \ function reads the local station number on Econet)
+
+ LDA #19                \ Call OSWORD with A = 19 and a function number of 8 to
+ JSR SendOverEconet     \ read the Econet station number of this machine and
+                        \ store it in the first two bytes of the parameter block
+
+ LDA oswordBlock+1      \ Copy the Econet station number to cmdrStation
+ STA cmdrStation
+
+ LDA oswordBlock+2      \ Copy the Econet network number to cmdrNetwork
+ STA cmdrNetwork
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: TransmitCmdrData
+\       Type: Subroutine
+\   Category: Econet
+\    Summary: Fill the transmit buffer with the commander data that we want to
+\             transmit to the scoreboard machine, and then transmit it
+\
+\ ******************************************************************************
+
+.TransmitCmdrData
+
+ PHP                    \ Store the flags on the stack
+
+ LDA scorePort          \ If the network is configured then the port will be
+ BNE tran1              \ non-zero, so skip the following to move on to the
+                        \ data transmission
+
+ PLP                    \ Retrieve the flags from the stack
+
+ RTS                    \ Return from the subroutine
+
+.tran1
+                        \ Copy the commander's name from NA% to transmitBuffer+0
+                        \ to transmitBuffer+7
+
+ LDX #7                 \ The commander's name can contain a maximum of 7
+                        \ characters, and is terminated by a carriage return,
+                        \ so set up a counter in X to copy 8 characters from
+                        \ NA% to dataToTransmit
+
+.trcm1
+
+ LDA NA%,X              \ Copy the X-th byte of NA% to the X-th byte of
+ STA transmitBuffer,X   \ transmitBuffer
+
+ DEX                    \ Decrement the loop counter
+
+ BPL trcm1              \ Loop back until we have copied all eight bytes
+
+ LDA cmdrStation        \ Copy the commander's Econet station number from
+ STA transmitBuffer+8   \ cmdrStation to transmitBuffer+8
+
+ LDA cmdrNetwork        \ Copy the commander's Econet network number from
+ STA transmitBuffer+9   \ cmdrNetwork to transmitBuffer+9
+
+ LDA TALLY              \ Copy the combat rank from TALLY(1 0) to
+ STA transmitBuffer+10  \ transmitBuffer(11 10)
+ LDA TALLY+1
+ STA transmitBuffer+11
+
+ LDA CASH               \ Copy the cash levels from CASH(0 1 2 3) to
+ STA transmitBuffer+15  \ transmitBuffer(15 14 13 12)
+ LDA CASH+1
+ STA transmitBuffer+14
+ LDA CASH+2
+ STA transmitBuffer+13
+ LDA CASH+3
+ STA transmitBuffer+12
+
+                        \ Fall through into TransmitData to transmit the data
+
+\ ******************************************************************************
+\
+\       Name: TransmitData
+\       Type: Subroutine
+\   Category: Econet
+\    Summary: Send the commander data to the scoreboard machine
+\
+\ ******************************************************************************
+
+.TransmitData
+
+ LDA #&80               \ Set the control byte in byte #0 of the parameter block
+ STA oswordBlock
+
+ LDA scorePort          \ Set the port number in byte #1 of the parameter block
+ STA oswordBlock+1
+
+ LDA scoreStation       \ Copy the scoreboard machine's Econet station number
+ STA oswordBlock+2      \ from scoreStation to byte #2 of the parameter block
+
+ LDA scoreNetwork       \ Copy the scoreboard machine's Econet network number
+ STA oswordBlock+3      \ from scoreNetwork to byte #3 of the parameter block
+
+ LDA LO(transmitBuffer) \ Put the address of the transmit buffer into bytes #4-7
+ STA oswordBlock+4      \ of the parameter block
+ LDA HI(transmitBuffer)
+ STA oswordBlock+5
+ LDA #0
+ STA oswordBlock+6
+ STA oswordBlock+7
+
+ STA oswordBlock+10     \ Put the address of the transmit buffer into bytes
+ STA oswordBlock+11     \ #8-11 of the parameter block
+ LDA LO(endBuffer)
+ STA oswordBlock+8
+ LDA HI(endBuffer)
+ STA oswordBlock+9
+
+ LDA #16                \ Call OSWORD with A = 16 to transmit the contents of
+ JSR SendOverEconet     \ the transmit buffer to the scoreboard machine
+
+ PLP                    \ Retrieve the flags from the stack
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: GetNetworkDetails
+\       Type: Subroutine
+\   Category: Econet
+\    Summary: Edit the scoreboard machine's network, station and port numbers,
+\             in that order
+\
+\ ******************************************************************************
+
+.GetNetworkDetails
+
+ LDA QQ11               \ Store the current view type on the stack
+ PHA
+
+ LDA #8                 \ Clear the top part of the screen, draw a white border,
+ JSR TRADEMODE          \ and set up a printable trading screen with a view type
+                        \ in QQ11 of 8 (Status Mode screen)
+
+ LDA #10                \ Move the text cursor to column 10
+ JSR DOXC
+
+ LDA #'N'               \ Print "NET{cr}{cr}")
+ JSR CHPR
+ LDA #'E'
+ JSR CHPR
+ LDA #'T'
+ JSR CHPR
+ JSR TT67
+ JSR TT67
+ 
+ JSR NLIN4              \ Draw a horizontal line at pixel row 19 to box in the
+                        \ title, and move the text cursor down one line
+
+ LDY #&FF               \ Set maximum number for gnum to 255
+ STY QQ25
+
+ LDA #&60               \ Modify gnum so that errors return rather than jumping
+ STA BAY2               \ to the inventory screen
+
+ JSR TT67               \ Print a newline
+
+ LDX scoreNetwork       \ Get the current scoreboard network number from
+                        \ scoreNetwork
+
+ CLC                    \ Print the 8-bit number in X to 3 digits, without a
+ JSR pr2                \ decimal point
+
+ JSR prq+3              \ Print a question mark
+
+ JSR TT162              \ Print a space
+
+ JSR gnum               \ Call gnum to get a number from the keyboard
+
+ BEQ gnet1              \ If no number was entered, skip the following to leave
+                        \ this value alone
+
+ STA scoreNetwork     \ Store the network number in scoreNetwork
+
+.gnet1
+
+ JSR TT67               \ Print a newline
+
+ LDX scoreStation       \ Get the current scoreboard station number from the low
+                        \ byte of scoreStation
+
+ CLC                    \ Print the 8-bit number in X to 3 digits, without a
+ JSR pr2                \ decimal point
+
+ JSR prq+3              \ Print a question mark
+
+ JSR TT162              \ Print a space
+
+ JSR gnum               \ Call gnum to get a number from the keyboard
+
+ BEQ gnet2              \ If no number was entered, skip the following to leave
+                        \ this seed alone
+
+ STA scoreStation       \ Store the station number in the low byte of
+                        \ scoreStation
+
+.gnet2
+
+ JSR TT67               \ Print a newline
+
+ LDX scorePort          \ Get the current scoreboard port number from scorePort
+
+ CLC                    \ Print the 8-bit number in X to 3 digits, without a
+ JSR pr2                \ decimal point
+
+ JSR prq+3              \ Print a question mark
+
+ JSR TT162              \ Print a space
+
+ JSR gnum               \ Call gnum to get a number from the keyboard
+
+ BEQ gnet3              \ If no number was entered, skip the following to leave
+                        \ this seed alone
+
+ STA scorePort          \ Store the port number in scorePort
+
+.gnet3
+
+ LDA #&A9               \ Revert the modification to gnum
+ STA BAY2
+
+ JSR GetCmdrNetwork     \ Read the local network and station numbers and store
+                        \ them in cmdrNetwork and cmdrStation
+
+ JSR TransmitCmdrData   \ Fill the transmit buffer with the commander data that
+                        \ we want to transmit to the scoreboard machine, and
+                        \ then transmit it
+
+ PLA                    \ Switch the view back to the previous view type that we
+ JSR TT66               \ stored on the stack
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
