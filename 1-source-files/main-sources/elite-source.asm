@@ -53318,13 +53318,15 @@ ENDMACRO
  FACE     -169,       55,      -89,         31    \ Face 10
  FACE        0,        0,     -196,         31    \ Face 11
 
- EQUB &A9, &80          \ These bytes appear to be unused
- EQUB &14, &2B
- EQUB &20, &FD
- EQUB &B8, &90
- EQUB &01, &60
-
                         \ --- Mod: Code added for Scoreboard: ----------------->
+
+\EQUB &A9, &80          \ These bytes appear to be unused
+\EQUB &14, &2B
+\EQUB &20, &FD
+\EQUB &B8, &90
+\EQUB &01, &60
+
+                        \ --- And replaced by: -------------------------------->
 
 \ ******************************************************************************
 \
@@ -53373,7 +53375,7 @@ ENDMACRO
 
 .transmitBuffer
 
- SKIP 16                \ A buffer to hold the data we want to transmit to the
+ SKIP 20                \ A buffer to hold the data we want to transmit to the
                         \ scoreboard machine in the format:
                         \
                         \   * Bytes #0-7 = commander's name, terminated by a
@@ -53386,6 +53388,9 @@ ENDMACRO
                         \   * Bytes #10-11 = commander's combat rank
                         \
                         \   * Bytes #12-15 = commander's cash pot
+                        \
+                        \   * Byte #16 = machine type
+                        \                1 = Master, 2 = 6502SP, 3 = BBC Micro
                         \
                         \ Combat rank and cash pot are stored with the low byte
                         \ first (unlike the way that cash is stored in the game)
@@ -53501,6 +53506,9 @@ ENDMACRO
  STA transmitBuffer+13
  LDA CASH+3
  STA transmitBuffer+12
+
+ LDA #2                 \ Set machine type to 1 (6502SP)
+ STA transmitBuffer+16
 
                         \ Fall through into TransmitData to transmit the data
 
@@ -53855,7 +53863,7 @@ ENDMACRO
  ECHR 'E'
  EQUB VE
 
-                        \ --- End of added code ------------------------------->
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
