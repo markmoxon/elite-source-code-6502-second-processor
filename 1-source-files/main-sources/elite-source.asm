@@ -15298,6 +15298,13 @@ ENDIF
 
 .LAUN
 
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ JSR TransmitCmdrData   \ Transmit commander data to the scoreboard machine, if
+                        \ configured
+
+                        \ --- End of added code ------------------------------->
+
  LDA #48                \ Call the NOISE routine with A = 48 to make the sound
  JSR NOISE              \ of the ship launching from the station
 
@@ -23217,6 +23224,13 @@ ENDIF
 
 .TT113
 
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ JSR TransmitCmdrData   \ Transmit commander data to the scoreboard machine, if
+                        \ configured
+
+                        \ --- End of added code ------------------------------->
+
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
@@ -30863,6 +30877,13 @@ ENDIF
                         \ time it will either be an asteroid (98.5% chance) or,
                         \ very rarely, a cargo canister (1.5% chance)
 
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ JSR TransmitCmdrData   \ Transmit commander data to the scoreboard machine, if
+                        \ configured
+
+                        \ --- End of added code ------------------------------->
+
  LDA MJ                 \ If we are in witchspace following a mis-jump, skip the
  BNE ytq                \ following by jumping down to MLOOP (via ytq above)
 
@@ -34609,6 +34630,19 @@ ENDIF
  LDA #101               \ The kill total is a multiple of 256, so it's time
  JSR MESS               \ for a pat on the back, so print recursive token 101
                         \ ("RIGHT ON COMMANDER!") as an in-flight message
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ INC netTally           \ Increment the kill count in netTally
+ BNE taly1
+ INC netTally+1
+
+.taly1
+
+ JSR TransmitCmdrData   \ Transmit commander data to the scoreboard machine, if
+                        \ configured
+
+                        \ --- End of added code ------------------------------->
 
  LDX #7                 \ Set X = 7 and fall through into EXNO to make the
                         \ sound of a ship exploding
@@ -53327,6 +53361,12 @@ ENDMACRO
  SKIP 1                 \ The Econet network number of the commander's machine
                         \ (i.e. this machine)
 
+.netTally
+
+ SKIP 2                 \ Stores a one-point-per-kill combat score for the
+                        \ scoreboard (so all platforms have the same point
+                        \ system)
+
 .oswordBlock
 
  SKIP 12                \ The OSWORD block to use for network calls
@@ -53386,6 +53426,10 @@ ENDMACRO
  STA oswordBlock        \ the first byte of the OSWORD parameter block (this
                         \ function reads the local station number on Econet)
 
+ LDA #0                 \ Reset the return data bytes for the station number
+ STA oswordBlock+1
+ STA oswordBlock+2
+
  LDA #19                \ Call OSWORD with A = 19 and a function number of 8 to
  JSR SendOverEconet     \ read the Econet station number of this machine and
                         \ store it in the first two bytes of the parameter block
@@ -53444,9 +53488,9 @@ ENDMACRO
  LDA cmdrNetwork        \ Copy the commander's Econet network number from
  STA transmitBuffer+9   \ cmdrNetwork to transmitBuffer+9
 
- LDA TALLY              \ Copy the combat rank from TALLY(1 0) to
+ LDA netTally           \ Copy the combat rank from netTally(1 0) to
  STA transmitBuffer+10  \ transmitBuffer(11 10)
- LDA TALLY+1
+ LDA netTally+1
  STA transmitBuffer+11
 
  LDA CASH               \ Copy the cash levels from CASH(0 1 2 3) to
@@ -53521,18 +53565,15 @@ ENDMACRO
  JSR TRADEMODE          \ and set up a printable trading screen with a view type
                         \ in QQ11 of 8 (Status Mode screen)
 
- LDA #14                \ Move the text cursor to column 14
+ LDA #10                \ Move the text cursor to column 10
  JSR DOXC
 
- LDA #'N'               \ Print "NET{cr}{cr}")
- JSR CHPR
- LDA #'E'
- JSR CHPR
- LDA #'T'
- JSR CHPR
- JSR TT67
- JSR TT67
- 
+ LDA #5                 \ Print extended token 5 ("NETWORK")
+ JSR PrintToken
+
+ LDA #4                 \ Print extended token 4 (" MENU{crlf}{crlf}")
+ JSR PrintToken
+
  JSR NLIN4              \ Draw a horizontal line at pixel row 19 to box in the
                         \ title, and move the text cursor down one line
 
@@ -53542,16 +53583,11 @@ ENDMACRO
  LDA #&60               \ Modify gnum so that errors return rather than jumping
  STA BAY2               \ to the inventory screen
 
- JSR TT67               \ Print a newline
+ LDA #5                 \ Print extended token 5 ("NETWORK")
+ JSR PrintToken
 
- LDA #'N'               \ Print "Net "
- JSR CHPR
- LDA #'e'
- JSR CHPR
- LDA #'t'
- JSR CHPR
- LDA #' '
- JSR CHPR
+ LDA #3                 \ Print extended token 3 (" NUMBER   ")
+ JSR PrintToken
 
  LDX scoreNetwork       \ Get the current scoreboard network number from
                         \ scoreNetwork
@@ -53559,29 +53595,31 @@ ENDMACRO
  CLC                    \ Print the 8-bit number in X to 3 digits, without a
  JSR pr2                \ decimal point
 
+ LDA #7                 \ Print extended token 7 ("   ")
+ JSR PrintToken
+
  JSR prq+3              \ Print a question mark
 
  JSR TT162              \ Print a space
 
  JSR gnum               \ Call gnum to get a number from the keyboard
 
- BEQ gnet1              \ If no number was entered, skip the following to leave
-                        \ this value alone
+ LDX T1                 \ If no number was entered, skip the following to leave
+ CPX #12                \ this seed alone
+ BEQ gnet1
 
- STA scoreNetwork     \ Store the network number in scoreNetwork
+ STA scoreNetwork       \ Store the network number in scoreNetwork
 
 .gnet1
 
- JSR TT67               \ Print a newline
+ JSR TT67               \ Print two newlines
+ JSR TT67
 
- LDA #'S'               \ Print "Stn "
- JSR CHPR
- LDA #'t'
- JSR CHPR
- LDA #'n'
- JSR CHPR
- LDA #' '
- JSR CHPR
+ LDA #1                 \ Print extended token 5 ("STATION")
+ JSR PrintToken
+
+ LDA #3                 \ Print extended token 3 (" NUMBER   ")
+ JSR PrintToken
 
  LDX scoreStation       \ Get the current scoreboard station number from the low
                         \ byte of scoreStation
@@ -53589,37 +53627,43 @@ ENDMACRO
  CLC                    \ Print the 8-bit number in X to 3 digits, without a
  JSR pr2                \ decimal point
 
+ LDA #7                 \ Print extended token 7 ("   ")
+ JSR PrintToken
+
  JSR prq+3              \ Print a question mark
 
  JSR TT162              \ Print a space
 
  JSR gnum               \ Call gnum to get a number from the keyboard
 
- BEQ gnet2              \ If no number was entered, skip the following to leave
-                        \ this seed alone
+ LDX T1                 \ If no number was entered, skip the following to leave
+ CPX #12                \ this seed alone
+ BEQ gnet2
 
  STA scoreStation       \ Store the station number in the low byte of
                         \ scoreStation
 
 .gnet2
 
- JSR TT67               \ Print a newline
+ JSR TT67               \ Print two newlines
+ JSR TT67
 
- LDA #'P'               \ Print "Port "
- JSR CHPR
- LDA #'o'
- JSR CHPR
- LDA #'r'
- JSR CHPR
- LDA #'t'
- JSR CHPR
- LDA #' '
- JSR CHPR
+ LDA #2                 \ Print extended token 2 ("PORT")
+ JSR PrintToken
+
+ LDA #3                 \ Print extended token 3 (" NUMBER   ")
+ JSR PrintToken
+
+ LDA #7                 \ Print extended token 7 ("   ")
+ JSR PrintToken
 
  LDX scorePort          \ Get the current scoreboard port number from scorePort
 
  CLC                    \ Print the 8-bit number in X to 3 digits, without a
  JSR pr2                \ decimal point
+
+ LDA #7                 \ Print extended token 7 ("   ")
+ JSR PrintToken
 
  JSR prq+3              \ Print a question mark
 
@@ -53627,12 +53671,39 @@ ENDMACRO
 
  JSR gnum               \ Call gnum to get a number from the keyboard
 
- BEQ gnet3              \ If no number was entered, skip the following to leave
-                        \ this seed alone
-
+ LDX T1                 \ If no number was entered, skip the following to leave
+ CPX #12                \ this seed alone
+ BEQ gnet3
+                        
  STA scorePort          \ Store the port number in scorePort
 
 .gnet3
+
+ JSR TT67               \ Print two newlines
+ JSR TT67
+
+ LDA #8                 \ Print extended token 8 ("RESET SCORE")
+ JSR PrintToken
+
+ LDX netTally           \ Get the current scoreboard port number from scorePort
+ LDY netTally+1
+
+ LDA #9                 \ Print the 16-bit number in (Y X) to 9 digits, without
+ CLC                    \ a decimal point
+ JSR TT11
+
+ LDA #7                 \ Print extended token 7 ("   ")
+ JSR PrintToken
+
+ JSR TT214              \ Ask a question with a "Y/N?" prompt
+
+ BCC gnet4              \ If the answer was not "yes", jump to gnet4
+
+ LDA #0                 \ The answer was yes, so reset the combat score
+ STA netTally
+ STA netTally+1
+
+.gnet4
 
  LDA #&A9               \ Revert the modification to gnum
  STA BAY2
@@ -53644,23 +53715,145 @@ ENDMACRO
                         \ we want to transmit to the scoreboard machine, and
                         \ then transmit it
 
- JSR TT67               \ Print a newline
+ JSR TT67               \ Print two newlines
+ JSR TT67
 
- LDA #'O'               \ Print "OK"
- JSR CHPR
- LDA #'K'
- JSR CHPR
+ LDA #6                 \ Print extended token 6 ("{all caps}OK")
+ JSR PrintToken
+
+ LDY #100               \ Wait for 100/50 of a second (2 seconds)
+ JSR DELAY
 
  LDX #&FF               \ Set the stack pointer to &01FF, which is the standard
  TXS                    \ location for the 6502 stack, so this instruction
                         \ effectively resets the stack
 
- LDY #44                \ Wait for 44/50 of a second (0.88 seconds)
- JSR DELAY
-
  LDA #f8                \ Jump into the main loop at FRCE, setting the key
  JMP FRCE               \ "pressed" to red key f8 (so we show the Status Mode
                         \ screen)
+
+\ ******************************************************************************
+\
+\       Name: PrintToken
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print an extended recursive token from the EconetToken table
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The recursive token to be printed, in the range 0-255
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   A                   A is preserved
+\
+\   Y                   Y is preserved
+\
+\   V(1 0)              V(1 0) is preserved
+\
+\ ******************************************************************************
+
+.PrintToken
+
+ PHA                    \ Store A on the stack, so we can retrieve it later
+
+ TAX                    \ Copy the token number from A into X
+
+ TYA                    \ Store Y on the stack
+ PHA
+
+ LDA V                  \ Store V(1 0) on the stack
+ PHA
+ LDA V+1
+ PHA
+
+ JSR MT19               \ Call MT19 to capitalise the next letter (i.e. set
+                        \ Sentence Case for this word only)
+
+ LDA #LO(EconetToken)   \ Set V to the low byte of EconetToken
+ STA V
+
+ LDA #HI(EconetToken)   \ Set A to the high byte of EconetToken
+
+ JMP DTEN               \ Call DTEN to print token number X from the
+                        \ UniverseToken table and restore the values of A, Y and
+                        \ V(1 0) from the stack, returning from the subroutine
+                        \ using a tail call
+
+\ ******************************************************************************
+\
+\       Name: EconetToken
+\       Type: Variable
+\   Category: Universe editor
+\    Summary: Extended recursive token table for the Econet configuration page
+\
+\ ******************************************************************************
+
+.EconetToken
+
+ EQUB VE                \ Token 0:      ""
+                        \
+                        \ Encoded as:   ""
+
+ ETWO 'S', 'T'          \ Token 1:    "STATION"
+ ETWO 'A', 'T'
+ ECHR 'I'
+ ETWO 'O', 'N'
+ EQUB VE
+
+ ECHR 'P'               \ Token 2:    "PORT"
+ ETWO 'O', 'R'
+ ECHR 'T'
+ EQUB VE
+
+ ECHR ' '               \ Token 3:    " NUMBER   "
+ ETWO 'N', 'U'
+ ECHR 'M'
+ ECHR 'B'
+ ETWO 'E', 'R'
+ ECHR ' '
+ ECHR ' '
+ ECHR ' '
+ EQUB VE
+
+ ECHR ' '               \ Token 4:    " MENU{crlf}{crlf}"
+ ECHR 'M'
+ ECHR 'E'
+ ETWO 'N', 'U'
+ ETWO '-', '-'
+ ETWO '-', '-'
+ EQUB VE
+
+ ECHR 'N'               \ Token 5:    "NETWORK"
+ ETWO 'E', 'T'
+ ECHR 'W'
+ ETWO 'O', 'R'
+ ECHR 'K'
+ EQUB VE
+
+ EJMP 1                 \ Token 6:    "{all caps}OK"
+ ECHR 'O'
+ ECHR 'K'
+ EQUB VE
+
+ ECHR ' '               \ Token 7:    "   "
+ ECHR ' '
+ ECHR ' '
+ EQUB VE
+
+ ETWO 'R', 'E'          \ Token 8:    "RESET SCORE"
+ ETWO 'S', 'E'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'C'
+ ETWO 'O', 'R'
+ ECHR 'E'
+ EQUB VE
 
                         \ --- End of added code ------------------------------->
 
