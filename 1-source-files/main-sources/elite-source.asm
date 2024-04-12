@@ -53353,16 +53353,6 @@ ENDMACRO
 
  SKIP 1                 \ The Econet network number of the scoreboard machine
 
-.cmdrStation
-
- SKIP 1                 \ The Econet station number of the commander's machine
-                        \ (i.e. this machine)
-
-.cmdrNetwork
-
- SKIP 1                 \ The Econet network number of the commander's machine
-                        \ (i.e. this machine)
-
 .netTally
 
  SKIP 2                 \ Stores a one-point-per-kill combat score for the
@@ -53381,19 +53371,21 @@ ENDMACRO
                         \   * Bytes #0-7 = commander's name, terminated by a
                         \                  carriage return
                         \
-                        \   * Byte #8 = commander's Econet network number
+                        \   * Byte #8 = commander's legal status
                         \
-                        \   * Byte #9 = commander's Econet station number
+                        \   * Byte #9 = commander's status condition
+                        \               0 = docked, 1 = green
+                        \               2 = yellow, 3 = red
                         \
-                        \   * Bytes #10-11 = commander's combat rank
+                        \   * Bytes #10-11 = commander's score
                         \
-                        \   * Bytes #12-15 = commander's cash pot
+                        \   * Bytes #12-15 = commander's credits
                         \
                         \   * Byte #16 = machine type
                         \                1 = Master, 2 = 6502SP, 3 = BBC Micro
                         \
-                        \ Combat rank and cash pot are stored with the low byte
-                        \ first (unlike the way that cash is stored in the game)
+                        \ Score and credits are stored with the low byte first
+                        \ (unlike the way that credits are stored in the game)
 
 .endBuffer
 
@@ -53412,38 +53404,6 @@ ENDMACRO
  LDY #HI(oswordBlock)
 
  JSR OSWORD             \ Call OSWORD with the command number from the stack
-
- RTS                    \ Return from the subroutine
-
-\ ******************************************************************************
-\
-\       Name: GetCmdrNetwork
-\       Type: Subroutine
-\   Category: Econet
-\    Summary: Read the local network and station numbers and store them in
-\             cmdrNetwork and cmdrStation
-\
-\ ******************************************************************************
-
-.GetCmdrNetwork
-
- LDA #8                 \ Set the function number for the OSWORD call to 8 in
- STA oswordBlock        \ the first byte of the OSWORD parameter block (this
-                        \ function reads the local station number on Econet)
-
- LDA #0                 \ Reset the return data bytes for the station number
- STA oswordBlock+1
- STA oswordBlock+2
-
- LDA #19                \ Call OSWORD with A = 19 and a function number of 8 to
- JSR SendOverEconet     \ read the Econet station number of this machine and
-                        \ store it in the first two bytes of the parameter block
-
- LDA oswordBlock+1      \ Copy the Econet station number to cmdrStation
- STA cmdrStation
-
- LDA oswordBlock+2      \ Copy the Econet network number to cmdrNetwork
- STA cmdrNetwork
 
  RTS                    \ Return from the subroutine
 
@@ -53487,14 +53447,45 @@ ENDMACRO
 
  BPL trcm1              \ Loop back until we have copied all eight bytes
 
- LDA cmdrStation        \ Copy the commander's Econet station number from
- STA transmitBuffer+8   \ cmdrStation to transmitBuffer+8
+ LDA FIST               \ Copy the commander's legal status from FIST to
+ STA transmitBuffer+8   \ transmitBuffer+8
 
- LDA cmdrNetwork        \ Copy the commander's Econet network number from
- STA transmitBuffer+9   \ cmdrNetwork to transmitBuffer+9
+ LDX #0                 \ Set X to condition docked (0)
 
- LDA netTally           \ Copy the combat rank from netTally(1 0) to
- STA transmitBuffer+10  \ transmitBuffer(11 10)
+ LDY QQ12               \ Fetch the docked status from QQ12, and if we are
+ BNE trcm2              \ docked, jump to wearedocked
+
+ INX                    \ Set X to condition green (1)
+
+ LDY JUNK               \ Set Y to the number of junk items in our local bubble
+                        \ of universe (where junk is asteroids, canisters,
+                        \ escape pods and so on)
+
+ LDA FRIN+2,Y           \ The ship slots at FRIN are ordered with the first two
+                        \ slots reserved for the planet and sun/space station,
+                        \ and then any ships, so if the slot at FRIN+2+Y is not
+                        \ empty (i.e. is non-zero), then that means the number
+                        \ of non-asteroids in the vicinity is at least 1
+
+ BEQ trcm2              \ So if X = 0, there are no ships in the vicinity, so
+                        \ jump to trcm2 to set the ship's condition to green
+
+ INX                    \ Set X to condition yellow (2)
+
+ LDY ENERGY             \ Otherwise we have ships in the vicinity, so we load
+                        \ our energy levels into Y
+
+ CPY #128               \ If energy levels >= 128, jump to trcm2
+ BCS trcm2
+
+ INX                    \ Set X to condition red (3)
+
+.trcm2
+
+ STX transmitBuffer+9   \ Store the commander's condition in transmitBuffer+9
+
+ LDA netTally           \ Copy the commander's combat score from netTally(1 0)
+ STA transmitBuffer+10  \ to transmitBuffer(11 10)
  LDA netTally+1
  STA transmitBuffer+11
 
@@ -53693,7 +53684,7 @@ ENDMACRO
  LDA #8                 \ Print extended token 8 ("RESET SCORE")
  JSR PrintToken
 
- LDX netTally           \ Get the current scoreboard port number from scorePort
+ LDX netTally           \ Get the current combat score from scorePort
  LDY netTally+1
 
  LDA #9                 \ Print the 16-bit number in (Y X) to 9 digits, without
@@ -53715,9 +53706,6 @@ ENDMACRO
 
  LDA #&A9               \ Revert the modification to gnum
  STA BAY2
-
- JSR GetCmdrNetwork     \ Read the local network and station numbers and store
-                        \ them in cmdrNetwork and cmdrStation
 
  JSR TransmitCmdrData   \ Fill the transmit buffer with the commander data that
                         \ we want to transmit to the scoreboard machine, and
