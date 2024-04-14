@@ -7440,9 +7440,8 @@ ENDMACRO
  DKS4                   \ Include macro DKS4 to check whether the key in A is
                         \ being pressed, and if it is, set bit 7 of A
 
- TAX
- BPL checkReturn        \ We have just printed the disc catalogue, so wait until
-                        \ RETURN is pressed, looping indefinitely until it gets
+ TAX                    \ We have just printed the disc catalogue, so wait until
+ BPL checkReturn        \ RETURN is pressed, looping indefinitely until it gets
                         \ tapped
 
 .skipReturn
