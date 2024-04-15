@@ -53319,7 +53319,7 @@ ENDMACRO
  FACE     -169,       55,      -89,         31    \ Face 10
  FACE        0,        0,     -196,         31    \ Face 11
 
-                        \ --- Mod: Code added for Scoreboard: ----------------->
+                        \ --- Mod: Code removed for Scoreboard: --------------->
 
 \EQUB &A9, &80          \ These bytes appear to be unused
 \EQUB &14, &2B
@@ -53327,16 +53327,18 @@ ENDMACRO
 \EQUB &B8, &90
 \EQUB &01, &60
 
-                        \ --- And replaced by: -------------------------------->
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \
 \       Name: Econet variables
 \       Type: Workspace
 \   Category: Econet
-\    Summary: Variables used in Econet Elite
+\    Summary: Variables used in Elite over Econet
 \
 \ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
 
 .scorePort
 
@@ -53390,6 +53392,8 @@ ENDMACRO
 
 .endBuffer
 
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: SendOverEconet
@@ -53398,6 +53402,8 @@ ENDMACRO
 \    Summary: Send data over the Econet
 \
 \ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
 
 .SendOverEconet
 
@@ -53408,6 +53414,8 @@ ENDMACRO
 
  RTS                    \ Return from the subroutine
 
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: TransmitCmdrData
@@ -53417,6 +53425,8 @@ ENDMACRO
 \             transmit to the scoreboard machine, and then transmit it
 \
 \ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
 
 .TransmitCmdrData
 
@@ -53504,6 +53514,8 @@ ENDMACRO
 
                         \ Fall through into TransmitData to transmit the data
 
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: TransmitData
@@ -53512,6 +53524,8 @@ ENDMACRO
 \    Summary: Send the commander data to the scoreboard machine
 \
 \ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
 
 .TransmitData
 
@@ -53549,6 +53563,8 @@ ENDMACRO
 
  RTS                    \ Return from the subroutine
 
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: GetNetworkDetails
@@ -53558,6 +53574,8 @@ ENDMACRO
 \             in that order
 \
 \ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
 
 .GetNetworkDetails
 
@@ -53729,6 +53747,8 @@ ENDMACRO
  JMP FRCE               \ "pressed" to red key f8 (so we show the Status Mode
                         \ screen)
 
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: PrintToken
@@ -53753,6 +53773,8 @@ ENDMACRO
 \   V(1 0)              V(1 0) is preserved
 \
 \ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
 
 .PrintToken
 
@@ -53781,6 +53803,8 @@ ENDMACRO
                         \ V(1 0) from the stack, returning from the subroutine
                         \ using a tail call
 
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: EconetToken
@@ -53789,6 +53813,8 @@ ENDMACRO
 \    Summary: Extended recursive token table for the Econet configuration page
 \
 \ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
 
 .EconetToken
 
@@ -53852,7 +53878,7 @@ ENDMACRO
  ECHR 'E'
  EQUB VE
 
-                        \ --- End of replacement ------------------------------>
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \

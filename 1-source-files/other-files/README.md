@@ -1,6 +1,6 @@
-# Other source files for Econet Elite
+# Other source files for Elite over Econet
 
-This folder contains commander files for Econet Elite.
+This folder contains commander files for Elite over Econet.
 
 ---
 
