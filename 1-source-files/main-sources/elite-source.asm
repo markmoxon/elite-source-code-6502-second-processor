@@ -23226,8 +23226,26 @@ ENDIF
 
                         \ --- Mod: Code added for Scoreboard: ----------------->
 
+                        \ If we get here then either the transaction was an
+                        \ MCASH and the C flag is clear, or it was a successful
+                        \ LCASH and the C flag is set
+
+ TXA                    \ If both X and Y are zero, jump to cash2 to skip the
+ BNE cash1              \ transmission of data, as our credit balance will not
+ TYA                    \ have changed
+ BEQ cash2
+
+.cash1
+
+ PHP                    \ Store the flags on the stack so we can return them
+                        \ from the subroutine
+
  JSR TransmitCmdrData   \ Transmit commander data to the scoreboard machine, if
                         \ configured
+
+ PLP                    \ Restore the flags
+
+.cash2
 
                         \ --- End of added code ------------------------------->
 
@@ -53809,7 +53827,7 @@ ENDMACRO
 \
 \       Name: EconetToken
 \       Type: Variable
-\   Category: Universe editor
+\   Category: Econet
 \    Summary: Extended recursive token table for the Econet configuration page
 \
 \ ******************************************************************************
