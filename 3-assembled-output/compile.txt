@@ -13366,16 +13366,16 @@ Saving file '3-assembled-output/ELTE.bin'
      55A2   A9 30      LDA #&30
      55A4   D0 38      BNE &55DE
 .EXNO2
-     55A6   EE EB 08   INC &08EB
-     55A9   D0 13      BNE &55BE
-     55AB   EE EC 08   INC &08EC
-     55AE   A9 65      LDA #&65
-     55B0   20 E9 57   JSR &57E9
-     55B3   EE 05 F1   INC &F105
-     55B6   D0 03      BNE &55BB
-     55B8   EE 06 F1   INC &F106
+     55A6   EE 05 F1   INC &F105
+     55A9   D0 03      BNE &55AE
+     55AB   EE 06 F1   INC &F106
 .taly1
-     55BB   20 2F F1   JSR &F12F
+     55AE   20 2F F1   JSR &F12F
+     55B1   EE EB 08   INC &08EB
+     55B4   D0 08      BNE &55BE
+     55B6   EE EC 08   INC &08EC
+     55B9   A9 65      LDA #&65
+     55BB   20 E9 57   JSR &57E9
      55BE   A2 07      LDX #&07
 .EXNO
      55C0   86 D1      STX &D1
