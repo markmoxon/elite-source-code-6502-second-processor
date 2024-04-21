@@ -53581,7 +53581,7 @@ ENDMACRO
  STA oswordBlock+6
  STA oswordBlock+7
 
- STA oswordBlock+10     \ Put the address of the transmit buffer into bytes
+ STA oswordBlock+10     \ Put the end address of the transmit buffer into bytes
  STA oswordBlock+11     \ #8-11 of the parameter block
  LDA #LO(endBuffer)
  STA oswordBlock+8
