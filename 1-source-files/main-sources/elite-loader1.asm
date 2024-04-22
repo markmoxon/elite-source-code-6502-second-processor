@@ -1324,7 +1324,7 @@ ENDIF
                         \ --- And replaced by: -------------------------------->
 
 
- EQUS "R.ELTIE"         \ This is short for "*RUN ELTIE"
+ EQUS "R.ELTSA"         \ This is short for "*RUN ELTSA"
  EQUB 13
                         \ --- End of replacement ------------------------------>
 

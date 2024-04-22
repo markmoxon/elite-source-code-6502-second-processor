@@ -204,7 +204,7 @@ ENDMACRO
 
                         \ --- And replaced by: -------------------------------->
 
- EQUS "R.ELTIC"         \ This is short for "*RUN ELTIC"
+ EQUS "R.ELTSI"         \ This is short for "*RUN ELTSI"
  EQUB 13
 
                         \ --- End of replacement ------------------------------>
@@ -228,7 +228,7 @@ ENDMACRO
 
                         \ --- And replaced by: -------------------------------->
 
- EQUS "R.ELTPC"         \ This is short for "*RUN ELTPC"
+ EQUS "R.ELTSP"         \ This is short for "*RUN ELTSP"
  EQUB 13
 
                         \ --- End of replacement ------------------------------>
