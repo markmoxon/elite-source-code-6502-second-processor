@@ -45580,7 +45580,6 @@ ENDMACRO
 
                         \ --- End of replacement ------------------------------>
 
-
  ETOK 176               \ Token 5:      "{lower case}
  ERND 18                \                {justify}
  ETOK 202               \                {single cap}[86-90] IS [140-144].{cr}
