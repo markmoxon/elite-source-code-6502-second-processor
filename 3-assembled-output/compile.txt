@@ -3232,7 +3232,8 @@ WP workspace from  &D00  to &E3C
      1107   98         TYA
      1108   51 05      EOR (&05),Y
      110A   49 75      EOR #&75
-     110C   91 05      STA (&05),Y
+     110C   EA         NOP
+     110D   EA         NOP
      110E   88         DEY
      110F   D0 F4      BNE &1105
      1111   E8         INX
@@ -12794,7 +12795,8 @@ Saving file '3-assembled-output/ELTE.bin'
      5151   86 86      STX &86
      5153   20 2E 52   JSR &522E
      5156   CD 64 10   CMP &1064
-     5159   D0 F8      BNE &5153
+     5159   EA         NOP
+     515A   EA         NOP
      515B   49 A9      EOR #&A9
      515D   AA         TAX
      515E   AD B2 08   LDA &08B2
@@ -17060,7 +17062,8 @@ Saving file '3-assembled-output/ELTG.bin'
      6BF3   E0 A0      CPX #&A0
      6BF5   90 EE      BCC &6BE5
      6BF7   CD 69 10   CMP &1069
-     6BFA   D0 DF      BNE &6BDB
+     6BFA   EA         NOP
+     6BFB   EA         NOP
      6BFC   60         RTS
 .PLUT
      6BFD   AE 91 08   LDX &0891
