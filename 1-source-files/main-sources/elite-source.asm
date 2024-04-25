@@ -34369,6 +34369,26 @@ ENDIF
 
 .WARP
 
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ LDA auto               \ If the docking computer is engaged (auto is non-zero)
+ AND SSPR               \ and we are inside the space station safe zone (SSPR
+ BEQ warp1              \ is non-zero), then this sets A to be non-zero, so if
+                        \ this is not the case, jump to warp1 to skip the
+                        \ following
+
+                        \ If we get here then the docking computer is engaged
+                        \ and we are in the space station safe zone, in which
+                        \ case the fast-forward button docks us instantly
+
+ JMP GOIN               \ Go to the docking bay (i.e. show the ship hangar
+                        \ screen) and return from the subroutine with a tail
+                        \ call
+
+.warp1
+
+                        \ --- End of added code ------------------------------->
+
  LDX JUNK               \ Set X to the total number of junk items in the
                         \ vicinity (e.g. asteroids, escape pods, cargo
                         \ canisters, Shuttles, Transporters and so on)
