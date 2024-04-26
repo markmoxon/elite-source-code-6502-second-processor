@@ -53783,7 +53783,7 @@ ENDMACRO
  JSR TT67               \ Print two newlines
  JSR TT67
 
- LDA #8                 \ Print extended token 8 ("RESET SCORES")
+ LDA #8                 \ Print extended token 8 ("RESET SCORES ")
  JSR PrintToken
 
  LDX netTally           \ Get the current combat score from netTally
@@ -53965,7 +53965,7 @@ ENDMACRO
  ECHR ' '
  EQUB VE
 
- ETWO 'R', 'E'          \ Token 8:    "RESET SCORES"
+ ETWO 'R', 'E'          \ Token 8:    "RESET SCORES "
  ETWO 'S', 'E'
  ECHR 'T'
  ECHR ' '
@@ -53973,6 +53973,7 @@ ENDMACRO
  ECHR 'C'
  ETWO 'O', 'R'
  ETWO 'E', 'S'
+ ECHR ' '
  EQUB VE
 
                         \ --- End of added code ------------------------------->
