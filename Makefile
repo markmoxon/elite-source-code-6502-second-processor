@@ -35,13 +35,8 @@ else
   max-commander=FALSE
 endif
 
-ifeq ($(encrypt), no)
-  unencrypt=-u
-  remove-checksums=TRUE
-else
-  unencrypt=
-  remove-checksums=FALSE
-endif
+unencrypt=-u
+remove-checksums=TRUE
 
 ifeq ($(match), no)
   match-original-binaries=FALSE

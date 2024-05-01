@@ -4238,7 +4238,8 @@ ENDIF
 \       Name: MESS2
 \       Type: Variable
 \   Category: Loader
-\    Summary: The OS command string for changing the disc directory to ELITE
+\    Summary: The OS command string for changing the disc directory to
+\             EliteCmdrs
 \
 \ ******************************************************************************
 
@@ -4246,7 +4247,7 @@ ENDIF
 
                         \ --- Mod: Code added for Econet: --------------------->
 
- EQUS "DIR ELITE"       \ Change to the ELITE folder in the user's main
+ EQUS "DIR EliteCmdrs"  \ Change to the EliteCmdrs folder in the user's main
  EQUB 13                \ directory on the network
 
                         \ --- End of added code ------------------------------->
@@ -15298,6 +15299,13 @@ ENDIF
 
 .LAUN
 
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ JSR TransmitCmdrData   \ Transmit commander data to the scoreboard machine, if
+                        \ configured
+
+                        \ --- End of added code ------------------------------->
+
  LDA #48                \ Call the NOISE routine with A = 48 to make the sound
  JSR NOISE              \ of the ship launching from the station
 
@@ -23217,6 +23225,31 @@ ENDIF
 
 .TT113
 
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+                        \ If we get here then either the transaction was an
+                        \ MCASH and the C flag is clear, or it was a successful
+                        \ LCASH and the C flag is set
+
+ TXA                    \ If both X and Y are zero, jump to cash2 to skip the
+ BNE cash1              \ transmission of data, as our credit balance will not
+ TYA                    \ have changed
+ BEQ cash2
+
+.cash1
+
+ PHP                    \ Store the flags on the stack so we can return them
+                        \ from the subroutine
+
+ JSR TransmitCmdrData   \ Transmit commander data to the scoreboard machine, if
+                        \ configured
+
+ PLP                    \ Restore the flags
+
+.cash2
+
+                        \ --- End of added code ------------------------------->
+
  RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
@@ -30863,6 +30896,13 @@ ENDIF
                         \ time it will either be an asteroid (98.5% chance) or,
                         \ very rarely, a cargo canister (1.5% chance)
 
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ JSR TransmitCmdrData   \ Transmit commander data to the scoreboard machine, if
+                        \ configured
+
+                        \ --- End of added code ------------------------------->
+
  LDA MJ                 \ If we are in witchspace following a mis-jump, skip the
  BNE ytq                \ following by jumping down to MLOOP (via ytq above)
 
@@ -32162,6 +32202,13 @@ ENDIF
  TXS                    \ location for the 6502 stack, so this instruction
                         \ effectively resets the stack
 
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ STX netDeaths          \ Set the death count to -1 so it gets incremented to
+                        \ zero in DEATH2
+
+                        \ --- End of added code ------------------------------->
+
  JSR RESET              \ Call RESET to initialise most of the game variables
 
 IF _EXECUTIVE
@@ -32201,6 +32248,15 @@ ENDIF
  JSR RES2               \ Reset a number of flight variables and workspaces
                         \ and fall through into the entry code for the game
                         \ to restart from the title screen
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ INC netDeaths          \ Increment the death count
+
+ JSR TransmitCmdrData   \ Transmit commander data to the scoreboard machine, if
+                        \ configured
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -33784,6 +33840,15 @@ ENDIF
 
  BPL LOL1               \ Loop back until we have copied all NT% bytes
 
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ LDA #0                 \ Zero scorePort, netTally and netDeaths to reset the
+ STA scorePort          \ scores and stop transmissions to the scoreboard
+ STA netTally
+ STA netDeaths
+
+                        \ --- End of added code ------------------------------->
+
 .LOR
 
  SEC                    \ Set the C flag
@@ -34329,6 +34394,26 @@ ENDIF
 
 .WARP
 
+                        \ --- Mod: Code added for Econet: --------------------->
+
+ LDA auto               \ If the docking computer is engaged (auto is non-zero)
+ AND SSPR               \ and we are inside the space station safe zone (SSPR
+ BEQ warp1              \ is non-zero), then this sets A to be non-zero, so if
+                        \ this is not the case, jump to warp1 to skip the
+                        \ following
+
+                        \ If we get here then the docking computer is engaged
+                        \ and we are in the space station safe zone, in which
+                        \ case the fast-forward button docks us instantly
+
+ JMP GOIN               \ Go to the docking bay (i.e. show the ship hangar
+                        \ screen) and return from the subroutine with a tail
+                        \ call
+
+.warp1
+
+                        \ --- End of added code ------------------------------->
+
  LDX JUNK               \ Set X to the total number of junk items in the
                         \ vicinity (e.g. asteroids, escape pods, cargo
                         \ canisters, Shuttles, Transporters and so on)
@@ -34598,6 +34683,19 @@ ENDIF
 \ ******************************************************************************
 
 .EXNO2
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ INC netTally           \ Increment the kill count in netTally, up to a maximum
+ BNE taly1              \ of 256
+ DEC netTally
+
+.taly1
+
+ JSR TransmitCmdrData   \ Transmit commander data to the scoreboard machine, if
+                        \ configured
+
+                        \ --- End of added code ------------------------------->
 
  INC TALLY              \ Increment the low byte of the kill count in TALLY
 
@@ -35510,6 +35608,19 @@ ENDIF
 
  JSR RDKEY              \ Scan the keyboard for a key press and return the
                         \ internal key number in X (or 0 for no key press)
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+ CPX #&55               \ If "N" is not being pressed, skip to skipNetwork
+ BNE skipNetwork
+
+ JMP GetNetworkDetails  \ Get the network and station numbers for the scoreboard
+                        \ server, returning from the subroutine using a tail
+                        \ call
+
+.skipNetwork
+
+                        \ --- End of added code ------------------------------->
 
  CPX #&51               \ If "S" is not being pressed, skip to DK6
  BNE DK6
@@ -45514,7 +45625,6 @@ ENDMACRO
 
                         \ --- End of replacement ------------------------------>
 
-
  ETOK 176               \ Token 5:      "{lower case}
  ERND 18                \                {justify}
  ETOK 202               \                {single cap}[86-90] IS [140-144].{cr}
@@ -49589,8 +49699,17 @@ ENDIF
 
  JSR mvblock            \ Call mvblock to copy the recursive tokens
 
+                        \ --- Mod: Code removed for Scoreboard: --------------->
+
                         \ And then we copy the &22 pages of ship blueprints from
                         \ F% + &0400 to D%
+
+                        \ --- And replaced by: -------------------------------->
+
+                        \ And then we copy the &28 pages of ship blueprints from
+                        \ F% + &0400 to D%
+
+                        \ --- End of replacement ------------------------------>
 
  LDA #LO(F%)            \ Set V(1 0) = F% + &0400
  STA V
@@ -49602,7 +49721,15 @@ ENDIF
  LDA #HI(D%)
  STA SC+1
 
+                        \ --- Mod: Code removed for Scoreboard: --------------->
+
  LDX #&22               \ Set X = &22 to act as a counter for copying &22 pages
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDX #&28               \ Set X = &28 to act as a counter for copying &28 pages
+
+                        \ --- End of replacement ------------------------------>
 
                         \ Fall through into mvblock to copy the ship blueprints
 
@@ -53255,11 +53382,601 @@ ENDMACRO
  FACE     -169,       55,      -89,         31    \ Face 10
  FACE        0,        0,     -196,         31    \ Face 11
 
- EQUB &A9, &80          \ These bytes appear to be unused
- EQUB &14, &2B
- EQUB &20, &FD
- EQUB &B8, &90
- EQUB &01, &60
+                        \ --- Mod: Code removed for Scoreboard: --------------->
+
+\EQUB &A9, &80          \ These bytes appear to be unused
+\EQUB &14, &2B
+\EQUB &20, &FD
+\EQUB &B8, &90
+\EQUB &01, &60
+
+                        \ --- End of removed code ----------------------------->
+
+\ ******************************************************************************
+\
+\       Name: Econet variables
+\       Type: Workspace
+\   Category: Econet
+\    Summary: Variables used in Elite over Econet
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+.scorePort
+
+ SKIP 1                 \ The Econet port on which to talk to the scoreboard
+                        \ machine
+                        \
+                        \ If this is zero, the network is disabled and no
+                        \ commander data is transmitted
+
+.scoreStation
+
+ SKIP 1                 \ The Econet station number of the scoreboard machine
+
+.scoreNetwork
+
+ SKIP 1                 \ The Econet network number of the scoreboard machine
+
+.netTally
+
+ SKIP 1                 \ Stores a one-point-per-kill combat score for the
+                        \ scoreboard (so all platforms have the same point
+                        \ system)
+
+.netDeaths
+
+ SKIP 1                 \ Counts the number of deaths
+
+.oswordBlock
+
+ SKIP 12                \ The OSWORD block to use for network calls
+
+.transmitBuffer
+
+ SKIP 20                \ A buffer to hold the data we want to transmit to the
+                        \ scoreboard machine in the format:
+                        \
+                        \   * Bytes #0-7 = commander's name, terminated by a
+                        \                  carriage return
+                        \
+                        \   * Byte #8 = commander's legal status
+                        \
+                        \   * Byte #9 = commander's status condition
+                        \               0 = docked, 1 = green
+                        \               2 = yellow, 3 = red
+                        \
+                        \   * Bytes #10-11 = commander's score
+                        \
+                        \   * Bytes #12-15 = commander's credits
+                        \
+                        \   * Byte #16 = machine type
+                        \                0 = BBC Micro SRAM, 1 = Master,
+                        \                2 = 6502SP, 3 = BBC Micro standard
+                        \
+                        \ Score and credits are stored with the low byte first
+                        \ (unlike the way that credits are stored in the game)
+
+.endBuffer
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SendOverEconet
+\       Type: Subroutine
+\   Category: Econet
+\    Summary: Send data over the Econet
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+.SendOverEconet
+
+ LDX #LO(oswordBlock)   \ Set (Y X) to the address of the OSWORD parameter block
+ LDY #HI(oswordBlock)
+
+ JSR OSWORD             \ Call OSWORD with the command number from the stack
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: TransmitCmdrData
+\       Type: Subroutine
+\   Category: Econet
+\    Summary: Fill the transmit buffer with the commander data that we want to
+\             transmit to the scoreboard machine, and then transmit it
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+.TransmitCmdrData
+
+ PHP                    \ Store the flags on the stack
+
+ LDA scorePort          \ If the network is configured then the port will be
+ BNE tran1              \ non-zero, so skip the following to move on to the
+                        \ data transmission
+
+ PLP                    \ Retrieve the flags from the stack
+
+ RTS                    \ Return from the subroutine
+
+.tran1
+                        \ Copy the commander's name from NA% to transmitBuffer+0
+                        \ to transmitBuffer+7
+
+ LDX #7                 \ The commander's name can contain a maximum of 7
+                        \ characters, and is terminated by a carriage return,
+                        \ so set up a counter in X to copy 8 characters from
+                        \ NA% to dataToTransmit
+
+.trcm1
+
+ LDA NA%,X              \ Copy the X-th byte of NA% to the X-th byte of
+ STA transmitBuffer,X   \ transmitBuffer
+
+ DEX                    \ Decrement the loop counter
+
+ BPL trcm1              \ Loop back until we have copied all eight bytes
+
+ LDA FIST               \ Fetch the commander's legal status from FIST
+
+ BEQ trcm2              \ If A = 0 then we are clean, so jump to trcm2 to
+                        \ store this value
+
+ CMP #50                \ Set the C flag if A >= 50, so C is set if we have
+                        \ a legal status of 50+ (i.e. we are a fugitive)
+
+ LDA #0                 \ Set A = 1 + C, so if C is not set (i.e. we have a
+ ADC #1                 \ legal status between 1 and 49) then A is set to 1,
+                        \ and if C is set (i.e. we have a legal status of 50+)
+                        \ then A is set to 2
+
+.trcm2
+
+ STA transmitBuffer+8   \ Store the commander's legal status in transmitBuffer+8
+
+ LDX #0                 \ Set X to condition docked (0)
+
+ LDY QQ12               \ Fetch the docked status from QQ12, and if we are
+ BNE trcm3              \ docked, jump to wearedocked
+
+ INX                    \ Set X to condition green (1)
+
+ LDY JUNK               \ Set Y to the number of junk items in our local bubble
+                        \ of universe (where junk is asteroids, canisters,
+                        \ escape pods and so on)
+
+ LDA FRIN+2,Y           \ The ship slots at FRIN are ordered with the first two
+                        \ slots reserved for the planet and sun/space station,
+                        \ and then any ships, so if the slot at FRIN+2+Y is not
+                        \ empty (i.e. is non-zero), then that means the number
+                        \ of non-asteroids in the vicinity is at least 1
+
+ BEQ trcm3              \ So if X = 0, there are no ships in the vicinity, so
+                        \ jump to trcm3 to set the ship's condition to green
+
+ INX                    \ Set X to condition yellow (2)
+
+ LDY ENERGY             \ Otherwise we have ships in the vicinity, so we load
+                        \ our energy levels into Y
+
+ CPY #128               \ If energy levels >= 128, jump to trcm3
+ BCS trcm3
+
+ INX                    \ Set X to condition red (3)
+
+.trcm3
+
+ STX transmitBuffer+9   \ Store the commander's condition in transmitBuffer+9
+
+ LDA netTally           \ Copy the commander's combat score from netTally to
+ STA transmitBuffer+10  \ transmitBuffer+10
+
+ LDA netDeaths          \ Copy the commander's death count from netDeaths to
+ STA transmitBuffer+11  \ transmitBuffer+11
+
+ LDA CASH               \ Copy the cash levels from CASH(0 1 2 3) to
+ STA transmitBuffer+15  \ transmitBuffer(15 14 13 12)
+ LDA CASH+1
+ STA transmitBuffer+14
+ LDA CASH+2
+ STA transmitBuffer+13
+ LDA CASH+3
+ STA transmitBuffer+12
+
+ LDA #2                 \ Set machine type to 2 (6502SP)
+ STA transmitBuffer+16
+
+                        \ Fall through into TransmitData to transmit the data
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: TransmitData
+\       Type: Subroutine
+\   Category: Econet
+\    Summary: Send the commander data to the scoreboard machine
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+.TransmitData
+
+ LDA #&80               \ Set the control byte in byte #0 of the parameter block
+ STA oswordBlock
+
+ LDA scorePort          \ Set the port number in byte #1 of the parameter block
+ STA oswordBlock+1
+
+ LDA scoreStation       \ Copy the scoreboard machine's Econet station number
+ STA oswordBlock+2      \ from scoreStation to byte #2 of the parameter block
+
+ LDA scoreNetwork       \ Copy the scoreboard machine's Econet network number
+ STA oswordBlock+3      \ from scoreNetwork to byte #3 of the parameter block
+
+ LDA #LO(transmitBuffer)    \ Put the address of the transmit buffer into bytes
+ STA oswordBlock+4          \ #4-7 of the parameter block
+ LDA #HI(transmitBuffer)
+ STA oswordBlock+5
+ LDA #0
+ STA oswordBlock+6
+ STA oswordBlock+7
+
+ STA oswordBlock+10     \ Put the end address of the transmit buffer into bytes
+ STA oswordBlock+11     \ #8-11 of the parameter block
+ LDA #LO(endBuffer)
+ STA oswordBlock+8
+ LDA #HI(endBuffer)
+ STA oswordBlock+9
+
+ LDA #16                \ Call OSWORD with A = 16 to transmit the contents of
+ JSR SendOverEconet     \ the transmit buffer to the scoreboard machine
+
+ PLP                    \ Retrieve the flags from the stack
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: GetNetworkDetails
+\       Type: Subroutine
+\   Category: Econet
+\    Summary: Edit the scoreboard machine's network, station and port numbers,
+\             in that order
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+.GetNetworkDetails
+
+ LDA #8                 \ Clear the top part of the screen, draw a white border,
+ JSR TRADEMODE          \ and set up a printable trading screen with a view type
+                        \ in QQ11 of 8 (Status Mode screen)
+
+ LDA #10                \ Move the text cursor to column 10
+ JSR DOXC
+
+ LDA #5                 \ Print extended token 5 ("NETWORK")
+ JSR PrintToken
+
+ LDA #4                 \ Print extended token 4 (" MENU{crlf}{crlf}")
+ JSR PrintToken
+
+ JSR NLIN4              \ Draw a horizontal line at pixel row 19 to box in the
+                        \ title, and move the text cursor down one line
+
+ LDY #&FF               \ Set maximum number for gnum to 255
+ STY QQ25
+
+ LDA #&60               \ Modify gnum so that errors return rather than jumping
+ STA BAY2               \ to the inventory screen
+
+ LDA #5                 \ Print extended token 5 ("NETWORK")
+ JSR PrintToken
+
+ LDA #3                 \ Print extended token 3 (" NUMBER   ")
+ JSR PrintToken
+
+ LDX scoreNetwork       \ Get the current scoreboard network number from
+                        \ scoreNetwork
+
+ CLC                    \ Print the 8-bit number in X to 3 digits, without a
+ JSR pr2                \ decimal point
+
+ LDA #7                 \ Print extended token 7 ("   ")
+ JSR PrintToken
+
+ JSR prq+3              \ Print a question mark
+
+ JSR TT162              \ Print a space
+
+ JSR gnum               \ Call gnum to get a number from the keyboard
+
+ LDX T1                 \ If no number was entered, skip the following to leave
+ CPX #12                \ this seed alone
+ BEQ gnet1
+
+ STA scoreNetwork       \ Store the network number in scoreNetwork
+
+.gnet1
+
+ JSR TT67               \ Print two newlines
+ JSR TT67
+
+ LDA #1                 \ Print extended token 5 ("STATION")
+ JSR PrintToken
+
+ LDA #3                 \ Print extended token 3 (" NUMBER   ")
+ JSR PrintToken
+
+ LDX scoreStation       \ Get the current scoreboard station number from the low
+                        \ byte of scoreStation
+
+ CLC                    \ Print the 8-bit number in X to 3 digits, without a
+ JSR pr2                \ decimal point
+
+ LDA #7                 \ Print extended token 7 ("   ")
+ JSR PrintToken
+
+ JSR prq+3              \ Print a question mark
+
+ JSR TT162              \ Print a space
+
+ JSR gnum               \ Call gnum to get a number from the keyboard
+
+ LDX T1                 \ If no number was entered, skip the following to leave
+ CPX #12                \ this seed alone
+ BEQ gnet2
+
+ STA scoreStation       \ Store the station number in the low byte of
+                        \ scoreStation
+
+.gnet2
+
+ JSR TT67               \ Print two newlines
+ JSR TT67
+
+ LDA #2                 \ Print extended token 2 ("PORT")
+ JSR PrintToken
+
+ LDA #3                 \ Print extended token 3 (" NUMBER   ")
+ JSR PrintToken
+
+ LDA #7                 \ Print extended token 7 ("   ")
+ JSR PrintToken
+
+ LDX scorePort          \ Get the current scoreboard port number from scorePort
+
+ CLC                    \ Print the 8-bit number in X to 3 digits, without a
+ JSR pr2                \ decimal point
+
+ LDA #7                 \ Print extended token 7 ("   ")
+ JSR PrintToken
+
+ JSR prq+3              \ Print a question mark
+
+ JSR TT162              \ Print a space
+
+ JSR gnum               \ Call gnum to get a number from the keyboard
+
+ LDX T1                 \ If no number was entered, skip the following to leave
+ CPX #12                \ this seed alone
+ BEQ gnet3
+                        
+ STA scorePort          \ Store the port number in scorePort
+
+.gnet3
+
+ JSR TT67               \ Print two newlines
+ JSR TT67
+
+ LDA #8                 \ Print extended token 8 ("RESET SCORES ")
+ JSR PrintToken
+
+ LDX netTally           \ Get the current combat score from netTally
+
+ CLC                    \ Call pr2 to print the score level as a 3-digit
+ JSR pr2                \ number without a decimal point (by clearing the C
+                        \ flag)
+
+ JSR TT162              \ Print a space
+
+ LDX netDeaths          \ Get the current death count from netDeaths
+
+ CLC                    \ Call pr2 to print the death count as a 3-digit
+ JSR pr2                \ number without a decimal point (by clearing the C
+                        \ flag)
+
+ LDA #7                 \ Print extended token 7 ("   ")
+ JSR PrintToken
+
+ JSR TT214              \ Ask a question with a "Y/N?" prompt
+
+ BCC gnet4              \ If the answer was not "yes", jump to gnet4
+
+ LDA #0                 \ The answer was yes, so reset the combat score and
+ STA netTally           \ death count
+ STA netDeaths
+
+ STA CASH               \ And set the credit level to 100 Cr
+ STA CASH+1
+ LDA #&03
+ STA CASH+2
+ LDA #&E8
+ STA CASH+3
+
+.gnet4
+
+ LDA #&A9               \ Revert the modification to gnum
+ STA BAY2
+
+ JSR TransmitCmdrData   \ Fill the transmit buffer with the commander data that
+                        \ we want to transmit to the scoreboard machine, and
+                        \ then transmit it
+
+ JSR TT67               \ Print two newlines
+ JSR TT67
+
+ LDA #6                 \ Print extended token 6 ("{all caps}OK")
+ JSR PrintToken
+
+ LDY #100               \ Wait for 100/50 of a second (2 seconds)
+ JSR DELAY
+
+ LDX #&FF               \ Set the stack pointer to &01FF, which is the standard
+ TXS                    \ location for the 6502 stack, so this instruction
+                        \ effectively resets the stack
+
+ LDA #f8                \ Jump into the main loop at FRCE, setting the key
+ JMP FRCE               \ "pressed" to red key f8 (so we show the Status Mode
+                        \ screen)
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: PrintToken
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Print an extended recursive token from the EconetToken table
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The recursive token to be printed, in the range 0-255
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   A                   A is preserved
+\
+\   Y                   Y is preserved
+\
+\   V(1 0)              V(1 0) is preserved
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+.PrintToken
+
+ PHA                    \ Store A on the stack, so we can retrieve it later
+
+ TAX                    \ Copy the token number from A into X
+
+ TYA                    \ Store Y on the stack
+ PHA
+
+ LDA V                  \ Store V(1 0) on the stack
+ PHA
+ LDA V+1
+ PHA
+
+ JSR MT19               \ Call MT19 to capitalise the next letter (i.e. set
+                        \ Sentence Case for this word only)
+
+ LDA #LO(EconetToken)   \ Set V to the low byte of EconetToken
+ STA V
+
+ LDA #HI(EconetToken)   \ Set A to the high byte of EconetToken
+
+ JMP DTEN               \ Call DTEN to print token number X from the
+                        \ UniverseToken table and restore the values of A, Y and
+                        \ V(1 0) from the stack, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: EconetToken
+\       Type: Variable
+\   Category: Econet
+\    Summary: Extended recursive token table for the Econet configuration page
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for Scoreboard: ----------------->
+
+.EconetToken
+
+ EQUB VE                \ Token 0:      ""
+                        \
+                        \ Encoded as:   ""
+
+ ETWO 'S', 'T'          \ Token 1:    "STATION"
+ ETWO 'A', 'T'
+ ECHR 'I'
+ ETWO 'O', 'N'
+ EQUB VE
+
+ ECHR 'P'               \ Token 2:    "PORT"
+ ETWO 'O', 'R'
+ ECHR 'T'
+ EQUB VE
+
+ ECHR ' '               \ Token 3:    " NUMBER   "
+ ETWO 'N', 'U'
+ ECHR 'M'
+ ECHR 'B'
+ ETWO 'E', 'R'
+ ECHR ' '
+ ECHR ' '
+ ECHR ' '
+ EQUB VE
+
+ ECHR ' '               \ Token 4:    " MENU{crlf}{crlf}"
+ ECHR 'M'
+ ECHR 'E'
+ ETWO 'N', 'U'
+ ETWO '-', '-'
+ ETWO '-', '-'
+ EQUB VE
+
+ ECHR 'N'               \ Token 5:    "NETWORK"
+ ETWO 'E', 'T'
+ ECHR 'W'
+ ETWO 'O', 'R'
+ ECHR 'K'
+ EQUB VE
+
+ EJMP 1                 \ Token 6:    "{all caps}OK"
+ ECHR 'O'
+ ECHR 'K'
+ EQUB VE
+
+ ECHR ' '               \ Token 7:    "   "
+ ECHR ' '
+ ECHR ' '
+ EQUB VE
+
+ ETWO 'R', 'E'          \ Token 8:    "RESET SCORES "
+ ETWO 'S', 'E'
+ ECHR 'T'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'C'
+ ETWO 'O', 'R'
+ ETWO 'E', 'S'
+ ECHR ' '
+ EQUB VE
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
