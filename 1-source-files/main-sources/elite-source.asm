@@ -53478,12 +53478,15 @@ ENDMACRO
                         \                  carriage return
                         \
                         \   * Byte #8 = commander's legal status
+                        \               0 = clean, 1 = offender, 2 = fugitive
                         \
                         \   * Byte #9 = commander's status condition
                         \               0 = docked, 1 = green
                         \               2 = yellow, 3 = red
                         \
-                        \   * Bytes #10-11 = commander's score
+                        \   * Byte #10 = commander's score
+                        \
+                        \   * Byte #11 = commander's death count
                         \
                         \   * Bytes #12-15 = commander's credits
                         \
@@ -53491,7 +53494,7 @@ ENDMACRO
                         \                0 = BBC Micro SRAM, 1 = Master,
                         \                2 = 6502SP, 3 = BBC Micro standard
                         \
-                        \ Score and credits are stored with the low byte first
+                        \ Credits are transmitted with the low byte first
                         \ (unlike the way that credits are stored in the game)
 
 .endBuffer
