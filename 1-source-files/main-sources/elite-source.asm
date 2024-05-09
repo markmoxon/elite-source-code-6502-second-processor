@@ -6030,8 +6030,8 @@ ENDIF
                         \ docking computer manoeuvring
 
  LDA auto               \ If auto is zero, then the docking computer is not
- BEQ MA23               \ activated, so jump to MA33 to skip the
-                        \ docking computer manoeuvring
+ BEQ MA23               \ activated, so jump to MA23 to skip to the next
+                        \ section
 
  LDA #123               \ Set A = 123 and jump down to MA34 to print token 123
  BNE MA34               \ ("DOCKING COMPUTERS ON") as an in-flight message
@@ -19459,8 +19459,8 @@ ENDIF
  JSR spc                \ 67 + A, followed by a space, so:
                         \
                         \   A = 0 prints token 67 ("LARGE") and a space
-                        \   A = 1 prints token 67 ("FIERCE") and a space
-                        \   A = 2 prints token 67 ("SMALL") and a space
+                        \   A = 1 prints token 68 ("FIERCE") and a space
+                        \   A = 2 prints token 69 ("SMALL") and a space
 
 .TT205
 
@@ -19514,14 +19514,14 @@ ENDIF
 
  ADC #242               \ A = 0 to 7, so print recursive token 82 + A, so:
  JSR TT27               \
-                        \   A = 0 prints token 76 ("RODENT")
-                        \   A = 1 prints token 76 ("FROG")
-                        \   A = 2 prints token 76 ("LIZARD")
-                        \   A = 3 prints token 76 ("LOBSTER")
-                        \   A = 4 prints token 76 ("BIRD")
-                        \   A = 5 prints token 76 ("HUMANOID")
-                        \   A = 6 prints token 76 ("FELINE")
-                        \   A = 7 prints token 76 ("INSECT")
+                        \   A = 0 prints token 82 ("RODENT")
+                        \   A = 1 prints token 83 ("FROG")
+                        \   A = 2 prints token 84 ("LIZARD")
+                        \   A = 3 prints token 85 ("LOBSTER")
+                        \   A = 4 prints token 86 ("BIRD")
+                        \   A = 5 prints token 87 ("HUMANOID")
+                        \   A = 6 prints token 88 ("FELINE")
+                        \   A = 7 prints token 89 ("INSECT")
 
 .TT76
 
@@ -20417,9 +20417,10 @@ ENDIF
  SEC                    \ Subtract ASCII "0" from the key pressed, to leave the
  SBC #'0'               \ numeric value of the key in A (if it was a number key)
 
- BCC OUT                \ If A < 0, jump to OUT to return from the subroutine
-                        \ with a result of 0, as the key pressed was not a
-                        \ number or letter and is less than ASCII "0"
+ BCC OUT                \ If A < 0, jump to OUT to load the current number and
+                        \ return from the subroutine, as the key pressed was
+                        \ RETURN (or some other ncharacter with a value less
+                        \ than ASCII "0")
 
  CMP #10                \ If A >= 10, jump to BAY2 to display the Inventory
  BCS BAY2               \ screen, as the key pressed was a letter or other
@@ -22151,6 +22152,12 @@ ENDIF
 \ Arguments:
 \
 \   A                   The text token to be printed
+\
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   prq+3               Print a question mark
 \
 \ ******************************************************************************
 
@@ -31126,6 +31133,35 @@ ENDIF
                         \ passed through the BCS above), so A is now one of the
                         \ lone bounty hunter ships, i.e. Cobra Mk III (pirate),
                         \ Asp Mk II, Python (pirate) or Fer-de-lance
+                        \
+                        \ Interestingly, this logic means that the Moray, which
+                        \ is the ship after the Fer-de-lance in the XX21 table,
+                        \ never spawns, as the above logic chooses a blueprint
+                        \ number in the range CYL2 to CYL2+3 (i.e. 24 to 27),
+                        \ and the Moray is blueprint 28
+                        \
+                        \ No other code spawns the ship with blueprint 28, so
+                        \ this means the Moray is never seen in Elite
+                        \
+                        \ This is presumably a bug, which could be very easily
+                        \ fixed by inserting one of the following instructions
+                        \ before the ADC #CYL2 instruction above:
+                        \
+                        \   * SEC would change the range to 25 to 28, which
+                        \     would cover the Asp Mk II, Python (pirate),
+                        \     Fer-de-lance and Moray
+                        \
+                        \   * LSR A would set the C flag to a random number to
+                        \     give a range of 24 to 28, which would cover the
+                        \     Cobra Mk III (pirate), Asp Mk II, Python (pirate),
+                        \     Fer-de-lance and Moray
+                        \
+                        \ It's hard to know what the authors' original intent
+                        \ was, but the Cobra Mk III (pirate) can already be
+                        \ spawned as part of a group of pirates (see mt1 below),
+                        \ so I suspect the first fix might be the correct one,
+                        \ as then there is no overlap between pirates and bounty
+                        \ hunters
 
  TAY                    \ Copy the new ship type to Y
 
