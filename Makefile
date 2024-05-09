@@ -53,14 +53,17 @@ ifeq ($(variant), source-disc)
   variant-number=1
   folder=/source-disc
   suffix=-from-source-disc
+  boot=-boot ELITE
 else ifeq ($(variant), executive)
   variant-number=3
   folder=/executive
   suffix=-executive
+  boot=-boot ELITE
 else
   variant-number=2
   folder=/sng45
   suffix=-sng45
+  boot=-opt 2
 endif
 
 .PHONY:all
@@ -77,7 +80,7 @@ all:
 	$(BEEBASM) -i 1-source-files/main-sources/elite-loader2.asm -v >> 3-assembled-output/compile.txt
 	$(BEEBASM) -i 1-source-files/main-sources/elite-readme.asm -v >> 3-assembled-output/compile.txt
 	$(PYTHON) 2-build-files/elite-checksum.py $(unencrypt) -rel$(variant-number)
-	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp$(suffix).ssd -boot ELITE -title "E L I T E"
+	$(BEEBASM) -i 1-source-files/main-sources/elite-disc.asm -do 5-compiled-game-discs/elite-6502sp$(suffix).ssd $(boot) -title "E L I T E"
 ifneq ($(verify), no)
 	@$(PYTHON) 2-build-files/crc32.py 4-reference-binaries$(folder) 3-assembled-output
 endif
