@@ -40036,8 +40036,11 @@ ENDIF
 
  JSR LL30               \ Draw the old laser line to remove it from the screen
 
- LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
- JSR DOCOL              \ switch to colour 3, which is cyan in the space view
+ LDX TYPE               \ Set A to the ship colour for this type, from the
+ LDA shpcol,X           \ relevant entry in the shpcol table
+
+ JSR DOCOL              \ Send a #SETCOL command to the I/O processor to switch
+                        \ back to the ship's colour
 
 .noLaserLine
 
@@ -40191,8 +40194,11 @@ ENDIF
 
  JSR LL30               \ Draw the new laser line
 
- LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
- JSR DOCOL              \ switch to colour 3, which is cyan in the space view
+ LDX TYPE               \ Set A to the ship colour for this type, from the
+ LDA shpcol,X           \ relevant entry in the shpcol table
+
+ JSR DOCOL              \ Send a #SETCOL command to the I/O processor to switch
+                        \ back to the ship's colour
 
                         \ --- End of replacement ------------------------------>
 
@@ -43066,15 +43072,27 @@ ENDIF
                         \ add them together to get the result we're after, and
                         \ then set the sign afterwards
 
+                        \ --- Mod: Code removed for flicker-free ships: ------->
+
+\LDA K                  \ We now do the following sum:
+\CLC                    \
+\ADC K2                 \   (A y_hi y_lo -) = K(3 2 1 0) + K2(3 2 1 0)
+\                       \
+\                       \ starting with the low bytes (which we don't keep)
+\                       \
+\                       \ The CLC has no effect because MULT3 clears the C
+\                       \ flag, so this instruction could be removed (as it is
+\                       \ in the cassette version, for example)
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA K                  \ We now do the following sum:
- CLC                    \
- ADC K2                 \   (A y_hi y_lo -) = K(3 2 1 0) + K2(3 2 1 0)
+ ADC K2                 \
+                        \   (A y_hi y_lo -) = K(3 2 1 0) + K2(3 2 1 0)
                         \
                         \ starting with the low bytes (which we don't keep)
-                        \
-                        \ The CLC has no effect because MULT3 clears the C
-                        \ flag, so this instruction could be removed (as it is
-                        \ in the cassette version, for example)
+
+                        \ --- End of replacement ------------------------------>
 
  LDA K+1                \ We then do the middle bytes, which go into y_lo
  ADC K2+1
