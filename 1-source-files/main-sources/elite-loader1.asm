@@ -1323,8 +1323,17 @@ ENDIF
 \EQUB 13
                         \ --- And replaced by: -------------------------------->
 
+IF _SNG45
+
  EQUS "R.ELTSA"         \ This is short for "*RUN ELTSA"
  EQUB 13
+
+ELIF _EXECUTIVE
+
+ EQUS "R.ELTXA"         \ This is short for "*RUN ELTXA"
+ EQUB 13
+
+ENDIF
                         \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************

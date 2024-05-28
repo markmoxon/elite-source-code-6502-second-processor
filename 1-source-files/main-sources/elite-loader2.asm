@@ -203,8 +203,17 @@ ENDMACRO
 
                         \ --- And replaced by: -------------------------------->
 
+IF _SNG45
+
  EQUS "R.ELTSI"         \ This is short for "*RUN ELTSI"
  EQUB 13
+
+ELIF _EXECUTIVE
+
+ EQUS "R.ELTXI"         \ This is short for "*RUN ELTXI"
+ EQUB 13
+
+ENDIF
 
                         \ --- End of replacement ------------------------------>
 
@@ -227,8 +236,17 @@ ENDMACRO
 
                         \ --- And replaced by: -------------------------------->
 
+IF _SNG45
+
  EQUS "R.ELTSP"         \ This is short for "*RUN ELTSP"
  EQUB 13
+
+ELIF _EXECUTIVE
+
+ EQUS "R.ELTXP"         \ This is short for "*RUN ELTXP"
+ EQUB 13
+
+ENDIF
 
                         \ --- End of replacement ------------------------------>
 
