@@ -31440,7 +31440,7 @@ ENDIF
  AND #3                 \ Set A = random number in the range 0-3, which we
                         \ will now use to determine the type of ship
 
-                        \ --- Mod: Code added for Compendium: ----------------->
+                        \ --- Mod: Code added for Moray bug fix: -------------->
 
  LSR A                  \ Set the C flag randomly, so we sometimes spawn a Moray
                         \ (see below)
@@ -35452,10 +35452,22 @@ ENDIF
                         \ button is pressed, otherwise it is set, so AND'ing
                         \ the value of IRB with %10000 extracts this bit
 
+                        \ --- Mod: Code removed for joystick fire button: ----->
+
+\EOR #%00010000         \ Flip bit 4 so that it's set if the fire button has
+\STA KY7                \ been pressed, and store the result in the keyboard
+\                       \ logger at location KY7, which is also where the A key
+\                       \ (fire lasers) key is logged
+
+                        \ --- And replaced by: -------------------------------->
+
  EOR #%00010000         \ Flip bit 4 so that it's set if the fire button has
- STA KY7                \ been pressed, and store the result in the keyboard
-                        \ logger at location KY7, which is also where the A key
-                        \ (fire lasers) key is logged
+ ORA KTRAN+7            \ been pressed, apply the key press state for the "A"
+ STA KY7                \ key from the key logger buffer, and store the result
+                        \ in the keyboard logger at location KY7, which is also
+                        \ where the A key (fire lasers) key is logged
+
+                        \ --- End of replacement ------------------------------>
 
  LDX #1                 \ Call DKS2 to fetch the value of ADC channel 1 (the
  JSR DKS2               \ joystick X value) into (A X), and OR A with 1. This
