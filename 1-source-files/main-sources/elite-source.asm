@@ -34899,7 +34899,7 @@ ENDIF
  JSR OSWORD             \ whether the key in byte #2 of the parameter block is
                         \ being pressed
 
- LDA DKS4pars+2         \ Fetch the result from byte#2 of the parameter block,
+ LDA DKS4pars+2         \ Fetch the result from byte #2 of the parameter block,
                         \ which will have bit 7 set if the key is being pressed
 
  RTS                    \ Return from the subroutine
