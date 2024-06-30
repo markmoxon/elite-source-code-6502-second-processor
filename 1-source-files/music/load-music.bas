@@ -290,8 +290,8 @@ P%=&400F
 .platform       EQUB 64
 .addrDNOIZ      EQUW &3DFE
 .addrplay1      EQUW &3DB1+1
-.addrDELAY      EQUW &3DEF
-.addrSFX        EQUW &3936		\ Set to SFX in elite-z
+.addrDELAY      EQUW &3DEE+1    \ +1 to avoid BeebAsm "DEF" bug
+.addrSFX        EQUW &3936      \ Set to SFX in elite-z
 .end
 ]
 !&80=&4000 : CALL SRLOAD : REM Load ROM image into the correct bank in I/O
