@@ -150,7 +150,14 @@ if Encrypt:
 
 # Write output file for P.CODE
 
+# Modified for Compendium
+editor_block = bytearray()
+editor_file = open("3-assembled-output/COMPENDIUM.bin", "rb")
+editor_block.extend(editor_file.read())
+editor_file.close()
+
 output_file = open("3-assembled-output/P.CODE.bin", "wb")
+output_file.write(editor_block)
 output_file.write(data_block)
 output_file.close()
 

@@ -3066,6 +3066,37 @@ WP workspace from  &D00  to &E3C
      9000
 .Y2VB
      9100
+.musicBuff
+     0E3C   03
+     0E3D   02
+     0E3E   00
+.StopMusic
+     0E3F   A2 3C      LDX #&3C
+     0E41   A0 0E      LDY #&0E
+     0E43   A9 FA      LDA #&FA
+     0E45   4C F1 FF   JMP &FFF1
+.PlayMusic
+     0E48   8D 3E 0E   STA &0E3E
+     0E4B   A2 3C      LDX #&3C
+     0E4D   A0 0E      LDY #&0E
+     0E4F   A9 FB      LDA #&FB
+     0E51   4C F1 FF   JMP &FFF1
+.SetMusicStatus
+     0E54   8D 3E 0E   STA &0E3E
+     0E57   A2 3C      LDX #&3C
+     0E59   A0 0E      LDY #&0E
+     0E5B   A9 FC      LDA #&FC
+     0E5D   4C F1 FF   JMP &FFF1
+.ProcessOptions
+     0E60   DA         PHX
+     0E61   8E 3E 0E   STX &0E3E
+     0E64   A2 3C      LDX #&3C
+     0E66   A0 0E      LDY #&0E
+     0E68   A9 FD      LDA #&FD
+     0E6A   20 F1 FF   JSR &FFF1
+     0E6D   FA         PLX
+     0E6E   60         RTS
+Saving file '3-assembled-output/COMPENDIUM.bin'
 .MOS
      1000
 .COMC
@@ -3230,7 +3261,7 @@ WP workspace from  &D00  to &E3C
      10F3   D0 EF      BNE &10E4
      10F5   4C 7E 11   JMP &117E
 .DOENTRY
-     10F8   20 D0 5A   JSR &5AD0
+     10F8   20 3F 0E   JSR &0E3F
      10FB   20 A9 4C   JSR &4CA9
      10FE   20 3E 2D   JSR &2D3E
      1101   64 7C      STZ &7C
@@ -3407,7 +3438,7 @@ WP workspace from  &D00  to &E3C
      1258   F0 08      BEQ &1262
      125A   A9 00      LDA #&00
      125C   8D 8B 08   STA &088B
-     125F   20 D0 5A   JSR &5AD0
+     125F   20 3F 0E   JSR &0E3F
 .MA78
      1262   AD 4A 08   LDA &084A
      1265   2D D2 08   AND &08D2
@@ -3431,7 +3462,7 @@ WP workspace from  &D00  to &E3C
      128F   2D D0 08   AND &08D0
      1292   F0 06      BEQ &129A
      1294   8D 8B 08   STA &088B
-     1297   20 E5 5A   JSR &5AE5
+     1297   20 54 0E   JSR &0E54
 .MA68
      129A   A9 00      LDA #&00
      129C   85 43      STA &43
@@ -3573,7 +3604,7 @@ WP workspace from  &D00  to &E3C
      13A7   C9 50      CMP #&50
      13A9   90 06      BCC &13B1
 .GOIN
-     13AB   20 D0 5A   JSR &5AD0
+     13AB   20 3F 0E   JSR &0E3F
      13AE   4C F8 10   JMP &10F8
 .MA62
      13B1   A5 7C      LDA &7C
@@ -12746,9 +12777,9 @@ Saving file '3-assembled-output/ELTE.bin'
      50EA   A9 03      LDA #&03
      50EC   20 DB 33   JSR &33DB
      50EF   A9 00      LDA #&00
-     50F1   20 D9 5A   JSR &5AD9
+     50F1   20 48 0E   JSR &0E48
      50F4   A9 FF      LDA #&FF
-     50F6   20 E5 5A   JSR &5AE5
+     50F6   20 54 0E   JSR &0E54
      50F9   A2 03      LDX #&03
      50FB   20 74 54   JSR &5474
      50FE   A2 0B      LDX #&0B
@@ -12768,7 +12799,7 @@ Saving file '3-assembled-output/ELTE.bin'
      511C   A9 07      LDA #&07
      511E   A2 19      LDX #&19
      5120   20 80 51   JSR &5180
-     5123   20 D0 5A   JSR &5AD0
+     5123   20 3F 0E   JSR &0E3F
      5126   20 28 4B   JSR &4B28
      5129   20 87 3A   JSR &3A87
      512C   20 F1 3B   JSR &3BF1
@@ -13062,7 +13093,7 @@ Saving file '3-assembled-output/ELTE.bin'
 .retry
      535C   20 F9 57   JSR &57F9
 .SVE
-     535F   20 D0 5A   JSR &5AD0
+     535F   20 3F 0E   JSR &0E3F
      5362   20 BF 52   JSR &52BF
      5365   BA         TSX
      5366   8E 42 53   STX &5342
@@ -13624,7 +13655,7 @@ Saving file '3-assembled-output/ELTE.bin'
      5797   8A         TXA
      5798   20 E3 81   JSR &81E3
 .DK7
-     579B   20 F1 5A   JSR &5AF1
+     579B   20 60 0E   JSR &0E60
      579E   E0 70      CPX #&70
      57A0   D0 03      BNE &57A5
      57A2   4C E1 50   JMP &50E1
@@ -14176,36 +14207,6 @@ Execute at &1000
 Reload at &4B34 
 S.ELTF &4B34  &5ACD  &1000  &4B34 
 Saving file '3-assembled-output/ELTF.bin'
-.musicBuff
-     5ACD   03
-     5ACE   02
-     5ACF   00
-.StopMusic
-     5AD0   A2 CD      LDX #&CD
-     5AD2   A0 5A      LDY #&5A
-     5AD4   A9 FA      LDA #&FA
-     5AD6   4C F1 FF   JMP &FFF1
-.PlayMusic
-     5AD9   8D CF 5A   STA &5ACF
-     5ADC   A2 CD      LDX #&CD
-     5ADE   A0 5A      LDY #&5A
-     5AE0   A9 FB      LDA #&FB
-     5AE2   4C F1 FF   JMP &FFF1
-.SetMusicStatus
-     5AE5   8D CF 5A   STA &5ACF
-     5AE8   A2 CD      LDX #&CD
-     5AEA   A0 5A      LDY #&5A
-     5AEC   A9 FC      LDA #&FC
-     5AEE   4C F1 FF   JMP &FFF1
-.ProcessOptions
-     5AF1   DA         PHX
-     5AF2   8E CF 5A   STX &5ACF
-     5AF5   A2 CD      LDX #&CD
-     5AF7   A0 5A      LDY #&5A
-     5AF9   A9 FD      LDA #&FD
-     5AFB   20 F1 FF   JSR &FFF1
-     5AFE   FA         PLX
-     5AFF   60         RTS
 .log
      5B00   02
      5B01   00
@@ -28089,9 +28090,9 @@ End macro ECHR
      81E2   60         RTS
 .SetSoundOption
      81E3   DA         PHX
-     81E4   8D CF 5A   STA &5ACF
-     81E7   A2 CD      LDX #&CD
-     81E9   A0 5A      LDY #&5A
+     81E4   8D 3E 0E   STA &0E3E
+     81E7   A2 3C      LDX #&3C
+     81E9   A0 0E      LDY #&0E
      81EB   A9 FE      LDA #&FE
      81ED   20 F1 FF   JSR &FFF1
      81F0   FA         PLX
@@ -39889,16 +39890,16 @@ End macro FACE
      F10A   01
      F10B   60
 .RestartSync
-     F10C   9C CF 5A   STZ &5ACF
-     F10F   A2 CD      LDX #&CD
-     F111   A0 5A      LDY #&5A
+     F10C   9C 3E 0E   STZ &0E3E
+     F10F   A2 3C      LDX #&3C
+     F111   A0 0E      LDY #&0E
      F113   A9 FF      LDA #&FF
      F115   4C F1 FF   JMP &FFF1
 .WaitForSync
      F118   A9 01      LDA #&01
-     F11A   8D CF 5A   STA &5ACF
-     F11D   A2 CD      LDX #&CD
-     F11F   A0 5A      LDY #&5A
+     F11A   8D 3E 0E   STA &0E3E
+     F11D   A2 3C      LDX #&3C
+     F11F   A0 0E      LDY #&0E
      F121   A9 FF      LDA #&FF
      F123   4C F1 FF   JMP &FFF1
 .EraseRestOfPlanet

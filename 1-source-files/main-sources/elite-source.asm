@@ -3674,6 +3674,146 @@ ENDIF
                         \ set of character lines in the scroll text (as
                         \ projected screen coordinates) so they can be erased
 
+                        \ --- Mod: Code added for Compendium: ----------------->
+
+ ORG &0E3C
+
+\ ******************************************************************************
+\
+\       Name: musicBuff
+\       Type: Variable
+\   Category: Universe editor
+\    Summary: Buffer for music OSWORD calls
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.musicBuff
+
+ EQUB 3                 \ The number of bytes to transmit with this command
+
+ EQUB 2                 \ The number of bytes to receive with this command
+
+ EQUB 0                 \ The parameter to send
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: StopMusic
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Stop any music that is currently playing
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.StopMusic
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #250               \ Set A = 250 for the StopMusic OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to
+                        \ stop the music, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: PlayMusic
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Send a music command to the I/O Processor
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.PlayMusic
+
+ STA musicBuff+2        \ Store the parameter to send in the musicBuff block
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #251               \ Set A = 251 for the PlayMusic OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to
+                        \ play the music, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetMusicStatus
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Update the music status flag in the I/O Processor
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.SetMusicStatus
+
+ STA musicBuff+2        \ Store the parameter to send in the musicBuff block
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #252               \ Set A = 252 for the PlayMusic OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to
+                        \ set the status, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ProcessOptions
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Process music-related options in the I/O Processor
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for music: ---------------------->
+
+.ProcessOptions
+
+ PHX                    \ Store the value of X on the stack
+
+ STX musicBuff+2        \ Store the parameter to send in the musicBuff block
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #253               \ Set A = 253 for the ProcessOptions OSWORD call
+
+ JSR OSWORD             \ Send an OSWORD command to the I/O processor to
+                        \ process the music-related option keys
+
+ PLX                    \ Retrieve the value of X from the stack
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+ SKIPTO &1000
+
+ SAVE "3-assembled-output/COMPENDIUM.bin", &0E3C, &1000, &0E3C
+
+                        \ --- End of added code ------------------------------->
+
+
+
 \ ******************************************************************************
 \
 \ ELITE A FILE
@@ -37149,134 +37289,6 @@ ENDMACRO
  CODE_G% = P%
 
  LOAD_G% = LOAD% + P% - CODE%
-
-\ ******************************************************************************
-\
-\       Name: musicBuff
-\       Type: Variable
-\   Category: Universe editor
-\    Summary: Buffer for music OSWORD calls
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for music: ---------------------->
-
-.musicBuff
-
- EQUB 3                 \ The number of bytes to transmit with this command
-
- EQUB 2                 \ The number of bytes to receive with this command
-
- EQUB 0                 \ The parameter to send
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: StopMusic
-\       Type: Subroutine
-\   Category: Music
-\    Summary: Stop any music that is currently playing
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for music: ---------------------->
-
-.StopMusic
-
- LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
- LDY #HI(musicBuff)     \ block
-
- LDA #250               \ Set A = 250 for the StopMusic OSWORD call
-
- JMP OSWORD             \ Send an OSWORD command to the I/O processor to
-                        \ stop the music, returning from the subroutine
-                        \ using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: PlayMusic
-\       Type: Subroutine
-\   Category: Music
-\    Summary: Send a music command to the I/O Processor
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for music: ---------------------->
-
-.PlayMusic
-
- STA musicBuff+2        \ Store the parameter to send in the musicBuff block
-
- LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
- LDY #HI(musicBuff)     \ block
-
- LDA #251               \ Set A = 251 for the PlayMusic OSWORD call
-
- JMP OSWORD             \ Send an OSWORD command to the I/O processor to
-                        \ play the music, returning from the subroutine
-                        \ using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: SetMusicStatus
-\       Type: Subroutine
-\   Category: Music
-\    Summary: Update the music status flag in the I/O Processor
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for music: ---------------------->
-
-.SetMusicStatus
-
- STA musicBuff+2        \ Store the parameter to send in the musicBuff block
-
- LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
- LDY #HI(musicBuff)     \ block
-
- LDA #252               \ Set A = 252 for the PlayMusic OSWORD call
-
- JMP OSWORD             \ Send an OSWORD command to the I/O processor to
-                        \ set the status, returning from the subroutine
-                        \ using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: ProcessOptions
-\       Type: Subroutine
-\   Category: Music
-\    Summary: Process music-related options in the I/O Processor
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for music: ---------------------->
-
-.ProcessOptions
-
- PHX                    \ Store the value of X on the stack
-
- STX musicBuff+2        \ Store the parameter to send in the musicBuff block
-
- LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
- LDY #HI(musicBuff)     \ block
-
- LDA #253               \ Set A = 253 for the ProcessOptions OSWORD call
-
- JSR OSWORD             \ Send an OSWORD command to the I/O processor to
-                        \ process the music-related option keys
-
- PLX                    \ Retrieve the value of X from the stack
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
 
                         \ --- Mod: Code removed for Compendium: --------------->
 
