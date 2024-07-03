@@ -3132,7 +3132,21 @@ ENDIF
                         \
                         \   * &FF = fitted
 
- SKIP 4                 \ These bytes appear to be unused
+                        \ --- Mod: Code removed for Trumbles: ----------------->
+
+\SKIP 4                 \ These bytes appear to be unused
+
+                        \ --- And replaced by: -------------------------------->
+
+ SKIP 1                 \ This byte appears to be unused
+
+.TRIBBLE
+
+ SKIP 2                 \ The number of Trumbles in the cargo hold
+
+ SKIP 1                 \ This byte appears to be unused
+
+                        \ --- End of replacement ------------------------------>
 
 .NOMSL
 
@@ -3484,9 +3498,26 @@ ENDIF
 
  SKIP 1                 \ The y-coordinate of the tip of the laser line
 
-.XX24
+                        \ --- Mod: Code removed for docking fee: -------------->
 
- SKIP 1                 \ This byte appears to be unused
+\.XX24
+\
+\SKIP 1                 \ This byte appears to be unused
+
+                        \ --- And replaced by: -------------------------------->
+
+.chargeDockingFee
+
+ SKIP 1                 \ Records whether we have been charged a docking fee, so
+                        \ we don't get charged twice:
+                        \
+                        \   * 0 = we have not been charged a docking fee
+                        \
+                        \   * Non-zero = we have been charged a docking fee
+                        \
+                        \ The docking fee is 5.0 credits
+
+                        \ --- End of replacement ------------------------------>
 
 .ALTIT
 
@@ -3806,13 +3837,651 @@ ENDIF
 
                         \ --- End of added code ------------------------------->
 
+\ ******************************************************************************
+\
+\       Name: TBRIEF
+\       Type: Subroutine
+\   Category: Missions
+\    Summary: Start mission 3
+\  Deep dive: The Trumbles mission
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for Trumbles: ------------------->
+
+.TBRIEF
+
+ LDA TP                 \ Set bit 4 of TP to indicate that mission 3 has been
+ ORA #%00010000         \ triggered
+ STA TP
+
+ LDA #199               \ Print extended token 199, which is the briefing for
+ JSR DETOK              \ the Trumbles mission
+
+ JSR TT214+8            \ Wait until either "Y" or "N" is pressed
+
+ BCC BAYSTEP            \ If "N" was pressed, then the mission was not accepted,
+                        \ jump to BAYSTEP to go to the docking bay (i.e. show
+                        \ the Status Mode screen)
+
+ LDY #HI(50000)         \ Otherwise the mission was accepted, so subtract
+ LDX #LO(50000)         \ 50,000 CR from the cash pot to pay for the Trumble
+ JSR LCASH
+
+ INC TRIBBLE            \ Increment the number of Trumbles from 0 to 1, so they
+                        \ start breeding
+
+.BAYSTEP
+
+ JMP BAY                \ Go to the docking bay (i.e. show the Status Mode
+                        \ screen)
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: WPLS2
+\       Type: Subroutine
+\   Category: Drawing planets
+\    Summary: Remove the planet from the screen
+\  Deep dive: The ball line heap
+\
+\ ------------------------------------------------------------------------------
+\
+\ We do this by redrawing it using the lines stored in the ball line heap when
+\ the planet was originally drawn by the BLINE routine.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.WPLS2
+
+ LDY LSX2               \ If LSX2 is non-zero (which indicates the ball line
+ BNE WP1                \ heap is empty), jump to WP1 to reset the line heap
+                        \ without redrawing the planet
+
+ STY LSNUM              \ Reset LSNUM to the start of the ball line heap (we can
+                        \ set this to 0 rather than 1 to take advantage of the
+                        \ fact that Y is 0 - the effect is the same)
+
+ LDA LSP                \ Set LSNUM2 to the end of the ball line heap
+ STA LSNUM2
+
+ JSR EraseRestOfPlanet  \ Draw the contents of the ball line heap to erase the
+                        \ old planet
+
+ LDA #1                 \ Set LSP = 1 to reset the ball line heap pointer
+ STA LSP
+
+ LDA #&FF               \ Set LSX2 = &FF to indicate the ball line heap is empty
+ STA LSX2
+
+.WP1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: WPLS
+\       Type: Subroutine
+\   Category: Drawing suns
+\    Summary: Remove the sun from the screen
+\  Deep dive: Drawing the sun
+\
+\ ------------------------------------------------------------------------------
+\
+\ We do this by redrawing it using the lines stored in the sun line heap when
+\ the sun was originally drawn by the SUN routine.
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   SUNX(1 0)           The x-coordinate of the vertical centre axis of the sun
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for Compendium: ----------------->
+
+.WPLS
+
+ LDA LSX                \ If LSX < 0, the sun line heap is empty, so return from
+ BMI WP1                \ the subroutine (as WP1 contains an RTS)
+
+ LDA SUNX               \ Set YY(1 0) = SUNX(1 0), the x-coordinate of the
+ STA YY                 \ vertical centre axis of the sun that's currently on
+ LDA SUNX+1             \ screen
+ STA YY+1
+
+ LDY #2*Y-1             \ #Y is the y-coordinate of the centre of the space
+                        \ view, so this sets Y as a counter for the number of
+                        \ lines in the space view (i.e. 191), which is also the
+                        \ number of lines in the LSO block
+
+.WPL2
+
+ LDA LSO,Y              \ Fetch the Y-th point from the sun line heap, which
+                        \ gives us the half-width of the sun's line on this line
+                        \ of the screen
+
+ BEQ P%+5               \ If A = 0, skip the following call to HLOIN2 as there
+                        \ is no sun line on this line of the screen
+
+ JSR HLOIN2             \ Call HLOIN2 to draw a horizontal line on pixel line Y,
+                        \ with centre point YY(1 0) and half-width A, and remove
+                        \ the line from the sun line heap once done
+
+ DEY                    \ Decrement the loop counter
+
+ BNE WPL2               \ Loop back for the next line in the line heap until
+                        \ we have gone through the entire heap
+
+ DEY                    \ This sets Y to &FF, as we end the loop with Y = 0
+
+ STY LSX                \ Set LSX to &FF to indicate the sun line heap is empty
+
+ JMP HBFL               \ Call HBFL to send the contents of the horizontal line
+                        \ buffer to the I/O processor for drawing on-screen,
+                        \ returning from the subroutine using a tail call
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: RemoveLaserLine
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Remove the laser line from the screen, if there is one
+\
+\ ******************************************************************************
+
+.RemoveLaserLine
+
+                        \ --- Mod: Code added for red enemy lasers: ----------->
+
+                        \ We now need to check whether there is a laser line
+                        \ on-screen, and if so remove it
+
+ LDY #1                 \ Set X1 to the first coordinate on the ship line heap,
+ LDA (XX19),Y           \ which is the start of the laser line
+ STA X1
+
+ INY                    \ Increment the index to point to the Y1 coordinate
+
+ LDA (XX19),Y           \ Set Y1 to the first coordinate on the ship line heap
+ STA Y1                 \ which is the start of the laser line
+
+ CMP #255               \ If the Y1 coordinate is 255 then there is no laser
+ BEQ noLaserLine        \ line currently on-screen, so jump to noLaserLine to
+                        \ skip the removal of the old line
+
+ LDA #255               \ Set the Y2 coordinate of the laser line in the ship
+ STA (XX19),Y           \ line heap to 255 to remove the laser line from the
+                        \ heap
+
+ INY                    \ Increment the index to point to the X2 coordinate
+
+ LDA (XX19),Y           \ Set X2 to the second coordinate on the ship line heap,
+ STA X2                 \ which is the end of the laser line
+
+ INY                    \ Increment the index to point to the Y2 coordinate
+
+ LDA (XX19),Y           \ Set Y2 to the second coordinate on the ship line heap,
+ STA Y2                 \ which is the end of the laser line
+
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
+
+ JSR LL30               \ Draw the old laser line to remove it from the screen
+
+ LDX TYPE               \ Set A to the ship colour for this type, from the
+ LDA shpcol,X           \ relevant entry in the shpcol table
+
+ JSR DOCOL              \ Send a #SETCOL command to the I/O processor to switch
+                        \ back to the ship's colour
+
+.noLaserLine
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: TIDY
+\       Type: Subroutine
+\   Category: Maths (Geometry)
+\    Summary: Orthonormalise the orientation vectors for a ship
+\  Deep dive: Tidying orthonormal vectors
+\             Orientation vectors
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine orthonormalises the orientation vectors for a ship. This means
+\ making the three orientation vectors orthogonal (perpendicular to each other),
+\ and normal (so each of the vectors has length 1).
+\
+\ We do this because we use the small angle approximation to rotate these
+\ vectors in space. It is not completely accurate, so the three vectors tend
+\ to get stretched over time, so periodically we tidy the vectors with this
+\ routine to ensure they remain as orthonormal as possible.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for Compendium: ----------------->
+
+.TI2
+
+                        \ Called from below with A = 0, X = 0, Y = 4 when
+                        \ nosev_x and nosev_y are small, so we assume that
+                        \ nosev_z is big
+
+ TYA                    \ A = Y = 4
+ LDY #2
+ JSR TIS3               \ Call TIS3 with X = 0, Y = 2, A = 4, to set roofv_z =
+ STA INWK+20            \ -(nosev_x * roofv_x + nosev_y * roofv_y) / nosev_z
+
+ JMP TI3                \ Jump to TI3 to keep tidying
+
+.TI1
+
+                        \ Called from below with A = 0, Y = 4 when nosev_x is
+                        \ small
+
+ TAX                    \ Set X = A = 0
+
+ LDA XX15+1             \ Set A = nosev_y, and if the top two magnitude bits
+ AND #%01100000         \ are both clear, jump to TI2 with A = 0, X = 0, Y = 4
+ BEQ TI2
+
+ LDA #2                 \ Otherwise nosev_y is big, so set up the index values
+                        \ to pass to TIS3
+
+ JSR TIS3               \ Call TIS3 with X = 0, Y = 4, A = 2, to set roofv_y =
+ STA INWK+18            \ -(nosev_x * roofv_x + nosev_z * roofv_z) / nosev_y
+
+ JMP TI3                \ Jump to TI3 to keep tidying
+
+.TIDY
+
+ LDA INWK+10            \ Set (XX15, XX15+1, XX15+2) = nosev
+ STA XX15
+ LDA INWK+12
+ STA XX15+1
+ LDA INWK+14
+ STA XX15+2
+
+ JSR NORM               \ Call NORM to normalise the vector in XX15, i.e. nosev
+
+ LDA XX15               \ Set nosev = (XX15, XX15+1, XX15+2)
+ STA INWK+10
+ LDA XX15+1
+ STA INWK+12
+ LDA XX15+2
+ STA INWK+14
+
+ LDY #4                 \ Set Y = 4
+
+ LDA XX15               \ Set A = nosev_x, and if the top two magnitude bits
+ AND #%01100000         \ are both clear, jump to TI1 with A = 0, Y = 4
+ BEQ TI1
+
+ LDX #2                 \ Otherwise nosev_x is big, so set up the index values
+ LDA #0                 \ to pass to TIS3
+
+ JSR TIS3               \ Call TIS3 with X = 2, Y = 4, A = 0, to set roofv_x =
+ STA INWK+16            \ -(nosev_y * roofv_y + nosev_z * roofv_z) / nosev_x
+
+.TI3
+
+ LDA INWK+16            \ Set (XX15, XX15+1, XX15+2) = roofv
+ STA XX15
+ LDA INWK+18
+ STA XX15+1
+ LDA INWK+20
+ STA XX15+2
+
+ JSR NORM               \ Call NORM to normalise the vector in XX15, i.e. roofv
+
+ LDA XX15               \ Set roofv = (XX15, XX15+1, XX15+2)
+ STA INWK+16
+ LDA XX15+1
+ STA INWK+18
+ LDA XX15+2
+ STA INWK+20
+
+ LDA INWK+12            \ Set Q = nosev_y
+ STA Q
+
+ LDA INWK+20            \ Set A = roofv_z
+
+ JSR MULT12             \ Set (S R) = Q * A = nosev_y * roofv_z
+
+ LDX INWK+14            \ Set X = nosev_z
+
+ LDA INWK+18            \ Set A = roofv_y
+
+ JSR TIS1               \ Set (A ?) = (-X * A + (S R)) / 96
+                        \        = (-nosev_z * roofv_y + nosev_y * roofv_z) / 96
+                        \
+                        \ This also sets Q = nosev_z
+
+ EOR #%10000000         \ Set sidev_x = -A
+ STA INWK+22            \        = (nosev_z * roofv_y - nosev_y * roofv_z) / 96
+
+ LDA INWK+16            \ Set A = roofv_x
+
+ JSR MULT12             \ Set (S R) = Q * A = nosev_z * roofv_x
+
+ LDX INWK+10            \ Set X = nosev_x
+
+ LDA INWK+20            \ Set A = roofv_z
+
+ JSR TIS1               \ Set (A ?) = (-X * A + (S R)) / 96
+                        \        = (-nosev_x * roofv_z + nosev_z * roofv_x) / 96
+                        \
+                        \ This also sets Q = nosev_x
+
+ EOR #%10000000         \ Set sidev_y = -A
+ STA INWK+24            \        = (nosev_x * roofv_z - nosev_z * roofv_x) / 96
+
+ LDA INWK+18            \ Set A = roofv_y
+
+ JSR MULT12             \ Set (S R) = Q * A = nosev_x * roofv_y
+
+ LDX INWK+12            \ Set X = nosev_y
+
+ LDA INWK+16            \ Set A = roofv_x
+
+ JSR TIS1               \ Set (A ?) = (-X * A + (S R)) / 96
+                        \        = (-nosev_y * roofv_x + nosev_x * roofv_y) / 96
+
+ EOR #%10000000         \ Set sidev_z = -A
+ STA INWK+26            \        = (nosev_y * roofv_x - nosev_x * roofv_y) / 96
+
+ LDA #0                 \ Set A = 0 so we can clear the low bytes of the
+                        \ orientation vectors
+
+ LDX #14                \ We want to clear the low bytes, so start from sidev_y
+                        \ at byte #9+14 (we clear all except sidev_z_lo, though
+                        \ I suspect this is in error and that X should be 16)
+
+.TIL1
+
+ STA INWK+9,X           \ Set the low byte in byte #9+X to zero
+
+ DEX                    \ Set X = X - 2 to jump down to the next low byte
+ DEX
+
+ BPL TIL1               \ Loop back until we have zeroed all the low bytes
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: TIS2
+\       Type: Subroutine
+\   Category: Maths (Arithmetic)
+\    Summary: Calculate A = A / Q
+\  Deep dive: Shift-and-subtract division
+\
+\ ------------------------------------------------------------------------------
+\
+\ Calculate the following division, where A is a sign-magnitude number and Q is
+\ a positive integer:
+\
+\   A = A / Q
+\
+\ The value of A is returned as a sign-magnitude number with 96 representing 1,
+\ and the maximum value returned is 1 (i.e. 96). This routine is used when
+\ normalising vectors, where we represent fractions using integers, so this
+\ gives us an approximation to two decimal places.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for Compendium: ----------------->
+
+.TIS2
+
+ TAY                    \ Store the argument A in Y
+
+ AND #%01111111         \ Strip the sign bit from the argument, so A = |A|
+
+ CMP Q                  \ If A >= Q then jump to TI4 to return a 1 with the
+ BCS TI4                \ correct sign
+
+ LDX #%11111110         \ Set T to have bits 1-7 set, so we can rotate through 7
+ STX T                  \ loop iterations, getting a 1 each time, and then
+                        \ getting a 0 on the 8th iteration... and we can also
+                        \ use T to catch our result bits into bit 0 each time
+
+.TIL2
+
+ ASL A                  \ Shift A to the left
+
+ CMP Q                  \ If A < Q skip the following subtraction
+ BCC P%+4
+
+ SBC Q                  \ A >= Q, so set A = A - Q
+                        \
+                        \ Going into this subtraction we know the C flag is
+                        \ set as we passed through the BCC above, and we also
+                        \ know that A >= Q, so the C flag will still be set once
+                        \ we are done
+
+ ROL T                  \ Rotate the counter in T to the left, and catch the
+                        \ result bit into bit 0 (which will be a 0 if we didn't
+                        \ do the subtraction, or 1 if we did)
+
+ BCS TIL2               \ If we still have set bits in T, loop back to TIL2 to
+                        \ do the next iteration of 7
+
+                        \ We've done the division and now have a result in the
+                        \ range 0-255 here, which we need to reduce to the range
+                        \ 0-96. We can do that by multiplying the result by 3/8,
+                        \ as 256 * 3/8 = 96
+
+ LDA T                  \ Set T = T / 4
+ LSR A
+ LSR A
+ STA T
+
+ LSR A                  \ Set T = T / 8 + T / 4
+ ADC T                  \       = 3T / 8
+ STA T
+
+ TYA                    \ Fetch the sign bit of the original argument A
+ AND #%10000000
+
+ ORA T                  \ Apply the sign bit to T
+
+ RTS                    \ Return from the subroutine
+
+.TI4
+
+ TYA                    \ Fetch the sign bit of the original argument A
+ AND #%10000000
+
+ ORA #96                \ Apply the sign bit to 96 (which represents 1)
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: MT9
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Clear the screen and set the current view type to 1
+\  Deep dive: Extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * XC = 1 (tab to column 1)
+\
+\ before calling TT66 to clear the screen and set the view type to 1.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for Compendium: ----------------->
+
+.MT9
+
+ LDA #1                 \ Call DOXC to move the text cursor to column 1
+ JSR DOXC
+
+ JMP TT66               \ Jump to TT66 to clear the screen and set the current
+                        \ view type to 1, returning from the subroutine using a
+                        \ tail call
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: MT13
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Switch to lower case when printing extended tokens
+\  Deep dive: Extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * DTW1 = %00100000 (apply lower case to the second letter of a word onwards)
+\
+\   * DTW6 = %10000000 (lower case is enabled)
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for Compendium: ----------------->
+
+.MT13
+
+ LDA #%10000000         \ Set DTW6 = %10000000
+ STA DTW6
+
+ LDA #%00100000         \ Set DTW1 = %00100000
+ STA DTW1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: MT19
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Capitalise the next letter
+\  Deep dive: Extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine sets the following:
+\
+\   * DTW8 = %11011111 (capitalise the next letter)
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for Compendium: ----------------->
+
+.MT19
+
+ LDA #%11011111         \ Set DTW8 = %11011111
+ STA DTW8
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: VOWEL
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Test whether a character is a vowel
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   A                   The character to be tested
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   C flag              The C flag is set if the character is a vowel, otherwise
+\                       it is clear
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for Compendium: ----------------->
+
+.VOWEL
+
+ ORA #%00100000         \ Set bit 5 of the character to make it lower case
+
+ CMP #'a'               \ If the letter is a vowel, jump to VRTS to return from
+ BEQ VRTS               \ the subroutine with the C flag set (as the CMP will
+ CMP #'e'               \ set the C flag if the comparison is equal)
+ BEQ VRTS
+ CMP #'i'
+ BEQ VRTS
+ CMP #'o'
+ BEQ VRTS
+ CMP #'u'
+ BEQ VRTS
+
+ CLC                    \ The character is not a vowel, so clear the C flag
+
+.VRTS
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: WHITETEXT
+\       Type: Subroutine
+\   Category: Text
+\    Summary: Switch to white text
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for Compendium: ----------------->
+
+.WHITETEXT
+
+ LDA #32                \ Send a #SETVDU19 32 command to the I/O processor to
+ JSR DOVDU19            \ switch to the mode 1 palette for the title screen,
+                        \ which is yellow (colour 1), white (colour 2) and cyan
+                        \ (colour 3)
+
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JMP DOCOL              \ switch to colour 2, which is white in the title
+                        \ screen, and return from the subroutine using a tail
+                        \ call
+
+                        \ --- End of moved code ------------------------------->
+
+                        \ --- Mod: Code added for Compendium: ----------------->
+
  SKIPTO &1000
 
  SAVE "3-assembled-output/COMPENDIUM.bin", &0E3C, &1000, &0E3C
 
                         \ --- End of added code ------------------------------->
-
-
 
 \ ******************************************************************************
 \
@@ -4575,6 +5244,34 @@ ENDIF
 
 .EN4
 
+                        \ --- Mod: Code added for Trumbles: ------------------->
+
+\LDA CASH+2             \ This is the Trumbles code from the Commodore 64
+\CMP #&C4               \ version, which triggers the mission when you reach a
+\BCC EN6                \ cash level of &C400 (or 5017.6 credits)
+                        \
+                        \ Instead, we're going to use the NES code, which offers
+                        \ the mission at 6553.6 credits
+
+ LDA CASH+1             \ If the second most significant byte of CASH(0 1 2 3)
+ BEQ EN6                \ is zero then the cash amount is less than &010000
+                        \ (6553.6 credits), so jump to EN6
+
+ LDA TP                 \ If bit 4 of TP is set, then the Tribbles mission has
+ AND #%00010000         \ already been completed, so jump to EN6
+ BNE EN6
+
+                        \ If we get here then cheat mode has not been applied,
+                        \ we have at least 6553.6 credits and the Trumble
+                        \ mission has not yet been offered, so we do that now
+
+ JMP TBRIEF             \ Jump to TBRIEF to offer the Trumble mission, returning
+                        \ from the subroutine using a tail call
+
+.EN6
+
+                        \ --- End of added code ------------------------------->
+
  JMP BAY                \ If we get here them we didn't start or any missions,
                         \ so jump to BAY to go to the docking bay (i.e. show the
                         \ Status Mode screen)
@@ -4996,6 +5693,55 @@ ENDIF
  LDA KY19               \ If "C" is being pressed, and we have a docking
  AND DKCMP              \ computer fitted, keep going, otherwise jump down to
  BEQ MA68               \ MA68 to skip the following
+
+                        \ --- Mod: Code added for docking fee: ---------------->
+
+                        \ We now deduct a docking fee of 5.0 credits for using
+                        \ the docking computer
+
+ LDA chargeDockingFee   \ If we have already been charged a docking fee
+ BNE barb4              \ (chargeDockingFee is non-zero), then jump to barb4 to
+                        \ engage the docking computer without charging a docking
+                        \ fee
+
+                        \ Otherwise we charge the docking fee
+
+ LDY #0                 \ Set (Y X) = 50, so the docking fee is 5.0 credits
+ LDX #50
+
+ JSR LCASH              \ Subtract (Y X) cash from the cash pot, but only if
+                        \ we have enough cash
+
+ BCS barb3              \ If the C flag is set then we did have enough cash for
+                        \ the transaction, so jump to barb3 to skip the
+                        \ following instruction
+
+                        \ If we get here then we don't have enough cash for the
+                        \ docking fee, so make a beep and return from the
+                        \ subroutine without engaging the docking computer
+
+ LDA #0                 \ Set auto to 0, so the docking computer is no longer
+ STA auto               \ activated
+
+ LDA #40                \ Call the NOISE routine with A = 40 to make a low,
+ JMP NOISE              \ long beep, and return from the subroutine using a tail
+                        \ call
+
+.barb3
+
+ DEC chargeDockingFee   \ Set chargeDockingFee to &FF so we don't charge another
+                        \ docking fee
+
+ LDA #0                 \ Print control code 0 (current amount of cash and
+ JSR MESS               \ newline) as an in-flight message, to show our balance
+                        \ after the docking fee has been paid
+
+.barb4
+
+ LDA #1                 \ Set A to 1 to enable the docking computer and music in
+                        \ the following
+
+                        \ --- End of added code ------------------------------->
 
  STA auto               \ Set auto to the non-zero value of A, so the docking
                         \ computer is activated
@@ -5460,13 +6206,27 @@ ENDIF
 
 .ISDK
 
+                        \ --- Mod: Code removed for better docking computer: -->
+
+\LDA K%+NI%+36          \ 1. Fetch the NEWB flags (byte #36) of the second ship
+\AND #%00000100         \ in the ship data workspace at K%, which is reserved
+\BNE MA62               \ for the sun or the space station (in this case it's
+\                       \ the latter), and if bit 2 is set, meaning the station
+\                       \ is hostile, jump down to MA62 to fail docking (so
+\                       \ trying to dock at a station that we have annoyed does
+\                       \ not end well)
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA K%+NI%+36          \ 1. Fetch the NEWB flags (byte #36) of the second ship
  AND #%00000100         \ in the ship data workspace at K%, which is reserved
- BNE MA62               \ for the sun or the space station (in this case it's
+ BNE MA622              \ for the sun or the space station (in this case it's
                         \ the latter), and if bit 2 is set, meaning the station
-                        \ is hostile, jump down to MA62 to fail docking (so
+                        \ is hostile, jump down to MA622 to fail docking (so
                         \ trying to dock at a station that we have annoyed does
                         \ not end well)
+
+                        \ --- End of replacement ------------------------------>
 
  LDA INWK+14            \ 2. If nosev_z_hi < 214, jump down to MA62 to fail
  CMP #214               \ docking, as the angle of approach is greater than 26
@@ -5501,6 +6261,18 @@ ENDIF
  JMP DOENTRY            \ Go to the docking bay (i.e. show the ship hangar)
 
 .MA62
+
+                        \ --- Mod: Code added for better docking computer: ---->
+
+ LDA auto               \ If the docking computer is engaged, ensure we dock
+ BNE GOIN               \ successfully even if the approach isn't correct, as
+                        \ the docking computer algorithm isn't perfect (so this
+                        \ fixes the issue in the other versions of Elite where
+                        \ the docking computer can kill you)
+
+.MA622
+
+                        \ --- End of added code ------------------------------->
 
                         \ If we arrive here, docking has just failed
 
@@ -6256,14 +7028,54 @@ ENDIF
  CMP #224               \ If the cabin temperature < 224 then jump to MA23 to
  BCC MA23               \ skip fuel scooping, as we aren't close enough
 
+                        \ --- Mod: Code added for Trumbles: ------------------->
+
+ CMP #240               \ If the cabin temperature < 240 then jump to nokilltr
+ BCC nokilltr           \ as the heat isn't high enough to kill Trumbles
+
+ LDA TRIBBLE+1          \ If TRIBBLE(1 0) = 0 then there are no Trumbles in the
+ ORA TRIBBLE            \ hold, so jump to nokilltr to skip the following
+ BEQ nokilltr
+
+ LSR TRIBBLE+1          \ Halve the number of Trumbles in TRIBBLE(1 0) as the
+ ROR TRIBBLE            \ cabin temperature is high enough to kill them off
+                        \ (this will eventually bring the number down to zero)
+
+ LDA #56                \ Call the NOISE routine with A = 56 to make the sound
+ JSR NOISE              \ of Trumbles being killed off by the heat of the sun
+
+.nokilltr
+
+                        \ --- End of added code ------------------------------->
+
  LDA BST                \ If we don't have fuel scoops fitted, jump to BA23 to
  BEQ MA23               \ skip fuel scooping, as we can't scoop without fuel
                         \ scoops
 
+                        \ --- Mod: Code removed for moving fuel scoops: ------->
+
+\LDA DELT4+1            \ We are now successfully fuel scooping, so it's time
+\LSR A                  \ to work out how much fuel we're scooping. Fetch the
+\                       \ high byte of DELT4, which contains our current speed
+\                       \ divided by 4, and halve it to get our current speed
+\                       \ divided by 8 (so it's now a value between 1 and 5, as
+\                       \ our speed is normally between 1 and 40). This gives
+\                       \ us the amount of fuel that's being scooped in A, so
+\                       \ the faster we go, the more fuel we scoop, and because
+\                       \ the fuel levels are stored as 10 * the fuel in light
+\                       \ years, that means we just scooped between 0.1 and 0.5
+\                       \ light years of free fuel
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA DELT4+1            \ We are now successfully fuel scooping, so it's time
- LSR A                  \ to work out how much fuel we're scooping. Fetch the
+ BEQ MA23               \ to work out how much fuel we're scooping. Fetch the
                         \ high byte of DELT4, which contains our current speed
-                        \ divided by 4, and halve it to get our current speed
+                        \ divided by 4, and if it is zero, jump to BA23 to skip
+                        \ skip fuel scooping, as we can't scoop fuel if we are
+                        \ not moving
+
+ LSR A                  \ If we are moving, halve A to get our current speed
                         \ divided by 8 (so it's now a value between 1 and 5, as
                         \ our speed is normally between 1 and 40). This gives
                         \ us the amount of fuel that's being scooped in A, so
@@ -6271,6 +7083,8 @@ ENDIF
                         \ the fuel levels are stored as 10 * the fuel in light
                         \ years, that means we just scooped between 0.1 and 0.5
                         \ light years of free fuel
+
+                        \ --- End of replacement ------------------------------>
 
  ADC QQ14               \ Set A = A + the current fuel level * 10 (from QQ14)
 
@@ -7053,61 +7867,6 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: MT9
-\       Type: Subroutine
-\   Category: Text
-\    Summary: Clear the screen and set the current view type to 1
-\  Deep dive: Extended text tokens
-\
-\ ------------------------------------------------------------------------------
-\
-\ This routine sets the following:
-\
-\   * XC = 1 (tab to column 1)
-\
-\ before calling TT66 to clear the screen and set the view type to 1.
-\
-\ ******************************************************************************
-
-.MT9
-
- LDA #1                 \ Call DOXC to move the text cursor to column 1
- JSR DOXC
-
- JMP TT66               \ Jump to TT66 to clear the screen and set the current
-                        \ view type to 1, returning from the subroutine using a
-                        \ tail call
-
-\ ******************************************************************************
-\
-\       Name: MT13
-\       Type: Subroutine
-\   Category: Text
-\    Summary: Switch to lower case when printing extended tokens
-\  Deep dive: Extended text tokens
-\
-\ ------------------------------------------------------------------------------
-\
-\ This routine sets the following:
-\
-\   * DTW1 = %00100000 (apply lower case to the second letter of a word onwards)
-\
-\   * DTW6 = %10000000 (lower case is enabled)
-\
-\ ******************************************************************************
-
-.MT13
-
- LDA #%10000000         \ Set DTW6 = %10000000
- STA DTW6
-
- LDA #%00100000         \ Set DTW1 = %00100000
- STA DTW1
-
- RTS                    \ Return from the subroutine
-
-\ ******************************************************************************
-\
 \       Name: MT6
 \       Type: Subroutine
 \   Category: Text
@@ -7311,93 +8070,6 @@ ENDIF
                         \ until we have printed Y+1 of them
 
  RTS                    \ Return from the subroutine
-
-\ ******************************************************************************
-\
-\       Name: MT19
-\       Type: Subroutine
-\   Category: Text
-\    Summary: Capitalise the next letter
-\  Deep dive: Extended text tokens
-\
-\ ------------------------------------------------------------------------------
-\
-\ This routine sets the following:
-\
-\   * DTW8 = %11011111 (capitalise the next letter)
-\
-\ ******************************************************************************
-
-.MT19
-
- LDA #%11011111         \ Set DTW8 = %11011111
- STA DTW8
-
- RTS                    \ Return from the subroutine
-
-\ ******************************************************************************
-\
-\       Name: VOWEL
-\       Type: Subroutine
-\   Category: Text
-\    Summary: Test whether a character is a vowel
-\
-\ ------------------------------------------------------------------------------
-\
-\ Arguments:
-\
-\   A                   The character to be tested
-\
-\ ------------------------------------------------------------------------------
-\
-\ Returns:
-\
-\   C flag              The C flag is set if the character is a vowel, otherwise
-\                       it is clear
-\
-\ ******************************************************************************
-
-.VOWEL
-
- ORA #%00100000         \ Set bit 5 of the character to make it lower case
-
- CMP #'a'               \ If the letter is a vowel, jump to VRTS to return from
- BEQ VRTS               \ the subroutine with the C flag set (as the CMP will
- CMP #'e'               \ set the C flag if the comparison is equal)
- BEQ VRTS
- CMP #'i'
- BEQ VRTS
- CMP #'o'
- BEQ VRTS
- CMP #'u'
- BEQ VRTS
-
- CLC                    \ The character is not a vowel, so clear the C flag
-
-.VRTS
-
- RTS                    \ Return from the subroutine
-
-\ ******************************************************************************
-\
-\       Name: WHITETEXT
-\       Type: Subroutine
-\   Category: Text
-\    Summary: Switch to white text
-\
-\ ******************************************************************************
-
-.WHITETEXT
-
- LDA #32                \ Send a #SETVDU19 32 command to the I/O processor to
- JSR DOVDU19            \ switch to the mode 1 palette for the title screen,
-                        \ which is yellow (colour 1), white (colour 2) and cyan
-                        \ (colour 3)
-
- LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
- JMP DOCOL              \ switch to colour 2, which is white in the title
-                        \ screen, and return from the subroutine using a tail
-                        \ call
 
 \ ******************************************************************************
 \
@@ -9094,6 +9766,13 @@ ENDIF
 \
 \ ******************************************************************************
 
+                        \ --- Mod: Code added for Compendium: ----------------->
+
+ PROGRAM% = P%          \ Move PBUF into unused memory at &0A00-&0AFF
+ ORG &0A00
+
+                        \ --- End of added code ------------------------------->
+
 .pixbl
 
 .PBUF
@@ -9216,6 +9895,12 @@ ELSE
  SKIP 256               \ The pixel buffer to send with this command
 
 ENDIF
+
+                        \ --- Mod: Code added for Compendium: ----------------->
+
+ ORG PROGRAM%
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -12498,6 +13183,23 @@ ENDIF
  STA ESCP               \ The escape pod is a one-use item, so set ESCP to 0 so
                         \ we no longer have one fitted
 
+                        \ --- Mod: Code added for Trumbles: ------------------->
+
+ LDA TRIBBLE            \ If there are no Trumbles in our hold, then both bytes
+ ORA TRIBBLE+1          \ of TRIBBLE(1 0) will be zero, so jump to nosurviv to
+ BEQ nosurviv           \ skip the following
+
+ JSR DORND              \ Otherwise set TRIBBLE(1 0) to a random number between
+ AND #7                 \ 1 and 7, to determine how many Trumbles manage to
+ ORA #1                 \ hitch a ride in the escape pod (so using an escape pod
+ STA TRIBBLE            \ is not a solution to the trouble with Trumbles)
+ LDA #0
+ STA TRIBBLE+1
+
+.nosurviv
+
+                        \ --- End of added code ------------------------------->
+
  LDA #70                \ Our replacement ship is delivered with a full tank of
  STA QQ14               \ fuel, so set the current fuel level in QQ14 to 70, or
                         \ 7.0 light years
@@ -13369,10 +14071,31 @@ ENDIF
  AND #%00000100         \ the ship's NEWB flags is set, and if it is (i.e. the
  BNE TN5                \ station is hostile), jump to TN5 to spawn some cops
 
- LDA MANY+SHU+1         \ The station is not hostile, so check how many
- BNE TA1                \ Transporters there are in the vicinity, and if we
+                        \ --- Mod: Code removed for better docking computer: -->
+
+\LDA MANY+SHU+1         \ The station is not hostile, so check how many
+\BNE TA1                \ Transporters there are in the vicinity, and if we
+\                       \ already have one, return from the subroutine (as TA1
+\                       \ contains an RTS)
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA MANY+SHU+1         \ Set A to the number of Transporters in the vicinity
+
+ ORA auto               \ If the docking computer is on then auto is &FF, so
+                        \ this ensures that A is always non-zero when we are
+                        \ auto-docking, so the following jump to TA1 will be
+                        \ taken and no Transporters will be spawned from the
+                        \ space station (unlike in the disc version, where you
+                        \ can get smashed into space dust by a badly timed
+                        \ Transporter launch when using the docking computer)
+
+ BNE TA1                \ The station is not hostile, so check how many
+                        \ Transporters there are in the vicinity, and if we
                         \ already have one, return from the subroutine (as TA1
                         \ contains an RTS)
+
+                        \ --- End of replacement ------------------------------>
 
                         \ If we get here then the station is not hostile, so we
                         \ can consider spawning a Transporter or Shuttle
@@ -18992,6 +19715,13 @@ ENDIF
                         \ until we have added up all market items from 12
                         \ (minerals) down to 0 (food)
 
+                        \ --- Mod: Code added for Trumbles: ------------------->
+
+ ADC TRIBBLE+1          \ Add the high byte of the number of Trumbles in the
+                        \ hold, as 256 Trumbles take up one tonne of cargo space
+
+                        \ --- End of added code ------------------------------->
+
  CMP CRGO               \ If A < CRGO then the C flag will be clear (we have
                         \ room in the hold)
                         \
@@ -20995,7 +21725,61 @@ ENDIF
  JMP BAY2               \ And then jump to BAY2 to display the Inventory
                         \ screen, as we have finished selling cargo
 
- RTS                    \ Return from the subroutine
+                        \ --- Mod: Code removed for Trumbles: ----------------->
+
+\RTS                    \ Return from the subroutine
+
+                        \ --- And replaced by: -------------------------------->
+
+ JSR TT69               \ Call TT69 to set Sentence Case and print a newline
+
+ LDA TRIBBLE            \ If there are any Trumbles in the hold, skip the
+ ORA TRIBBLE+1          \ following RTS and continue on
+ BNE P%+3
+
+.zebra
+
+ RTS                    \ There are no Trumbles in the hold, so return from the
+                        \ subroutine
+
+                        \ If we get here then we have Trumbles in the hold, so
+                        \ we print out the number
+
+ CLC                    \ Clear the C flag, so the call to TT11 below doesn't
+                        \ include a decimal point
+
+ LDA #0                 \ Set A = 0, for the call to TT11 below, so we don't pad
+                        \ out the number of Trumbles
+
+ LDX TRIBBLE            \ Fetch the number of Trumbles into (Y X)
+ LDY TRIBBLE+1
+
+ JSR TT11               \ Call TT11 to print the number of Trumbles in (Y X),
+                        \ with no decimal point
+
+ JSR DORND              \ Print out a random extended token from 111 to 114, all
+ AND #3                 \ of which are blank in this version of Elite
+ CLC
+ ADC #111
+ JSR DETOK
+
+ LDA #198               \ Print extended token 198, which is blank, but would
+ JSR DETOK              \ contain the text "LITTLE TRUMBLE" if the Trumbles
+                        \ mission was enabled
+
+ LDA TRIBBLE+1          \ If we have more than 256 Trumbles, skip to DOANS
+ BNE DOANS
+
+ LDX TRIBBLE            \ If we have exactly one Trumble, return from the
+ DEX                    \ subroutine (as zebra contains an RTS)
+ BEQ zebra
+
+.DOANS
+
+ LDA #'s'               \ We have more than one Trumble, so print an 's' and
+ JMP DASC               \ return from the subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -25770,6 +26554,37 @@ ENDIF
 
 .SOLAR
 
+                        \ --- Mod: Code added for Trumbles: ------------------->
+
+ LDA TRIBBLE            \ If we have no Trumbles in the hold, skip to nobirths
+ BEQ nobirths
+
+                        \ If we get here then we have Trumbles in the hold, so
+                        \ this is where they breed (though we never get here in
+                        \ the Master version as the number of Trumbles is always
+                        \ zero)
+
+ LDA #0                 \ Trumbles eat food and narcotics during the hyperspace
+ STA QQ20               \ journey, so zero the amount of food and narcotics in
+ STA QQ20+6             \ the hold
+
+ JSR DORND              \ Take the number of Trumbles from TRIBBLE(1 0), add a
+ AND #15                \ random number between 4 and 15, and double the result,
+ ADC TRIBBLE            \ storing the resulting number in TRIBBLE(1 0)
+ ORA #4                 \
+ ROL A                  \ We start with the low byte
+ STA TRIBBLE
+
+ ROL TRIBBLE+1          \ And then do the high byte
+
+ BPL P%+5               \ If bit 7 of the high byte is set, then rotate the high
+ ROR TRIBBLE+1          \ byte back to the right, so the number of Trumbles is
+                        \ always positive
+
+.nobirths
+
+                        \ --- End of added code ------------------------------->
+
  LSR FIST               \ Halve our legal status in FIST, making us less bad,
                         \ and moving bit 0 into the C flag (so every time we
                         \ arrive in a new system, our legal status improves a
@@ -29209,113 +30024,6 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: WPLS2
-\       Type: Subroutine
-\   Category: Drawing planets
-\    Summary: Remove the planet from the screen
-\  Deep dive: The ball line heap
-\
-\ ------------------------------------------------------------------------------
-\
-\ We do this by redrawing it using the lines stored in the ball line heap when
-\ the planet was originally drawn by the BLINE routine.
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for flicker-free planets: ------->
-
-.WPLS2
-
- LDY LSX2               \ If LSX2 is non-zero (which indicates the ball line
- BNE WP1                \ heap is empty), jump to WP1 to reset the line heap
-                        \ without redrawing the planet
-
- STY LSNUM              \ Reset LSNUM to the start of the ball line heap (we can
-                        \ set this to 0 rather than 1 to take advantage of the
-                        \ fact that Y is 0 - the effect is the same)
-
- LDA LSP                \ Set LSNUM2 to the end of the ball line heap
- STA LSNUM2
-
- JSR EraseRestOfPlanet  \ Draw the contents of the ball line heap to erase the
-                        \ old planet
-
- LDA #1                 \ Set LSP = 1 to reset the ball line heap pointer
- STA LSP
-
- LDA #&FF               \ Set LSX2 = &FF to indicate the ball line heap is empty
- STA LSX2
-
-.WP1
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: WPLS
-\       Type: Subroutine
-\   Category: Drawing suns
-\    Summary: Remove the sun from the screen
-\  Deep dive: Drawing the sun
-\
-\ ------------------------------------------------------------------------------
-\
-\ We do this by redrawing it using the lines stored in the sun line heap when
-\ the sun was originally drawn by the SUN routine.
-\
-\ ------------------------------------------------------------------------------
-\
-\ Arguments:
-\
-\   SUNX(1 0)           The x-coordinate of the vertical centre axis of the sun
-\
-\ ******************************************************************************
-
-.WPLS
-
- LDA LSX                \ If LSX < 0, the sun line heap is empty, so return from
- BMI WP1                \ the subroutine (as WP1 contains an RTS)
-
- LDA SUNX               \ Set YY(1 0) = SUNX(1 0), the x-coordinate of the
- STA YY                 \ vertical centre axis of the sun that's currently on
- LDA SUNX+1             \ screen
- STA YY+1
-
- LDY #2*Y-1             \ #Y is the y-coordinate of the centre of the space
-                        \ view, so this sets Y as a counter for the number of
-                        \ lines in the space view (i.e. 191), which is also the
-                        \ number of lines in the LSO block
-
-.WPL2
-
- LDA LSO,Y              \ Fetch the Y-th point from the sun line heap, which
-                        \ gives us the half-width of the sun's line on this line
-                        \ of the screen
-
- BEQ P%+5               \ If A = 0, skip the following call to HLOIN2 as there
-                        \ is no sun line on this line of the screen
-
- JSR HLOIN2             \ Call HLOIN2 to draw a horizontal line on pixel line Y,
-                        \ with centre point YY(1 0) and half-width A, and remove
-                        \ the line from the sun line heap once done
-
- DEY                    \ Decrement the loop counter
-
- BNE WPL2               \ Loop back for the next line in the line heap until
-                        \ we have gone through the entire heap
-
- DEY                    \ This sets Y to &FF, as we end the loop with Y = 0
-
- STY LSX                \ Set LSX to &FF to indicate the sun line heap is empty
-
- JMP HBFL               \ Call HBFL to send the contents of the horizontal line
-                        \ buffer to the I/O processor for drawing on-screen,
-                        \ returning from the subroutine using a tail call
-
-\ ******************************************************************************
-\
 \       Name: EDGES
 \       Type: Subroutine
 \   Category: Drawing lines
@@ -30842,6 +31550,13 @@ ENDIF
 
  STA MCNT               \ Reset MCNT (the main loop counter) to 0
 
+                        \ --- Mod: Code added for docking fee: ---------------->
+
+ STA chargeDockingFee   \ Set chargeDockingFee to 0 so the docking fee is marked
+                        \ as being not already paid
+
+                        \ --- End of added code ------------------------------->
+
  LDA #3                 \ Reset DELTA (speed) to 3
  STA DELTA
 
@@ -31850,6 +32565,79 @@ ENDIF
 
  LDY #2                 \ Wait for 2/50 of a second (0.04 seconds), to slow the
  JSR DELAY              \ main loop down a bit
+
+                        \ --- Mod: Code added for Trumbles: ------------------->
+
+ LDA TRIBBLE+1          \ If the high byte of TRIBBLE(1 0), the number of
+ BEQ game5              \ Trumbles in the hold, is zero, jump to game5 to skip
+                        \ the following
+
+                        \ We have a lot of Trumbles in the hold, so let's see if
+                        \ any of them are breeding (note that Trumbles always
+                        \ breed when we jump into a new system in the SOLAR
+                        \ routine, but when we have lots of them, they also
+                        \ breed here in the main flight loop)
+
+ JSR DORND              \ Set A and X to random numbers
+
+ CMP #220               \ If A >= 220 then set the C flag (14% chance)
+
+ LDA TRIBBLE            \ Add the C flag to TRIBBLE(1 0), starting with the low
+ ADC #0                 \ bytes
+ STA TRIBBLE
+
+ BCC game5              \ And then the high bytes
+ INC TRIBBLE+1          \
+                        \ So there is a 14% chance of a Trumble being born
+
+ BPL game5              \ If the high byte of TRIBBLE(1 0) is now &80, then
+ DEC TRIBBLE+1          \ decrement it back to &7F, so the number of Trumbles
+                        \ never goes above &7FFF (32767)
+
+.game5
+
+ LDA TRIBBLE+1          \ If the high byte of TRIBBLE(1 0), the number of
+ BEQ game7              \ Trumbles in the hold, is zero, jump to game7 to skip
+                        \ the following
+
+                        \ We have a lot of Trumbles in the hold, so they are
+                        \ probably making a bit of a noise
+
+ LDY CABTMP             \ If the cabin temperature is >= 224 then jump to game6
+ CPY #224               \ to skip the following and leave the value of A as a
+ BCS game6              \ high value, so the chances of the Trumbles making a
+                        \ noise in hot temperature is greater (specifically,
+                        \ this is the temperature at which the fuel scoop start
+                        \ working)
+
+ LSR A                  \ Set A = A / 2
+ LSR A
+
+.game6
+
+ STA T                  \ Set T = A, which will be higher with more Trumbles and
+                        \ higher temperatures
+ 
+ JSR DORND              \ Set A and X to random numbers
+ 
+ CMP T                  \ If A >= T then jump to game7 to skip making any noise,
+ BCS game7              \ so there is a higher chance of Trumbles making noise
+                        \ when there are lots of them or the cabin temperature
+                        \ is hot enough for the fuel scoops to work
+ 
+ AND #%100              \ Set A to our random number, set to either 0 or 4
+
+ ADC #3                 \ Set Y to our random number, set to either 3 or 7 (we
+ TAY                    \ know the C flag is clear as we just passed through a
+                        \ BCS)
+
+ JSR NOISE              \ Call the NOISE routine to make the sound of the
+                        \ Trumbles in Y, which will be one of 3 or 7, with an
+                        \ equal chance of either
+
+.game7
+
+                        \ --- End of added code ------------------------------->
 
  JSR TT17               \ Scan the keyboard for the cursor keys or joystick,
                         \ returning the cursor's delta values in X and Y and
@@ -34780,6 +35568,26 @@ ENDIF
 
 .WARP
 
+                        \ --- Mod: Code added for better docking computer: ---->
+
+ LDA auto               \ If the docking computer is engaged (auto is non-zero)
+ AND SSPR               \ and we are inside the space station safe zone (SSPR
+ BEQ warp1              \ is non-zero), then this sets A to be non-zero, so if
+                        \ this is not the case, jump to warp1 to skip the
+                        \ following
+
+                        \ If we get here then the docking computer is engaged
+                        \ and we are in the space station safe zone, in which
+                        \ case the fast-forward button docks us instantly
+
+ JMP GOIN               \ Go to the docking bay (i.e. show the ship hangar
+                        \ screen) and return from the subroutine with a tail
+                        \ call
+
+.warp1
+
+                        \ --- End of added code ------------------------------->
+
  LDX JUNK               \ Set X to the total number of junk items in the
                         \ vicinity (e.g. asteroids, escape pods, cargo
                         \ canisters, Shuttles, Transporters and so on)
@@ -36685,262 +37493,6 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\       Name: TIDY
-\       Type: Subroutine
-\   Category: Maths (Geometry)
-\    Summary: Orthonormalise the orientation vectors for a ship
-\  Deep dive: Tidying orthonormal vectors
-\             Orientation vectors
-\
-\ ------------------------------------------------------------------------------
-\
-\ This routine orthonormalises the orientation vectors for a ship. This means
-\ making the three orientation vectors orthogonal (perpendicular to each other),
-\ and normal (so each of the vectors has length 1).
-\
-\ We do this because we use the small angle approximation to rotate these
-\ vectors in space. It is not completely accurate, so the three vectors tend
-\ to get stretched over time, so periodically we tidy the vectors with this
-\ routine to ensure they remain as orthonormal as possible.
-\
-\ ******************************************************************************
-
-.TI2
-
-                        \ Called from below with A = 0, X = 0, Y = 4 when
-                        \ nosev_x and nosev_y are small, so we assume that
-                        \ nosev_z is big
-
- TYA                    \ A = Y = 4
- LDY #2
- JSR TIS3               \ Call TIS3 with X = 0, Y = 2, A = 4, to set roofv_z =
- STA INWK+20            \ -(nosev_x * roofv_x + nosev_y * roofv_y) / nosev_z
-
- JMP TI3                \ Jump to TI3 to keep tidying
-
-.TI1
-
-                        \ Called from below with A = 0, Y = 4 when nosev_x is
-                        \ small
-
- TAX                    \ Set X = A = 0
-
- LDA XX15+1             \ Set A = nosev_y, and if the top two magnitude bits
- AND #%01100000         \ are both clear, jump to TI2 with A = 0, X = 0, Y = 4
- BEQ TI2
-
- LDA #2                 \ Otherwise nosev_y is big, so set up the index values
-                        \ to pass to TIS3
-
- JSR TIS3               \ Call TIS3 with X = 0, Y = 4, A = 2, to set roofv_y =
- STA INWK+18            \ -(nosev_x * roofv_x + nosev_z * roofv_z) / nosev_y
-
- JMP TI3                \ Jump to TI3 to keep tidying
-
-.TIDY
-
- LDA INWK+10            \ Set (XX15, XX15+1, XX15+2) = nosev
- STA XX15
- LDA INWK+12
- STA XX15+1
- LDA INWK+14
- STA XX15+2
-
- JSR NORM               \ Call NORM to normalise the vector in XX15, i.e. nosev
-
- LDA XX15               \ Set nosev = (XX15, XX15+1, XX15+2)
- STA INWK+10
- LDA XX15+1
- STA INWK+12
- LDA XX15+2
- STA INWK+14
-
- LDY #4                 \ Set Y = 4
-
- LDA XX15               \ Set A = nosev_x, and if the top two magnitude bits
- AND #%01100000         \ are both clear, jump to TI1 with A = 0, Y = 4
- BEQ TI1
-
- LDX #2                 \ Otherwise nosev_x is big, so set up the index values
- LDA #0                 \ to pass to TIS3
-
- JSR TIS3               \ Call TIS3 with X = 2, Y = 4, A = 0, to set roofv_x =
- STA INWK+16            \ -(nosev_y * roofv_y + nosev_z * roofv_z) / nosev_x
-
-.TI3
-
- LDA INWK+16            \ Set (XX15, XX15+1, XX15+2) = roofv
- STA XX15
- LDA INWK+18
- STA XX15+1
- LDA INWK+20
- STA XX15+2
-
- JSR NORM               \ Call NORM to normalise the vector in XX15, i.e. roofv
-
- LDA XX15               \ Set roofv = (XX15, XX15+1, XX15+2)
- STA INWK+16
- LDA XX15+1
- STA INWK+18
- LDA XX15+2
- STA INWK+20
-
- LDA INWK+12            \ Set Q = nosev_y
- STA Q
-
- LDA INWK+20            \ Set A = roofv_z
-
- JSR MULT12             \ Set (S R) = Q * A = nosev_y * roofv_z
-
- LDX INWK+14            \ Set X = nosev_z
-
- LDA INWK+18            \ Set A = roofv_y
-
- JSR TIS1               \ Set (A ?) = (-X * A + (S R)) / 96
-                        \        = (-nosev_z * roofv_y + nosev_y * roofv_z) / 96
-                        \
-                        \ This also sets Q = nosev_z
-
- EOR #%10000000         \ Set sidev_x = -A
- STA INWK+22            \        = (nosev_z * roofv_y - nosev_y * roofv_z) / 96
-
- LDA INWK+16            \ Set A = roofv_x
-
- JSR MULT12             \ Set (S R) = Q * A = nosev_z * roofv_x
-
- LDX INWK+10            \ Set X = nosev_x
-
- LDA INWK+20            \ Set A = roofv_z
-
- JSR TIS1               \ Set (A ?) = (-X * A + (S R)) / 96
-                        \        = (-nosev_x * roofv_z + nosev_z * roofv_x) / 96
-                        \
-                        \ This also sets Q = nosev_x
-
- EOR #%10000000         \ Set sidev_y = -A
- STA INWK+24            \        = (nosev_x * roofv_z - nosev_z * roofv_x) / 96
-
- LDA INWK+18            \ Set A = roofv_y
-
- JSR MULT12             \ Set (S R) = Q * A = nosev_x * roofv_y
-
- LDX INWK+12            \ Set X = nosev_y
-
- LDA INWK+16            \ Set A = roofv_x
-
- JSR TIS1               \ Set (A ?) = (-X * A + (S R)) / 96
-                        \        = (-nosev_y * roofv_x + nosev_x * roofv_y) / 96
-
- EOR #%10000000         \ Set sidev_z = -A
- STA INWK+26            \        = (nosev_y * roofv_x - nosev_x * roofv_y) / 96
-
- LDA #0                 \ Set A = 0 so we can clear the low bytes of the
-                        \ orientation vectors
-
- LDX #14                \ We want to clear the low bytes, so start from sidev_y
-                        \ at byte #9+14 (we clear all except sidev_z_lo, though
-                        \ I suspect this is in error and that X should be 16)
-
-.TIL1
-
- STA INWK+9,X           \ Set the low byte in byte #9+X to zero
-
- DEX                    \ Set X = X - 2 to jump down to the next low byte
- DEX
-
- BPL TIL1               \ Loop back until we have zeroed all the low bytes
-
- RTS                    \ Return from the subroutine
-
-\ ******************************************************************************
-\
-\       Name: TIS2
-\       Type: Subroutine
-\   Category: Maths (Arithmetic)
-\    Summary: Calculate A = A / Q
-\  Deep dive: Shift-and-subtract division
-\
-\ ------------------------------------------------------------------------------
-\
-\ Calculate the following division, where A is a sign-magnitude number and Q is
-\ a positive integer:
-\
-\   A = A / Q
-\
-\ The value of A is returned as a sign-magnitude number with 96 representing 1,
-\ and the maximum value returned is 1 (i.e. 96). This routine is used when
-\ normalising vectors, where we represent fractions using integers, so this
-\ gives us an approximation to two decimal places.
-\
-\ ******************************************************************************
-
-.TIS2
-
- TAY                    \ Store the argument A in Y
-
- AND #%01111111         \ Strip the sign bit from the argument, so A = |A|
-
- CMP Q                  \ If A >= Q then jump to TI4 to return a 1 with the
- BCS TI4                \ correct sign
-
- LDX #%11111110         \ Set T to have bits 1-7 set, so we can rotate through 7
- STX T                  \ loop iterations, getting a 1 each time, and then
-                        \ getting a 0 on the 8th iteration... and we can also
-                        \ use T to catch our result bits into bit 0 each time
-
-.TIL2
-
- ASL A                  \ Shift A to the left
-
- CMP Q                  \ If A < Q skip the following subtraction
- BCC P%+4
-
- SBC Q                  \ A >= Q, so set A = A - Q
-                        \
-                        \ Going into this subtraction we know the C flag is
-                        \ set as we passed through the BCC above, and we also
-                        \ know that A >= Q, so the C flag will still be set once
-                        \ we are done
-
- ROL T                  \ Rotate the counter in T to the left, and catch the
-                        \ result bit into bit 0 (which will be a 0 if we didn't
-                        \ do the subtraction, or 1 if we did)
-
- BCS TIL2               \ If we still have set bits in T, loop back to TIL2 to
-                        \ do the next iteration of 7
-
-                        \ We've done the division and now have a result in the
-                        \ range 0-255 here, which we need to reduce to the range
-                        \ 0-96. We can do that by multiplying the result by 3/8,
-                        \ as 256 * 3/8 = 96
-
- LDA T                  \ Set T = T / 4
- LSR A
- LSR A
- STA T
-
- LSR A                  \ Set T = T / 8 + T / 4
- ADC T                  \       = 3T / 8
- STA T
-
- TYA                    \ Fetch the sign bit of the original argument A
- AND #%10000000
-
- ORA T                  \ Apply the sign bit to T
-
- RTS                    \ Return from the subroutine
-
-.TI4
-
- TYA                    \ Fetch the sign bit of the original argument A
- AND #%10000000
-
- ORA #96                \ Apply the sign bit to 96 (which represents 1)
-
- RTS                    \ Return from the subroutine
-
-\ ******************************************************************************
-\
 \       Name: TIS3
 \       Type: Subroutine
 \   Category: Maths (Arithmetic)
@@ -37261,6 +37813,151 @@ ENDMACRO
  EQUB &6C, &20, &02     \ MOS code
  EQUB &D0, &EB, &A2
  EQUB &08
+
+\ ******************************************************************************
+\
+\       Name: RestartSync
+\       Type: Subroutine
+\   Category: Main loop
+\    Summary: Restart the sync counter
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.RestartSync
+
+ STZ musicBuff+2        \ Set the parameter to zero to restart the sync counter
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
+                        \ the sync counter, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: WaitForSync
+\       Type: Subroutine
+\   Category: Main loop
+\    Summary: Pause until the sync counter reaches zero
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.WaitForSync
+
+ LDA #1
+ STA musicBuff+2        \ Set the parameter to zero to restart the sync counter
+
+ LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
+ LDY #HI(musicBuff)     \ block
+
+ LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
+                        \ the sync counter, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: EraseRestOfPlanet
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw all remaining lines in the ball line heap to erase the rest
+\             of the old planet
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.EraseRestOfPlanet
+
+ LDY LSNUM              \ Set Y to the offset in LSNUM, which points to the part
+                        \ of the heap that we are overwriting with new points
+
+ CPY LSNUM2             \ If LSNUM >= LSNUM2, then we have already redrawn all
+ BCS eras1              \ of the lines from the old circle's ball line heap, so
+                        \ skip the following
+
+ JSR DrawPlanetLine     \ Erase the next planet line from the ball line heap
+
+ JMP EraseRestOfPlanet  \ Loop back for the next line in the ball line heap
+
+.eras1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawNewPlanetLine
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a ball line, but only if it is different to the old line
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   K3+4 to K3+7        The (X1, Y1) and (X2, Y2) coordinates of the old line
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.DrawNewPlanetLine
+
+ BIT K3+9               \ If bit 7 of K3+9 is clear, then there is no old line
+ BPL nlin2              \ to draw, so jump to nlin2 to draw the new line only
+
+ LDA K3+4               \ If the old line equals the new line, jump to nlin3
+ CMP X1                 \ to skip drawing both lines
+ BNE nlin1
+ LDA K3+5
+ CMP Y1
+ BNE nlin1
+ LDA K3+6
+ CMP X2
+ BNE nlin1
+ LDA K3+7
+ CMP Y2
+ BEQ nlin3
+
+.nlin1
+
+                        \ If we get here then the old line is different to the
+                        \ new line, so we draw them both
+
+ JSR LL30               \ Draw the new line from (X1, Y1) to (X2, Y2)
+
+ LDA K3+4               \ Set up the old line's coordinates
+ STA X1
+ LDA K3+5
+ STA Y1
+ LDA K3+6
+ STA X2
+ LDA K3+7
+ STA Y2
+
+.nlin2
+
+ JSR LL30               \ Draw the old line to erase it
+
+.nlin3
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -40862,65 +41559,6 @@ ENDIF
 
  RTS                    \ Return from the subroutine
 
-\ ******************************************************************************
-\
-\       Name: RemoveLaserLine
-\       Type: Subroutine
-\   Category: Drawing lines
-\    Summary: Remove the laser line from the screen, if there is one
-\
-\ ******************************************************************************
-
-.RemoveLaserLine
-
-                        \ --- Mod: Code added for red enemy lasers: ----------->
-
-                        \ We now need to check whether there is a laser line
-                        \ on-screen, and if so remove it
-
- LDY #1                 \ Set X1 to the first coordinate on the ship line heap,
- LDA (XX19),Y           \ which is the start of the laser line
- STA X1
-
- INY                    \ Increment the index to point to the Y1 coordinate
-
- LDA (XX19),Y           \ Set Y1 to the first coordinate on the ship line heap
- STA Y1                 \ which is the start of the laser line
-
- CMP #255               \ If the Y1 coordinate is 255 then there is no laser
- BEQ noLaserLine        \ line currently on-screen, so jump to noLaserLine to
-                        \ skip the removal of the old line
-
- LDA #255               \ Set the Y2 coordinate of the laser line in the ship
- STA (XX19),Y           \ line heap to 255 to remove the laser line from the
-                        \ heap
-
- INY                    \ Increment the index to point to the X2 coordinate
-
- LDA (XX19),Y           \ Set X2 to the second coordinate on the ship line heap,
- STA X2                 \ which is the end of the laser line
-
- INY                    \ Increment the index to point to the Y2 coordinate
-
- LDA (XX19),Y           \ Set Y2 to the second coordinate on the ship line heap,
- STA Y2                 \ which is the end of the laser line
-
- LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
- JSR DOCOL              \ switch to colour 2, which is red in the space view
-
- JSR LL30               \ Draw the old laser line to remove it from the screen
-
- LDX TYPE               \ Set A to the ship colour for this type, from the
- LDA shpcol,X           \ relevant entry in the shpcol table
-
- JSR DOCOL              \ Send a #SETCOL command to the I/O processor to switch
-                        \ back to the ship's colour
-
-.noLaserLine
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -47926,21 +48564,61 @@ ENDMACRO
  ETOK 209
  EQUB VE
 
- EQUB VE                \ Token 111:    ""
-                        \
-                        \ Encoded as:   ""
+                        \ --- Mod: Code removed for Trumbles: ----------------->
 
- EQUB VE                \ Token 112:    ""
-                        \
-                        \ Encoded as:   ""
+\EQUB VE                \ Token 111:    ""
+\                       \
+\                       \ Encoded as:   ""
+\
+\EQUB VE                \ Token 112:    ""
+\                       \
+\                       \ Encoded as:   ""
+\
+\EQUB VE                \ Token 113:    ""
+\                       \
+\                       \ Encoded as:   ""
+\
+\EQUB VE                \ Token 114:    ""
+\                       \
+\                       \ Encoded as:   ""
 
- EQUB VE                \ Token 113:    ""
-                        \
-                        \ Encoded as:   ""
+                        \ --- And replaced by: -------------------------------->
 
- EQUB VE                \ Token 114:    ""
-                        \
-                        \ Encoded as:   ""
+ ECHR ' '               \ Token 111:    " CUDDLY"
+ ECHR 'C'               \
+ ECHR 'U'               \ Encoded as:   " CUDDLY"
+ ECHR 'D'
+ ECHR 'D'
+ ECHR 'L'
+ ECHR 'Y'
+ EQUB VE
+
+ ECHR ' '               \ Token 112:    " CUTE"
+ ECHR 'C'               \
+ ECHR 'U'               \ Encoded as:   " CUTE"
+ ECHR 'T'
+ ECHR 'E'
+ EQUB VE
+
+ ECHR ' '               \ Token 113:    " FURRY"
+ ECHR 'F'               \
+ ECHR 'U'               \ Encoded as:   " FURRY"
+ ECHR 'R'
+ ECHR 'R'
+ ECHR 'Y'
+ EQUB VE
+
+ ECHR ' '               \ Token 114:    " FRIENDLY"
+ ECHR 'F'               \
+ ECHR 'R'               \ Encoded as:   " FRI<246>DLY"
+ ECHR 'I'
+ ETWO 'E', 'N'
+ ECHR 'D'
+ ECHR 'L'
+ ECHR 'Y'
+ EQUB VE
+
+                        \ --- End of replacement ------------------------------>
 
  ECHR 'W'               \ Token 115:    "WASP"
  ECHR 'A'               \
@@ -48491,13 +49169,249 @@ ENDMACRO
                         \
                         \ Encoded as:   ""
 
- EQUB VE                \ Token 198:    ""
-                        \
-                        \ Encoded as:   ""
+                        \ --- Mod: Code removed for Trumbles: ----------------->
 
- EQUB VE                \ Token 199:    ""
-                        \
-                        \ Encoded as:   ""
+\EQUB VE                \ Token 198:    ""
+\                       \
+\                       \ Encoded as:   ""
+\
+\EQUB VE                \ Token 199:    ""
+\                       \
+\                       \ Encoded as:   ""
+
+                        \ --- And replaced by: -------------------------------->
+
+ ECHR ' '               \ Token 198:    " LITTLE TRUMBLE"
+ ECHR 'L'               \
+ ETWO 'I', 'T'          \ Encoded as:   " L<219>T<229> TRUMB<229>"
+ ECHR 'T'
+ ETWO 'L', 'E'
+ ECHR ' '
+ ECHR 'T'
+ ECHR 'R'
+ ECHR 'U'
+ ECHR 'M'
+ ECHR 'B'
+ ETWO 'L', 'E'
+ EQUB VE  
+
+ EJMP 25                \ Token 199:    "{incoming message screen, wait 2s}
+ EJMP 9                 \                {clear screen}
+ EJMP 23                \                {move to row 10, white, lower case}
+ EJMP 14                \                {justify}
+ ECHR ' '               \                  {single cap}GOOD DAY COMMANDER
+ ECHR ' '               \                {commander name}, ALLOW ME TO INTRODUCE
+ EJMP 19                \                MYSELF. {single cap}I AM {single cap}
+ ECHR 'G'               \                THE {single cap}MERCHANT {single cap}
+ ECHR 'O'               \                PRINCE OF THRUN AND I {single cap}FIND
+ ECHR 'O'               \                MYSELF FORCED TO SELL MY MOST            
+ ECHR 'D'               \                TREASURED POSSESSION.{cr}
+ ECHR ' '               \                 {single cap}I AM OFFERING YOU, FOR THE
+ ECHR 'D'               \                PALTRY SUM OF JUST 5000{single cap}C
+ ECHR 'A'               \                {single cap}R THE RAREST THING IN THE
+ ECHR 'Y'               \                {single cap}KNOWN {single cap}UNIVERSE.
+ ECHR ' '               \                {cr}
+ ETOK 154               \                 {single cap}{single cap}WILL YOU TAKE
+ ECHR ' '               \                IT(Y/N)?{cr}
+ EJMP 4                 \                {left align}{all caps}{tab 6}
+ ECHR ','               \
+ EJMP 13                \ Encoded as:   "{25}{9}{23}{14}  {19}GOOD DAY [154] {4}
+ ECHR ' '               \                ,{13} <228><224>W ME[201]<240>TRODU
+ ETWO 'A', 'L'          \                <233> MY<218>LF. {19}I AM {19}<226>E
+ ETWO 'L', 'O'          \                 {19}M<244>CH<255>T {19}PR<240><233> OF
+ ECHR 'W'               \                 {19}<226>RUN <255>D {19}I{26}F<240>D M
+ ECHR ' '               \                Y<218>LF F<253><233>D[201]<218>LL MY MO
+ ECHR 'M'               \                <222> T<242>ASUR<242> POSS<237>SI<223>
+ ECHR 'E'               \                [204]I AM OFF<244>[195][179], F<253>
+ ETOK 201               \                 [147]P<228>TRY SUM OF JU<222> 5000{19}
+ ETWO 'I', 'N'          \                C{19}R [147]R<238>E<222> <226>[195]
+ ECHR 'T'               \                 <240> <226>E {19}K<227>WN {19}UNIV
+ ECHR 'R'               \                <244><218>[204]W<220>L [179] TAKE <219>
+ ECHR 'O'               \                [206]{12}{15}{1}{8}"
+ ECHR 'D'
+ ECHR 'U'             
+ ETWO 'C', 'E'
+ ECHR ' '             
+ ECHR 'M'
+ ECHR 'Y'
+ ETWO 'S', 'E'
+ ECHR 'L'
+ ECHR 'F'
+ ECHR '.'
+ ECHR ' '
+ EJMP 19
+ ECHR 'I'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'M'
+ ECHR ' '
+ EJMP 19
+ ETWO 'T', 'H'
+ ECHR 'E'
+ ECHR ' '
+ EJMP 19
+ ECHR 'M'
+ ETWO 'E', 'R'
+ ECHR 'C'
+ ECHR 'H'
+ ETWO 'A', 'N'
+ ECHR 'T'
+ ECHR ' '
+ EJMP 19
+ ECHR 'P'
+ ECHR 'R'
+ ETWO 'I', 'N'
+ ETWO 'C', 'E'
+ ECHR ' '
+ ECHR 'O'
+ ECHR 'F'
+ ECHR ' '
+ EJMP 19
+ ETWO 'T', 'H'
+ ECHR 'R'
+ ECHR 'U'
+ ECHR 'N'
+ ECHR ' '
+ ETWO 'A', 'N'
+ ECHR 'D'
+ ECHR ' '
+ EJMP 19
+ ECHR 'I'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'I', 'N'
+ ECHR 'D'
+ ECHR ' '
+ ECHR 'M'
+ ECHR 'Y'
+ ETWO 'S', 'E'
+ ECHR 'L'
+ ECHR 'F'
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ETWO 'C', 'E'
+ ECHR 'D'
+ ETOK 201
+ ETWO 'S', 'E'
+ ECHR 'L'
+ ECHR 'L'
+ ECHR ' '
+ ECHR 'M'
+ ECHR 'Y'
+ ECHR ' '
+ ECHR 'M'
+ ECHR 'O'
+ ETWO 'S', 'T'
+ ECHR ' '
+ ECHR 'T'
+ ETWO 'R', 'E'
+ ECHR 'A'
+ ECHR 'S'
+ ECHR 'U'
+ ECHR 'R'
+ ETWO 'E', 'D'
+ ECHR ' '
+ ECHR 'P'
+ ECHR 'O'
+ ECHR 'S'
+ ECHR 'S'
+ ETWO 'E', 'S'
+ ECHR 'S'
+ ECHR 'I'
+ ETWO 'O', 'N'
+ ETOK 204
+ ECHR 'I'
+ ECHR ' '
+ ECHR 'A'
+ ECHR 'M'
+ ECHR ' '
+ ECHR 'O'
+ ECHR 'F'
+ ECHR 'F'
+ ETWO 'E', 'R'
+ ETOK 195
+ ETOK 179
+ ECHR ','
+ ECHR ' '
+ ECHR 'F'
+ ETWO 'O', 'R'
+ ECHR ' '
+ ETOK 147
+ ECHR 'P'
+ ETWO 'A', 'L'
+ ECHR 'T'
+ ECHR 'R'
+ ECHR 'Y'
+ ECHR ' '
+ ECHR 'S'
+ ECHR 'U'
+ ECHR 'M'
+ ECHR ' '
+ ECHR 'O'
+ ECHR 'F'
+ ECHR ' '
+ ECHR 'J'
+ ECHR 'U'
+ ETWO 'S', 'T'
+ ECHR ' '
+ ECHR '5'
+ ECHR '0'
+ ECHR '0'
+ ECHR '0'
+ EJMP 19
+ ECHR 'C'
+ EJMP 19
+ ECHR 'R'
+ ECHR ' '
+ ETOK 147
+ ECHR 'R'
+ ETWO 'A', 'R'
+ ECHR 'E'
+ ETWO 'S', 'T'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ETOK 195
+ ECHR ' '
+ ETWO 'I', 'N'
+ ECHR ' '
+ ETWO 'T', 'H'
+ ECHR 'E'
+ ECHR ' '
+ EJMP 19
+ ECHR 'K'
+ ETWO 'N', 'O'
+ ECHR 'W'
+ ECHR 'N'
+ ECHR ' '
+ EJMP 19
+ ECHR 'U'
+ ECHR 'N'
+ ECHR 'I'
+ ECHR 'V'
+ ETWO 'E', 'R'
+ ETWO 'S', 'E'
+ ETOK 204
+ ECHR 'W'
+ ETWO 'I', 'L'
+ ECHR 'L'
+ ECHR ' '
+ ETOK 179
+ ECHR ' '
+ ECHR 'T'
+ ECHR 'A'
+ ECHR 'K'
+ ECHR 'E'
+ ECHR ' '
+ ETWO 'I', 'T'
+ ETOK 206
+ EJMP 12
+ EJMP 15
+ EJMP 1
+ EJMP 8
+ EQUB VE
+
+                        \ --- End of replacement ------------------------------>
 
  ECHR ' '               \ Token 200:    " NAME? "
  ECHR 'N'               \
@@ -54272,90 +55186,6 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\       Name: RestartSync
-\       Type: Subroutine
-\   Category: Main loop
-\    Summary: Restart the sync counter
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for speed control: -------------->
-
-.RestartSync
-
- STZ musicBuff+2        \ Set the parameter to zero to restart the sync counter
-
- LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
- LDY #HI(musicBuff)     \ block
-
- LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
-
- JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
-                        \ the sync counter, returning from the subroutine
-                        \ using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: WaitForSync
-\       Type: Subroutine
-\   Category: Main loop
-\    Summary: Pause until the sync counter reaches zero
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for speed control: -------------->
-
-.WaitForSync
-
- LDA #1
- STA musicBuff+2        \ Set the parameter to zero to restart the sync counter
-
- LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
- LDY #HI(musicBuff)     \ block
-
- LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
-
- JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
-                        \ the sync counter, returning from the subroutine
-                        \ using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: EraseRestOfPlanet
-\       Type: Subroutine
-\   Category: Drawing lines
-\    Summary: Draw all remaining lines in the ball line heap to erase the rest
-\             of the old planet
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for flicker-free planets: ------->
-
-.EraseRestOfPlanet
-
- LDY LSNUM              \ Set Y to the offset in LSNUM, which points to the part
-                        \ of the heap that we are overwriting with new points
-
- CPY LSNUM2             \ If LSNUM >= LSNUM2, then we have already redrawn all
- BCS eras1              \ of the lines from the old circle's ball line heap, so
-                        \ skip the following
-
- JSR DrawPlanetLine     \ Erase the next planet line from the ball line heap
-
- JMP EraseRestOfPlanet  \ Loop back for the next line in the ball line heap
-
-.eras1
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
 \       Name: DrawPlanetLine
 \       Type: Subroutine
 \   Category: Drawing lines
@@ -54480,67 +55310,6 @@ ENDMACRO
 
  INC LSNUM              \ Increment LSNUM to point to the next coordinate, so we
                         \ work our way through the current heap
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: DrawNewPlanetLine
-\       Type: Subroutine
-\   Category: Drawing lines
-\    Summary: Draw a ball line, but only if it is different to the old line
-\
-\ ------------------------------------------------------------------------------
-\
-\ Arguments:
-\
-\   K3+4 to K3+7        The (X1, Y1) and (X2, Y2) coordinates of the old line
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for flicker-free planets: ------->
-
-.DrawNewPlanetLine
-
- BIT K3+9               \ If bit 7 of K3+9 is clear, then there is no old line
- BPL nlin2              \ to draw, so jump to nlin2 to draw the new line only
-
- LDA K3+4               \ If the old line equals the new line, jump to nlin3
- CMP X1                 \ to skip drawing both lines
- BNE nlin1
- LDA K3+5
- CMP Y1
- BNE nlin1
- LDA K3+6
- CMP X2
- BNE nlin1
- LDA K3+7
- CMP Y2
- BEQ nlin3
-
-.nlin1
-
-                        \ If we get here then the old line is different to the
-                        \ new line, so we draw them both
-
- JSR LL30               \ Draw the new line from (X1, Y1) to (X2, Y2)
-
- LDA K3+4               \ Set up the old line's coordinates
- STA X1
- LDA K3+5
- STA Y1
- LDA K3+6
- STA X2
- LDA K3+7
- STA Y2
-
-.nlin2
-
- JSR LL30               \ Draw the old line to erase it
-
-.nlin3
 
  RTS                    \ Return from the subroutine
 
