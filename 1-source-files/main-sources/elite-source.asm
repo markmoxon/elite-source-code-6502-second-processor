@@ -7041,8 +7041,9 @@ ENDIF
  ROR TRIBBLE            \ cabin temperature is high enough to kill them off
                         \ (this will eventually bring the number down to zero)
 
- LDA #56                \ Call the NOISE routine with A = 56 to make the sound
+ LDA #24                \ Call the NOISE routine with A = 24 to make the sound
  JSR NOISE              \ of Trumbles being killed off by the heat of the sun
+                        \ (using the second part of the two-part kill sound)
 
 .nokilltr
 
