@@ -4101,7 +4101,7 @@ Saving file '3-assembled-output/COMPENDIUM.bin'
      15D7   F0 0B      BEQ &15E4
      15D9   4E D5 08   LSR &08D5
      15DC   6E D4 08   ROR &08D4
-     15DF   A9 38      LDA #&38
+     15DF   A9 18      LDA #&18
      15E1   20 A3 55   JSR &55A3
 .nokilltr
      15E4   AD CD 08   LDA &08CD
