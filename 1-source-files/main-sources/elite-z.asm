@@ -6847,7 +6847,7 @@ ENDMACRO
  LDA NWOSWD-2           \ If the new volume is zero, jump to zeroVolume
  BEQ zeroVolume
 
- CMP #&F1               \ If this is not volume &F1, jump to notF4
+ CMP #&F1               \ If this is not volume &F1, jump to notF1
  BNE notF1
 
  LDA NWOSWD-2           \ Load the new volume for &F1, which is put into
