@@ -33688,7 +33688,7 @@ ENDIF
 \LDY #HI(MINI)          \ source, but they would load a commander file called
 \JSR OSCLI              \ "E.MINING" and continue below, so presumably this is
 \JMP LOL1-2             \ code for loading a test commander file
-
+\
 \LDX #2                 \ These instructions are commented out in the original
 \JSR FX200              \ source, but they would enable the ESCAPE key and clear
                         \ memory if the BREAK key is pressed (*FX 200,2)
