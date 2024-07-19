@@ -7553,7 +7553,6 @@ IF _MATCH_ORIGINAL_BINARIES
 
  ENDIF
 
- 
 ELSE
  
  SKIP 256               \ The ball line heap for storing x-coordinates (see the
@@ -33688,7 +33687,7 @@ ENDIF
 \LDY #HI(MINI)          \ source, but they would load a commander file called
 \JSR OSCLI              \ "E.MINING" and continue below, so presumably this is
 \JMP LOL1-2             \ code for loading a test commander file
-\
+
 \LDX #2                 \ These instructions are commented out in the original
 \JSR FX200              \ source, but they would enable the ESCAPE key and clear
                         \ memory if the BREAK key is pressed (*FX 200,2)
@@ -39816,7 +39815,7 @@ ENDIF
  STA XX15+4             \ from the XX3 heap into XX15+4
 
  LDA XX3+3,X            \ Fetch the y_hi coordinate of the edge's end vertex
- STA XX12+1             \ from the XX3 heap into XX11+1
+ STA XX12+1             \ from the XX3 heap into XX12+1
 
  LDA XX3+2,X            \ Fetch the y_lo coordinate of the edge's end vertex
  STA XX12               \ from the XX3 heap into XX12
