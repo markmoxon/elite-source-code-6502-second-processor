@@ -726,15 +726,30 @@ ENDIF
 
 .TVT3
 
- EQUB &00, &34          \ 1 = yellow, 2 = red, 3 = cyan (space view)
- EQUB &24, &17          \
- EQUB &74, &64          \ Set with a #SETVDU19 0 command, after which:
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\EQUB &00, &34          \ 1 = yellow, 2 = red, 3 = cyan (space view)
+\EQUB &24, &17          \
+\EQUB &74, &64          \ Set with a #SETVDU19 0 command, after which:
+\EQUB &57, &47          \
+\EQUB &B1, &A1          \   #YELLOW = yellow
+\EQUB &96, &86          \   #RED    = red
+\EQUB &F1, &E1          \   #CYAN   = cyan
+\EQUB &D6, &C6          \   #GREEN  = cyan/yellow stripe
+\                       \   #WHITE  = cyan/red stripe
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUB &00, &31          \ 1 = cyan, 2 = red, 3 = white (anaglyph 3D space view)
+ EQUB &21, &17          \
+ EQUB &71, &61          \ Set with a #SETVDU19 16 command
  EQUB &57, &47          \
- EQUB &B1, &A1          \   #YELLOW = yellow
- EQUB &96, &86          \   #RED    = red
- EQUB &F1, &E1          \   #CYAN   = cyan
- EQUB &D6, &C6          \   #GREEN  = cyan/yellow stripe
-                        \   #WHITE  = cyan/red stripe
+ EQUB &B0, &A0          \   #CYAN_3D  = cyan
+ EQUB &96, &86          \   #RED_3D   = red
+ EQUB &F0, &E0          \   #WHITE_3D = white
+ EQUB &D6, &C6
+
+                        \ --- End of replacement ------------------------------>
 
  EQUB &00, &34          \ 1 = yellow, 2 = red, 3 = white (chart view)
  EQUB &24, &17          \
@@ -746,15 +761,31 @@ ENDIF
  EQUB &D6, &C6          \   #GREEN  = white/yellow stripe
                         \   #WHITE  = white/red stripe
 
- EQUB &00, &34          \ 1 = yellow, 2 = white, 3 = cyan (title screen)
- EQUB &24, &17          \
- EQUB &74, &64          \ Set with a #SETVDU19 32 command, after which:
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\EQUB &00, &34          \ 1 = yellow, 2 = white, 3 = cyan (title screen)
+\EQUB &24, &17          \
+\EQUB &74, &64          \ Set with a #SETVDU19 32 command, after which:
+\EQUB &57, &47          \
+\EQUB &B1, &A1          \   #YELLOW = yellow
+\EQUB &90, &80          \   #RED    = white
+\EQUB &F1, &E1          \   #CYAN   = cyan
+\EQUB &D0, &C0          \   #GREEN  = cyan/yellow stripe
+\                       \   #WHITE  = cyan/white stripe
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUB &00, &31          \ 1 = yellow, 2 = white, 3 = cyan (title screen)
+ EQUB &21, &17          \
+ EQUB &71, &61          \ Set with a #SETVDU19 32 command, after which:
  EQUB &57, &47          \
- EQUB &B1, &A1          \   #YELLOW = yellow
- EQUB &90, &80          \   #RED    = white
- EQUB &F1, &E1          \   #CYAN   = cyan
- EQUB &D0, &C0          \   #GREEN  = cyan/yellow stripe
+ EQUB &B0, &A0          \   #YELLOW = yellow
+ EQUB &96, &86          \   #RED    = white
+ EQUB &F0, &E0          \   #CYAN   = cyan
+ EQUB &D6, &C6          \   #GREEN  = cyan/yellow stripe
                         \   #WHITE  = cyan/white stripe
+
+                        \ --- End of replacement ------------------------------>
 
  EQUB &00, &34          \ 1 = yellow, 2 = magenta, 3 = white (trade view)
  EQUB &24, &17          \
@@ -2401,9 +2432,19 @@ ENDIF
  DEC LINMAX             \ Decrement LINMAX so it now contains 2 * number of
                         \ points
 
- LDA TABLE+3            \ If TABLE+3 = 255, jump to doalaser to draw this line,
- CMP #255               \ as this denotes that the following segment is a laser
- BEQ doalaser           \ line, which should be drawn in red
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA TABLE+3            \ If TABLE+3 = 255, jump to doalaser to draw this line,
+\CMP #255               \ as this denotes that the following segment is a laser
+\BEQ doalaser           \ line, which should be drawn in red
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA TABLE+3            \ If TABLE+3 = 255, jump to nullLine to skip this line,
+ CMP #255               \ as this denotes that the following segment is a null
+ BEQ nullLine           \ line, which should not be drawn
+
+                        \ --- End of replacement ------------------------------>
 
 .LL27
 
@@ -2477,6 +2518,19 @@ ENDIF
  BNE Ivedonealaser      \ point to the rest of the lines as the laser line is
                         \ always the first to be transmitted from the parasite
                         \ (this BNE is effectively a JMP as A is never zero)
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.nullLine
+
+ TYA                    \ Set A = Y + 4
+ CLC
+ ADC #4
+
+ JMP Ivedonealaser      \ Jump up to Ivedonealaser with A set to the next point
+                        \ in the queue
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \

@@ -62,6 +62,12 @@
 
  LOAD_WORDS% = &81B0    \ The address where the text data will be loaded
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ XX3a = &8600           \ XX3 heap for storing the right-eye calculations
+
+                        \ --- End of added code ------------------------------->
+
 IF _SNG45 OR _SOURCE_DISC
 
  Q% = _MAX_COMMANDER    \ Set Q% to TRUE to max out the default commander, FALSE
@@ -233,6 +239,16 @@ ENDIF
  f8 = &76               \ Internal key number for red key f8 (Status Mode)
 
  f9 = &77               \ Internal key number for red key f9 (Inventory)
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ CYAN_3D = %00001111    \ Four mode 1 pixels of colour 1 (cyan)
+
+ RED_3D  = %11110000    \ Four mode 1 pixels of colour 2 (red)
+
+ WHITE_3D = %11111111   \ Four mode 1 pixels of colour 3 (white)
+
+                        \ --- End of added code ------------------------------->
 
  YELLOW  = %00001111    \ Four mode 1 pixels of colour 1 (yellow)
 
@@ -831,6 +847,17 @@ ENDIF
 
  SKIP 1                 \ Temporary storage, typically used for storing the
                         \ number of iterations required when looping
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.rHeap
+
+ SKIP 0                 \ The address of the ship line heap for the right eye
+                        \
+                        \ Shares memory with CNT2 and STP, which are not used in
+                        \ the LL9 routine
+
+                        \ --- End of added code ------------------------------->
 
 .CNT2
 
@@ -3382,6 +3409,14 @@ ENDIF
 
  SKIP 100               \ The line buffer used by DASC to print justified text
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.LSY3
+
+ SKIP 256               \ ???   
+
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: WP
@@ -3410,12 +3445,25 @@ ENDIF
 
 .LSO
 
- SKIP 192               \ The ship line heap for the space station (see NWSPS)
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\SKIP 192               \ The ship line heap for the space station (see NWSPS)
+\                       \ and the sun line heap (see SUN)
+\                       \
+\                       \ The spaces can be shared as our local bubble of
+\                       \ universe can support either the sun or a space
+\                       \ station, but not both
+
+                        \ --- And replaced by: -------------------------------->
+
+ SKIP 192*2             \ The ship line heap for the space station (see NWSPS)
                         \ and the sun line heap (see SUN)
                         \
                         \ The spaces can be shared as our local bubble of
                         \ universe can support either the sun or a space
                         \ station, but not both
+
+                        \ --- End of replacement ------------------------------>
 
 .SX
 
@@ -3511,6 +3559,14 @@ ENDIF
  SKIP 1                 \ Used as an index into the UB tables when projecting
                         \ the scroll text lines onto the Star Wars perspective
                         \ view and then onto the screen
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.LSX3
+
+ SKIP 256               \ ???
+
+                        \ --- End of added code ------------------------------->
 
  PRINT "WP workspace from  ", ~WP," to ", ~P%
 
@@ -26463,17 +26519,39 @@ ENDIF
                         \ (as the heap space always ends just before the ship
                         \ blueprints at D%)
 
- LDY #5                 \ Fetch ship blueprint byte #5, which contains the
- LDA (XX0),Y            \ maximum heap size required for plotting the new ship,
- STA T1                 \ and store it in T1
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- LDA SLSP               \ Take the 16-bit address in SLSP and subtract T1,
+\LDY #5                 \ Fetch ship blueprint byte #5, which contains the
+\LDA (XX0),Y            \ maximum heap size required for plotting the new ship,
+\STA T1                 \ and store it in T1
+\
+\LDA SLSP               \ Take the 16-bit address in SLSP and subtract T1,
+\SEC                    \ storing the 16-bit result in INWK(34 33), so this now
+\SBC T1                 \ points to the start of the line heap for our new ship
+\STA INWK+33
+\LDA SLSP+1
+\SBC #0
+\STA INWK+34
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDY #5                 \ Fetch ship blueprint byte #5, which contains the
+ LDA (XX0),Y            \ maximum heap size required for plotting the new ship
+
+ STZ XX24               \ Double the heap size and store it in (XX24 T1)
+ ASL A
+ ROL XX24
+ STA T1
+
+ LDA SLSP               \ Take the 16-bit address in SLSP and subtract (XX24 T1)
  SEC                    \ storing the 16-bit result in INWK(34 33), so this now
  SBC T1                 \ points to the start of the line heap for our new ship
  STA INWK+33
  LDA SLSP+1
- SBC #0
+ SBC XX24
  STA INWK+34
+
+                        \ --- End of replacement ------------------------------>
 
                         \ We now need to check that there is enough free space
                         \ for both this new line heap and the new data block
@@ -29971,6 +30049,14 @@ ENDIF
                         \ we are removing (i.e. the size of the gap in the heap
                         \ created by the ship removal)
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STZ T1                 \ Set (T1 A) = A * 2, to give us the heap size for both
+ ASL A                  \ eyes
+ ROL T1
+
+                        \ --- End of added code ------------------------------->
+
                         \ INF currently contains the ship data for the ship we
                         \ are removing, and INF(34 33) contains the address of
                         \ the bottom of the ship's heap, so we can calculate
@@ -29982,10 +30068,21 @@ ENDIF
  ADC (INF),Y
  STA P
 
- INY                    \ And next we add A and address in INF+34, with any
- LDA (INF),Y            \ from the previous addition, to get the high byte of
- ADC #0                 \ the top of the heap, which we store in P+1, so P(1 0)
- STA P+1                \ points to the top of this ship's heap
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\INY                    \ And next we add A and the address in INF+34, with any
+\LDA (INF),Y            \ carry from the previous addition, to get the high byte
+\ADC #0                 \ of the top of the heap, which we store in P+1, so
+\STA P+1                \ P(1 0) points to the top of this ship's heap
+
+                        \ --- And replaced by: -------------------------------->
+
+ INY                    \ And next we add T1 and the address in INF+34, with any
+ LDA (INF),Y            \ carry from the previous addition, to get the high byte
+ ADC T1                 \ of the top of the heap, which we store in P+1, so
+ STA P+1                \ P(1 0) points to the top of this ship's heap
+
+                        \ --- End of replacement ------------------------------>
 
                         \ Now, we're ready to start looping through the ships
                         \ we want to move, moving the slots, data blocks and
@@ -30028,6 +30125,14 @@ ENDIF
  LDA (SC),Y             \ gives us its maximum heap size, and store it in T
  STA T
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STZ T1                 \ Set (T1 T) = T * 2, to give us the heap size for both
+ ASL T                  \ eyes
+ ROL T1
+
+                        \ --- End of added code ------------------------------->
+
                         \ We now subtract T from P(1 0), so P(1 0) will point to
                         \ the bottom of the line heap for the destination
                         \ (which we will use later when closing up the gap in
@@ -30038,9 +30143,19 @@ ENDIF
  SBC T
  STA P
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA P+1                \ And then we do the high bytes, for which we subtract
+\SBC #0                 \ 0 to include any carry, so this is effectively doing
+\STA P+1                \ P(1 0) = P(1 0) - (0 T)
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA P+1                \ And then we do the high bytes, for which we subtract
- SBC #0                 \ 0 to include any carry, so this is effectively doing
- STA P+1                \ P(1 0) = P(1 0) - (0 T)
+ SBC T1                 \ 0 to include any carry, so this is effectively doing
+ STA P+1                \ P(1 0) = P(1 0) - (T1 T)
+
+                        \ --- End of replacement ------------------------------>
 
                         \ Next, we want to set SC(1 0) to point to the source
                         \ ship's data block
@@ -37208,14 +37323,35 @@ ENDIF
 
  STA (XX19),Y           \ Store A in byte Y of the ship line heap
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA (rHeap),Y          \ Store A in byte Y of the ship line heap
+
+                        \ This section will need updating for proper anaglyph -
+                        \ for now this just duplicates the dot in the right eye
+
+                        \ --- End of added code ------------------------------->
+
  INY                    \ Store A in byte Y+2 of the ship line heap
  INY
  STA (XX19),Y
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA (rHeap),Y          \ Store A in byte Y of the ship line heap
+
+                        \ --- End of added code ------------------------------->
 
  LDA K3                 \ Set A = screen x-coordinate of the ship dot
 
  DEY                    \ Store A in byte Y+1 of the ship line heap
  STA (XX19),Y
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA (rHeap),Y          \ Store A in byte Y of the ship line heap
+
+                        \ --- End of added code ------------------------------->
 
  ADC #3                 \ Set A = screen x-coordinate of the ship dot + 3
 
@@ -37233,6 +37369,12 @@ ENDIF
  DEY                    \ Store A in byte Y-1 of the ship line heap
  DEY
  STA (XX19),Y
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA (rHeap),Y          \ Store A in byte Y of the ship line heap
+
+                        \ --- End of added code ------------------------------->
 
  RTS                    \ Return from the subroutine
 
@@ -37757,11 +37899,20 @@ ENDIF
  LDX TYPE               \ If the ship type is negative then this indicates a
  BMI LL25               \ planet or sun, so jump to PLANET via LL25 above
 
- LDA shpcol,X           \ Set A to the ship colour for this type, from the X-th
-                        \ entry in the shpcol table
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- JSR DOCOL              \ Send a #SETCOL command to the I/O processor to switch
-                        \ to this colour
+\LDA shpcol,X           \ Set A to the ship colour for this type, from the X-th
+\                       \ entry in the shpcol table
+\
+\JSR DOCOL              \ Send a #SETCOL command to the I/O processor to switch
+\                       \ to this colour
+
+                        \ --- And replaced by: -------------------------------->
+
+ JSR GetRightLineHeap   \ Set rHeap(1 0) to the address of the second ship line
+                        \ heap, where we will store the right-eye lines
+
+                        \ --- End of replacement ------------------------------>
 
  LDA #31                \ Set XX4 = 31 to store the ship's distance for later
  STA XX4                \ comparison with the visibility distance. We will
@@ -39170,6 +39321,30 @@ ENDIF
 
  JMP LL66               \ Jump down to LL66
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.LL62a
+
+ LDA #128               \ Calculate 128 - (U R), starting with the low bytes
+ SEC
+ SBC R
+
+ STA XX3a,X             \ Store the low byte of the result in the X-th byte of
+                        \ the heap at XX3
+
+ INX                    \ Increment the heap pointer in X to point to the next
+                        \ byte
+
+ LDA #0                 \ And then subtract the high bytes
+ SBC U
+
+ STA XX3a,X             \ Store the low byte of the result in the X-th byte of
+                        \ the heap at XX3
+
+ JMP LL66a              \ Jump down to LL66a
+
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: LL9 (Part 7 of 12)
@@ -39238,13 +39413,44 @@ ENDIF
 
 .LL57
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+                        \ At this point we have the vertex x, y, z 3D coords in
+                        \ XX15(2 1 0), XX15(5 4 3) and (0 U T)
+                        \
+                        \ We now apply eye spacing to the x-coordinates, before
+                        \ they are all scaled down
+                        \
+                        \   XX15(2 1 0)      -= eye-spacing / 2 (for left eye)
+                        \
+                        \   xRightEye(2 1 0) += eye-spacing / 2 (for right eye)
+
+ JSR ApplyEyeSpacing    \ Calculate the 3D coordinates for this vertex through
+                        \ both eyes
+
+.LL57a
+
+                        \ --- End of added code ------------------------------->
+
                         \ By this point we have our results, so now to scale
                         \ the 16-bit results down into 8-bit values
+
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA U                  \ If the high bytes of the result are all zero, we are
+\ORA XX15+1             \ done, so jump down to LL60 for the next stage
+\ORA XX15+4
+\BEQ LL60
+
+                        \ --- And replaced by: -------------------------------->
 
  LDA U                  \ If the high bytes of the result are all zero, we are
  ORA XX15+1             \ done, so jump down to LL60 for the next stage
  ORA XX15+4
+ ORA xRightEye+1
  BEQ LL60
+
+                        \ --- End of replacement ------------------------------>
 
  LSR XX15+1             \ Shift XX15(1 0) to the right
  ROR XX15
@@ -39255,8 +39461,20 @@ ENDIF
  LSR U                  \ Shift (U T) to the right
  ROR T
 
- JMP LL57               \ Jump back to LL57 to see if we can shift the result
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\JMP LL57               \ Jump back to LL57 to see if we can shift the result
+\                       \ any more
+
+                        \ --- And replaced by: -------------------------------->
+
+ LSR xRightEye+1        \ Shift xRightEye(1 0) to the right
+ ROR xRightEye
+
+ JMP LL57a              \ Jump back to LL57 to see if we can shift the result
                         \ any more
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -39349,9 +39567,19 @@ ENDIF
  LDX CNT                \ Fetch the pointer to the end of the XX3 heap from CNT
                         \ into X
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA XX15+2             \ If x_sign is negative, jump up to LL62, which will
+\BMI LL62               \ store 128 - (U R) on the XX3 heap and return by
+\                       \ jumping down to LL66 below
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA XX15+2             \ If x_sign is negative, jump up to LL62, which will
- BMI LL62               \ store 128 - (U R) on the XX3 heap and return by
-                        \ jumping down to LL66 below
+ BPL P%+5               \ store 128 - (U R) on the XX3 heap and return by
+ JMP LL62               \ jumping down to LL66 below
+
+                        \ --- End of replacement ------------------------------>
 
  LDA R                  \ Calculate 128 + (U R), starting with the low bytes
  CLC
@@ -39370,6 +39598,87 @@ ENDIF
                         \ the heap at XX3
 
 .LL66
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+                        \ We now repeat the calculation for the x-coordinate in
+                        \ xRightEye(2 0), for the right-eye image (in cyan)
+
+ LDA T                  \ Set Q = z_lo
+ STA Q
+
+ LDA xRightEye          \ Set A = x_lo
+
+ CMP Q                  \ If x_lo < z_lo jump to LL69a
+ BCC LL69a
+
+ JSR LL61               \ Call LL61 to calculate:
+                        \
+                        \   (U R) = 256 * A / Q
+                        \         = 256 * x / z
+                        \
+                        \ which we can do as x >= z
+
+ JMP LL65a              \ Jump to LL65a to skip the division for x_lo < z_lo
+
+.LL69a
+
+ JSR LL28               \ Call LL28 to calculate:
+                        \
+                        \   R = 256 * A / Q
+                        \     = 256 * x / z
+                        \
+                        \ Because x < z, the result fits into one byte, and we
+                        \ also know that U = 0, so (U R) also contains the
+                        \ result
+
+.LL65a
+
+                        \ At this point we have:
+                        \
+                        \   (U R) = x / z
+                        \
+                        \ so (U R) contains the vertex's x-coordinate projected
+                        \ on screen
+                        \
+                        \ The next task is to convert (U R) to a pixel screen
+                        \ coordinate and stick it on the XX3 heap.
+                        \
+                        \ We start with the x-coordinate. To convert the
+                        \ x-coordinate to a screen pixel we add 128, the
+                        \ x-coordinate of the centre of the screen, because the
+                        \ projected value is relative to an origin at the centre
+                        \ of the screen, but the origin of the screen pixels is
+                        \ at the top-left of the screen
+
+ LDX CNT                \ Fetch the pointer to the end of the XX3 heap from CNT
+                        \ into X
+
+ LDA xRightEye+2        \ If x_sign is negative, jump up to LL62a, which will
+ BPL P%+5               \ store 128 - (U R) on the XX3 heap and return by
+ JMP LL62a              \ jumping down to LL66 below
+
+ LDA R                  \ Calculate 128 + (U R), starting with the low bytes
+ CLC
+ ADC #128
+
+ STA XX3a,X             \ Store the low byte of the result in the fifth byte of
+                        \ the coordinate block we are adding to XX3 (as X points
+                        \ to the second byte)
+
+ INX                    \ Increment the heap pointer in X to point to the next
+                        \ byte
+
+ LDA U                  \ And then add the high bytes
+ ADC #0
+
+ STA XX3a,X             \ Store the high byte of the result in the sixth byte of
+                        \ the coordinate block we are adding to XX3 (as X points
+                        \ to the second byte)
+
+.LL66a
+
+                        \ --- End of added code ------------------------------->
 
                         \ We've just stored the screen x-coordinate of the
                         \ vertex on the XX3 heap, so now for the y-coordinate
@@ -39409,6 +39718,13 @@ ENDIF
  STA XX3,X              \ Store the low byte of the result in the X-th byte of
                         \ the heap at XX3
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA XX3a,X             \ Store the low byte of the result in the X-th byte of
+                        \ the heap at XX3a
+
+                        \ --- End of added code ------------------------------->
+
  INX                    \ Increment the heap pointer in X to point to the next
                         \ byte
 
@@ -39417,6 +39733,13 @@ ENDIF
 
  STA XX3,X              \ Store the high byte of the result in the X-th byte of
                         \ the heap at XX3
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA XX3a,X             \ Store the high byte of the result in the X-th byte of
+                        \ the heap at XX3a
+
+                        \ --- End of added code ------------------------------->
 
  JMP LL50               \ Jump to LL50 to move on to the next vertex
 
@@ -39468,6 +39791,13 @@ ENDIF
  STA XX3,X              \ Store the low byte of the result in the X-th byte of
                         \ the heap at XX3
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA XX3a,X             \ Store the low byte of the result in the X-th byte of
+                        \ the heap at XX3a
+
+                        \ --- End of added code ------------------------------->
+
  INX                    \ Increment the heap pointer in X to point to the next
                         \ byte
 
@@ -39476,6 +39806,13 @@ ENDIF
 
  STA XX3,X              \ Store the high byte of the result in the X-th byte of
                         \ the heap at XX3
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA XX3a,X             \ Store the high byte of the result in the X-th byte of
+                        \ the heap at XX3a
+
+                        \ --- End of added code ------------------------------->
 
 .LL50
 
@@ -39658,34 +39995,54 @@ ENDIF
  ADC #3                 \ Set Y = A + 3, so Y now points to the fourth byte in
  TAY                    \ this coordinate
 
- LDA #255               \ Set the fourth byte to 255 to act as a flag to the I/O
- STA (XX19),Y           \ processor to draw the following line in red, as it is
-                        \ a laser (this flag is read and acted on in the ADDBYT
-                        \ routine in the I/O processor
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #255               \ Set the fourth byte to 255 to act as a flag to the I/O
+\STA (XX19),Y           \ processor to draw the following line in red, as it is
+\                       \ a laser (this flag is read and acted on in the ADDBYT
+\                       \ routine in the I/O processor
+\
+\INY                    \ Increment Y to point to the next coordinate block
+\
+\LDA XX15               \ Add X1 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+1             \ Add Y1 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+2             \ Add X2 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+3             \ Add Y2 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\STY U                  \ Store the updated ship line heap pointer in U
+
+                        \ --- And replaced by: -------------------------------->
 
  INY                    \ Increment Y to point to the next coordinate block
 
- LDA XX15               \ Add X1 to the end of the heap
- STA (XX19),Y
+ PHY                    \ Store the heap pointer on the stack
 
- INY                    \ Increment the heap pointer
+ JSR DrawLeftEyeLine    \ Draw the laser line in the left-eye line heap
 
- LDA XX15+1             \ Add Y1 to the end of the heap
- STA (XX19),Y
+ PLY                    \ Retrieve the heap pointer from the stack, so we can
+                        \ draw the right-eye line in the same place but in the
+                        \ right heap
 
- INY                    \ Increment the heap pointer
+ JSR DrawRightEyeLine   \ Draw the laser line in the right-eye line heap
 
- LDA XX15+2             \ Add X2 to the end of the heap
- STA (XX19),Y
+ \ Need to draw right eye laser line too ???
 
- INY                    \ Increment the heap pointer
-
- LDA XX15+3             \ Add Y2 to the end of the heap
- STA (XX19),Y
-
- INY                    \ Increment the heap pointer
-
- STY U                  \ Store the updated ship line heap pointer in U
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -39735,10 +40092,21 @@ ENDIF
                         \ visibility distance for this edge, beyond which the
                         \ edge is not shown
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\CMP XX4                \ If XX4 > the visibility distance, where XX4 contains
+\BCC LL78               \ the ship's z-distance reduced to 0-31 (which we set in
+\                       \ part 2), then this edge is too far away to be visible,
+\                       \ so jump down to LL78 to move on to the next edge
+
+                        \ --- And replaced by: -------------------------------->
+
  CMP XX4                \ If XX4 > the visibility distance, where XX4 contains
- BCC LL78               \ the ship's z-distance reduced to 0-31 (which we set in
-                        \ part 2), then this edge is too far away to be visible,
+ BCS P%+5               \ the ship's z-distance reduced to 0-31 (which we set in
+ JMP LL78               \ part 2), then this edge is too far away to be visible,
                         \ so jump down to LL78 to move on to the next edge
+
+                        \ --- End of replacement ------------------------------>
 
  INY                    \ Increment Y to point to byte #1
 
@@ -39768,8 +40136,19 @@ ENDIF
  LSR A
  TAX
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA XX2,X              \ If XX2+X is zero then we decided in part 5 that
+\BEQ LL78               \ face 2 is hidden, so jump to LL78
+
+                        \ --- And replaced by: -------------------------------->
+
+
  LDA XX2,X              \ If XX2+X is zero then we decided in part 5 that
- BEQ LL78               \ face 2 is hidden, so jump to LL78
+ BNE P%+5               \ face 2 is hidden, so jump to LL78
+ JMP LL78
+
+                        \ --- End of replacement ------------------------------>
 
 .LL79
 
@@ -39795,6 +40174,21 @@ ENDIF
 
  LDA (V),Y              \ Fetch byte #3 for this edge into Q, which contains
  STA Q                  \ the number of the vertex at the end of the edge
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA K2+2               \ Store the number of the vertex at the end of the edge
+                        \ into K2+2 (as Q gets corrupted by LL145)
+
+ STX K2                 \ Store the number of the vertex at the start of the
+                        \ edge into K2
+
+ LDY U                  \ Fetch the ship line heap pointer, which points to the
+                        \ next free byte on the heap, into Y
+
+ STY K2+1               \ Store the ship line heap pointer in K2+1
+
+                        \ --- End of added code ------------------------------->
 
  LDA XX3+1,X            \ Fetch the x_hi coordinate of the edge's start vertex
  STA XX15+1             \ from the XX3 heap into XX15+1
@@ -39827,9 +40221,23 @@ ENDIF
                         \ clipped to fit on-screen, returning the clipped line's
                         \ end-points in (X1, Y1) and (X2, Y2)
 
- BCS LL78               \ If the C flag is set then the line is not visible on
-                        \ screen, so jump to LL78 so we don't store this line
-                        \ in the ship line heap
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\BCS LL78               \ If the C flag is set then the line is not visible on
+\                       \ screen, so jump to LL78 so we don't store this line
+\                       \ in the ship line heap
+
+                        \ --- And replaced by: -------------------------------->
+
+ PHP                    \ Store the C flag on the stack (if it is set then the
+                        \ line is not visible on screen)
+
+ BCS LL78a              \ If the C flag is set then the line is not visible on
+                        \ screen, so jump to LL78a to store a dummy line in the
+                        \ ship line heap (but only if the right-eye line is
+                        \ visible)
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -39856,27 +40264,126 @@ ENDIF
  LDY U                  \ Fetch the ship line heap pointer, which points to the
                         \ next free byte on the heap, into Y
 
- LDA XX15               \ Add X1 to the end of the heap
- STA (XX19),Y
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- INY                    \ Increment the heap pointer
+\LDA XX15               \ Add X1 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+1             \ Add Y1 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+2             \ Add X2 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+3             \ Add Y2 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\STY U                  \ Store the updated ship line heap pointer in U
 
- LDA XX15+1             \ Add Y1 to the end of the heap
- STA (XX19),Y
+                        \ --- And replaced by: -------------------------------->
 
- INY                    \ Increment the heap pointer
+ JSR DrawLeftEyeLine    \ Draw the ship line in the left-eye line heap
 
- LDA XX15+2             \ Add X2 to the end of the heap
- STA (XX19),Y
+                        \ --- End of replacement ------------------------------>
 
- INY                    \ Increment the heap pointer
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- LDA XX15+3             \ Add Y2 to the end of the heap
- STA (XX19),Y
+.LL78a
 
- INY                    \ Increment the heap pointer
+                        \ Now we clip the right-eye line (cyan)
 
- STY U                  \ Store the updated ship line heap pointer in U
+ LDX K2                 \ Set X to the number of the vertex at the start of the
+                        \ edge, which we stored in K2 above
+
+ LDA XX3a+1,X           \ Fetch the x_hi coordinate of the edge's start vertex
+ STA XX15+1             \ from the XX3a heap into XX15+1
+
+ LDA XX3a,X             \ Fetch the x_lo coordinate of the edge's start vertex
+ STA XX15               \ from the XX3a heap into XX15
+
+ LDA XX3a+2,X           \ Fetch the y_lo coordinate of the edge's start vertex
+ STA XX15+2             \ from the XX3a heap into XX15+2
+
+ LDA XX3a+3,X           \ Fetch the y_hi coordinate of the edge's start vertex
+ STA XX15+3             \ from the XX3a heap into XX15+3
+
+ LDX K2+2               \ Set X to the number of the vertex at the end of the
+                        \ edge, which we stored in K2+2
+
+ LDA XX3a,X             \ Fetch the x_lo coordinate of the edge's end vertex
+ STA XX15+4             \ from the XX3a heap into XX15+4
+
+ LDA XX3a+3,X           \ Fetch the y_hi coordinate of the edge's end vertex
+ STA XX12+1             \ from the XX3a heap into XX11+1
+
+ LDA XX3a+2,X           \ Fetch the y_lo coordinate of the edge's end vertex
+ STA XX12               \ from the XX3a heap into XX12
+
+ LDA XX3a+1,X           \ Fetch the x_hi coordinate of the edge's end vertex
+ STA XX15+5             \ from the XX3a heap into XX15+5
+
+ JSR LL147              \ Call LL147 to see if the new line segment needs to be
+                        \ clipped to fit on-screen, returning the clipped line's
+                        \ end-points in (X1, Y1) and (X2, Y2)
+
+ BCS LL78b              \ If the C flag is set then the line is not visible on
+                        \ screen, so jump to LL78b to check whether we also
+                        \ skipped the left-eye line
+
+                        \ If we get here then the right-eye line is visible, so
+                        \ we draw the right-eye line (cyan) into the heap
+
+ LDY K2+1               \ Fetch the ship line heap pointer, which points to the
+                        \ next free byte on the heap, into Y, which we stored in
+                        \ K2+1 above
+
+ JSR DrawRightEyeLine   \ Draw the ship line in the right-eye line heap
+
+ PLP                    \ Retrieve the status flags we stored on the stack above
+
+ BCC LL78               \ If the C flag is clear then we already drew the
+                        \ left-eye line, so jump to LL78 to move on to the next
+                        \ part
+
+                        \ If we get here then we did not draw the left-eye line
+                        \ but we did draw the right-eye line, so we need to draw
+                        \ a null left-eye line
+
+ LDY K2+1               \ Fetch the ship line heap pointer, which points to the
+                        \ next free byte on the heap, into Y, which we stored in
+                        \ K2+1 above
+
+ JSR DrawLeftEyeNull    \ Draw a null ship line into the left-eye line heap
+
+ JMP LL78c              \ Jump to LL78c to move on to the next part
+
+.LL78b
+
+                        \ If we get here then the right-eye line is not visible
+
+ PLP                    \ Retrieve the status flags we stored on the stack above
+                        \ to give us the status of the left-eye line
+
+ BCS LL78               \ If the C flag is set then neither line is visible on
+                        \ screen, so jump to LL78 to skip drawing anything
+
+ LDY K2+1               \ Fetch the ship line heap pointer, which points to the
+                        \ next free byte on the heap, into Y, which we stored in
+                        \ K2+1 above
+
+ JSR DrawRightEyeNull   \ Draw a null ship line into the right-eye line heap
+
+.LL78c
+
+                        \ --- End of replacement ------------------------------>
 
  CPY T1                 \ If Y >= T1 then we have reached the maximum number of
  BCS LL81               \ edge lines that we can store in the ship line heap, so
@@ -39920,6 +40427,13 @@ ENDIF
  STA (XX19)             \ Store A as the first byte of the ship line heap, so
                         \ the heap is now correctly set up
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA (rHeap)            \ Store A as the first byte of the ship line heap, so
+                        \ the heap is now correctly set up for the right eye
+
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: LL9 (Part 12 of 12)
@@ -39958,6 +40472,13 @@ ENDIF
  BCC nolines            \ draw, so return from the subroutine (as nolines
                         \ contains an RTS)
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA #RED_3D            \ Send a #SETCOL RED_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
+
+                        \ --- End of added code ------------------------------->
+
  LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
  JSR OSWRCH             \ tell it to start receiving a new line to draw (so
                         \ when we send it OSWRCH commands from now on, the I/O
@@ -39983,6 +40504,44 @@ ENDIF
                         \ By the time we get here, we have sent all the line
                         \ coordinates to the I/O processor, so it will have
                         \ drawn the line after we sent the last one
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+                        \ We now draw all the lines in the right-eye line heap
+
+ LDA (rHeap)            \ Fetch the first byte from the ship line heap into A,
+                        \ which contains the number of bytes in the heap
+
+ CMP #5                 \ If the heap size is less than 5, there is nothing to
+ BCC nolines            \ draw, so return from the subroutine (as nolines
+                        \ contains an RTS)
+
+ LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 1, which is cyan in the space view
+
+ LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
+ JSR OSWRCH             \ tell it to start receiving a new line to draw (so
+                        \ when we send it OSWRCH commands from now on, the I/O
+                        \ processor will add these bytes to this line until
+                        \ they are all sent, at which point it will draw the
+                        \ line)
+
+ LDY #0                 \ Fetch the first byte from the ship line heap into A,
+ LDA (rHeap),Y          \ which contains the number of bytes in the heap
+
+ STA XX20               \ Store the heap size in XX20
+
+.LL27a
+
+ LDA (rHeap),Y          \ Fetch the Y-th line coordinate from the heap and send
+ JSR OSWRCH             \ it to the I/O processor to add to the line buffer
+
+ INY                    \ Increment the heap pointer
+
+ CPY XX20               \ If the heap counter is less than the size of the heap,
+ BCC LL27a              \ loop back to LL27 to draw the next line from the heap
+
+                        \ --- End of added code ------------------------------->
 
 .nolines
 
@@ -44662,55 +45221,59 @@ ENDIF
 \
 \ ******************************************************************************
 
-.LTDEF
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
- EQUB &63, &34, &47, &76, &97   \ Letter definition for ","
- EQUB &35, &00, &00, &00, &00   \ Letter definition for "-"
- EQUB &63, &34, &47, &76, &00   \ Letter definition for "."
- EQUB &61, &00, &00, &00, &00   \ Letter definition for "/"
- EQUB &73, &31, &15, &57, &00   \ Letter definition for "0"
- EQUB &31, &17, &00, &00, &00   \ Letter definition for "1"
- EQUB &02, &25, &53, &36, &68   \ Letter definition for "2"
- EQUB &02, &28, &86, &35, &00   \ Letter definition for "3"
- EQUB &82, &23, &35, &00, &00   \ Letter definition for "4"
- EQUB &20, &03, &35, &58, &86   \ Letter definition for "5"
- EQUB &20, &06, &68, &85, &53   \ Letter definition for "6"
- EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
- EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
- EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
- EQUB &00, &00, &00, &00, &00   \ Letter definition for ":" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for ";" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "<" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "=" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for ">" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "?" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "@" (blank)
- EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
- EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
- EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
- EQUB &60, &05, &56, &00, &00   \ Letter definition for "D"
- EQUB &86, &60, &02, &35, &00   \ Letter definition for "E"
- EQUB &60, &02, &35, &00, &00   \ Letter definition for "F"
- EQUB &45, &58, &86, &60, &02   \ Letter definition for "G"
- EQUB &60, &28, &35, &00, &00   \ Letter definition for "H"
- EQUB &17, &00, &00, &00, &00   \ Letter definition for "I"
- EQUB &28, &86, &63, &00, &00   \ Letter definition for "J"
- EQUB &60, &23, &83, &00, &00   \ Letter definition for "K"
- EQUB &86, &60, &00, &00, &00   \ Letter definition for "L"
- EQUB &60, &04, &42, &28, &00   \ Letter definition for "M"
- EQUB &60, &08, &82, &00, &00   \ Letter definition for "N"
- EQUB &60, &02, &28, &86, &00   \ Letter definition for "O"
- EQUB &60, &02, &25, &53, &00   \ Letter definition for "P"
- EQUB &60, &02, &28, &86, &48   \ Letter definition for "Q"
- EQUB &60, &02, &25, &53, &48   \ Letter definition for "R"
- EQUB &20, &03, &35, &58, &86   \ Letter definition for "S"
- EQUB &02, &17, &00, &00, &00   \ Letter definition for "T"
- EQUB &28, &86, &60, &00, &00   \ Letter definition for "U"
- EQUB &27, &70, &00, &00, &00   \ Letter definition for "V"
- EQUB &28, &84, &46, &60, &00   \ Letter definition for "W"
- EQUB &26, &08, &00, &00, &00   \ Letter definition for "X"
- EQUB &74, &04, &24, &00, &00   \ Letter definition for "Y"
- EQUB &02, &26, &68, &00, &00   \ Letter definition for "Z"
+\.LTDEF
+\
+\EQUB &63, &34, &47, &76, &97   \ Letter definition for ","
+\EQUB &35, &00, &00, &00, &00   \ Letter definition for "-"
+\EQUB &63, &34, &47, &76, &00   \ Letter definition for "."
+\EQUB &61, &00, &00, &00, &00   \ Letter definition for "/"
+\EQUB &73, &31, &15, &57, &00   \ Letter definition for "0"
+\EQUB &31, &17, &00, &00, &00   \ Letter definition for "1"
+\EQUB &02, &25, &53, &36, &68   \ Letter definition for "2"
+\EQUB &02, &28, &86, &35, &00   \ Letter definition for "3"
+\EQUB &82, &23, &35, &00, &00   \ Letter definition for "4"
+\EQUB &20, &03, &35, &58, &86   \ Letter definition for "5"
+\EQUB &20, &06, &68, &85, &53   \ Letter definition for "6"
+\EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
+\EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
+\EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for ":" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for ";" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for "<" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for "=" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for ">" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for "?" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for "@" (blank)
+\EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
+\EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
+\EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
+\EQUB &60, &05, &56, &00, &00   \ Letter definition for "D"
+\EQUB &86, &60, &02, &35, &00   \ Letter definition for "E"
+\EQUB &60, &02, &35, &00, &00   \ Letter definition for "F"
+\EQUB &45, &58, &86, &60, &02   \ Letter definition for "G"
+\EQUB &60, &28, &35, &00, &00   \ Letter definition for "H"
+\EQUB &17, &00, &00, &00, &00   \ Letter definition for "I"
+\EQUB &28, &86, &63, &00, &00   \ Letter definition for "J"
+\EQUB &60, &23, &83, &00, &00   \ Letter definition for "K"
+\EQUB &86, &60, &00, &00, &00   \ Letter definition for "L"
+\EQUB &60, &04, &42, &28, &00   \ Letter definition for "M"
+\EQUB &60, &08, &82, &00, &00   \ Letter definition for "N"
+\EQUB &60, &02, &28, &86, &00   \ Letter definition for "O"
+\EQUB &60, &02, &25, &53, &00   \ Letter definition for "P"
+\EQUB &60, &02, &28, &86, &48   \ Letter definition for "Q"
+\EQUB &60, &02, &25, &53, &48   \ Letter definition for "R"
+\EQUB &20, &03, &35, &58, &86   \ Letter definition for "S"
+\EQUB &02, &17, &00, &00, &00   \ Letter definition for "T"
+\EQUB &28, &86, &60, &00, &00   \ Letter definition for "U"
+\EQUB &27, &70, &00, &00, &00   \ Letter definition for "V"
+\EQUB &28, &84, &46, &60, &00   \ Letter definition for "W"
+\EQUB &26, &08, &00, &00, &00   \ Letter definition for "X"
+\EQUB &74, &04, &24, &00, &00   \ Letter definition for "Y"
+\EQUB &02, &26, &68, &00, &00   \ Letter definition for "Z"
+
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -44721,23 +45284,27 @@ ENDIF
 \
 \ ******************************************************************************
 
-.NOFX
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
- EQUB 4                 \ Grid points 0-2
- EQUB 8
- EQUB 12
+\.NOFX
+\
+\EQUB 4                 \ Grid points 0-2
+\EQUB 8
+\EQUB 12
+\
+\EQUB 4                 \ Grid points 3-5
+\EQUB 8
+\EQUB 12
+\
+\EQUB 4                 \ Grid points 6-8
+\EQUB 8
+\EQUB 12
+\
+\EQUB 4                 \ Grid points 9-B
+\EQUB 8
+\EQUB 12
 
- EQUB 4                 \ Grid points 3-5
- EQUB 8
- EQUB 12
-
- EQUB 4                 \ Grid points 6-8
- EQUB 8
- EQUB 12
-
- EQUB 4                 \ Grid points 9-B
- EQUB 8
- EQUB 12
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -44748,23 +45315,27 @@ ENDIF
 \
 \ ******************************************************************************
 
-.NOFY
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
- EQUB 0                 \ Grid points 0-2
- EQUB 0
- EQUB 0
+\.NOFY
+\
+\EQUB 0                 \ Grid points 0-2
+\EQUB 0
+\EQUB 0
+\
+\EQUB WY                \ Grid points 3-5
+\EQUB WY
+\EQUB WY
+\
+\EQUB 2*WY              \ Grid points 6-8
+\EQUB 2*WY
+\EQUB 2*WY
+\
+\EQUB 2.5*WY            \ Grid points 9-B
+\EQUB 2.5*WY
+\EQUB 2.5*WY
 
- EQUB WY                \ Grid points 3-5
- EQUB WY
- EQUB WY
-
- EQUB 2*WY              \ Grid points 6-8
- EQUB 2*WY
- EQUB 2*WY
-
- EQUB 2.5*WY            \ Grid points 9-B
- EQUB 2.5*WY
- EQUB 2.5*WY
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -44775,23 +45346,27 @@ ENDIF
 \
 \ ******************************************************************************
 
-.acorn
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
-IF _SNG45 OR _SOURCE_DISC
+\.acorn
+\
+\IF _SNG45 OR _SOURCE_DISC
+\
+\EQUS ":::ACORNSOFT::::"
+\EQUS ";;;;;;;;;;;;;;;;"
+\EQUS "::::PRESENTS"
+\EQUB 0
+\
+\ELIF _EXECUTIVE
+\
+\EQUS ":::PIZZASOFT::::"
+\EQUS ";;;;;;;;;;;;;;;;"
+\EQUS "::::PRESENTS"
+\EQUB 0
+\
+\ENDIF
 
- EQUS ":::ACORNSOFT::::"
- EQUS ";;;;;;;;;;;;;;;;"
- EQUS "::::PRESENTS"
- EQUB 0
-
-ELIF _EXECUTIVE
-
- EQUS ":::PIZZASOFT::::"
- EQUS ";;;;;;;;;;;;;;;;"
- EQUS "::::PRESENTS"
- EQUB 0
-
-ENDIF
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -44802,13 +45377,17 @@ ENDIF
 \
 \ ******************************************************************************
 
-.byian
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
- EQUS "::::::BY:;::::::"
- EQUS ";;;;IAN;BELL;;;;"
- EQUS "::::::AND:::::::"
- EQUS ";;DAVID;BRABEN"
- EQUB 0
+\.byian
+\
+\EQUS "::::::BY:;::::::"
+\EQUS ";;;;IAN;BELL;;;;"
+\EQUS "::::::AND:::::::"
+\EQUS ";;DAVID;BRABEN"
+\EQUB 0
+
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -44819,16 +45398,20 @@ ENDIF
 \
 \ ******************************************************************************
 
-.executive
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
-IF _EXECUTIVE
+\.executive
+\
+\IF _EXECUTIVE
+\
+\EQUS "::::::THE;::::::"
+\EQUS ";;;EXECUTIVE;;;;"
+\EQUS "::::VERSION"
+\EQUB 0
+\
+\ENDIF
 
- EQUS "::::::THE;::::::"
- EQUS ";;;EXECUTIVE;;;;"
- EQUS "::::VERSION"
- EQUB 0
-
-ENDIF
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -44839,25 +45422,29 @@ ENDIF
 \
 \ ******************************************************************************
 
-.true3
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
-IF _SNG45 OR _SOURCE_DISC
+\.true3
+\
+\IF _SNG45 OR _SOURCE_DISC
+\
+\EQUS "THE:GALAXY:IS:IN"
+\EQUS "TURMOIL,THE:NAVY"
+\EQUS "FAR:AWAY:AS::THE"
+\EQUS "EMPIRE:CRUMBLES."
+\EQUB 0
+\
+\ELIF _EXECUTIVE
+\
+\EQUS "CONGRATULATIONS:"
+\EQUS ";ON;OBTAINING;A;"
+\EQUS "::COPY:OF:THIS::"
+\EQUS "ELUSIVE;PRODUCT."
+\EQUB 0
+\
+\ENDIF
 
- EQUS "THE:GALAXY:IS:IN"
- EQUS "TURMOIL,THE:NAVY"
- EQUS "FAR:AWAY:AS::THE"
- EQUS "EMPIRE:CRUMBLES."
- EQUB 0
-
-ELIF _EXECUTIVE
-
- EQUS "CONGRATULATIONS:"
- EQUS ";ON;OBTAINING;A;"
- EQUS "::COPY:OF:THIS::"
- EQUS "ELUSIVE;PRODUCT."
- EQUB 0
-
-ENDIF
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -49424,46 +50011,50 @@ ENDIF
 \
 \ ******************************************************************************
 
-.MTIN
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
- EQUB 16                \ Token  0: a random extended token between 16 and 20
- EQUB 21                \ Token  1: a random extended token between 21 and 25
- EQUB 26                \ Token  2: a random extended token between 26 and 30
- EQUB 31                \ Token  3: a random extended token between 31 and 35
- EQUB 155               \ Token  4: a random extended token between 155 and 159
- EQUB 160               \ Token  5: a random extended token between 160 and 164
- EQUB 46                \ Token  6: a random extended token between 46 and 50
- EQUB 165               \ Token  7: a random extended token between 165 and 169
- EQUB 36                \ Token  8: a random extended token between 36 and 40
- EQUB 41                \ Token  9: a random extended token between 41 and 45
- EQUB 61                \ Token 10: a random extended token between 61 and 65
- EQUB 51                \ Token 11: a random extended token between 51 and 55
- EQUB 56                \ Token 12: a random extended token between 56 and 60
- EQUB 170               \ Token 13: a random extended token between 170 and 174
- EQUB 66                \ Token 14: a random extended token between 66 and 70
- EQUB 71                \ Token 15: a random extended token between 71 and 75
- EQUB 76                \ Token 16: a random extended token between 76 and 80
- EQUB 81                \ Token 17: a random extended token between 81 and 85
- EQUB 86                \ Token 18: a random extended token between 86 and 90
- EQUB 140               \ Token 19: a random extended token between 140 and 144
- EQUB 96                \ Token 20: a random extended token between 96 and 100
- EQUB 101               \ Token 21: a random extended token between 101 and 105
- EQUB 135               \ Token 22: a random extended token between 135 and 139
- EQUB 130               \ Token 23: a random extended token between 130 and 134
- EQUB 91                \ Token 24: a random extended token between 91 and 95
- EQUB 106               \ Token 25: a random extended token between 106 and 110
- EQUB 180               \ Token 26: a random extended token between 180 and 184
- EQUB 185               \ Token 27: a random extended token between 185 and 189
- EQUB 190               \ Token 28: a random extended token between 190 and 194
- EQUB 225               \ Token 29: a random extended token between 225 and 229
- EQUB 230               \ Token 30: a random extended token between 230 and 234
- EQUB 235               \ Token 31: a random extended token between 235 and 239
- EQUB 240               \ Token 32: a random extended token between 240 and 244
- EQUB 245               \ Token 33: a random extended token between 245 and 249
- EQUB 250               \ Token 34: a random extended token between 250 and 254
- EQUB 115               \ Token 35: a random extended token between 115 and 119
- EQUB 120               \ Token 36: a random extended token between 120 and 124
- EQUB 125               \ Token 37: a random extended token between 125 and 129
+\.MTIN
+\
+\EQUB 16                \ Token  0: a random extended token between 16 and 20
+\EQUB 21                \ Token  1: a random extended token between 21 and 25
+\EQUB 26                \ Token  2: a random extended token between 26 and 30
+\EQUB 31                \ Token  3: a random extended token between 31 and 35
+\EQUB 155               \ Token  4: a random extended token between 155 and 159
+\EQUB 160               \ Token  5: a random extended token between 160 and 164
+\EQUB 46                \ Token  6: a random extended token between 46 and 50
+\EQUB 165               \ Token  7: a random extended token between 165 and 169
+\EQUB 36                \ Token  8: a random extended token between 36 and 40
+\EQUB 41                \ Token  9: a random extended token between 41 and 45
+\EQUB 61                \ Token 10: a random extended token between 61 and 65
+\EQUB 51                \ Token 11: a random extended token between 51 and 55
+\EQUB 56                \ Token 12: a random extended token between 56 and 60
+\EQUB 170               \ Token 13: a random extended token between 170 and 174
+\EQUB 66                \ Token 14: a random extended token between 66 and 70
+\EQUB 71                \ Token 15: a random extended token between 71 and 75
+\EQUB 76                \ Token 16: a random extended token between 76 and 80
+\EQUB 81                \ Token 17: a random extended token between 81 and 85
+\EQUB 86                \ Token 18: a random extended token between 86 and 90
+\EQUB 140               \ Token 19: a random extended token between 140 and 144
+\EQUB 96                \ Token 20: a random extended token between 96 and 100
+\EQUB 101               \ Token 21: a random extended token between 101 and 105
+\EQUB 135               \ Token 22: a random extended token between 135 and 139
+\EQUB 130               \ Token 23: a random extended token between 130 and 134
+\EQUB 91                \ Token 24: a random extended token between 91 and 95
+\EQUB 106               \ Token 25: a random extended token between 106 and 110
+\EQUB 180               \ Token 26: a random extended token between 180 and 184
+\EQUB 185               \ Token 27: a random extended token between 185 and 189
+\EQUB 190               \ Token 28: a random extended token between 190 and 194
+\EQUB 225               \ Token 29: a random extended token between 225 and 229
+\EQUB 230               \ Token 30: a random extended token between 230 and 234
+\EQUB 235               \ Token 31: a random extended token between 235 and 239
+\EQUB 240               \ Token 32: a random extended token between 240 and 244
+\EQUB 245               \ Token 33: a random extended token between 245 and 249
+\EQUB 250               \ Token 34: a random extended token between 250 and 254
+\EQUB 115               \ Token 35: a random extended token between 115 and 119
+\EQUB 120               \ Token 36: a random extended token between 120 and 124
+\EQUB 125               \ Token 37: a random extended token between 125 and 129
+
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -49507,7 +50098,16 @@ ENDIF
  LDA #HI(D%)
  STA SC+1
 
- LDX #&22               \ Set X = &22 to act as a counter for copying &22 pages
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDX #&22               \ Set X = &22 to act as a counter for copying &22 pages
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDX #&28               \ Set X = &28 to act as a counter for copying &28 pages,
+                        \ so that's &D000 to &F7FF
+
+                        \ --- End of replacement ------------------------------>
 
                         \ Fall through into mvblock to copy the ship blueprints
 
@@ -53165,6 +53765,565 @@ ENDMACRO
  EQUB &20, &FD
  EQUB &B8, &90
  EQUB &01, &60
+
+\ ******************************************************************************
+\
+\       Name: MTIN
+\       Type: Variable
+\   Category: Text
+\    Summary: Lookup table for random tokens in the extended token table (0-37)
+\  Deep dive: Extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The ERND token type, which is part of the extended token system, takes an
+\ argument between 0 and 37, and returns a randomly chosen token in the range
+\ specified in this table. This is used to generate the extended description of
+\ each system.
+\
+\ For example, the entry at position 13 in this table (counting from 0) is 66,
+\ so ERND 14 will expand into a random token in the range 66-70, i.e. one of
+\ "JUICE", "BRANDY", "WATER", "BREW" and "GARGLE BLASTERS".
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.MTIN
+
+ EQUB 16                \ Token  0: a random extended token between 16 and 20
+ EQUB 21                \ Token  1: a random extended token between 21 and 25
+ EQUB 26                \ Token  2: a random extended token between 26 and 30
+ EQUB 31                \ Token  3: a random extended token between 31 and 35
+ EQUB 155               \ Token  4: a random extended token between 155 and 159
+ EQUB 160               \ Token  5: a random extended token between 160 and 164
+ EQUB 46                \ Token  6: a random extended token between 46 and 50
+ EQUB 165               \ Token  7: a random extended token between 165 and 169
+ EQUB 36                \ Token  8: a random extended token between 36 and 40
+ EQUB 41                \ Token  9: a random extended token between 41 and 45
+ EQUB 61                \ Token 10: a random extended token between 61 and 65
+ EQUB 51                \ Token 11: a random extended token between 51 and 55
+ EQUB 56                \ Token 12: a random extended token between 56 and 60
+ EQUB 170               \ Token 13: a random extended token between 170 and 174
+ EQUB 66                \ Token 14: a random extended token between 66 and 70
+ EQUB 71                \ Token 15: a random extended token between 71 and 75
+ EQUB 76                \ Token 16: a random extended token between 76 and 80
+ EQUB 81                \ Token 17: a random extended token between 81 and 85
+ EQUB 86                \ Token 18: a random extended token between 86 and 90
+ EQUB 140               \ Token 19: a random extended token between 140 and 144
+ EQUB 96                \ Token 20: a random extended token between 96 and 100
+ EQUB 101               \ Token 21: a random extended token between 101 and 105
+ EQUB 135               \ Token 22: a random extended token between 135 and 139
+ EQUB 130               \ Token 23: a random extended token between 130 and 134
+ EQUB 91                \ Token 24: a random extended token between 91 and 95
+ EQUB 106               \ Token 25: a random extended token between 106 and 110
+ EQUB 180               \ Token 26: a random extended token between 180 and 184
+ EQUB 185               \ Token 27: a random extended token between 185 and 189
+ EQUB 190               \ Token 28: a random extended token between 190 and 194
+ EQUB 225               \ Token 29: a random extended token between 225 and 229
+ EQUB 230               \ Token 30: a random extended token between 230 and 234
+ EQUB 235               \ Token 31: a random extended token between 235 and 239
+ EQUB 240               \ Token 32: a random extended token between 240 and 244
+ EQUB 245               \ Token 33: a random extended token between 245 and 249
+ EQUB 250               \ Token 34: a random extended token between 250 and 254
+ EQUB 115               \ Token 35: a random extended token between 115 and 119
+ EQUB 120               \ Token 36: a random extended token between 120 and 124
+ EQUB 125               \ Token 37: a random extended token between 125 and 129
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: LTDEF
+\       Type: Variable
+\   Category: Demo
+\    Summary: Line definitions for characters in the Star Wars scroll text
+\  Deep dive: The 6502 Second Processor demo mode
+\
+\ ------------------------------------------------------------------------------
+\
+\ Characters in the scroll text are drawn using lines on a 3x6 numbered grid
+\ like this:
+\
+\   0   1   2
+\   .   .   .
+\   3   4   5
+\   .   .   .
+\   6   7   8
+\   9   A   B
+\
+\ The low nibble of each byte is the starting point for that line segment, and
+\ the high nibble is the end point, so a value of &28, for example, means
+\ "draw a line from point 8 to point 2". This table contains definitions for all
+\ the characters we can use in the scroll text, as lines on the above grid.
+\
+\ See the deep dive on "the 6502 Second Processor demo mode" for details.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.LTDEF
+
+ EQUB &63, &34, &47, &76, &97   \ Letter definition for ","
+ EQUB &35, &00, &00, &00, &00   \ Letter definition for "-"
+ EQUB &63, &34, &47, &76, &00   \ Letter definition for "."
+ EQUB &61, &00, &00, &00, &00   \ Letter definition for "/"
+ EQUB &73, &31, &15, &57, &00   \ Letter definition for "0"
+ EQUB &31, &17, &00, &00, &00   \ Letter definition for "1"
+ EQUB &02, &25, &53, &36, &68   \ Letter definition for "2"
+ EQUB &02, &28, &86, &35, &00   \ Letter definition for "3"
+ EQUB &82, &23, &35, &00, &00   \ Letter definition for "4"
+ EQUB &20, &03, &35, &58, &86   \ Letter definition for "5"
+ EQUB &20, &06, &68, &85, &53   \ Letter definition for "6"
+ EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
+ EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
+ EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ":" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ";" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "<" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "=" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ">" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "?" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "@" (blank)
+ EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
+ EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
+ EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
+ EQUB &60, &05, &56, &00, &00   \ Letter definition for "D"
+ EQUB &86, &60, &02, &35, &00   \ Letter definition for "E"
+ EQUB &60, &02, &35, &00, &00   \ Letter definition for "F"
+ EQUB &45, &58, &86, &60, &02   \ Letter definition for "G"
+ EQUB &60, &28, &35, &00, &00   \ Letter definition for "H"
+ EQUB &17, &00, &00, &00, &00   \ Letter definition for "I"
+ EQUB &28, &86, &63, &00, &00   \ Letter definition for "J"
+ EQUB &60, &23, &83, &00, &00   \ Letter definition for "K"
+ EQUB &86, &60, &00, &00, &00   \ Letter definition for "L"
+ EQUB &60, &04, &42, &28, &00   \ Letter definition for "M"
+ EQUB &60, &08, &82, &00, &00   \ Letter definition for "N"
+ EQUB &60, &02, &28, &86, &00   \ Letter definition for "O"
+ EQUB &60, &02, &25, &53, &00   \ Letter definition for "P"
+ EQUB &60, &02, &28, &86, &48   \ Letter definition for "Q"
+ EQUB &60, &02, &25, &53, &48   \ Letter definition for "R"
+ EQUB &20, &03, &35, &58, &86   \ Letter definition for "S"
+ EQUB &02, &17, &00, &00, &00   \ Letter definition for "T"
+ EQUB &28, &86, &60, &00, &00   \ Letter definition for "U"
+ EQUB &27, &70, &00, &00, &00   \ Letter definition for "V"
+ EQUB &28, &84, &46, &60, &00   \ Letter definition for "W"
+ EQUB &26, &08, &00, &00, &00   \ Letter definition for "X"
+ EQUB &74, &04, &24, &00, &00   \ Letter definition for "Y"
+ EQUB &02, &26, &68, &00, &00   \ Letter definition for "Z"
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: NOFX
+\       Type: Variable
+\   Category: Demo
+\    Summary: The x-coordinates of the scroll text letter grid
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.NOFX
+
+ EQUB 4                 \ Grid points 0-2
+ EQUB 8
+ EQUB 12
+
+ EQUB 4                 \ Grid points 3-5
+ EQUB 8
+ EQUB 12
+
+ EQUB 4                 \ Grid points 6-8
+ EQUB 8
+ EQUB 12
+
+ EQUB 4                 \ Grid points 9-B
+ EQUB 8
+ EQUB 12
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: NOFY
+\       Type: Variable
+\   Category: Demo
+\    Summary: The y-coordinates of the scroll text letter grid
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.NOFY
+
+ EQUB 0                 \ Grid points 0-2
+ EQUB 0
+ EQUB 0
+
+ EQUB WY                \ Grid points 3-5
+ EQUB WY
+ EQUB WY
+
+ EQUB 2*WY              \ Grid points 6-8
+ EQUB 2*WY
+ EQUB 2*WY
+
+ EQUB 2.5*WY            \ Grid points 9-B
+ EQUB 2.5*WY
+ EQUB 2.5*WY
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: acorn
+\       Type: Variable
+\   Category: Demo
+\    Summary: The text for the demo's opening scroll text
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.acorn
+
+IF _SNG45 OR _SOURCE_DISC
+
+ EQUS ":::ACORNSOFT::::"
+ EQUS ";;;;;;;;;;;;;;;;"
+ EQUS "::::PRESENTS"
+ EQUB 0
+
+ELIF _EXECUTIVE
+
+ EQUS ":::PIZZASOFT::::"
+ EQUS ";;;;;;;;;;;;;;;;"
+ EQUS "::::PRESENTS"
+ EQUB 0
+
+ENDIF
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: byian
+\       Type: Variable
+\   Category: Demo
+\    Summary: The text for the demo's middle scroll text
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.byian
+
+ EQUS "::::::BY:;::::::"
+ EQUS ";;;;IAN;BELL;;;;"
+ EQUS "::::::AND:::::::"
+ EQUS ";;DAVID;BRABEN"
+ EQUB 0
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: executive
+\       Type: Variable
+\   Category: Demo
+\    Summary: Extra text for the demo in the Executive version
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.executive
+
+IF _EXECUTIVE
+
+ EQUS "::::::THE;::::::"
+ EQUS ";;;EXECUTIVE;;;;"
+ EQUS "::::VERSION"
+ EQUB 0
+
+ENDIF
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: true3
+\       Type: Variable
+\   Category: Demo
+\    Summary: The text for the demo's final scroll text
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.true3
+
+IF _SNG45 OR _SOURCE_DISC
+
+ EQUS "THE:GALAXY:IS:IN"
+ EQUS "TURMOIL,THE:NAVY"
+ EQUS "FAR:AWAY:AS::THE"
+ EQUS "EMPIRE:CRUMBLES."
+ EQUB 0
+
+ELIF _EXECUTIVE
+
+ EQUS "CONGRATULATIONS:"
+ EQUS ";ON;OBTAINING;A;"
+ EQUS "::COPY:OF:THIS::"
+ EQUS "ELUSIVE;PRODUCT."
+ EQUB 0
+
+ENDIF
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ApplyEyeSpacing
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Apply eye spacing to a 3D coordinate
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ApplyEyeSpacing
+
+ PHX                    \ Save X and T on the stack
+ LDA T
+ PHA
+
+ LDA XX15               \ Copy the vertex x-coordinate from XX15(2 1 0) to
+ STA XX18               \ XX18(2 1 0)
+ LDA XX15+1
+ STA XX18+1
+ LDA XX15+2
+ STA XX18+2
+
+ STZ K+3                \ Set K(3 2 1) = x-offset of right eye (cyan)
+ STZ K+2                \              = halfEyeSpacing
+ LDA halfEyeSpacing
+ STA K+1
+
+ LDX #XX18-INWK         \ Set K(3 2 1) = K(3 2 1) + XX18(2 1 0)
+ JSR MVT3
+
+ LDA K+1                \ Store the right-eye vertex in xRightEye(2 1 0)
+ STA xRightEye
+ LDA K+2
+ STA xRightEye+1
+ LDA K+3
+ STA xRightEye+2
+
+ LDA #%10000000         \ Set K(3 2 1) = x-offset of left eye (red)
+ STA K+3                \              = -halfEyeSpacing
+ STZ K+2
+ LDA halfEyeSpacing
+ STA K+1
+
+ LDX #XX18-INWK         \ Set K(3 2 1) = K(3 2 1) + XX18(2 1 0)
+ JSR MVT3
+
+ LDA K+1                \ Store the right-eye coordinates in XX15(2 1 0)
+ STA XX15
+ LDA K+2
+ STA XX15+1
+ LDA K+3
+ STA XX15+2
+
+ PLA                    \ Restore X and T
+ STA T
+ PLX
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: xRightEye
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: The 3D x-coordinate of the vertex to be shown in the right eye
+\             (in cyan)
+\
+\ ******************************************************************************
+
+.xRightEye
+
+ SKIP 3
+
+\ ******************************************************************************
+\
+\       Name: halfEyeSpacing
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: Half of the distance between the eyes
+\
+\ ******************************************************************************
+
+.halfEyeSpacing
+
+ EQUB 4
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawLeftEyeNull
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a null ship line into the left-eye line heap
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawLeftEyeNull
+
+ LDA #255               \ Set Y2 = 255 to denote a null line
+ STA XX15+3
+
+ JMP DrawLeftEyeLine    \ Draw the line into the left-eye line heap, returning
+                        \ from the subroutine using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawRightEyeNull
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a null ship line into the right-eye line heap
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawRightEyeNull
+
+ LDA #255               \ Set Y2 = 255 to denote a null line
+ STA XX15+3
+
+ JMP DrawRightEyeLine   \ Draw the line into the right-eye line heap, returning
+                        \ from the subroutine using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawLeftEyeLine
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a ship line into the left-eye line heap
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawLeftEyeLine
+
+ LDA XX15               \ Add X1 to the end of the heap
+ STA (XX19),Y
+
+ INY                    \ Increment the heap pointer
+
+ LDA XX15+1             \ Add Y1 to the end of the heap
+ STA (XX19),Y
+
+ INY                    \ Increment the heap pointer
+
+ LDA XX15+2             \ Add X2 to the end of the heap
+ STA (XX19),Y
+
+ INY                    \ Increment the heap pointer
+
+ LDA XX15+3             \ Add Y2 to the end of the heap
+ STA (XX19),Y
+
+ INY                    \ Increment the heap pointer
+
+ STY U                  \ Store the updated ship line heap pointer in U
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawRightEyeLine
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a ship line into the right-eye line heap
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawRightEyeLine
+
+ LDA XX15               \ Add X1 to the end of the heap
+ STA (rHeap),Y
+
+ INY                    \ Increment the heap pointer
+
+ LDA XX15+1             \ Add Y1 to the end of the heap
+ STA (rHeap),Y
+
+ INY                    \ Increment the heap pointer
+
+ LDA XX15+2             \ Add X2 to the end of the heap
+ STA (rHeap),Y
+
+ INY                    \ Increment the heap pointer
+
+ LDA XX15+3             \ Add Y2 to the end of the heap
+ STA (rHeap),Y
+
+ INY                    \ Increment the heap pointer
+
+ STY U                  \ Store the updated ship line heap pointer in U
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: GetRightLineHeap
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Fetch the address of the heap for the right-eye lines
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.GetRightLineHeap
+
+ LDY #5                 \ Fetch ship blueprint byte #5, which contains the
+ LDA (XX0),Y            \ maximum heap size required for plotting the new ship
+ STA T1                 \ and store it in T1
+
+ LDA INWK+33            \ Set rHeap(1 0) = INWK(34 33) + T1
+ CLC
+ ADC T1
+ STA rHeap
+ LDA INWK+34
+ ADC #0
+ STA rHeap+1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
