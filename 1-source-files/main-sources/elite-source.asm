@@ -7573,7 +7573,6 @@ IF _MATCH_ORIGINAL_BINARIES
 
  ENDIF
 
- 
 ELSE
  
  SKIP 256               \ The ball line heap for storing x-coordinates (see the
@@ -40373,7 +40372,7 @@ ENDIF
  STA XX15+4             \ from the XX3 heap into XX15+4
 
  LDA XX3+3,X            \ Fetch the y_hi coordinate of the edge's end vertex
- STA XX12+1             \ from the XX3 heap into XX11+1
+ STA XX12+1             \ from the XX3 heap into XX12+1
 
  LDA XX3+2,X            \ Fetch the y_lo coordinate of the edge's end vertex
  STA XX12               \ from the XX3 heap into XX12
@@ -42955,6 +42954,7 @@ ENDIF
 \   Category: Moving
 \    Summary: Rotate the planet or sun's location in space by the amount of
 \             pitch and roll of our ship
+\  Deep dive: Rotating the universe
 \
 \ ------------------------------------------------------------------------------
 \
