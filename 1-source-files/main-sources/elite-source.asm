@@ -240,7 +240,39 @@ ENDIF
 
  f9 = &77               \ Internal key number for red key f9 (Inventory)
 
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\YELLOW  = %00001111    \ Four mode 1 pixels of colour 1 (yellow)
+\
+\RED     = %11110000    \ Four mode 1 pixels of colour 2 (red, magenta or white)
+\
+\CYAN    = %11111111    \ Four mode 1 pixels of colour 3 (cyan or white)
+\
+\GREEN   = %10101111    \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
+\
+\WHITE   = %11111010    \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+\
+\MAGENTA = RED          \ Four mode 1 pixels of colour 2 (red, magenta or white)
+\
+\DUST    = WHITE        \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+\
+\RED2    = %00000011    \ Two mode 2 pixels of colour 1    (red)
+\
+\GREEN2  = %00001100    \ Two mode 2 pixels of colour 2    (green)
+\
+\YELLOW2 = %00001111    \ Two mode 2 pixels of colour 3    (yellow)
+\
+\BLUE2   = %00110000    \ Two mode 2 pixels of colour 4    (blue)
+\
+\MAG2    = %00110011    \ Two mode 2 pixels of colour 5    (magenta)
+\
+\CYAN2   = %00111100    \ Two mode 2 pixels of colour 6    (cyan)
+\
+\WHITE2  = %00111111    \ Two mode 2 pixels of colour 7    (white)
+\
+\STRIPE  = %00100011    \ Two mode 2 pixels of colour 5, 1 (magenta/red)
+
+                        \ --- And replaced by: -------------------------------->
 
  CYAN_3D = %00001111    \ Four mode 1 pixels of colour 1 (cyan)
 
@@ -248,37 +280,23 @@ ENDIF
 
  WHITE_3D = %11111111   \ Four mode 1 pixels of colour 3 (white)
 
-                        \ --- End of added code ------------------------------->
+ YELLOW  = %11111111    \ Set all non-3Dcolours to white
+ RED     = %11111111
+ CYAN    = %11111111
+ GREEN   = %11111111
+ WHITE   = %11111111
+ MAGENTA = %11111111
+ DUST    = %11111111
+ RED2    = %11111111
+ GREEN2  = %11111111
+ YELLOW2 = %11111111
+ BLUE2   = %11111111
+ MAG2    = %11111111
+ CYAN2   = %11111111
+ WHITE2  = %11111111
+ STRIPE  = %11111111
 
- YELLOW  = %00001111    \ Four mode 1 pixels of colour 1 (yellow)
-
- RED     = %11110000    \ Four mode 1 pixels of colour 2 (red, magenta or white)
-
- CYAN    = %11111111    \ Four mode 1 pixels of colour 3 (cyan or white)
-
- GREEN   = %10101111    \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
-
- WHITE   = %11111010    \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
-
- MAGENTA = RED          \ Four mode 1 pixels of colour 2 (red, magenta or white)
-
- DUST    = WHITE        \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
-
- RED2    = %00000011    \ Two mode 2 pixels of colour 1    (red)
-
- GREEN2  = %00001100    \ Two mode 2 pixels of colour 2    (green)
-
- YELLOW2 = %00001111    \ Two mode 2 pixels of colour 3    (yellow)
-
- BLUE2   = %00110000    \ Two mode 2 pixels of colour 4    (blue)
-
- MAG2    = %00110011    \ Two mode 2 pixels of colour 5    (magenta)
-
- CYAN2   = %00111100    \ Two mode 2 pixels of colour 6    (cyan)
-
- WHITE2  = %00111111    \ Two mode 2 pixels of colour 7    (white)
-
- STRIPE  = %00100011    \ Two mode 2 pixels of colour 5, 1 (magenta/red)
+                        \ --- End of replacement ------------------------------>
 
  NRU% = 0               \ The number of planetary systems with extended system
                         \ description overrides in the RUTOK table

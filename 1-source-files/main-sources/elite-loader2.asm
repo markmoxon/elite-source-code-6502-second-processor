@@ -307,7 +307,15 @@ ENDMACRO
 
 .DIALS
 
- INCBIN "1-source-files/images/P.DIALS2P.bin"
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\INCBIN "1-source-files/images/P.DIALS2P.bin"
+
+                        \ --- And replaced by: -------------------------------->
+
+ INCBIN "1-source-files/images/P.DIALSW.bin"
+
+                        \ --- End of replacement ------------------------------>
 
 .DATE
 
@@ -315,7 +323,15 @@ ENDMACRO
 
 .ASOFT
 
- INCBIN "1-source-files/images/Z.ACSOFT.bin"
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\INCBIN "1-source-files/images/Z.ACSOFT.bin"
+
+                        \ --- And replaced by: -------------------------------->
+
+ INCBIN "1-source-files/images/Z.ACSOFTW.bin"
+
+                        \ --- End of replacement ------------------------------>
 
 .ELITE
 
@@ -323,7 +339,15 @@ ENDMACRO
 
 .CpASOFT
 
- INCBIN "1-source-files/images/Z.(C)ASFT.bin"
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\INCBIN "1-source-files/images/Z.(C)ASFT.bin"
+
+                        \ --- And replaced by: -------------------------------->
+
+ INCBIN "1-source-files/images/Z.(C)ASFTW.bin"
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \

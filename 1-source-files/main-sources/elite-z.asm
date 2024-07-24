@@ -48,35 +48,63 @@
 
  Y = 96                 \ The centre y-coordinate of the 256 x 192 space view
 
- YELLOW  = %00001111    \ Four mode 1 pixels of colour 1 (yellow)
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- RED     = %11110000    \ Four mode 1 pixels of colour 2 (red, magenta or white)
+\YELLOW  = %00001111    \ Four mode 1 pixels of colour 1 (yellow)
+\
+\RED     = %11110000    \ Four mode 1 pixels of colour 2 (red, magenta or white)
+\
+\CYAN    = %11111111    \ Four mode 1 pixels of colour 3 (cyan or white)
+\
+\GREEN   = %10101111    \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
+\
+\WHITE   = %11111010    \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+\
+\MAGENTA = RED          \ Four mode 1 pixels of colour 2 (red, magenta or white)
+\
+\DUST    = WHITE        \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+\
+\RED2    = %00000011    \ Two mode 2 pixels of colour 1    (red)
+\
+\GREEN2  = %00001100    \ Two mode 2 pixels of colour 2    (green)
+\
+\YELLOW2 = %00001111    \ Two mode 2 pixels of colour 3    (yellow)
+\
+\BLUE2   = %00110000    \ Two mode 2 pixels of colour 4    (blue)
+\
+\MAG2    = %00110011    \ Two mode 2 pixels of colour 5    (magenta)
+\
+\CYAN2   = %00111100    \ Two mode 2 pixels of colour 6    (cyan)
+\
+\WHITE2  = %00111111    \ Two mode 2 pixels of colour 7    (white)
+\
+\STRIPE  = %00100011    \ Two mode 2 pixels of colour 5, 1 (magenta/red)
 
- CYAN    = %11111111    \ Four mode 1 pixels of colour 3 (cyan or white)
+                        \ --- And replaced by: -------------------------------->
 
- GREEN   = %10101111    \ Four mode 1 pixels of colour 3, 1, 3, 1 (cyan/yellow)
+ CYAN_3D = %00001111    \ Four mode 1 pixels of colour 1 (cyan)
 
- WHITE   = %11111010    \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+ RED_3D  = %11110000    \ Four mode 1 pixels of colour 2 (red)
 
- MAGENTA = RED          \ Four mode 1 pixels of colour 2 (red, magenta or white)
+ WHITE_3D = %11111111   \ Four mode 1 pixels of colour 3 (white)
 
- DUST    = WHITE        \ Four mode 1 pixels of colour 3, 2, 3, 2 (cyan/red)
+ YELLOW  = %11111111    \ Set all non-3Dcolours to white
+ RED     = %11111111
+ CYAN    = %11111111
+ GREEN   = %11111111
+ WHITE   = %11111111
+ MAGENTA = %11111111
+ DUST    = %11111111
+ RED2    = %11111111
+ GREEN2  = %11111111
+ YELLOW2 = %11111111
+ BLUE2   = %11111111
+ MAG2    = %11111111
+ CYAN2   = %11111111
+ WHITE2  = %11111111
+ STRIPE  = %11111111
 
- RED2    = %00000011    \ Two mode 2 pixels of colour 1    (red)
-
- GREEN2  = %00001100    \ Two mode 2 pixels of colour 2    (green)
-
- YELLOW2 = %00001111    \ Two mode 2 pixels of colour 3    (yellow)
-
- BLUE2   = %00110000    \ Two mode 2 pixels of colour 4    (blue)
-
- MAG2    = %00110011    \ Two mode 2 pixels of colour 5    (magenta)
-
- CYAN2   = %00111100    \ Two mode 2 pixels of colour 6    (cyan)
-
- WHITE2  = %00111111    \ Two mode 2 pixels of colour 7    (white)
-
- STRIPE  = %00100011    \ Two mode 2 pixels of colour 5, 1 (magenta/red)
+                        \ --- End of replacement ------------------------------>
 
  PARMAX = 15            \ The number of dashboard parameters transmitted with
                         \ the #RDPARAMS and OSWRCH 137 <param> commands
@@ -779,11 +807,11 @@ ENDIF
  EQUB &21, &17          \
  EQUB &71, &61          \ Set with a #SETVDU19 32 command, after which:
  EQUB &57, &47          \
- EQUB &B0, &A0          \   #YELLOW = yellow
- EQUB &96, &86          \   #RED    = white
- EQUB &F0, &E0          \   #CYAN   = cyan
- EQUB &D6, &C6          \   #GREEN  = cyan/yellow stripe
-                        \   #WHITE  = cyan/white stripe
+ EQUB &B0, &A0          \   #CYAN_3D  = cyan
+ EQUB &96, &86          \   #RED_3D   = red
+ EQUB &F0, &E0          \   #WHITE_3D = white
+ EQUB &D6, &C6          \   #GREEN  = cyan/white stripe
+                        \   #WHITE  = red/white stripe
 
                         \ --- End of replacement ------------------------------>
 
@@ -5267,10 +5295,21 @@ ENDIF
 
 .orange
 
- EQUB %10100101         \ Four mode 1 pixels of colour 2, 1, 2, 1 (red/yellow)
- EQUB %10100101
- EQUB %01011010         \ Four mode 1 pixels of colour 1, 2, 1, 2 (yellow/red)
- EQUB %01011010
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\EQUB %10100101         \ Four mode 1 pixels of colour 2, 1, 2, 1 (red/yellow)
+\EQUB %10100101
+\EQUB %01011010         \ Four mode 1 pixels of colour 1, 2, 1, 2 (yellow/red)
+\EQUB %01011010
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUB %11111111         \ Eight mode 1 pixels of colour 3 (white)
+ EQUB %11111111
+ EQUB %11111111
+ EQUB %11111111
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -7640,9 +7679,17 @@ ENDMACRO
                         \ starts
 
 .BOX
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- LDA #%00001111         \ Set COL = %00001111 to act as a four-pixel yellow
- STA COL                \ character byte (i.e. set the line colour to yellow)
+\LDA #%00001111         \ Set COL = %00001111 to act as a four-pixel yellow
+\STA COL                \ character byte (i.e. set the line colour to yellow)
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #%11111111         \ Set COL = %11111111 to act as a four-pixel white
+ STA COL                \ character byte (i.e. set the line colour to white)
+
+                        \ --- End of replacement ------------------------------>
 
  LDY #1                 \ Move the text cursor to row 1
  STY YC
@@ -8696,14 +8743,29 @@ ENDMACRO
 
 .TVT1
 
- EQUB &34, &43
- EQUB &25, &16
- EQUB &86, &70
- EQUB &61, &52
- EQUB &C3, &B4
- EQUB &A5, &96
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\EQUB &34, &43
+\EQUB &25, &16
+\EQUB &86, &70
+\EQUB &61, &52
+\EQUB &C3, &B4
+\EQUB &A5, &96
+\EQUB &07, &F0
+\EQUB &E1, &D2
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUB &30, &40
+ EQUB &20, &10
+ EQUB &80, &70
+ EQUB &60, &50
+ EQUB &C0, &B0
+ EQUB &A0, &90
  EQUB &07, &F0
- EQUB &E1, &D2
+ EQUB &E0, &D0
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -8875,19 +8937,23 @@ ENDMACRO
                         \ (i.e. the bottom part of the screen) but with no
                         \ cursor
 
- LDA ESCP               \ Set A = ESCP, which is &FF if we have an escape pod
-                        \ fitted, or 0 if we don't
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- AND #4                 \ Set A = 4 if we have an escape pod fitted, or 0 if we
-                        \ don't
+\LDA ESCP               \ Set A = ESCP, which is &FF if we have an escape pod
+\                       \ fitted, or 0 if we don't
+\
+\AND #4                 \ Set A = 4 if we have an escape pod fitted, or 0 if we
+\                       \ don't
+\
+\EOR #&34               \ Set A = &30 if we have an escape pod fitted, or &34 if
+\                       \ we don't
+\
+\STA &FE21              \ Store A in SHEILA &21 to map colour 3 (#YELLOW2) to
+\                       \ white if we have an escape pod fitted, or yellow if we
+\                       \ don't, so the outline colour of the dashboard changes
+\                       \ from yellow to white if we have an escape pod fitted
 
- EOR #&34               \ Set A = &30 if we have an escape pod fitted, or &34 if
-                        \ we don't
-
- STA &FE21              \ Store A in SHEILA &21 to map colour 3 (#YELLOW2) to
-                        \ white if we have an escape pod fitted, or yellow if we
-                        \ don't, so the outline colour of the dashboard changes
-                        \ from yellow to white if we have an escape pod fitted
+                        \ --- End of removed code ----------------------------->
 
                         \ The following loop copies bytes #15 to #1 from TVT1 to
                         \ SHEILA &21, but not byte #0, as we just did that
@@ -8901,8 +8967,17 @@ ENDMACRO
 
  DEY                    \ Decrement the palette byte counter
 
- BNE VNT2               \ Loop back to VNT2 until we have copied all the palette
-                        \ bytes bar the first one
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\BNE VNT2               \ Loop back to VNT2 until we have copied all the palette
+\                       \ bytes bar the first one
+
+                        \ --- And replaced by: -------------------------------->
+
+ BPL VNT2               \ Loop back to VNT2 until we have copied all the palette
+                        \ bytes, including the first one
+
+                        \ --- End of replacement ------------------------------>
 
 .jvec
 
