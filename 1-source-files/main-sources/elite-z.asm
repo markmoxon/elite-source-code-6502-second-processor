@@ -2466,15 +2466,17 @@ ENDIF
 \CMP #255               \ as this denotes that the following segment is a laser
 \BEQ doalaser           \ line, which should be drawn in red
 
-                        \ --- And replaced by: -------------------------------->
-
- LDA TABLE+3            \ If TABLE+3 = 255, jump to nullLine to skip this line,
- CMP #255               \ as this denotes that the following segment is a null
- BEQ nullLine           \ line, which should not be drawn
-
-                        \ --- End of replacement ------------------------------>
+                        \ --- End of removed code ----------------------------->
 
 .LL27
+
+                        \ --- Mod: Code added for anaglyph 3D: ----------------
+
+ LDA TABLE+3,Y          \ If Y2 = 255, jump to nullLine to skip drawing this
+ CMP #255               \ line, as this denotes that the following segment is a
+ BEQ nullLine           \ null line that should not be drawn
+
+                        \ --- End of added code ------------------------------->
 
  LDA TABLE,Y            \ Set X1 to the Y-th byte from TABLE
  STA X1
