@@ -39445,6 +39445,9 @@ ENDIF
 
  JSR ApplyEyeSpacing    \ Calculate the 3D coordinates for this vertex through
                         \ both eyes
+                        \
+                        \ This also copies the z-coordinate from (U T) to
+                        \ zCoord(1 0) for use in the parallax routines
 
 .LL57a
 
@@ -39693,6 +39696,8 @@ ENDIF
  STA XX3a,X             \ Store the high byte of the result in the sixth byte of
                         \ the coordinate block we are adding to XX3 (as X points
                         \ to the second byte)
+
+ JSR ApplyParallax      \ Apply parallax to the x-coordinates for both eyes
 
 .LL66a
 
@@ -54111,6 +54116,28 @@ ENDIF
 \   Category: Drawing lines
 \    Summary: Apply eye spacing to a 3D coordinate
 \
+\ ------------------------------------------------------------------------------
+\
+\ Given the 3D x-coordinate of a point in space, calculate the x-coordinate
+\ relative to each eye.
+\
+\ The calculation simply subtracts or adds half the eye separation to get the
+\ left or right x-coordinate.
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   XX15(2 1 0)         The 3D x-coordinate of the point to transform
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   XX15(2 1 0)         The 3D x-coordinate relative to the left eye (red)
+\
+\   xRightEye(2 1 0)    The 3D x-coordinate relative to the right eye (cyan)
+\
 \ ******************************************************************************
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
@@ -54120,6 +54147,10 @@ ENDIF
  PHX                    \ Save X and T on the stack
  LDA T
  PHA
+
+ STA zCoord             \ Set zCoord(1 0) = (U T) for use in ApplyParallax
+ LDA U
+ STA zCoord+1
 
  LDA XX15               \ Copy the vertex x-coordinate from XX15(2 1 0) to
  STA XX18               \ XX18(2 1 0)
@@ -54136,7 +54167,7 @@ ENDIF
  LDX #XX18-INWK         \ Set K(3 2 1) = K(3 2 1) + XX18(2 1 0)
  JSR MVT3
 
- LDA K+1                \ Store the right-eye vertex in xRightEye(2 1 0)
+ LDA K+1                \ Store the right-eye coordinate in xRightEye(2 1 0)
  STA xRightEye
  LDA K+2
  STA xRightEye+1
@@ -54152,7 +54183,7 @@ ENDIF
  LDX #XX18-INWK         \ Set K(3 2 1) = K(3 2 1) + XX18(2 1 0)
  JSR MVT3
 
- LDA K+1                \ Store the right-eye coordinates in XX15(2 1 0)
+ LDA K+1                \ Store the left-eye coordinate in XX15(2 1 0)
  STA XX15
  LDA K+2
  STA XX15+1
@@ -54165,6 +54196,8 @@ ENDIF
 
  RTS                    \ Return from the subroutine
 
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: xRightEye
@@ -54175,9 +54208,13 @@ ENDIF
 \
 \ ******************************************************************************
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
 .xRightEye
 
  SKIP 3
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -54188,9 +54225,225 @@ ENDIF
 \
 \ ******************************************************************************
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
 .halfEyeSpacing
 
- EQUB 4
+ EQUB 2                 \ Set eye spacing to 4
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: zCoord
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: The 3D z-coordinate of the vertex to be processed
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.zCoord
+
+ SKIP 2
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: zPlane
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: The z-coordinate of the projection plane
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.zPlane
+
+ EQUW &180              \ Set projection plane at z-coordinate (1 128)
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ApplyParallax
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Apply parallax to a 3D coordinate
+\
+\ ------------------------------------------------------------------------------
+\
+\ As a first pass, we simply add a skew of the high byte of:
+\
+\   zCoord(1 0) - zPlane(1 0)
+\
+\ This is the full calculation.
+\
+\ Given the 3D coordinates of a point in space, apply the parallax ("skew") for
+\ the anaglyph 3D effect:
+\
+\   x += (z * e) / (d + z)
+\
+\ where:
+\
+\   e = x-coordinate of eye
+\
+\   z = z-coordinate of point in space
+\
+\   d = distance to projection plane (the "screen")
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   X                   The index into the line heap, pointing to the second
+\                       byte of the x-coordinate we just added
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ApplyParallax
+
+ PHX                    \ Store the line heap index on the stack so we can use
+                        \ it below and restore it at the end of the routine
+
+ LDA zCoord             \ Set P(2 1) = zCoord(1 0) - zPlane(1 0)
+ SEC                    \
+ SBC zPlane             \ i.e. the z-axis distance between the point and the
+ STA P+1                \ projection plane, as a signed 16-bit value
+ LDA zCoord+1
+ SBC zPlane+1
+ STA P+2
+
+ BCC para4              \ If zCoord < zPlane then the point is this side of the
+                        \ projection plane, so jump to para4 to apply negative
+                        \ parallax
+
+ BNE para1              \ If zCoord > zPlane then the point is beyond the
+                        \ projection plane, so jump to para1 to apply positive
+                        \ parallax
+
+                        \ If we get here then zCoord = zPlane and the point is
+                        \ on the projection plane, so leave the x-coordinates
+                        \ unchanged by returning from the subroutine
+
+ PLX                    \ Restore the index from the stack into X
+
+ RTS                    \ Return from the subroutine
+
+.para1
+
+                        \ If we get here then the point is beyond the projection
+                        \ plane and we apply positive parallax (so the left eye
+                        \ moves right and the right eye moves left)
+
+                        \ First, we cap the distance to a maximum of twice the
+                        \ distance of the projection screen, so we don't end up
+                        \ applying huge parallax for distant objects
+
+ LDA zPlane             \ Set A to the high byte of zPlane(1 0) * 2
+ ASL A
+ TAX
+ LDA zPlane+1
+ ROL A
+
+ CMP P+2                \ If P(2 1) =< zPlane(1 0) * 2 then the point is not too
+ BCC para2              \ far away, so jump to para2 to skip the following
+
+ STA P+2                \ Otherwise the point is far away, so set the distance
+ STX P+1                \ in P(2 1) to zPlane(1 0) * 2
+
+.para2
+
+                        \ At this point, P(2 1) is positive and contains the
+                        \ capped distance of the point, which we now use to
+                        \ calculate the amount of parallax to apply
+
+                        \ Experiment by applying P+2 / 4 pixels of parallax ???
+
+ LSR P+2                \ Quarter P+2
+ LSR P+2
+
+ PLY                    \ Set Y to the heap index from the stack, leaving it
+ PHY                    \ there
+
+ LDA XX3-1,Y            \ Add P+2 pixels to the left x-coordinate to move the
+ CLC                    \ left-eye coordinate to the right
+ ADC P+2
+ STA XX3-1,Y
+ LDA XX3,Y
+ ADC #0
+ STA XX3,Y
+
+ LDA XX3a-1,Y           \ Subtract P+2 pixels from the right x-coordinate to
+ SEC                    \ move the right-eye coordinate to the left
+ SBC P+2
+ STA XX3a-1,Y
+ LDA XX3a,Y
+ SBC #0
+ STA XX3a,Y
+
+ PLX                    \ Restore the index from the stack into X
+
+ RTS                    \ Return from the subroutine
+
+.para4
+
+                        \ If we get here then the point is this side of the
+                        \ projection plane and we apply negative parallax (so
+                        \ the left eye moves left and the right eye moves
+                        \ right)
+
+                        \ At this point, P(2 1) is negative and contains the
+                        \ distance of the point, which we now use to calculate
+                        \ the amount of parallax to apply
+
+ LDA P+1                \ P(2 1) is negative, so we need to negate it using
+ EOR #%11111111         \ two's complement, to make it positive, starting with
+ CLC                    \ the low byte in P+1
+ ADC #1
+ STA P+1
+
+ LDA P+2                \ And then the high byte in P+2
+ EOR #%11111111
+ ADC #0
+ STA P+2
+
+                        \ At this point, P(2 1) is positive and contains the
+                        \ negated distance of the point, which we now use to
+                        \ calculate the amount of parallax to apply
+
+                        \ Experiment by applying P+2 / 4 pixels of parallax ???
+
+ LSR P+2                \ Quarter P+2
+ LSR P+2
+
+ PLY                    \ Set Y to the heap index from the stack, leaving it
+ PHY                    \ there
+
+ LDA XX3-1,Y            \ Subtract P+2 pixels from the left x-coordinate to move
+ SEC                    \ the left-eye coordinate to the left
+ SBC P+2
+ STA XX3-1,Y
+ LDA XX3,Y
+ SBC #0
+ STA XX3,Y
+
+ LDA XX3a-1,Y           \ Add P+2 pixels to the right x-coordinate to move the
+ CLC                    \ right-eye coordinate to the right
+ ADC P+2
+ STA XX3a-1,Y
+ LDA XX3a,Y
+ ADC #0
+ STA XX3a,Y
+
+ PLX                    \ Restore the index from the stack into X
+
+ RTS                    \ Return from the subroutine
 
                         \ --- End of added code ------------------------------->
 
