@@ -32728,6 +32728,13 @@ ENDIF
 
 .TLL2
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ BIT pauseRotation      \ If rotation is disabled, jump to noRotation
+ BMI noRotation
+
+                        \ --- End of added code ------------------------------->
+
  LDA INWK+7             \ If z_hi (the ship's distance) is 1, jump to TL1 to
  CMP #1                 \ skip the following decrement
  BEQ TL1
@@ -32743,9 +32750,18 @@ ENDIF
  LDX #128               \ Set z_lo = 128, so the closest the ship gets to us is
  STX INWK+6             \ z_hi = 1, z_lo = 128, or 256 + 128 = 384
 
- LDA MCNT               \ This value will be zero on one out of every four
- AND #3                 \ iterations, so for the other three, skip to nodesire
- BNE nodesire           \ so we only scan for key presses once every four loops
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA MCNT               \ This value will be zero on one out of every four
+\AND #3                 \ iterations, so for the other three, skip to nodesire
+\BNE nodesire           \ so we only scan for key presses once every four loops
+
+
+                        \ --- And replaced by: -------------------------------->
+
+.noRotation
+
+                        \ --- End of replacement ------------------------------>
 
  STX NEEDKEY            \ Set NEEDKEY = 128, so the call to LL9 below draws the
                         \ ship and scans for key presses (LL9 resets NEEDKEY to
@@ -32802,7 +32818,124 @@ ENDIF
 
 .TL3
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ CMP #&79               \ If we didn't press the right arrow, jump to titl2
+ BNE titl2
+
+ INC halfEyeSpacing     \ Increment the eye spacing
+
+ LDA #12                \ Set CNT2 = 12 as the outer loop counter for the loop
+ STA CNT2               \ starting at TLL2
+
+ JMP titl12             \ Jump to titl12 to keep the ship rotating
+
+.titl2
+
+ CMP #&19               \ If we didn't press the left arrow, jump to titl4
+ BNE titl4
+
+ DEC halfEyeSpacing     \ Decrement the eye spacing, keeping it positive
+ BPL titl3
+ STZ halfEyeSpacing
+
+.titl3
+
+ JMP titl12             \ Jump to titl12 to keep the ship rotating
+
+.titl4
+
+ CMP #&39               \ If we didn't press the up arrow, jump to titl5
+ BNE titl5
+
+ LDA zPlane             \ Increment zPlane(1 0) by 16
+ CLC
+ ADC #16
+ STA zPlane
+ LDA zPlane+1
+ ADC #0
+ STA zPlane+1
+
+ JMP titl12             \ Jump to titl12 to keep the ship rotating
+
+.titl5
+
+ CMP #&29               \ If we didn't press the down arrow, jump to titl7
+ BNE titl7
+
+ LDA zPlane             \ Decrement zPlane(1 0) by 16, keeeping it positive
+ SEC
+ SBC #16
+ TAX
+ LDA zPlane+1
+ SBC #0
+ BCC titl6
+ STA zPlane+1
+ STX zPlane
+
+.titl6
+
+ JMP titl12             \ Jump to titl12 to keep the ship rotating
+
+.titl7
+
+ CMP #&69               \ If we didn't press COPY, jump to titl8
+ BNE titl8
+
+ LDA #&FF               \ Set the pause rotation flag
+ STA pauseRotation
+
+ JMP titl12             \ Jump to titl12 to keep the ship rotating
+
+.titl8
+
+ CMP #&59               \ If we didn't press DELETE, jump to titl7
+ BNE titl9
+
+ STZ pauseRotation      \ Clear the pause rotation flag
+
+ JMP titl12             \ Jump to titl12 to keep the ship rotating
+
+.titl9
+
+ CMP #&10               \ If we didn't press "Q", jump to titl10
+ BNE titl10
+
+ LDA #40                \ We pressed "Q", so make a long, low beep
+ JSR NOISE
+
+ LDA #&FF               \ Disable parallax
+ STA doParallax
+
+ JMP titl12             \ Jump to titl12 to keep the ship rotating
+
+.titl10
+
+ CMP #&37               \ If we didn't press "P", jump to titl7
+ BNE titl11
+
+ JSR BEEP               \ We pressed "P", so make a beep
+
+ STZ doParallax         \ Enable parallax
+
+ JMP titl12             \ Jump to titl12 to keep the ship rotating
+
+.titl11
+
+                        \ --- End of added code ------------------------------->
+
  RTS                    \ Return from the subroutine
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.titl12
+
+ LDA #12                \ Set CNT2 = 12 as the outer loop counter for the loop
+ STA CNT2               \ starting at TLL2, so we restart the countdown
+
+ JMP TLL2               \ Loop back to keep the ship rotating
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -54269,6 +54402,40 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: pauseRotation
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: A flag that controls rotation and movement on the title screen
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.pauseRotation
+
+ EQUB 0                 \ Allow rotation by default
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: doParallax
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: A flag that controls whether we apply parallax
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.doParallax
+
+ EQUB 0                 \ Apply parallax by default
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
 \       Name: ApplyParallax
 \       Type: Subroutine
 \   Category: Drawing lines
@@ -54276,24 +54443,12 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ As a first pass, we simply add a skew of the high byte of:
+\ As a first pass, we simply add a multiple of the high byte of the following:
 \
 \   zCoord(1 0) - zPlane(1 0)
 \
-\ This is the full calculation.
-\
-\ Given the 3D coordinates of a point in space, apply the parallax ("skew") for
-\ the anaglyph 3D effect:
-\
-\   x += (z * e) / (d + z)
-\
-\ where:
-\
-\   e = x-coordinate of eye
-\
-\   z = z-coordinate of point in space
-\
-\   d = distance to projection plane (the "screen")
+\ We add this value to the x-coordinates, according to whether the point is in
+\ front of or beyond the projection plane.
 \
 \ ------------------------------------------------------------------------------
 \
@@ -54307,6 +54462,9 @@ ENDIF
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
 .ApplyParallax
+
+ BIT doParallax         \ If parallax is disabled, return from the subroutine
+ BMI para1
 
  PHX                    \ Store the line heap index on the stack so we can use
                         \ it below and restore it at the end of the routine
@@ -54323,8 +54481,8 @@ ENDIF
                         \ projection plane, so jump to para4 to apply negative
                         \ parallax
 
- BNE para1              \ If zCoord > zPlane then the point is beyond the
-                        \ projection plane, so jump to para1 to apply positive
+ BNE para2              \ If zCoord > zPlane then the point is beyond the
+                        \ projection plane, so jump to para2 to apply positive
                         \ parallax
 
                         \ If we get here then zCoord = zPlane and the point is
@@ -54333,9 +54491,11 @@ ENDIF
 
  PLX                    \ Restore the index from the stack into X
 
+.para1
+
  RTS                    \ Return from the subroutine
 
-.para1
+.para2
 
                         \ If we get here then the point is beyond the projection
                         \ plane and we apply positive parallax (so the left eye
@@ -54352,21 +54512,21 @@ ENDIF
  ROL A
 
  CMP P+2                \ If P(2 1) =< zPlane(1 0) * 2 then the point is not too
- BCC para2              \ far away, so jump to para2 to skip the following
+ BCC para3              \ far away, so jump to para3 to skip the following
 
  STA P+2                \ Otherwise the point is far away, so set the distance
  STX P+1                \ in P(2 1) to zPlane(1 0) * 2
 
-.para2
+.para3
 
                         \ At this point, P(2 1) is positive and contains the
                         \ capped distance of the point, which we now use to
                         \ calculate the amount of parallax to apply
 
-                        \ Experiment by applying P+2 / 4 pixels of parallax ???
+                        \ Experiment by applying P+2 pixels of parallax ???
 
- LSR P+2                \ Quarter P+2
- LSR P+2
+\LSR P+2                \ Quarter P+2
+\LSR P+2
 
  PLY                    \ Set Y to the heap index from the stack, leaving it
  PHY                    \ there
@@ -54417,10 +54577,10 @@ ENDIF
                         \ negated distance of the point, which we now use to
                         \ calculate the amount of parallax to apply
 
-                        \ Experiment by applying P+2 / 4 pixels of parallax ???
+                        \ Experiment by applying P+2 pixels of parallax ???
 
- LSR P+2                \ Quarter P+2
- LSR P+2
+\LSR P+2                \ Quarter P+2
+\LSR P+2
 
  PLY                    \ Set Y to the heap index from the stack, leaving it
  PHY                    \ there
