@@ -39830,9 +39830,9 @@ ENDIF
                         \ the coordinate block we are adding to XX3 (as X points
                         \ to the second byte)
 
- JSR ApplyParallax      \ Apply parallax to the x-coordinates for both eyes
-
 .LL66a
+
+ JSR ApplyParallax      \ Apply parallax to the x-coordinates for both eyes
 
                         \ --- End of added code ------------------------------->
 
@@ -54362,7 +54362,7 @@ ENDIF
 
 .halfEyeSpacing
 
- EQUB 2                 \ Set eye spacing to 4
+ EQUB 1                 \ Set eye spacing to 2
 
                         \ --- End of added code ------------------------------->
 
@@ -54503,7 +54503,7 @@ ENDIF
 
                         \ First, we cap the distance to a maximum of twice the
                         \ distance of the projection screen, so we don't end up
-                        \ applying huge parallax for distant objects
+                        \ applying huge parallax to distant objects
 
  LDA zPlane             \ Set A to the high byte of zPlane(1 0) * 2
  ASL A
@@ -54511,8 +54511,8 @@ ENDIF
  LDA zPlane+1
  ROL A
 
- CMP P+2                \ If P(2 1) =< zPlane(1 0) * 2 then the point is not too
- BCC para3              \ far away, so jump to para3 to skip the following
+ CMP P+2                \ If zPlane(1 0) * 2 >= P(2 1) then the point is not too
+ BCS para3              \ far away, so jump to para3 to skip the following
 
  STA P+2                \ Otherwise the point is far away, so set the distance
  STX P+1                \ in P(2 1) to zPlane(1 0) * 2
