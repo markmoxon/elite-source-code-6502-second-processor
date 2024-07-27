@@ -54396,7 +54396,7 @@ ENDIF
 
 .zPlane
 
- EQUW &180              \ Set projection plane at z-coordinate (1 128)
+ EQUW &200              \ Set projection plane at z-coordinate (2 0)
 
                         \ --- End of added code ------------------------------->
 
@@ -54443,7 +54443,9 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ As a first pass, we simply add a multiple of the high byte of the following:
+\ To create a very simple parallax effect, we add a multiple of the high byte of
+\ the following, which gives us the distance between a point in space and the
+\ projection plane:
 \
 \   zCoord(1 0) - zPlane(1 0)
 \
@@ -54501,32 +54503,25 @@ ENDIF
                         \ plane and we apply positive parallax (so the left eye
                         \ moves right and the right eye moves left)
 
-                        \ First, we cap the distance to a maximum of twice the
-                        \ distance of the projection screen, so we don't end up
-                        \ applying huge parallax to distant objects
-
- LDA zPlane             \ Set A to the high byte of zPlane(1 0) * 2
- ASL A
- TAX
- LDA zPlane+1
- ROL A
-
- CMP P+2                \ If zPlane(1 0) * 2 >= P(2 1) then the point is not too
- BCS para3              \ far away, so jump to para3 to skip the following
-
- STA P+2                \ Otherwise the point is far away, so set the distance
- STX P+1                \ in P(2 1) to zPlane(1 0) * 2
-
-.para3
-
                         \ At this point, P(2 1) is positive and contains the
                         \ capped distance of the point, which we now use to
                         \ calculate the amount of parallax to apply
 
-                        \ Experiment by applying P+2 pixels of parallax ???
+ LDA P+2                \ Set A = P+2 / 4
+ LSR A                  \
+ LSR A                  \ and cap it to a maximum value of 2
+ CMP #2
+ BCC para3
+ LDA #2
 
-\LSR P+2                \ Quarter P+2
-\LSR P+2
+.para3
+
+ STA P+2                \ Store the new value in P+2, to use as the number of
+                        \ pixels of parallax to apply
+
+                        \ We now apply P+2 pixels of positive parallax (so
+                        \ the left eye moves right and the right eye moves
+                        \ left)
 
  PLY                    \ Set Y to the heap index from the stack, leaving it
  PHY                    \ there
@@ -54558,9 +54553,8 @@ ENDIF
                         \ the left eye moves left and the right eye moves
                         \ right)
 
-                        \ At this point, P(2 1) is negative and contains the
-                        \ distance of the point, which we now use to calculate
-                        \ the amount of parallax to apply
+                        \ At this point, P(2 1) is negative, so we need to flip
+                        \ the sign to use for the parallax calculation
 
  LDA P+1                \ P(2 1) is negative, so we need to negate it using
  EOR #%11111111         \ two's complement, to make it positive, starting with
@@ -54581,6 +54575,22 @@ ENDIF
 
 \LSR P+2                \ Quarter P+2
 \LSR P+2
+
+ LDA P+2                \ Set A = P+2 / 4
+ LSR A                  \
+ LSR A                  \ and cap it to a maximum value of 2
+ CMP #2
+ BCC para5
+ LDA #2
+
+.para5
+
+ STA P+2                \ Store the new value in P+2, to use as the number of
+                        \ pixels of parallax to apply
+
+                        \ We now apply P+2 pixels of negative parallax (so
+                        \ the left eye moves left and the right eye moves
+                        \ right)
 
  PLY                    \ Set Y to the heap index from the stack, leaving it
  PHY                    \ there
