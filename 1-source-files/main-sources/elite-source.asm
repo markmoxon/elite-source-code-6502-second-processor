@@ -32728,13 +32728,6 @@ ENDIF
 
 .TLL2
 
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
- BIT pauseRotation      \ If rotation is disabled, jump to noRotation
- BMI noRotation
-
-                        \ --- End of added code ------------------------------->
-
  LDA INWK+7             \ If z_hi (the ship's distance) is 1, jump to TL1 to
  CMP #1                 \ skip the following decrement
  BEQ TL1
@@ -32750,18 +32743,9 @@ ENDIF
  LDX #128               \ Set z_lo = 128, so the closest the ship gets to us is
  STX INWK+6             \ z_hi = 1, z_lo = 128, or 256 + 128 = 384
 
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
-
-\LDA MCNT               \ This value will be zero on one out of every four
-\AND #3                 \ iterations, so for the other three, skip to nodesire
-\BNE nodesire           \ so we only scan for key presses once every four loops
-
-
-                        \ --- And replaced by: -------------------------------->
-
-.noRotation
-
-                        \ --- End of replacement ------------------------------>
+ LDA MCNT               \ This value will be zero on one out of every four
+ AND #3                 \ iterations, so for the other three, skip to nodesire
+ BNE nodesire           \ so we only scan for key presses once every four loops
 
  STX NEEDKEY            \ Set NEEDKEY = 128, so the call to LL9 below draws the
                         \ ship and scans for key presses (LL9 resets NEEDKEY to
@@ -32820,122 +32804,36 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- CMP #&79               \ If we didn't press the right arrow, jump to titl2
- BNE titl2
+ CMP #f0                \ Did we press f0? If not, skip the following
+ BNE titl1              \ instruction
 
- INC halfEyeSpacing     \ Increment the eye spacing
+ LDA #1                 \ Clear the top part of the screen, draw a white border,
+ JSR TT66               \ and set the current view type in QQ11 to 1
 
- LDA #12                \ Set CNT2 = 12 as the outer loop counter for the loop
- STA CNT2               \ starting at TLL2
+ LDA #'U'               \ Change the directory to U
+ STA S1%+3
 
- JMP titl12             \ Jump to titl12 to keep the ship rotating
+ JSR GTNMEW             \ The f0 key was pressed, so call GTNMEW to fetch the
+                        \ name of the commander file to load (including drive
+                        \ number and directory) into INWK
 
-.titl2
+ JSR LoadUniverse       \ Call LoadUniverse to load the commander file
 
- CMP #&19               \ If we didn't press the left arrow, jump to titl4
- BNE titl4
+ JSR ConvertToAnaglyph  \ Convert the ship line heaps to double the size
 
- DEC halfEyeSpacing     \ Decrement the eye spacing, keeping it positive
- BPL titl3
- STZ halfEyeSpacing
+ LDA #'E'               \ Change the directory back to E
+ STA S1%+3
 
-.titl3
+ JSR ShowUniverse       \ Display the universe file and allow anaglyph settings
+                        \ to be tweaked
 
- JMP titl12             \ Jump to titl12 to keep the ship rotating
+ JMP TT170              \ Restart the game at the title screen
 
-.titl4
-
- CMP #&39               \ If we didn't press the up arrow, jump to titl5
- BNE titl5
-
- LDA zPlane             \ Increment zPlane(1 0) by 16
- CLC
- ADC #16
- STA zPlane
- LDA zPlane+1
- ADC #0
- STA zPlane+1
-
- JMP titl12             \ Jump to titl12 to keep the ship rotating
-
-.titl5
-
- CMP #&29               \ If we didn't press the down arrow, jump to titl7
- BNE titl7
-
- LDA zPlane             \ Decrement zPlane(1 0) by 16, keeeping it positive
- SEC
- SBC #16
- TAX
- LDA zPlane+1
- SBC #0
- BCC titl6
- STA zPlane+1
- STX zPlane
-
-.titl6
-
- JMP titl12             \ Jump to titl12 to keep the ship rotating
-
-.titl7
-
- CMP #&69               \ If we didn't press COPY, jump to titl8
- BNE titl8
-
- LDA #&FF               \ Set the pause rotation flag
- STA pauseRotation
-
- JMP titl12             \ Jump to titl12 to keep the ship rotating
-
-.titl8
-
- CMP #&59               \ If we didn't press DELETE, jump to titl7
- BNE titl9
-
- STZ pauseRotation      \ Clear the pause rotation flag
-
- JMP titl12             \ Jump to titl12 to keep the ship rotating
-
-.titl9
-
- CMP #&10               \ If we didn't press "Q", jump to titl10
- BNE titl10
-
- LDA #40                \ We pressed "Q", so make a long, low beep
- JSR NOISE
-
- LDA #&FF               \ Disable parallax
- STA doParallax
-
- JMP titl12             \ Jump to titl12 to keep the ship rotating
-
-.titl10
-
- CMP #&37               \ If we didn't press "P", jump to titl7
- BNE titl11
-
- JSR BEEP               \ We pressed "P", so make a beep
-
- STZ doParallax         \ Enable parallax
-
- JMP titl12             \ Jump to titl12 to keep the ship rotating
-
-.titl11
+.titl1
 
                         \ --- End of added code ------------------------------->
 
  RTS                    \ Return from the subroutine
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.titl12
-
- LDA #12                \ Set CNT2 = 12 as the outer loop counter for the loop
- STA CNT2               \ starting at TLL2, so we restart the countdown
-
- JMP TLL2               \ Loop back to keep the ship rotating
-
-                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -54351,23 +54249,6 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: halfEyeSpacing
-\       Type: Variable
-\   Category: Drawing lines
-\    Summary: Half of the distance between the eyes
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.halfEyeSpacing
-
- EQUB 1                 \ Set eye spacing to 2
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
 \       Name: zCoord
 \       Type: Variable
 \   Category: Drawing lines
@@ -54385,6 +54266,23 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: halfEyeSpacing
+\       Type: Variable
+\   Category: Drawing lines
+\    Summary: Half of the distance between the eyes
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.halfEyeSpacing
+
+ EQUB 1                 \ Set eye spacing to 2
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
 \       Name: zPlane
 \       Type: Variable
 \   Category: Drawing lines
@@ -54396,24 +54294,7 @@ ENDIF
 
 .zPlane
 
- EQUW &200              \ Set projection plane at z-coordinate (2 0)
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: pauseRotation
-\       Type: Variable
-\   Category: Drawing lines
-\    Summary: A flag that controls rotation and movement on the title screen
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.pauseRotation
-
- EQUB 0                 \ Allow rotation by default
+ EQUW &4C0              \ Set projection plane to z-coordinate (4 &C0)
 
                         \ --- End of added code ------------------------------->
 
@@ -54507,8 +54388,8 @@ ENDIF
                         \ capped distance of the point, which we now use to
                         \ calculate the amount of parallax to apply
 
- LDA P+2                \ Set A = P+2 / 4
- LSR A                  \
+ LDA P+2                \ Set A = P+2 / 2
+\LSR A                  \
  LSR A                  \ and cap it to a maximum value of 2
  CMP #2
  BCC para3
@@ -54573,11 +54454,8 @@ ENDIF
 
                         \ Experiment by applying P+2 pixels of parallax ???
 
-\LSR P+2                \ Quarter P+2
-\LSR P+2
-
- LDA P+2                \ Set A = P+2 / 4
- LSR A                  \
+ LDA P+2                \ Set A = P+2 / 2
+\LSR A                  \
  LSR A                  \ and cap it to a maximum value of 2
  CMP #2
  BCC para5
@@ -54765,6 +54643,633 @@ ENDIF
  RTS                    \ Return from the subroutine
 
                         \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: LoadUniverse
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Load a universe file
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.LoadUniverse
+
+ JSR ZEBC               \ Call ZEBC to zero-fill pages &B and &C
+
+ LDY #HI(K%-2)          \ Set up an OSFILE block at &0C00, containing:
+ STY &0C03              \
+ LDY #LO(K%-2)          \ Load address = K%-2 in &0C02 to &0C05
+ STY &0C02              \
+ LDY #&03               \ Length of file = &0321 in &0C0A to &0C0D
+ STY &0C0B
+ LDY #&21
+ STY &0C0A
+
+ LDA #&FF               \ Call SaveLoadFile with A = &FF to load the universe
+ JSR SaveLoadFile       \ file to address K%
+
+ BCS load1              \ If the C flag is set then an invalid drive number was
+                        \ entered during the call to SaveLoadFile and the file
+                        \ wasn't loaded, so jump to load1 to skip the following
+                        \ and return from the subroutine
+
+ JSR StoreName          \ Transfer the universe filename from INWK to NAME, to
+                        \ set it as the current filename
+
+                        \ We now split up the file, by copying the data after
+                        \ the end of the K% block into FRIN, MANY and JUNK
+
+ LDA #HI(K%+&2E4)       \ Copy NOSH+1 bytes from K%+&2E4 to FRIN
+ STA P+1
+ LDA #LO(K%+&2E4)
+ STA P
+ LDA #HI(FRIN)
+ STA Q+1
+ LDA #LO(FRIN)
+ STA Q
+ LDY #NOSH+1
+ JSR CopyBlock
+
+ STZ FRIN+NOSH          \ Zero the slot terminator
+
+ LDA #HI(K%+&2E4+21)    \ Copy NTY + 1 bytes from K%+&2E4+21 to MANY
+ STA P+1
+ LDA #LO(K%+&2E4+21)    
+ STA P
+ LDA #HI(MANY)
+ STA Q+1
+ LDA #LO(MANY)
+ STA Q
+ LDY #NTY+1
+ JSR CopyBlock
+
+ LDA K%+&2E4+21+35      \ Copy 1 byte from K%+&2E4+21+35 to JUNK
+ STA JUNK
+
+ LDA K%+&2E4+21+36      \ Copy 2 bytes from K%+&2E4+21+36 to SLSP
+ STA SLSP
+ LDA K%+&2E4+21+37
+ STA SLSP+1
+
+\JSR ResetExplosions    \ Reset any explosions so they restart on loading
+
+.load1
+
+ RTS
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SaveLoadFile
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Save or load a universe file
+\
+\ ------------------------------------------------------------------------------
+\
+\ The filename should be stored at INWK, terminated with a carriage return (13).
+\ The routine asks for a drive number and updates the filename accordingly
+\ before performing the load or save.
+\
+\ Arguments:
+\
+\   A                   File operation to be performed. Can be one of the
+\                       following:
+\
+\                         * 0 (save file)
+\
+\                         * &FF (load file)
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   C flag              Set if an invalid drive number was entered
+\
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   slod3               Contains an RTS
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.SaveLoadFile
+
+ PHA                    \ Store A on the stack so we can restore it after the
+                        \ call to GTDRV
+
+ JSR GTDRV              \ Get an ASCII disc drive drive number from the keyboard
+                        \ in A, setting the C flag if an invalid drive number
+                        \ was entered
+
+ STA INWK+1             \ Store the ASCII drive number in INWK+1, which is the
+                        \ drive character of the filename string ":0.E."
+
+ PLA                    \ Restore A from the stack
+
+ BCS slod3              \ If the C flag is set, then an invalid drive number was
+                        \ entered, so jump to slod3 to return from the
+                        \ subroutine
+
+ PHA                    \ Store A on the stack so we can restore it after the
+                        \ call to DODOSVN
+
+ LDA #255               \ Set the SVN flag to 255 to indicate that disc access
+ JSR DODOSVN            \ is in progress
+
+ PLA                    \ Restore A from the stack
+
+ LDX #INWK              \ Store a pointer to INWK at the start of the block at
+ STX &0C00              \ &0C00, storing #INWK in the low byte because INWK is
+                        \ in zero page
+
+ LDX #0                 \ Set (Y X) = &0C00
+ LDY #&C
+
+ JSR OSFILE             \ Call OSFILE to do the file operation specified in
+                        \ &0C00 (i.e. save or load a file depending on the value
+                        \ of A)
+
+ JSR CLDELAY            \ Pause for 1280 empty loops
+
+ LDA #0                 \ Set the SVN flag to 0 indicate that disc access has
+ JSR DODOSVN            \ finished
+
+ CLC                    \ Clear the C flag
+
+.slod3
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: StoreName
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Store the name of the current universe file
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.StoreName
+
+ LDX #7                 \ The universe's name can contain a maximum of 7
+                        \ characters, and is terminated by a carriage return,
+                        \ so set up a counter in X to copy 8 characters
+
+.name1
+
+ LDA INWK+5,X           \ Copy the X-th byte of INWK+5 to the X-th byte of NA%
+ STA NAME,X
+
+ DEX                    \ Decrement the loop counter
+
+ BPL name1              \ Loop back until we have copied all 8 bytes
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: CopyBlock
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Copy a small block of memory
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   Y                   Number of bytes to copy - 1
+\
+\   P(1 0)              From address
+\
+\   Q(1 0)              To address
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.CopyBlock
+
+ LDA (P),Y              \ Copy byte X from P(1 0) to Q(1 0)
+ STA (Q),Y
+
+ DEY                    \ Decrement the counter
+
+ BPL CopyBlock          \ Loop back until all X bytes are copied
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetSpaceView
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Change the space view to front, rear, left or right space view
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   X                   Space view number:
+\
+\                         * 0 = front
+\                         * 1 = rear
+\                         * 2 = left
+\                         * 3 = right
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.SetSpaceView
+
+ JSR LOOK1              \ Call LOOK1 to switch to view X
+
+ JSR NWSTARS            \ Set up a new stardust field (not sure why LOOK1
+                        \ doesn't draw the stardust - it should)
+
+ JMP DrawShips          \ Draw all ships, returning from the subroutine using a
+                        \ tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawShips
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Draw all ships, planets, stations etc.
+\
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   draw3               Contains an RTS
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawShips
+
+ LDX #0                 \ We count through all the occupied ship slots, from
+                        \ slot 0 and up
+
+.draw1
+
+ LDA FRIN,X             \ If the slot is empty, return from the subroutine as
+ BEQ draw3              \ we are done
+
+ PHX                    \ Store the counter on the stack
+
+ JSR GetShipData        \ Fetch the details for the ship in slot X
+
+ JSR DrawShipScanner    \ Draw the ship
+
+.draw2
+
+ PLX                    \ Retrieve the counter from the stack
+
+ INX                    \ Move to the next slot
+
+ CPX #NOSH              \ Loop back until we have drawn all the ships
+ BCC draw1
+
+.draw3
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: GetShipData
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Fetch the ship info for a specific ship slot
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   X                   Slot number of ship data to fetch
+\
+\ Returns:
+\
+\   X                   X is unchanged
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.GetShipData
+
+ LDA FRIN,X             \ Fetch the contents of this slot into A. If it is 0
+ BEQ gets2              \ then this slot is empty, so jump to gets2 to return
+                        \ from the subroutine
+
+ STA TYPE               \ Store the ship type in TYPE
+
+ JSR GINF               \ Call GINF to fetch the address of the ship data block
+                        \ for the ship in slot X and store it in INF. The data
+                        \ block is in the K% workspace, which is where all the
+                        \ ship data blocks are stored
+
+                        \ Next we want to copy the ship data block from INF to
+                        \ the zero-page workspace at INWK, so we can process it
+                        \ more efficiently
+
+ LDY #NI%-1             \ There are NI% bytes in each ship data block (and in
+                        \ the INWK workspace, so we set a counter in Y so we can
+                        \ loop through them
+
+.gets1
+
+ LDA (INF),Y            \ Load the Y-th byte of INF and store it in the Y-th
+ STA INWK,Y             \ byte of INWK
+
+ DEY                    \ Decrement the loop counter
+
+ BPL gets1              \ Loop back for the next byte until we have copied the
+                        \ last byte from INF to INWK
+
+ LDA TYPE               \ If the ship type is negative then this indicates a
+ BMI gets2              \ planet or sun, so jump down to gets2, as the next bit
+                        \ sets up a pointer to the ship blueprint, which doesn't
+                        \ apply to planets and suns
+
+ ASL A                  \ Set Y = ship type * 2
+ TAY
+
+ LDA XX21-2,Y           \ The ship blueprints at XX21 start with a lookup
+ STA XX0                \ table that points to the individual ship blueprints,
+                        \ so this fetches the low byte of this particular ship
+                        \ type's blueprint and stores it in XX0
+
+ LDA XX21-1,Y           \ Fetch the high byte of this particular ship type's
+ STA XX0+1              \ blueprint and store it in XX0+1
+
+.gets2
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawShipScanner
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Store the ship's data and draw the ship on the screen and the
+\             scanner
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawShipScanner
+
+ JSR MV5                \ Draw the ship on the scanner
+
+ JSR STORE              \ Store the updated scanner byte
+
+ JSR PLUT               \ Call PLUT to update the geometric axes in INWK to
+                        \ match the view (front, rear, left, right)
+
+ LDA #%00100000         \ If bit 5 of the ship's byte #31 is set, then the ship
+ BIT XX1+31             \ is currently exploding, so do not draw the explosion
+ BNE ship1
+
+ JSR LL9                \ Draw the ship
+
+.ship1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ConvertToAnaglyph
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Convert a loaded universe file so it works with anaglyph 3D
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ConvertToAnaglyph
+
+                        \ We are loading a file into the anaglyph 3D version, so
+                        \ we need to make the following change:
+                        \
+                        \   * Fix the ship heap addresses in INWK+33 and INWK+34
+                        \     to be double size
+
+ LDX #2                 \ Set a counter in X to loop through all the ship slots,
+                        \ not including the station
+
+.conv1
+
+ LDA FRIN,X             \ If the slot is empty then we have done them all, so
+ BEQ conv5              \ jump to conv5 to finish off
+
+.conv2
+
+                        \ We now update the ship heap pointer to point to the
+                        \ correct address for the platform we are running on
+
+ TXA                    \ Set Y = X * 2
+ ASL A                  \
+ TAY                    \ so we can use X as an index into UNIV for this slot
+
+ LDA UNIV,Y             \ Copy the address of the target ship's data block from
+ STA V                  \ UNIV(X+1 X) to V(1 0)
+ LDA UNIV+1,Y
+ STA V+1
+
+ LDY #33                \ Set P(1 0) = block(34 33), the ship heap address
+ LDA (V),Y
+ STA P
+ INY
+ LDA (V),Y
+ STA P+1
+
+ LDA #LO(D%)            \ Set P(1 0) = D% - P(1 0)
+ SEC                    \
+ SBC P                  \ to give us the size of the ship line heap
+ STA P
+ LDA #HI(D%)
+ SBC P+1
+ STA P+1
+
+ ASL P                  \ Double P(1 0) to give us the new heap size
+ ROL P+1
+
+ LDA #LO(D%)            \ Set block(34 33) = D% - P(1 0)
+ SEC                    \
+ SBC P                  \ to give us the new ship line heap address, which
+ DEY                    \ we also store in SLSP(1 0), as the heap address of
+ STA (V),Y              \ the last ship will also be the bottom of the heap
+ STA SLSP
+ LDA #HI(D%)
+ SBC P+1
+ INY
+ STA (V),Y
+ STA SLSP+1
+
+.conv4
+
+ INX                    \ Increment the counter to move on to the next slot
+
+ CPX #NOSH
+ BCC conv1              \ Loop back until all X bytes are searched
+
+.conv5
+
+ STZ FRIN+NOSH          \ Clear the last ship slot, so it can act as a backstop
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ShowUniverse
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Display a universe file and allow anaglyph settings to be tweaked
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ShowUniverse
+
+ LDX #0                 \ Draw the front view, returning from the subroutine
+ STX VIEW               \ using a tail call
+
+ JSR LOOK1              \ Call LOOK1 to switch to view X
+
+ JSR NWSTARS            \ Set up a new stardust field (not sure why LOOK1
+                        \ doesn't draw the stardust - it should)
+
+.show1
+
+ JSR DrawShips          \ Draw all ships, returning from the subroutine using a
+                        \ tail call
+
+ JSR TT217              \ Scan the keyboard until a key is pressed, and return
+                        \ the key's ASCII code in A (and X)
+
+ PHA                    \ Draw all ships to remove them from the screen
+ JSR DrawShips
+ PLA
+
+ CMP #&8D               \ If we didn't press the right arrow, jump to show3
+ BNE show3
+
+ INC halfEyeSpacing     \ Increment the eye spacing
+
+ JMP show1              \ Jump to show1 to redraw the scene
+
+.show3
+
+ CMP #&8C               \ If we didn't press the left arrow, jump to show5
+ BNE show5
+
+ DEC halfEyeSpacing     \ Decrement the eye spacing, keeping it positive
+ BPL show4
+ STZ halfEyeSpacing
+
+.show4
+
+ JMP show1              \ Jump to show1 to redraw the scene
+
+.show5
+
+ CMP #&8F               \ If we didn't press the up arrow, jump to show6
+ BNE show6
+
+ LDA zPlane             \ Increment zPlane(1 0) by 16
+ CLC
+ ADC #16
+ STA zPlane
+ LDA zPlane+1
+ ADC #0
+ STA zPlane+1
+
+ JMP show1              \ Jump to show1 to redraw the scene
+
+.show6
+
+ CMP #&8E               \ If we didn't press the down arrow, jump to show8
+ BNE show8
+
+ LDA zPlane             \ Decrement zPlane(1 0) by 16, keeeping it positive
+ SEC
+ SBC #16
+ TAX
+ LDA zPlane+1
+ SBC #0
+ BCC show7
+ STA zPlane+1
+ STX zPlane
+
+.show7
+
+ JMP show1              \ Jump to show1 to redraw the scene
+
+.show8
+
+ CMP #&71               \ If we didn't press "Q", jump to show9
+ BNE show9
+
+ LDA #40                \ We pressed "Q", so make a long, low beep
+ JSR NOISE
+
+ LDA #&FF               \ Disable parallax
+ STA doParallax
+
+ JMP show1              \ Jump to show1 to redraw the scene
+
+.show9
+
+ CMP #&70               \ If we didn't press "P", jump to show8
+ BNE show10
+
+ JSR BEEP               \ We pressed "P", so make a beep
+
+ STZ doParallax         \ Enable parallax
+
+ JMP show1              \ Jump to show1 to redraw the scene
+
+.show10
+
+ CMP #&1B               \ If we didn't press ESCAPE, jump to show12
+ BEQ show12
+
+ JMP show1              \ Jump to show1 to redraw the scene
+
+.show12
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
