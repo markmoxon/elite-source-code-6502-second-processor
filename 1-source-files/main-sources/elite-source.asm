@@ -54277,7 +54277,7 @@ ENDIF
 
 .halfEyeSpacing
 
- EQUB 1                 \ Set eye spacing to 2
+ EQUB 2                 \ Set eye spacing to 4
 
                         \ --- End of added code ------------------------------->
 
@@ -54382,7 +54382,7 @@ ENDIF
 
                         \ If we get here then the point is beyond the projection
                         \ plane and we apply positive parallax (so the left eye
-                        \ moves right and the right eye moves left)
+                        \ moves left and the right eye moves right)
 
                         \ At this point, P(2 1) is positive and contains the
                         \ capped distance of the point, which we now use to
@@ -54401,26 +54401,26 @@ ENDIF
                         \ pixels of parallax to apply
 
                         \ We now apply P+2 pixels of positive parallax (so
-                        \ the left eye moves right and the right eye moves
-                        \ left)
+                        \ the left eye moves left and the right eye moves
+                        \ right)
 
  PLY                    \ Set Y to the heap index from the stack, leaving it
  PHY                    \ there
 
- LDA XX3-1,Y            \ Add P+2 pixels to the left x-coordinate to move the
- CLC                    \ left-eye coordinate to the right
- ADC P+2
+ LDA XX3-1,Y            \ Subtract P+2 pixels from the left x-coordinate to move
+ SEC                    \ the left-eye coordinate to the left
+ SBC P+2
  STA XX3-1,Y
  LDA XX3,Y
- ADC #0
+ SBC #0
  STA XX3,Y
 
- LDA XX3a-1,Y           \ Subtract P+2 pixels from the right x-coordinate to
- SEC                    \ move the right-eye coordinate to the left
- SBC P+2
+ LDA XX3a-1,Y           \ Add P+2 pixels to the right x-coordinate to move the
+ CLC                    \ right-eye coordinate to the right
+ ADC P+2
  STA XX3a-1,Y
  LDA XX3a,Y
- SBC #0
+ ADC #0
  STA XX3a,Y
 
  PLX                    \ Restore the index from the stack into X
@@ -54431,8 +54431,8 @@ ENDIF
 
                         \ If we get here then the point is this side of the
                         \ projection plane and we apply negative parallax (so
-                        \ the left eye moves left and the right eye moves
-                        \ right)
+                        \ the left eye moves right and the right eye moves
+                        \ left)
 
                         \ At this point, P(2 1) is negative, so we need to flip
                         \ the sign to use for the parallax calculation
@@ -54467,26 +54467,26 @@ ENDIF
                         \ pixels of parallax to apply
 
                         \ We now apply P+2 pixels of negative parallax (so
-                        \ the left eye moves left and the right eye moves
-                        \ right)
+                        \ the left eye moves right and the right eye moves
+                        \ left)
 
  PLY                    \ Set Y to the heap index from the stack, leaving it
  PHY                    \ there
 
- LDA XX3-1,Y            \ Subtract P+2 pixels from the left x-coordinate to move
- SEC                    \ the left-eye coordinate to the left
- SBC P+2
+ LDA XX3-1,Y            \ Add P+2 pixels to the left x-coordinate to move the
+ CLC                    \ left-eye coordinate to the right
+ ADC P+2
  STA XX3-1,Y
  LDA XX3,Y
- SBC #0
+ ADC #0
  STA XX3,Y
 
- LDA XX3a-1,Y           \ Add P+2 pixels to the right x-coordinate to move the
- CLC                    \ right-eye coordinate to the right
- ADC P+2
+ LDA XX3a-1,Y           \ Subtract P+2 pixels from the right x-coordinate to
+ SEC                    \ move the right-eye coordinate to the left
+ SBC P+2
  STA XX3a-1,Y
  LDA XX3a,Y
- ADC #0
+ SBC #0
  STA XX3a,Y
 
  PLX                    \ Restore the index from the stack into X
