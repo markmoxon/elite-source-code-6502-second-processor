@@ -3518,7 +3518,7 @@ ENDIF
 \
 \       Name: K%
 \       Type: Workspace
-\    Address: &8200 to &85FF (&8500 to &88FF in the Executive version)
+\    Address: &8200 to &84E3 (&8500 to &87E3 in the Executive version)
 \   Category: Workspaces
 \    Summary: Ship data blocks
 \  Deep dive: Ship data blocks
@@ -29982,10 +29982,10 @@ ENDIF
  ADC (INF),Y
  STA P
 
- INY                    \ And next we add A and address in INF+34, with any
- LDA (INF),Y            \ from the previous addition, to get the high byte of
- ADC #0                 \ the top of the heap, which we store in P+1, so P(1 0)
- STA P+1                \ points to the top of this ship's heap
+ INY                    \ And next we add A and the address in INF+34, with any
+ LDA (INF),Y            \ carry from the previous addition, to get the high byte
+ ADC #0                 \ of the top of the heap, which we store in P+1, so
+ STA P+1                \ P(1 0) points to the top of this ship's heap
 
                         \ Now, we're ready to start looping through the ships
                         \ we want to move, moving the slots, data blocks and
@@ -37224,7 +37224,7 @@ ENDIF
                         \ subroutine early (i.e. LL9). This works because we
                         \ called Shpt from above with a JSR, so nono-2 removes
                         \ that return address from the stack, leaving the next
-                        \ return address exposed. LL9 called SHPPT with a JMP.
+                        \ return address exposed. LL9 called SHPPT with a JMP,
                         \ so the next return address is the one that was put on
                         \ the stack by the original call to LL9. So the RTS in
                         \ nono will actually return us from the original call
