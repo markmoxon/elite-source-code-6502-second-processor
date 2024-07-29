@@ -62,12 +62,6 @@
 
  LOAD_WORDS% = &81B0    \ The address where the text data will be loaded
 
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
- XX3a = &8600           \ XX3 heap for storing the right-eye calculations
-
-                        \ --- End of added code ------------------------------->
-
 IF _SNG45 OR _SOURCE_DISC
 
  Q% = _MAX_COMMANDER    \ Set Q% to TRUE to max out the default commander, FALSE
@@ -3463,26 +3457,28 @@ ENDIF
 
 .LSO
 
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
-
-\SKIP 192               \ The ship line heap for the space station (see NWSPS)
-\                       \ and the sun line heap (see SUN)
-\                       \
-\                       \ The spaces can be shared as our local bubble of
-\                       \ universe can support either the sun or a space
-\                       \ station, but not both
-
-                        \ --- And replaced by: -------------------------------->
-
- SKIP 192*2             \ The ship line heap for the space station (see NWSPS)
+ SKIP 192               \ The ship line heap for the space station (see NWSPS)
                         \ and the sun line heap (see SUN)
                         \
                         \ The spaces can be shared as our local bubble of
                         \ universe can support either the sun or a space
                         \ station, but not both
 
-                        \ --- End of replacement ------------------------------>
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
 
+ SKIP 9                 \ Add an extra 9 bytes to cope with double the lines for
+                        \ the Dodo station, which needs storage for 25 edges
+                        \ (each requiring four bytes) plus a byte to store the
+                        \ heap size, so that's 2 * 25 * 4 + 1 = 201
+
+.XX3a
+
+ SKIP 40 * 4            \ Add a second calculation heap for the right eye, which
+                        \ needs to be able to store four bytes for each edge,
+                        \ where the mavimum number of edges required is 39 for
+                        \ for the Cobra Mk III wireframe, plus a laser line
+
+                        \ --- End of added code ------------------------------->
 .SX
 
  SKIP NOST + 1          \ This is where we store the x_hi coordinates for all
