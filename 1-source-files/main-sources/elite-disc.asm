@@ -77,4 +77,6 @@ ENDIF
  PUTFILE "1-source-files/universe-files/U.MANUAL.bin", "U.MANUAL", &000000, &000000
  PUTFILE "1-source-files/universe-files/U.SHIPID.bin", "U.SHIPID", &000000, &000000
  PUTFILE "1-source-files/universe-files/U.SHIPID6.bin", "U.SHIPID6", &000000, &000000
+ PUTFILE "1-source-files/universe-files/U.VIPERS.bin", "U.VIPERS", &000000, &000000
+ PUTFILE "1-source-files/universe-files/U.SPIRAL.bin", "U.SPIRAL", &000000, &000000
 

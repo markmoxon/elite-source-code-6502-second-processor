@@ -55178,34 +55178,34 @@ ENDIF
  JSR DrawShips
  PLA
 
- CMP #&8D               \ If we didn't press the right arrow, jump to show3
- BNE show3
+ CMP #&8D               \ If we didn't press the right arrow, jump to show2
+ BNE show2
 
  INC halfEyeSpacing     \ Increment the eye spacing
 
  JMP show1              \ Jump to show1 to redraw the scene
 
-.show3
+.show2
 
- CMP #&8C               \ If we didn't press the left arrow, jump to show5
- BNE show5
+ CMP #&8C               \ If we didn't press the left arrow, jump to show4
+ BNE show4
 
  DEC halfEyeSpacing     \ Decrement the eye spacing, keeping it positive
- BPL show4
+ BPL show3
  STZ halfEyeSpacing
 
-.show4
+.show3
 
  JMP show1              \ Jump to show1 to redraw the scene
 
-.show5
+.show4
 
- CMP #&8F               \ If we didn't press the up arrow, jump to show6
- BNE show6
+ CMP #&8F               \ If we didn't press the up arrow, jump to show5
+ BNE show5
 
- LDA zPlane             \ Increment zPlane(1 0) by 16
+ LDA zPlane             \ Increment zPlane(1 0) by 64
  CLC
- ADC #16
+ ADC #64
  STA zPlane
  LDA zPlane+1
  ADC #0
@@ -55213,29 +55213,32 @@ ENDIF
 
  JMP show1              \ Jump to show1 to redraw the scene
 
-.show6
+.show5
 
- CMP #&8E               \ If we didn't press the down arrow, jump to show8
- BNE show8
+ CMP #&8E               \ If we didn't press the down arrow, jump to show7
+ BNE show7
 
- LDA zPlane             \ Decrement zPlane(1 0) by 16, keeeping it positive
+ LDA zPlane             \ Decrement zPlane(1 0) by 64, keeeping it positive
  SEC
- SBC #16
+ SBC #64
  TAX
  LDA zPlane+1
  SBC #0
- BCC show7
+ BCC show6
  STA zPlane+1
  STX zPlane
 
-.show7
-
  JMP show1              \ Jump to show1 to redraw the scene
 
-.show8
+.show6
 
- CMP #&71               \ If we didn't press "Q", jump to show9
- BNE show9
+ JSR BEEP
+ JMP show1              \ Jump to show1 to redraw the scene
+
+.show7
+
+ CMP #&71               \ If we didn't press "Q", jump to show8
+ BNE show8
 
  LDA #40                \ We pressed "Q", so make a long, low beep
  JSR NOISE
@@ -55245,10 +55248,10 @@ ENDIF
 
  JMP show1              \ Jump to show1 to redraw the scene
 
-.show9
+.show8
 
- CMP #&70               \ If we didn't press "P", jump to show8
- BNE show10
+ CMP #&70               \ If we didn't press "P", jump to show7
+ BNE show9
 
  JSR BEEP               \ We pressed "P", so make a beep
 
@@ -55256,14 +55259,14 @@ ENDIF
 
  JMP show1              \ Jump to show1 to redraw the scene
 
-.show10
+.show9
 
- CMP #&1B               \ If we didn't press ESCAPE, jump to show12
- BEQ show12
+ CMP #&1B               \ If we didn't press ESCAPE, jump to show10
+ BEQ show10
 
  JMP show1              \ Jump to show1 to redraw the scene
 
-.show12
+.show10
 
  RTS                    \ Return from the subroutine
 
