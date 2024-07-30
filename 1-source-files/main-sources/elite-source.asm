@@ -54327,7 +54327,7 @@ ENDIF
 
 .doParallax
 
- EQUB 0                 \ Apply parallax by default
+ EQUB 1                 \ Apply parallax by default (1 = on, 0 = off)
 
                         \ --- End of added code ------------------------------->
 
@@ -54362,8 +54362,8 @@ ENDIF
 
 .ApplyParallax
 
- BIT doParallax         \ If parallax is disabled, return from the subroutine
- BMI para1
+ LDA doParallax         \ If parallax is disabled, return from the subroutine
+ BEQ para1
 
  PHX                    \ Store the line heap index on the stack so we can use
                         \ it below and restore it at the end of the routine
@@ -55207,6 +55207,26 @@ ENDIF
  JSR DrawShips          \ Draw all ships, returning from the subroutine using a
                         \ tail call
 
+ LDA zPlane             \ Draw the value of zPlane in the energy bank indicator
+ STA P
+ LDA zPlane+1
+ ASL P
+ ROL A
+ ASL P
+ ROL A
+ STA ENERGY
+
+ LDA halfEyeSpacing     \ Draw the eye spacing in the speed indicator
+ ASL A
+ STA DELTA
+
+ JSR DIALS              \ Update the dashboard
+
+ LDA doParallax         \ Draw the parallax toggle as a missile
+ STA NOMSL
+
+ JSR msblob             \ Update the missiles
+
  JSR TT217              \ Scan the keyboard until a key is pressed, and return
                         \ the key's ASCII code in A (and X)
 
@@ -55276,11 +55296,7 @@ ENDIF
  CMP #&71               \ If we didn't press "Q", jump to show8
  BNE show8
 
- LDA #40                \ We pressed "Q", so make a long, low beep
- JSR NOISE
-
- LDA #&FF               \ Disable parallax
- STA doParallax
+ STZ doParallax         \ Disable parallax
 
  JMP show1              \ Jump to show1 to redraw the scene
 
@@ -55289,9 +55305,8 @@ ENDIF
  CMP #&70               \ If we didn't press "P", jump to show7
  BNE show9
 
- JSR BEEP               \ We pressed "P", so make a beep
-
- STZ doParallax         \ Enable parallax
+ LDA #1                 \ Enable parallax
+ STA doParallax
 
  JMP show1              \ Jump to show1 to redraw the scene
 
