@@ -62,6 +62,26 @@
 
  LOAD_WORDS% = &81B0    \ The address where the text data will be loaded
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ HALF_EYE_SPACING = 1   \ Half the default spacing between the eyes in
+                        \ x-coordinates (i.e. the the distance from the nose
+                        \ to each eye)
+
+ Z_PLANE = &0A00        \ The default z-coordinate of the parallax projection
+                        \ plane (10 0)
+
+ Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
+                        \ plane in the universe screen with each key press (1 0)
+
+ MAX_PARALLAX = 3       \ The maximum number of pixels that we shift to the left
+                        \ or right when applying parallax
+
+ PARALLAX_FACTOR = 1    \ Set parallax to z_hi/(2^PARALLAX_FACTOR), so increase
+                        \ this value to reduce the amount of parallax
+
+                        \ --- End of added code ------------------------------->
+
 IF _SNG45 OR _SOURCE_DISC
 
  Q% = _MAX_COMMANDER    \ Set Q% to TRUE to max out the default commander, FALSE
@@ -54273,7 +54293,7 @@ ENDIF
 
 .halfEyeSpacing
 
- EQUB 2                 \ Set eye spacing to 4
+ EQUB HALF_EYE_SPACING
 
                         \ --- End of added code ------------------------------->
 
@@ -54282,7 +54302,7 @@ ENDIF
 \       Name: zPlane
 \       Type: Variable
 \   Category: Drawing lines
-\    Summary: The z-coordinate of the projection plane
+\    Summary: The default z-coordinate of the parallax projection plane
 \
 \ ******************************************************************************
 
@@ -54290,7 +54310,7 @@ ENDIF
 
 .zPlane
 
- EQUW &4C0              \ Set projection plane to z-coordinate (4 &C0)
+ EQUW Z_PLANE
 
                         \ --- End of added code ------------------------------->
 
@@ -54384,12 +54404,21 @@ ENDIF
                         \ capped distance of the point, which we now use to
                         \ calculate the amount of parallax to apply
 
- LDA P+2                \ Set A = P+2 / 2
-\LSR A                  \
- LSR A                  \ and cap it to a maximum value of 2
- CMP #2
+ LDA P+2                \ Set A = P+2
+
+IF PARALLAX_FACTOR > 0
+
+ FOR I%, 1, PARALLAX_FACTOR
+
+  LSR A                 \ Set A = A / (2 ^ PARALLAX_FACTOR)
+
+ NEXT
+
+ENDIF
+
+ CMP #MAX_PARALLAX      \ Cap A to a maximum value of MAX_PARALLAX
  BCC para3
- LDA #2
+ LDA #MAX_PARALLAX
 
 .para3
 
@@ -54448,14 +54477,21 @@ ENDIF
                         \ negated distance of the point, which we now use to
                         \ calculate the amount of parallax to apply
 
-                        \ Experiment by applying P+2 pixels of parallax ???
+ LDA P+2                \ Set A = P+2
 
- LDA P+2                \ Set A = P+2 / 2
-\LSR A                  \
- LSR A                  \ and cap it to a maximum value of 2
- CMP #2
+IF PARALLAX_FACTOR > 0
+
+ FOR I%, 1, PARALLAX_FACTOR
+
+  LSR A                 \ Set A = A / (2 ^ PARALLAX_FACTOR)
+
+ NEXT
+
+ENDIF
+
+ CMP #MAX_PARALLAX      \ Cap A to a maximum value of MAX_PARALLAX
  BCC para5
- LDA #2
+ LDA #MAX_PARALLAX
 
 .para5
 
@@ -55203,12 +55239,12 @@ ENDIF
  CMP #&8F               \ If we didn't press the up arrow, jump to show5
  BNE show5
 
- LDA zPlane             \ Increment zPlane(1 0) by 64
+ LDA zPlane             \ Increment zPlane(1 0) by Z_PLANE_DELTA
  CLC
- ADC #64
+ ADC #LO(Z_PLANE_DELTA)
  STA zPlane
  LDA zPlane+1
- ADC #0
+ ADC #HI(Z_PLANE_DELTA)
  STA zPlane+1
 
  JMP show1              \ Jump to show1 to redraw the scene
@@ -55218,12 +55254,12 @@ ENDIF
  CMP #&8E               \ If we didn't press the down arrow, jump to show7
  BNE show7
 
- LDA zPlane             \ Decrement zPlane(1 0) by 64, keeeping it positive
- SEC
- SBC #64
+ LDA zPlane             \ Decrement zPlane(1 0) by Z_PLANE_DELTA, keeeping
+ SEC                    \ it positive
+ SBC #LO(Z_PLANE_DELTA)
  TAX
  LDA zPlane+1
- SBC #0
+ SBC #HI(Z_PLANE_DELTA)
  BCC show6
  STA zPlane+1
  STX zPlane
