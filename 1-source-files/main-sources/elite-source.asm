@@ -68,7 +68,7 @@
                         \ x-coordinates (i.e. the the distance from the nose
                         \ to each eye)
 
- Z_PLANE = &0A00        \ The default z-coordinate of the parallax projection
+ Z_PLANE = &A00         \ The default z-coordinate of the parallax projection
                         \ plane (10 0)
 
  Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
@@ -55293,7 +55293,7 @@ ENDIF
 
 .show7
 
- CMP #&71               \ If we didn't press "Q", jump to show8
+ CMP #&6F               \ If we didn't press "O", jump to show8
  BNE show8
 
  STZ doParallax         \ Disable parallax
