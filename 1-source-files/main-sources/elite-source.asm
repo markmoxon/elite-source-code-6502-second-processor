@@ -68,8 +68,8 @@
                         \ x-coordinates (i.e. the the distance from the nose
                         \ to each eye)
 
- Z_PLANE = &A00         \ The default z-coordinate of the parallax projection
-                        \ plane (10 0)
+ Z_PLANE = &800         \ The default z-coordinate of the parallax projection
+                        \ plane (8 0)
 
  Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
                         \ plane in the universe screen with each key press (1 0)
