@@ -922,9 +922,29 @@ ENDIF
 
  SKIP 1                 \ Temporary storage, used in a number of places
 
-.XX14
+                        \ --- Mod: Code removed for flicker-free ships: ------->
 
- SKIP 1                 \ This byte appears to be unused
+\.XX14
+\
+\SKIP 1                 \ This byte appears to be unused
+
+                        \ --- And replaced by: -------------------------------->
+
+.LSNUM
+
+ SKIP 1                 \ The pointer to the current position in the ship line
+                        \ heap as we work our way through the new ship's edges
+                        \ (and the corresponding old ship's edges) when drawing
+                        \ the ship in the main ship-drawing routine at LL9
+
+.LSNUM2
+
+ SKIP 0                 \ The size of the existing ship line heap for the ship
+                        \ we are drawing in LL9, i.e. the number of lines in the
+                        \ old ship that is currently shown on-screen and which
+                        \ we need to erase
+
+                        \ --- End of replacement ------------------------------>
 
 .RAT
 
@@ -3539,7 +3559,25 @@ ENDIF
 
 .XX24
 
- SKIP 1                 \ This byte appears to be unused
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\SKIP 1                 \ This byte appears to be unused
+
+                        \ --- And replaced by: -------------------------------->
+
+ SKIP 1                 \ A "pair flag" that we use it to determine which lines
+                        \ we have drawn to the heap (and therefore when to
+                        \ increment the pointer in LSNUM)
+                        \
+                        \   * Bit 7 set = only one of a line pair has been drawn
+                        \                 so far
+                        \
+                        \   * Bit 7 clear = neither or both lines have been
+                        \                   drawn
+                        \
+                        \ Also used as temporary storage in NWSHP
+
+                        \ --- End of replacement ------------------------------>
 
 .ALTIT
 
@@ -9195,11 +9233,47 @@ ENDIF
                         \ we call BLINE it can draw the first line, from this
                         \ point to the next
 
- BEQ BL5                \ This is the first call to BLINE, so we don't need to
-                        \ copy the previous point to XX15 as there isn't one,
-                        \ so we jump to BL5 to tidy up and return from the
-                        \ subroutine (this BEQ is effectively a JMP, as we just
-                        \ incremented FLAG to 0)
+                        \ --- Mod: Code removed for flicker-free planets: ----->
+
+\BEQ BL5                \ This is the first call to BLINE, so we don't need to
+\                       \ copy the previous point to XX15 as there isn't one,
+\                       \ so we jump to BL5 to tidy up and return from the
+\                       \ subroutine (this BEQ is effectively a JMP, as we just
+\                       \ incremented FLAG to 0)
+
+                        \ --- And replaced by: -------------------------------->
+
+.BL5
+
+ JSR DrawPlanetLine     \ Draw the current line from the old planet
+
+                        \ The following inserts a &FF marker into the LSY2 line
+                        \ heap to indicate that the next call to BLINE should
+                        \ store both the (X1, Y1) and (X2, Y2) points. We do
+                        \ this on the very first call to BLINE (when FLAG is
+                        \ &FF), and on subsequent calls if the segment does not
+                        \ fit on-screen, in which case we don't draw or store
+                        \ that segment, and we start a new segment with the next
+                        \ call to BLINE that does fit on-screen
+
+ LDY LSP                \ If byte LSP-1 of LSY2 = &FF, jump to BL7 to tidy up
+ LDA #&FF               \ and return from the subroutine, as the point that has
+ CMP LSY2-1,Y           \ been passed to BLINE is the start of a segment, so all
+ BEQ BL7                \ we need to do is save the coordinate in K5, without
+                        \ moving the pointer in LSP
+
+ STA LSY2,Y             \ Otherwise we just tried to plot a segment but it
+                        \ didn't fit on-screen, so put the &FF marker into the
+                        \ heap for this point, so the next call to BLINE starts
+                        \ a new segment
+
+ INC LSP                \ Increment LSP to point to the next point in the heap
+
+ BNE BL7                \ Jump to BL7 to tidy up and return from the subroutine
+                        \ (this BNE is effectively a JMP, as LSP will never be
+                        \ zero)
+
+                        \ --- End of replacement ------------------------------>
 
 .BL1
 
@@ -9235,7 +9309,39 @@ ENDIF
                         \ screen anyway, so jump to BL5, to avoid drawing and
                         \ storing this line
 
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+ LDA SWAP               \ If SWAP = 0, then we didn't have to swap the line
+ BEQ BL9                \ coordinates around during the clipping process, so
+                        \ jump to BL9 to skip the following swap
+
+ LDA X1                 \ Otherwise the coordinates were swapped by the call to
+ LDY X2                 \ LL145 above, so we swap (X1, Y1) and (X2, Y2) back
+ STA X2                 \ again
+ STY X1
+ LDA Y1
+ LDY Y2
+ STA Y2
+ STY Y1
+
+.BL9
+
+                        \ --- End of added code ------------------------------->
+
  LDY LSP                \ Set Y = LSP
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+ LDA LSY2-1,Y           \ If byte LSP-1 of LSY2 is not &FF, jump down to BL8
+ CMP #&FF               \ to skip the following (X1, Y1) code
+ BNE BL8
+
+                        \ Byte LSP-1 of LSY2 is &FF, which indicates that we
+                        \ need to store (X1, Y1) in the heap
+
+ JSR DrawPlanetLine     \ Draw the current line from the old planet
+
+                        \ --- End of added code ------------------------------->
 
  LDA X1                 \ Store X1 in the LSP-th byte of LSX2
  STA LSX2,Y
@@ -9244,6 +9350,20 @@ ENDIF
  STA LSY2,Y
 
  INY                    \ Increment Y to point to the next byte in LSX2/LSY2
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.BL8
+
+ LDA #&FF               \ Set bit 7 of K3+8 so we do not draw the current line
+ STA K3+8               \ in the call to DrawPlanetLine, but store the
+                        \ coordinates so we we can check them below
+
+ JSR DrawPlanetLine+2   \ Calculate the current line from the old heap, but do
+                        \ not draw it, but store the coordinates (X1, Y1) and
+                        \ (X2, Y2) in K3+4 to K3+7
+
+                        \ --- End of added code ------------------------------->
 
  LDA X2                 \ Store X2 in the LSP-th byte of LSX2
  STA LSX2,Y
@@ -9255,7 +9375,26 @@ ENDIF
 
  STY LSP                \ Update LSP to point to the same as Y
 
-.BL5
+                        \ --- Mod: Code removed for flicker-free planets: ----->
+
+\.BL5
+
+                        \ --- And replaced by: -------------------------------->
+
+ JSR DrawNewPlanetLine  \ Draw a line from (X1, Y1) to (X2, Y2), but only if it
+                        \ is different to the old line in K3+4 to K3+7
+
+ LDA XX13               \ If XX13 is non-zero, jump up to BL5 to add a &FF
+ BNE BL5                \ marker to the end of the line heap. XX13 is non-zero
+                        \ after the call to the clipping routine LL145 above if
+                        \ the end of the line was clipped, meaning the next line
+                        \ sent to BLINE can't join onto the end but has to start
+                        \ a new segment, and that's what inserting the &FF
+                        \ marker does
+
+.BL7
+
+                        \ --- End of replacement ------------------------------>
 
  LDA K6                 \ Copy the data for this step point from K6(3 2 1 0)
  STA K5                 \ into K5(3 2 1 0), for use in the next call to BLINE:
@@ -27126,14 +27265,24 @@ ENDIF
                         \ the sun, jump to PL57 to skip the following
                         \ instructions
 
- JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
-                        \ processor for drawing on-screen, which redraws the
-                        \ planet and this removes it from the screen
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- STZ LSP                \ Reset the ball line heap by setting the ball line heap
-                        \ pointer to 0
+\JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
+\                       \ processor for drawing on-screen, which redraws the
+\                       \ planet and this removes it from the screen
+\
+\STZ LSP                \ Reset the ball line heap by setting the ball line heap
+\                       \ pointer to 0
+\
+\RTS                    \ Return from the subroutine
 
- RTS                    \ Return from the subroutine
+                        \ --- And replaced by: -------------------------------->
+
+ JMP WPLS2              \ This is the planet, so jump to WPLS2 to remove it from
+                        \ screen, returning from the subroutine using a tail
+                        \ call
+
+                        \ --- End of replacement ------------------------------>
 
 .PL57
 
@@ -27251,18 +27400,31 @@ ENDIF
 
 .PL9
 
- JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
-                        \ processor for drawing on-screen, which will erase the
-                        \ planet from the screen
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- STZ LSP                \ Reset the ball line heap by setting the ball line heap
-                        \ pointer to 0
+\JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
+\                       \ processor for drawing on-screen, which will erase the
+\                       \ planet from the screen
+\
+\STZ LSP                \ Reset the ball line heap by setting the ball line heap
+\                       \ pointer to 0
+\
+\JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
+\
+\BCS PL20               \ If the call to CIRCLE returned with the C flag set,
+\                       \ then the circle does not fit on-screen, so jump to
+\                       \ PL20 to return from the subroutine
+
+                        \ --- And replaced by: -------------------------------->
 
  JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
 
- BCS PL20               \ If the call to CIRCLE returned with the C flag set,
+ BCS PL20A              \ If the call to CIRCLE returned with the C flag set,
                         \ then the circle does not fit on-screen, so jump to
-                        \ PL20 to return from the subroutine
+                        \ PL20A to remove the planet from the screen and return
+                        \ from the subroutine
+
+                        \ --- End of replacement ------------------------------>
 
  LDA K+1                \ If K+1 is zero, jump to PL25 as K(1 0) < 256, so the
  BEQ PL25               \ planet fits on the screen and we can draw meridians or
@@ -27270,10 +27432,24 @@ ENDIF
 
 .PL20
 
- JMP LS2FL              \ The planet doesn't fit on-screen, so jump to LS2FL to
-                        \ send the ball line heap to the I/O processor for
-                        \ drawing on-screen, returning from the subroutine using
-                        \ a tail call
+                        \ --- Mod: Code removed for flicker-free planets: ----->
+
+\JMP LS2FL              \ The planet doesn't fit on-screen, so jump to LS2FL to
+\                       \ send the ball line heap to the I/O processor for
+\                       \ drawing on-screen, returning from the subroutine using
+\                       \ a tail call
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
+                        \ any lines that are left in the ball line heap, before
+                        \ returning from the subroutine using a tail call
+
+.PL20A
+
+ JMP WPLS2              \ Call WPLS2 to remove the planet from the screen
+
+                        \ --- End of replacement ------------------------------>
 
 .PL25
 
@@ -27377,11 +27553,20 @@ ENDIF
                         \
                         \   (XX16+3 K2+3) = sidev_y / z
 
- JSR PLS2               \ Call PLS2 to draw the second meridian
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
-                        \ processor for drawing on-screen, returning from the
-                        \ subroutine using a tail call
+\JSR PLS2               \ Call PLS2 to draw the second meridian
+\
+\JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
+\                       \ processor for drawing on-screen, returning from the
+\                       \ subroutine using a tail call
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP PLS2               \ Jump to PLS2 to draw the second meridian, returning
+                        \ from the subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -27510,11 +27695,20 @@ ENDIF
  STZ CNT2               \ Set CNT2 = 0 as we are drawing a full ellipse, so we
                         \ don't need to apply an offset
 
- JSR PLS22              \ Call PLS22 to draw the crater
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
-                        \ processor for drawing on-screen, returning from the
+\JSR PLS22              \ Call PLS22 to draw the crater
+\
+\JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
+\                       \ processor for drawing on-screen, returning from the
+\                       \ subroutine using a tail call
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP PLS22              \ Jump to PLS22 to draw the crater, returning from the
                         \ subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -27970,7 +28164,17 @@ ENDIF
 
 .PL40
 
- RTS                    \ Return from the subroutine
+                        \ --- Mod: Code removed for flicker-free planets: ----->
+
+\RTS                    \ Return from the subroutine
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
+                        \ any lines that are left in the ball line heap,
+                        \ returning from the subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -28576,6 +28780,13 @@ ENDIF
                         \ on-screen, so return from the subroutine (as RTS2
                         \ contains an RTS)
 
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+ LDA #0                 \ Set LSX2 = 0 to indicate that the ball line heap is
+ STA LSX2               \ not empty, as we are about to fill it
+
+                        \ --- End of added code ------------------------------->
+
  LDX K                  \ Set X = K = radius
 
  LDA #8                 \ Set A = 8
@@ -28644,6 +28855,29 @@ ENDIF
                         \ This gets called from CIRCLE2 below to calculate the
                         \ line segments, which CIRCLE2 then sends to the I/O
                         \ processor for drawing
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+                        \ We now set things up for flicker-free circle plotting,
+                        \ by setting the following:
+                        \
+                        \   LSNUM = offset to the first coordinate in the ball
+                        \           line heap
+                        \
+                        \   LSNUM2 = the number of bytes in the heap for the
+                        \            circle that's currently on-screen (or 0 if
+                        \            there is no ship currently on-screen)
+
+ STZ LSNUM              \ Set LSNUM = 0, to point to the offset before the first
+                        \ set of circle coordinates in the ball line heap
+
+ LDX LSP                \ Set LSNUM2 to the last byte of the ball line heap
+ STX LSNUM2
+
+ LDX #1                 \ Set LSP = 1 to reset the ball line heap pointer
+ STX LSP
+
+                        \ --- End of added code ------------------------------->
 
  LDX #&FF               \ Set FLAG = &FF to reset the ball line heap in the call
  STX FLAG               \ to the BLINE routine below
@@ -28758,10 +28992,19 @@ ENDIF
  STZ LSP                \ Reset the ball line heap by setting the ball line heap
                         \ pointer to 0
 
- JSR CIRCLE3            \ Call CIRCLE3 to populate the ball line heap
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
-                        \ Fall through into LS2FL to send the ball line heap to
-                        \ the I/O processor for drawing on-screen
+\JSR CIRCLE3            \ Call CIRCLE3 to populate the ball line heap
+\
+\                       \ Fall through into LS2FL to send the ball line heap to
+\                       \ the I/O processor for drawing on-screen
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP CIRCLE3            \ Call CIRCLE3 to draw the circle, returning from the
+                        \ subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -28786,118 +29029,167 @@ ENDIF
 \
 \ ******************************************************************************
 
-.LS2FL
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- LDY LSP                \ Set Y to the ball line heap pointer, which contains
-                        \ the number of the first free byte after the end of the
-                        \ LSX2 and LSY2 heaps - in other words, the number of
-                        \ points in the ball line heap
+\.LS2FL
+\
+\LDY LSP                \ Set Y to the ball line heap pointer, which contains
+\                       \ the number of the first free byte after the end of the
+\                       \ LSX2 and LSY2 heaps - in other words, the number of
+\                       \ points in the ball line heap
+\
+\                       \ We now loop through the ball line heap using Y as a
+\                       \ pointer
+\
+\.WP3
+\
+\STY T                  \ Set T = the number of points in the heap
+\
+\BEQ WP1                \ If there are no points in the heap, jump down to WP1
+\                       \ to return from the subroutine
+\
+\LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
+\JSR OSWRCH             \ tell it to start receiving a new line to draw. The
+\                       \ parameter to this call needs to contain the number of
+\                       \ bytes we are going to send for the line's coordinates,
+\                       \ so let's calculate that now
+\
+\TYA                    \ Transfer the Y counter into A, so A now contains the
+\                       \ number of coordinates to send to the I/O processor
+\
+\BMI WP2                \ If the counter in A > 127, then jump to WP2, as we
+\                       \ need to send the points in two batches (as the line
+\                       \ buffer in the I/O processor can hold 256 bytes, and
+\                       \ each coordinate occupies two bytes)
+\
+\SEC                    \ Set A = (A * 2) + 1
+\ROL A                  \
+\                       \ so A now contains the number of bytes we are going to
+\                       \ send, plus 1 (the extra 1 is required as the value
+\                       \ sent needs to point to the first free byte after the
+\                       \ end of the byte list)
+\
+\JSR OSWRCH             \ Send A to the I/O processor as the argument to the
+\                       \ OSWRCH 129 command, so the I/O processor can set the
+\                       \ LINMAX variable in the BEGINLIN routine
+\
+\                       \ We now want to send the points themselves to the I/O
+\                       \ processor
+\
+\LDY #0                 \ Set Y = 0 to act as a loop through the first T points
+\
+\.WPL1
+\
+\LDA LSX2,Y             \ Send the x-coordinate of the start of the line segment
+\JSR OSWRCH
+\
+\LDA LSY2,Y             \ Send the y-coordinate of the start of the line segment
+\JSR OSWRCH
+\
+\INY                    \ Increment the pointer to point to the next coordinate
+\
+\LDA LSX2,Y             \ Send the x-coordinate of the end of the line segment
+\JSR OSWRCH
+\
+\LDA LSY2,Y             \ Send the y-coordinate of the end of the line segment
+\JSR OSWRCH
+\
+\INY                    \ Increment the pointer to point to the next coordinate
+\
+\CPY T                  \ If Y < T then loop back to send the next coordinate,
+\BCC WPL1               \ until we have sent them all. The I/O processor will
+\                       \ now draw the line
+\
+\.WP1
+\
+\RTS                    \ Return from the subroutine
+\
+\.WP2
+\
+\                       \ If we get here then there are more than 127 points in
+\                       \ the line heap to send to the I/O processor, so we need
+\                       \ to send them in two batches. We start by sending the
+\                       \ second half of the coordinates, making sure we include
+\                       \ the last coordinate from the first batch to make sure
+\                       \ the circles drawn by each batch join up
+\
+\ASL A                  \ Shift A left, shifting bit 7 (which we know is set)
+\                       \ into the C flag, so this sets:
+\                       \
+\                       \   A = (A * 2) mod 256
+\                       \
+\                       \ So A contains the number of bytes left over in the
+\                       \ second batch if we send a full first batch
+\
+\ADC #4                 \ Set A = A + 4 + C
+\                       \       = A + 4 + 1
+\                       \
+\                       \ so A now contains the number of bytes we are going to
+\                       \ send in each batch, plus 4 (because we need to send
+\                       \ the extra coordinate at the start of the second
+\                       \ batch), plus 1 (the extra 1 is required as the value
+\                       \ sent needs to point to the first free byte after the
+\                       \ end of the byte list)
+\
+\JSR OSWRCH             \ Send A to the I/O processor as the argument to the
+\                       \ OSWRCH 129 command, so the I/O processor can set the
+\                       \ LINMAX variable in the BEGINLIN routine
+\
+\LDY #126               \ Call WPL1 above with Y = 126 to send the second batch
+\JSR WPL1               \ of points from the ball line heap to the I/O
+\                       \ processor, starting from the last coordinate of the
+\                       \ first batch, so that gets sent in both batches (this
+\                       \ is why Y = 126 rather than 127)
+\
+\LDY #126               \ Jump to WP3 above to send a whole new OSWRCH 129
+\JMP WP3                \ command to draw the first batch of points
 
-                        \ We now loop through the ball line heap using Y as a
-                        \ pointer
+                        \ --- End of removed code ----------------------------->
 
-.WP3
+\ ******************************************************************************
+\
+\       Name: WPLS2
+\       Type: Subroutine
+\   Category: Drawing planets
+\    Summary: Remove the planet from the screen
+\  Deep dive: The ball line heap
+\
+\ ------------------------------------------------------------------------------
+\
+\ We do this by redrawing it using the lines stored in the ball line heap when
+\ the planet was originally drawn by the BLINE routine.
+\
+\ ******************************************************************************
 
- STY T                  \ Set T = the number of points in the heap
+                        \ --- Mod: Code added for flicker-free planets: ------->
 
- BEQ WP1                \ If there are no points in the heap, jump down to WP1
-                        \ to return from the subroutine
+.WPLS2
 
- LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
- JSR OSWRCH             \ tell it to start receiving a new line to draw. The
-                        \ parameter to this call needs to contain the number of
-                        \ bytes we are going to send for the line's coordinates,
-                        \ so let's calculate that now
+ LDY LSX2               \ If LSX2 is non-zero (which indicates the ball line
+ BNE WP1                \ heap is empty), jump to WP1 to reset the line heap
+                        \ without redrawing the planet
 
- TYA                    \ Transfer the Y counter into A, so A now contains the
-                        \ number of coordinates to send to the I/O processor
+ STY LSNUM              \ Reset LSNUM to the start of the ball line heap (we can
+                        \ set this to 0 rather than 1 to take advantage of the
+                        \ fact that Y is 0 - the effect is the same)
 
- BMI WP2                \ If the counter in A > 127, then jump to WP2, as we
-                        \ need to send the points in two batches (as the line
-                        \ buffer in the I/O processor can hold 256 bytes, and
-                        \ each coordinate occupies two bytes)
+ LDA LSP                \ Set LSNUM2 to the end of the ball line heap
+ STA LSNUM2
 
- SEC                    \ Set A = (A * 2) + 1
- ROL A                  \
-                        \ so A now contains the number of bytes we are going to
-                        \ send, plus 1 (the extra 1 is required as the value
-                        \ sent needs to point to the first free byte after the
-                        \ end of the byte list)
+ JSR EraseRestOfPlanet  \ Draw the contents of the ball line heap to erase the
+                        \ old planet
 
- JSR OSWRCH             \ Send A to the I/O processor as the argument to the
-                        \ OSWRCH 129 command, so the I/O processor can set the
-                        \ LINMAX variable in the BEGINLIN routine
+ LDA #1                 \ Set LSP = 1 to reset the ball line heap pointer
+ STA LSP
 
-                        \ We now want to send the points themselves to the I/O
-                        \ processor
-
- LDY #0                 \ Set Y = 0 to act as a loop through the first T points
-
-.WPL1
-
- LDA LSX2,Y             \ Send the x-coordinate of the start of the line segment
- JSR OSWRCH
-
- LDA LSY2,Y             \ Send the y-coordinate of the start of the line segment
- JSR OSWRCH
-
- INY                    \ Increment the pointer to point to the next coordinate
-
- LDA LSX2,Y             \ Send the x-coordinate of the end of the line segment
- JSR OSWRCH
-
- LDA LSY2,Y             \ Send the y-coordinate of the end of the line segment
- JSR OSWRCH
-
- INY                    \ Increment the pointer to point to the next coordinate
-
- CPY T                  \ If Y < T then loop back to send the next coordinate,
- BCC WPL1               \ until we have sent them all. The I/O processor will
-                        \ now draw the line
+ LDA #&FF               \ Set LSX2 = &FF to indicate the ball line heap is empty
+ STA LSX2
 
 .WP1
 
  RTS                    \ Return from the subroutine
 
-.WP2
-
-                        \ If we get here then there are more than 127 points in
-                        \ the line heap to send to the I/O processor, so we need
-                        \ to send them in two batches. We start by sending the
-                        \ second half of the coordinates, making sure we include
-                        \ the last coordinate from the first batch to make sure
-                        \ the circles drawn by each batch join up
-
- ASL A                  \ Shift A left, shifting bit 7 (which we know is set)
-                        \ into the C flag, so this sets:
-                        \
-                        \   A = (A * 2) mod 256
-                        \
-                        \ So A contains the number of bytes left over in the
-                        \ second batch if we send a full first batch
-
- ADC #4                 \ Set A = A + 4 + C
-                        \       = A + 4 + 1
-                        \
-                        \ so A now contains the number of bytes we are going to
-                        \ send in each batch, plus 4 (because we need to send
-                        \ the extra coordinate at the start of the second
-                        \ batch), plus 1 (the extra 1 is required as the value
-                        \ sent needs to point to the first free byte after the
-                        \ end of the byte list)
-
- JSR OSWRCH             \ Send A to the I/O processor as the argument to the
-                        \ OSWRCH 129 command, so the I/O processor can set the
-                        \ LINMAX variable in the BEGINLIN routine
-
- LDY #126               \ Call WPL1 above with Y = 126 to send the second batch
- JSR WPL1               \ of points from the ball line heap to the I/O
-                        \ processor, starting from the last coordinate of the
-                        \ first batch, so that gets sent in both batches (this
-                        \ is why Y = 126 rather than 127)
-
- LDY #126               \ Jump to WP3 above to send a whole new OSWRCH 129
- JMP WP3                \ command to draw the first batch of points
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -37320,8 +37612,12 @@ ENDIF
 
 .SHPPT
 
- JSR EE51               \ Call EE51 to remove the ship's wireframe from the
-                        \ screen, if there is one
+                        \ --- Mod: Code removed for flicker-free ships: ------->
+
+\JSR EE51               \ Call EE51 to remove the ship's wireframe from the
+\                       \ screen, if there is one
+
+                        \ --- End of removed code ----------------------------->
 
  JSR PROJ               \ Project the ship onto the screen, returning:
                         \
@@ -37350,12 +37646,23 @@ ENDIF
  BCS nono               \ the bottom of the screen, jump to nono as the ship's
                         \ dot is off the bottom of the space view
 
- LDY #2                 \ Call Shpt with Y = 2 to set up bytes 1-4 in the ship
- JSR Shpt               \ lines space, aborting the call to LL9 if the dot is
+                        \ --- Mod: Code removed for flicker-free ships: ------->
+
+\LDY #2                 \ Call Shpt with Y = 2 to set up bytes 1-4 in the ship
+\JSR Shpt               \ lines space, aborting the call to LL9 if the dot is
+\                       \ off the side of the screen. This call sets up the
+\                       \ first row of the dot (i.e. a four-pixel dash)
+\
+\LDY #6                 \ Set Y to 6 for the next call to Shpt
+
+                        \ --- And replaced by: -------------------------------->
+
+ JSR Shpt               \ Call Shpt with Y = 2 to set up bytes 1-4 in the ship
+                        \ lines space, aborting the call to LL9 if the dot is
                         \ off the side of the screen. This call sets up the
                         \ first row of the dot (i.e. a four-pixel dash)
 
- LDY #6                 \ Set Y to 6 for the next call to Shpt
+                        \ --- End of replacement ------------------------------>
 
  LDA K4                 \ Set A = y-coordinate of dot + 1 (so this is the second
  ADC #1                 \ row of the two-pixel-high dot)
@@ -37373,16 +37680,26 @@ ENDIF
  ORA XX1+31             \ have now drawn something on-screen for this ship
  STA XX1+31
 
- LDA #9                 \ Set A = 9 so when we call LL18+2 next, byte #0 of the
-                        \ heap gets set to 9, to cover the 9 bytes we just stuck
-                        \ on the heap
+                        \ --- Mod: Code removed for flicker-free ships: ------->
 
- JMP LL81+2             \ Call LL81+2 to draw the ship's dot, returning from the
+\LDA #9                 \ Set A = 9 so when we call LL18+2 next, byte #0 of the
+\                       \ heap gets set to 9, to cover the 9 bytes we just stuck
+\                       \ the heap
+\
+\JMP LL81+2             \ Call LL81+2 to draw the ship's dot, returning from the
+\                       \ subroutine using a tail call
+\
+\PLA                    \ Pull the return address from the stack, so the RTS
+\PLA                    \ below actually returns from the subroutine that called
+\                       \ LL9 (as we called SHPPT from LL9 with a JMP)
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP LL155              \ Jump to LL155 to draw any remaining lines that are
+                        \ still in the ship line heap and return from the
                         \ subroutine using a tail call
 
- PLA                    \ Pull the return address from the stack, so the RTS
- PLA                    \ below actually returns from the subroutine that called
-                        \ LL9 (as we called SHPPT from LL9 with a JMP)
+                        \ --- End of replacement ------------------------------>
 
 .nono
 
@@ -37390,19 +37707,29 @@ ENDIF
  AND XX1+31             \ nothing is being drawn on-screen for this ship
  STA XX1+31
 
- RTS                    \ Return from the subroutine
+                        \ --- Mod: Code removed for flicker-free ships: ------->
+
+\RTS                    \ Return from the subroutine
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP LL155              \ Jump to LL155 to draw any remaining lines that are
+                        \ still in the ship line heap and return from the
+                        \ subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 .Shpt
 
-                        \ This routine sets up four bytes in the ship line heap,
-                        \ from byte Y-1 to byte Y+2. If the ship's screen point
-                        \ turns out to be off-screen, then this routine aborts
-                        \ the entire call to LL9, exiting via nono. The four
-                        \ bytes define a horizontal 4-pixel dash, for either the
-                        \ top or the bottom of the ship's dot
+                        \ --- Mod: Code removed for flicker-free ships: ------->
 
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
-
+\                       \ This routine sets up four bytes in the ship line heap,
+\                       \ from byte Y-1 to byte Y+2. If the ship's screen point
+\                       \ turns out to be off-screen, then this routine aborts
+\                       \ the entire call to LL9, exiting via nono. The four
+\                       \ bytes define a horizontal 4-pixel dash, for either the
+\                       \ top or the bottom of the ship's dot
+\
 \STA (XX19),Y           \ Store A in byte Y of the ship line heap (i.e. Y1)
 \
 \INY                    \ Store A in byte Y+2 of the ship line heap (i.e. Y2)
@@ -37435,13 +37762,13 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- STA (XX19),Y           \ Store A in byte Y of both ship line heaps (i.e. Y1)
- STA (rHeap),Y
+                        \ This routine draws a horizontal 4-pixel dash, for
+                        \ either the top or the bottom of the ship's dot
 
- INY                    \ Store A in byte Y+2 of both ship line heaps (i.e. Y2)
- INY
- STA (XX19),Y
- STA (rHeap),Y
+ PHA                    \ Store the y-coordinate on the stack
+
+ STA Y1                 \ Store A in both y-coordinates, as this is a horizontal
+ STA Y2                 \ dash at y-coordinate A
 
                         \ We now set X2 to the left end of the dot and X1 to
                         \ the right end, as in the original
@@ -37462,9 +37789,44 @@ ENDIF
                         \ Set XX19 to a line from X2 = K3 - MAX_PARALLAX to 
                         \ X1 = K3 - MAX_PARALLAX + 3
 
- DEY                    \ Decrement Y to point to X2 in the line heap
+                        \ We start with the left eye
 
-                        \ We start with the right eye
+ LDA K3                 \ Set A = screen x-coordinate of the right end of the
+ CLC                    \ ship dot for the left eye, i.e. K3 - MAX_PARALLAX + 3
+ ADC #3
+ SEC
+ SBC #MAX_PARALLAX
+
+ BCS shpt1              \ If the left-eye dot fits on-screen, jump to shpt1 to
+                        \ draw the dot
+
+ LDA #255               \ Set Y2 = 255 for the right-eye dot, which sets it to a
+ STA Y2                 \ null line, as it isn't on-screen
+
+ JMP shpt3              \ Jump to shpt2 to draw the left-eye dot
+
+.shpt1
+
+ STA X1                 \ Store the x-coordinate in X1
+
+ SBC #3                 \ Set A to the x-coordinate of the end of the dot, which
+ BCS shpt2              \ is 3 pixels wide, capping the result at 0 so it fits
+ LDA #0                 \ on the screen (we know this subtraction will work as
+                        \ we only get here if the C flag is set)
+
+.shpt2
+
+ STA X2                 \ Store the x-coordinate in X2
+
+.shpt3
+
+ JSR DrawLeftEyeLine    \ Draw the left-eye dot
+
+                        \ And now we do the right eye
+
+ PLA                    \ Set the Y1 and Y2 coordinates to the value we stored
+ STA Y1                 \ on the stack above
+ STA Y2
 
  LDA K3                 \ Set A = screen x-coordinate of the left end of the
  ADC #MAX_PARALLAX      \ ship dot for the right eye, i.e. K3 + MAX_PARALLAX
@@ -37474,74 +37836,30 @@ ENDIF
                         \ will not overflow (as we checked it before calling
                         \ Shpt)
 
- BCC shpt1              \ If the right-eye dot fits on-screen, jump to shpt1 to
+ BCC shpt4              \ If the right-eye dot fits on-screen, jump to shpt4 to
                         \ draw the dot
 
  LDA #255               \ Set Y2 = 255 for the right-eye dot, which sets it to a
- INY                    \ null line, as it isn't on-screen
- STA (rHeap),Y
+ STA Y2                 \ null line, as it isn't on-screen
 
- DEY                    \ Make sure Y stil points at X2 for the left-eye dot
-
- JMP shpt3              \ Jump to shpt3 to draw the left-eye dot, leaving Y
-                        \ pointing at X2
-
-.shpt1
-
- DEY                    \ Store the x-coordinate in X1 and leave Y pointing at
- DEY                    \ X2
- STA (rHeap),Y
- INY
- INY
-
- ADC #3                 \ Set A to the x-coordinate of the end of the dot, which
- BCC shpt2              \ is 3 pixels wide, capping the result at 255 so it fits
- LDA #255               \ on the screen (we know this subtraction will work as
-                        \ we only get here if the C flag is clear)
-
-.shpt2
-
- STA (rHeap),Y          \ Store the x-coordinate in X2
-
-.shpt3
-
-                        \ Now we do the left eye, knowing that Y still points at
-                        \ X2
-
- LDA K3                 \ Set A = screen x-coordinate of the right end of the
- CLC                    \ ship dot for the left eye, i.e. K3 - MAX_PARALLAX + 3
- ADC #3
- SEC
- SBC #MAX_PARALLAX
-
- BCS shpt4              \ If the left-eye dot fits on-screen, jump to shpt4 to
-                        \ draw the dot
-
- LDA #255               \ Set A = 255 to set as Y2 for the left-eye dot, which
-                        \ sets it to a null line, as it isn't on-screen
-
- INY                    \ Increment Y to point to Y2
-
- JMP shpt5              \ Jump to shpt5 to write the value to Y2 and return from
-                        \ the subroutine
+ JMP shpt6              \ Jump to shpt6 to draw the left-eye dot
 
 .shpt4
 
- DEY                    \ Store the x-coordinate in X1 and leave Y pointing at
- DEY                    \ X2
- STA (XX19),Y
- INY
- INY
+ STA X1                 \ Store the x-coordinate in X1
 
- SBC #3                 \ Set A to the x-coordinate of the end of the dot, which
- BCS shpt5              \ is 3 pixels wide, capping the result at 0 so it fits
- LDA #0                 \ on the screen (we know this subtraction will work as
-                        \ we only get here if the C flag is set)
+ ADC #3                 \ Set A to the x-coordinate of the end of the dot, which
+ BCC shpt5              \ is 3 pixels wide, capping the result at 255 so it fits
+ LDA #255               \ on the screen (we know this subtraction will work as
+                        \ we only get here if the C flag is clear)
 
 .shpt5
 
- STA (XX19),Y           \ Store the x-coordinate in X2 (for a valid line) or Y2
-                        \ (if this line is not on-screen)
+ STA X2                 \ Store the x-coordinate in X2
+
+.shpt6
+
+ JSR DrawRightEyeLine   \ Draw the right-eye dot
 
  CLC                    \ Clear the C flag (as we rely on the Shpt routine doing
                         \ this)
@@ -38084,12 +38402,50 @@ ENDIF
  JSR GetRightLineHeap   \ Set rHeap(1 0) to the address of the second ship line
                         \ heap, where we will store the right-eye lines
 
+ STZ XX24               \ Set XX24 = 0 to flag that neither line has been drawn
+                        \ yet
+
                         \ --- End of replacement ------------------------------>
 
  LDA #31                \ Set XX4 = 31 to store the ship's distance for later
  STA XX4                \ comparison with the visibility distance. We will
                         \ update this value below with the actual ship's
                         \ distance if it turns out to be visible on-screen
+
+                        \ --- Mod: Code added for flicker-free ships: --------->
+
+                        \ We now set things up for smooth ship plotting, by
+                        \ setting the following:
+                        \
+                        \   LSNUM = offset to the first coordinate in the ship's
+                        \           line heap
+                        \
+                        \   LSNUM2 = the number of bytes in the heap for the
+                        \            ship that's currently on-screen (or 0 if
+                        \            there is no ship currently on-screen)
+
+ LDY #1                 \ Set LSNUM = 1, the offset of the first set of line
+ STY LSNUM              \ coordinates in the ship line heap
+
+ DEY                    \ Decrement Y to 0
+
+ LDA #%00001000         \ If bit 3 of the ship's byte #31 is set, then the ship
+ BIT INWK+31            \ is currently being drawn on-screen, so skip the
+ BNE P%+5               \ following two instructions
+
+ LDA #0                 \ The ship is not being drawn on screen, so set A = 0
+                        \ so that LSNUM2 gets set to 0 below (as there are no
+                        \ existing coordinates on the ship line heap for this
+                        \ ship)
+ 
+ EQUB &2C               \ Skip the next instruction by turning it into
+                        \ &2C &B1 &BD, or BIT &BDB1 which does nothing apart
+                        \ from affect the flags
+
+ LDA (XX19),Y           \ Set LSNUM2 to the first byte of the ship's line heap,
+ STA LSNUM2             \ which contains the number of bytes in the heap
+
+                        \ --- End of added code ------------------------------->
 
  LDA NEWB               \ If bit 7 of the ship's NEWB flags is set, then the
  BMI EE51               \ ship has been scooped or has docked, so jump down to
@@ -40052,13 +40408,23 @@ ENDIF
 
 .EE31
 
- LDA #%00001000         \ If bit 3 of the ship's byte #31 is clear, then there
- BIT XX1+31             \ is nothing already being shown for this ship, so skip
- BEQ LL74               \ to LL74 as we don't need to erase anything from the
-                        \ screen
+                        \ --- Mod: Code removed for flicker-free ships: ------->
 
- JSR LL155              \ Otherwise call LL155 to draw the existing ship, which
-                        \ removes it from the screen
+\LDA #%00001000         \ If bit 3 of the ship's byte #31 is clear, then there
+\BIT XX1+31             \ is nothing already being shown for this ship, so skip
+\BEQ LL74               \ to LL74 as we don't need to erase anything from the
+\                       \ screen
+\
+\JSR LL155              \ Otherwise call LL155 to draw the existing ship, which
+\                       \ removes it from the screen
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDY #9                 \ Fetch byte #9 of the ship's blueprint, which is the
+ LDA (XX0),Y            \ number of edges, and store it in XX20
+ STA XX20
+
+                        \ --- End of replacement ------------------------------>
 
  LDA #%00001000         \ Set bit 3 of A so the next instruction sets bit 3 of
                         \ the ship's byte #31 to denote that we are drawing
@@ -40071,19 +40437,28 @@ ENDIF
                         \ otherwise it is set (the TSB instruction applies the
                         \ accumulator to the memory location using an OR)
 
- LDY #9                 \ Fetch byte #9 of the ship's blueprint, which is the
- LDA (XX0),Y            \ number of edges, and store it in XX20
- STA XX20
+                        \ --- Mod: Code removed for flicker-free ships: ------->
 
- STZ U                  \ Set U = 0 (though we increment it to 1 below)
+\LDY #9                 \ Fetch byte #9 of the ship's blueprint, which is the
+\LDA (XX0),Y            \ number of edges, and store it in XX20
+\STA XX20
+\
+\STZ U                  \ Set U = 0 (though we increment it to 1 below)
+\
+\STZ XX17               \ Set XX17 = 0, which we are going to use as a counter
+\                       \ for stepping through the ship's edges
+\
+\INC U                  \ We are going to start calculating the lines we need to
+\                       \ draw for this ship, and will store them in the ship
+\                       \ line heap, using U to point to the end of the heap, so
+\                       \ we start by setting U = 1
 
- STZ XX17               \ Set XX17 = 0, which we are going to use as a counter
-                        \ for stepping through the ship's edges
+                        \ --- And replaced by: -------------------------------->
 
- INC U                  \ We are going to start calculating the lines we need to
-                        \ draw for this ship, and will store them in the ship
-                        \ line heap, using U to point to the end of the heap, so
-                        \ we start by setting U = 1
+ LDY #0                 \ Set XX17 = 0, which we are going to use as a counter
+ STY XX17               \ for stepping through the ship's edges
+
+                        \ --- End of replacement ------------------------------>
 
  BIT XX1+31             \ If bit 6 of the ship's byte #31 is clear, then the
  BVC LL170              \ ship is not firing its lasers, so jump to LL170 to
@@ -40166,14 +40541,14 @@ ENDIF
                         \ screen, so jump to LL170 so we don't store this line
                         \ in the ship line heap
 
- LDA U                  \ Fetch the ship line heap pointer, which points to the
-                        \ next free byte on the heap, into A
-
- ADC #3                 \ Set Y = A + 3, so Y now points to the fourth byte in
- TAY                    \ this coordinate
-
                         \ --- Mod: Code removed for anaglyph 3D: -------------->
 
+\LDA U                  \ Fetch the ship line heap pointer, which points to the
+\                       \ next free byte on the heap, into A
+\
+\ADC #3                 \ Set Y = A + 3, so Y now points to the fourth byte in
+\TAY                    \ this coordinate
+\
 \LDA #255               \ Set the fourth byte to 255 to act as a flag to the I/O
 \STA (XX19),Y           \ processor to draw the following line in red, as it is
 \                       \ a laser (this flag is read and acted on in the ADDBYT
@@ -40205,19 +40580,12 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- INY                    \ Increment Y to point to the next coordinate block
-
- PHY                    \ Store the heap pointer on the stack
-
  JSR DrawLeftEyeLine    \ Draw the laser line in the left-eye line heap
 
- PLY                    \ Retrieve the heap pointer from the stack, so we can
-                        \ draw the right-eye line in the same place but in the
-                        \ right heap
+\ Draw right eye laser line in a different place to the left eye
+\ (Right eye line is currently null) ???
 
- JSR DrawRightEyeLine   \ Draw the laser line in the right-eye line heap
-
- \ Need to draw right eye laser line too ???
+ JSR DrawRightEyeNull   \ Draw the laser line in the right-eye line heap
 
                         \ --- End of replacement ------------------------------>
 
@@ -40256,14 +40624,29 @@ ENDIF
                         \ So V(1 0) now points to the start of the edges data
                         \ for this ship
 
+                        \ --- Mod: Code removed for flicker-free ships: ------->
+
+\LDY #5                 \ Fetch byte #5 of the ship's blueprint, which contains
+\LDA (XX0),Y            \ the maximum heap size for plotting the ship (which is
+\STA T1                 \ 1 + 4 * the maximum number of visible edges) and store
+\                       \ it in T1
+\
+\LDY XX17               \ Set Y to the edge counter in XX17
+\
+\.LL75
+
+                        \ --- And replaced by: -------------------------------->
+
  LDY #5                 \ Fetch byte #5 of the ship's blueprint, which contains
  LDA (XX0),Y            \ the maximum heap size for plotting the ship (which is
- STA T1                 \ 1 + 4 * the maximum number of visible edges) and store
-                        \ it in T1
-
- LDY XX17               \ Set Y to the edge counter in XX17
+ STA CNT                \ 1 + 4 * the maximum number of visible edges) and store
+                        \ it in CNT
 
 .LL75
+
+ LDY #0                 \ Set Y = 0 so we start with byte #0
+
+                        \ --- End of replacement ------------------------------>
 
  LDA (V),Y              \ Fetch byte #0 for this edge, which contains the
                         \ visibility distance for this edge, beyond which the
@@ -40295,7 +40678,11 @@ ENDIF
                         \
                         \     * Bits 4-7 = the number of face 2
 
- INY                    \ Increment Y to point to byte #2
+                        \ --- Mod: Code removed for flicker-free ships: ------->
+
+\INY                    \ Increment Y to point to byte #2
+
+                        \ --- End of removed code ----------------------------->
 
  STA P                  \ Store byte #1 into P
 
@@ -40344,26 +40731,31 @@ ENDIF
                         \ before storing the resulting line in the ship line
                         \ heap
 
+                        \ --- Mod: Code removed for flicker-free ships: ------->
+
+\LDA (V),Y              \ Fetch byte #2 for this edge into X, which contains
+\TAX                    \ the number of the vertex at the start of the edge
+\
+\INY                    \ Increment Y to point to byte #3
+\
+\LDA (V),Y              \ Fetch byte #3 for this edge into Q, which contains
+\STA Q                  \ the number of the vertex at the end of the edge
+
+                        \ --- And replaced by: -------------------------------->
+
+ INY                    \ Increment Y to point to byte #2
+
  LDA (V),Y              \ Fetch byte #2 for this edge into X, which contains
  TAX                    \ the number of the vertex at the start of the edge
 
- INY                    \ Increment Y to point to byte #3
-
- LDA (V),Y              \ Fetch byte #3 for this edge into Q, which contains
- STA Q                  \ the number of the vertex at the end of the edge
+                        \ --- End of replacement ------------------------------>
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- STA K2+2               \ Store the number of the vertex at the end of the edge
-                        \ into K2+2 (as Q gets corrupted by LL145)
+ STX K2+1               \ Store the number of the vertex at the start of the
+                        \ edge into K2+1
 
- STX K2                 \ Store the number of the vertex at the start of the
-                        \ edge into K2
-
- LDY U                  \ Fetch the ship line heap pointer, which points to the
-                        \ next free byte on the heap, into Y
-
- STY K2+1               \ Store the ship line heap pointer in K2+1
+                        \ First we clip the left-eye line (red)
 
                         \ --- End of added code ------------------------------->
 
@@ -40379,8 +40771,22 @@ ENDIF
  LDA XX3+3,X            \ Fetch the y_hi coordinate of the edge's start vertex
  STA XX15+3             \ from the XX3 heap into XX15+3
 
- LDX Q                  \ Set X to the number of the vertex at the end of the
-                        \ edge, which we stored in Q
+                        \ --- Mod: Code removed for flicker-free ships: ------->
+
+\LDX Q                  \ Set X to the number of the vertex at the end of the
+\                       \ edge, which we stored in Q
+
+                        \ --- And replaced by: -------------------------------->
+
+ INY                    \ Increment Y to point to byte #3
+
+ LDA (V),Y              \ Fetch byte #3 for this edge into X, which contains
+ TAX                    \ the number of the vertex at the end of the edge
+
+ STA K2+2               \ Store the number of the vertex at the end of the edge
+                        \ into K2+2 (as Q gets corrupted by LL145)
+
+                        \ --- End of replacement ------------------------------>
 
  LDA XX3,X              \ Fetch the x_lo coordinate of the edge's end vertex
  STA XX15+4             \ from the XX3 heap into XX15+4
@@ -40410,75 +40816,20 @@ ENDIF
                         \ line is not visible on screen)
 
  BCS LL78a              \ If the C flag is set then the line is not visible on
-                        \ screen, so jump to LL78a to store a dummy line in the
-                        \ ship line heap (but only if the right-eye line is
-                        \ visible)
+                        \ screen, so jump to LL78a to skip drawing the left line
+                        \ for now (we will draw a null left-eye line later, but
+                        \ only if we draw the right-eye line)
 
-                        \ --- End of replacement ------------------------------>
-
-\ ******************************************************************************
-\
-\       Name: LL9 (Part 11 of 12)
-\       Type: Subroutine
-\   Category: Drawing ships
-\    Summary: Draw ship: Add all visible edges to the ship line heap
-\  Deep dive: Drawing ships
-\
-\ ------------------------------------------------------------------------------
-\
-\ This part adds all the visible edges to the ship line heap, so we can draw
-\ them in part 12.
-\
-\ Other entry points:
-\
-\   LL81+2              Draw the contents of the ship line heap, used to draw
-\                       the ship as a dot from SHPPT
-\
-\ ******************************************************************************
-
-.LL80
-
- LDY U                  \ Fetch the ship line heap pointer, which points to the
-                        \ next free byte on the heap, into Y
-
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
-
-\LDA XX15               \ Add X1 to the end of the heap
-\STA (XX19),Y
-\
-\INY                    \ Increment the heap pointer
-\
-\LDA XX15+1             \ Add Y1 to the end of the heap
-\STA (XX19),Y
-\
-\INY                    \ Increment the heap pointer
-\
-\LDA XX15+2             \ Add X2 to the end of the heap
-\STA (XX19),Y
-\
-\INY                    \ Increment the heap pointer
-\
-\LDA XX15+3             \ Add Y2 to the end of the heap
-\STA (XX19),Y
-\
-\INY                    \ Increment the heap pointer
-\
-\STY U                  \ Store the updated ship line heap pointer in U
-
-                        \ --- And replaced by: -------------------------------->
-
- JSR DrawLeftEyeLine    \ Draw the ship line in the left-eye line heap
-
-                        \ --- End of replacement ------------------------------>
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+ JSR DrawLeftEyeLine    \ Draw this edge using smooth animation, by first
+                        \ drawing the ship's new line and then erasing the
+                        \ corresponding old line from the screen
 
 .LL78a
 
                         \ Now we clip the right-eye line (cyan)
 
- LDX K2                 \ Set X to the number of the vertex at the start of the
-                        \ edge, which we stored in K2 above
+ LDX K2+1               \ Set X to the number of the vertex at the start of the
+                        \ edge, which we stored in K2+1 above
 
  LDA XX3a+1,X           \ Fetch the x_hi coordinate of the edge's start vertex
  STA XX15+1             \ from the XX3a heap into XX15+1
@@ -40518,10 +40869,6 @@ ENDIF
                         \ If we get here then the right-eye line is visible, so
                         \ we draw the right-eye line (cyan) into the heap
 
- LDY K2+1               \ Fetch the ship line heap pointer, which points to the
-                        \ next free byte on the heap, into Y, which we stored in
-                        \ K2+1 above
-
  JSR DrawRightEyeLine   \ Draw the ship line in the right-eye line heap
 
  PLP                    \ Retrieve the status flags we stored on the stack above
@@ -40534,13 +40881,9 @@ ENDIF
                         \ but we did draw the right-eye line, so we need to draw
                         \ a null left-eye line
 
- LDY K2+1               \ Fetch the ship line heap pointer, which points to the
-                        \ next free byte on the heap, into Y, which we stored in
-                        \ K2+1 above
-
  JSR DrawLeftEyeNull    \ Draw a null ship line into the left-eye line heap
 
- JMP LL78c              \ Jump to LL78c to move on to the next part
+ JMP LL78               \ Jump to LL78 to move on to the next part
 
 .LL78b
 
@@ -40552,34 +40895,79 @@ ENDIF
  BCS LL78               \ If the C flag is set then neither line is visible on
                         \ screen, so jump to LL78 to skip drawing anything
 
- LDY K2+1               \ Fetch the ship line heap pointer, which points to the
-                        \ next free byte on the heap, into Y, which we stored in
-                        \ K2+1 above
+                        \ If we get here then we did draw the left-eye line but
+                        \ the right-eye line if not visible, so we need to draw
+                        \ a null right-eye line
 
  JSR DrawRightEyeNull   \ Draw a null ship line into the right-eye line heap
 
-.LL78c
-
                         \ --- End of replacement ------------------------------>
 
- CPY T1                 \ If Y >= T1 then we have reached the maximum number of
- BCS LL81               \ edge lines that we can store in the ship line heap, so
-                        \ skip to LL81 so we don't loop back for the next edge
+\ ******************************************************************************
+\
+\       Name: LL9 (Part 11 of 12)
+\       Type: Subroutine
+\   Category: Drawing ships
+\    Summary: Draw ship: Add all visible edges to the ship line heap
+\  Deep dive: Drawing ships
+\
+\ ------------------------------------------------------------------------------
+\
+\ This part adds all the visible edges to the ship line heap, so we can draw
+\ them in part 12.
+\
+\ Other entry points:
+\
+\   LL81+2              Draw the contents of the ship line heap, used to draw
+\                       the ship as a dot from SHPPT
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code removed for flicker-free ships: ------->
+
+\.LL80
+\
+\LDY U                  \ Fetch the ship line heap pointer, which points to the
+\                       \ next free byte on the heap, into Y
+\
+\LDA XX15               \ Add X1 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+1             \ Add Y1 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+2             \ Add X2 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+3             \ Add Y2 to the end of the heap
+\STA (XX19),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\STY U                  \ Store the updated ship line heap pointer in U
+
+                        \ --- And replaced by: -------------------------------->
 
 .LL78
 
- INC XX17               \ Increment the edge counter to point to the next edge
-
- LDY XX17               \ If Y >= XX20, which contains the number of edges in
- CPY XX20               \ the blueprint, jump to LL81 as we have processed all
- BCS LL81               \ the edges and don't need to loop back for the next one
-
- LDY #0                 \ Set Y to point to byte #0 again, ready for the next
-                        \ edge
+ LDA LSNUM              \ If LSNUM >= CNT, skip to LL81 so we don't loop back
+ CMP CNT                \ for the next edge (CNT was set to the maximum heap
+ BCS LL81               \ size for this ship in part 10, so this checks whether
+                        \ we have just run out of space in the ship line heap,
+                        \ and stops drawing edges if we have)
 
  LDA V                  \ Increment V by 4 so V(1 0) points to the data for the
- ADC #4                 \ next edge
+ CLC                    \ next edge
+ ADC #4
  STA V
+
+                        \ --- End of replacement ------------------------------>
 
  BCC ll81               \ If the above addition didn't overflow, jump to ll81 to
                         \ skip the following instruction
@@ -40589,27 +40977,38 @@ ENDIF
 
 .ll81
 
- JMP LL75               \ Loop back to LL75 to process the next edge
+                        \ --- Mod: Code removed for flicker-free ships: ------->
+
+\JMP LL75               \ Loop back to LL75 to process the next edge
+\
+\.LL81
+\
+\                       \ We have finished adding lines to the ship line heap,
+\                       \ so now we need to set the first byte of the heap to
+\                       \ the number of bytes stored there
+\
+\LDA U                  \ Fetch the ship line heap pointer from U into A, which
+\                       \ points to the end of the heap, and therefore contains
+\                       \ the heap size
+\
+\STA (XX19)             \ Store A as the first byte of the ship line heap, so
+\                       \ the heap is now correctly set up
+
+                        \ --- And replaced by: -------------------------------->
+
+ INC XX17               \ Increment the edge counter to point to the next edge
+
+ LDY XX17               \ If Y < XX20, which contains the number of edges in
+ CPY XX20               \ the blueprint, loop back to LL75 to process the next
+ BCS LL81               \ edge
+ JMP LL75
 
 .LL81
 
-                        \ We have finished adding lines to the ship line heap,
-                        \ so now we need to set the first byte of the heap to
-                        \ the number of bytes stored there
+ JMP LL155              \ Jump down to part 12 below to draw any remaining lines
+                        \ from the old ship that are still in the ship line heap
 
- LDA U                  \ Fetch the ship line heap pointer from U into A, which
-                        \ points to the end of the heap, and therefore contains
-                        \ the heap size
-
- STA (XX19)             \ Store A as the first byte of the ship line heap, so
-                        \ the heap is now correctly set up
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
- STA (rHeap)            \ Store A as the first byte of the ship line heap, so
-                        \ the heap is now correctly set up for the right eye
-
-                        \ --- End of added code ------------------------------->
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -40642,12 +41041,84 @@ ENDIF
 
 .notneed
 
- LDA (XX19)             \ Fetch the first byte from the ship line heap into A,
-                        \ which contains the number of bytes in the heap
+                        \ --- Mod: Code removed for flicker-free ships: ------->
 
- CMP #5                 \ If the heap size is less than 5, there is nothing to
- BCC nolines            \ draw, so return from the subroutine (as nolines
-                        \ contains an RTS)
+\LDA (XX19)             \ Fetch the first byte from the ship line heap into A,
+\                       \ which contains the number of bytes in the heap
+\
+\CMP #5                 \ If the heap size is less than 5, there is nothing to
+\BCC nolines            \ draw, so return from the subroutine (as nolines
+\                       \ contains an RTS)
+\
+\LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
+\JSR OSWRCH             \ tell it to start receiving a new line to draw (so
+\                       \ when we send it OSWRCH commands from now on, the I/O
+\                       \ processor will add these bytes to this line until
+\                       \ they are all sent, at which point it will draw the
+\                       \ line)
+\
+\LDY #0                 \ Fetch the first byte from the ship line heap into A,
+\LDA (XX19),Y           \ which contains the number of bytes in the heap
+\
+\STA XX20               \ Store the heap size in XX20
+\
+\.LL27
+\
+\LDA (XX19),Y           \ Fetch the Y-th line coordinate from the heap and send
+\JSR OSWRCH             \ it to the I/O processor to add to the line buffer
+\
+\INY                    \ Increment the heap pointer
+\
+\CPY XX20               \ If the heap counter is less than the size of the heap,
+\BCC LL27               \ loop back to LL27 to draw the next line from the heap
+\
+\                       \ By the time we get here, we have sent all the line
+\                       \ coordinates to the I/O processor, so it will have
+\                       \ drawn the line after we sent the last one
+\
+\.nolines
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDY LSNUM              \ Set Y to the offset in the line heap LSNUM
+
+.LL27
+
+ CPY LSNUM2             \ If Y >= LSNUM2, jump to LLEX to return from the ship
+ BCS LLEX               \ drawing routine, because the index in Y is greater
+                        \ than the size of the existing ship line heap, which
+                        \ means we have alrady erased all the old ships lines
+                        \ when drawing the new ship
+
+                        \ If we get here then Y < LSNUM2, which means Y is
+                        \ pointing to an on-screen line from the old ship that
+                        \ we need to erase
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+                        \ Erase the ship line for the left eye (red)
+
+ STY K2+2               \ Store the vertex index in Y into K2+2
+
+                        \ --- End of added code ------------------------------->
+
+ LDA (XX19),Y           \ Fetch the X1 line coordinate from the heap and store
+ STA XX15               \ it in XX15
+
+ INY                    \ Increment the heap pointer
+
+ LDA (XX19),Y           \ Fetch the Y1 line coordinate from the heap and store
+ STA XX15+1             \ it in XX15+1
+
+ INY                    \ Increment the heap pointer
+
+ LDA (XX19),Y           \ Fetch the X2 line coordinate from the heap and store
+ STA XX15+2             \ it in XX15+2
+
+ INY                    \ Increment the heap pointer
+
+ LDA (XX19),Y           \ Fetch the Y2 line coordinate from the heap and store
+ STA XX15+3             \ it in XX15+3
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
@@ -40656,73 +41127,185 @@ ENDIF
 
                         \ --- End of added code ------------------------------->
 
- LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
- JSR OSWRCH             \ tell it to start receiving a new line to draw (so
-                        \ when we send it OSWRCH commands from now on, the I/O
-                        \ processor will add these bytes to this line until
-                        \ they are all sent, at which point it will draw the
-                        \ line)
+ JSR LL30               \ Draw a line from (X1, Y1) to (X2, Y2) to erase it from
+                        \ the screen
 
- LDY #0                 \ Fetch the first byte from the ship line heap into A,
- LDA (XX19),Y           \ which contains the number of bytes in the heap
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- STA XX20               \ Store the heap size in XX20
+\INY                    \ Increment the heap pointer
 
-.LL27
+                        \ --- And replaced by: -------------------------------->
 
- LDA (XX19),Y           \ Fetch the Y-th line coordinate from the heap and send
- JSR OSWRCH             \ it to the I/O processor to add to the line buffer
+ LDY K2+2               \ Reset the heap pointer for the right-eye line
+
+                        \ Erase the ship line for the right eye (cyan)
+
+ LDA (rHeap),Y          \ Fetch the X1 line coordinate from the heap and store
+ STA XX15               \ it in XX15
 
  INY                    \ Increment the heap pointer
 
- CPY XX20               \ If the heap counter is less than the size of the heap,
- BCC LL27               \ loop back to LL27 to draw the next line from the heap
+ LDA (rHeap),Y          \ Fetch the Y1 line coordinate from the heap and store
+ STA XX15+1             \ it in XX15+1
 
-                        \ By the time we get here, we have sent all the line
-                        \ coordinates to the I/O processor, so it will have
-                        \ drawn the line after we sent the last one
+ INY                    \ Increment the heap pointer
 
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+ LDA (rHeap),Y          \ Fetch the X2 line coordinate from the heap and store
+ STA XX15+2             \ it in XX15+2
 
-                        \ We now draw all the lines in the right-eye line heap
+ INY                    \ Increment the heap pointer
 
- LDA (rHeap)            \ Fetch the first byte from the ship line heap into A,
-                        \ which contains the number of bytes in the heap
-
- CMP #5                 \ If the heap size is less than 5, there is nothing to
- BCC nolines            \ draw, so return from the subroutine (as nolines
-                        \ contains an RTS)
+ LDA (rHeap),Y          \ Fetch the Y2 line coordinate from the heap and store
+ STA XX15+3             \ it in XX15+3
 
  LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
- JSR DOCOL              \ switch to colour 1, which is cyan in the space view
+ JSR DOCOL              \ switch to colour 3, which is cyan in the space view
 
- LDA #129               \ Send an OSWRCH 129 command to the I/O processor to
- JSR OSWRCH             \ tell it to start receiving a new line to draw (so
-                        \ when we send it OSWRCH commands from now on, the I/O
-                        \ processor will add these bytes to this line until
-                        \ they are all sent, at which point it will draw the
-                        \ line)
-
- LDY #0                 \ Fetch the first byte from the ship line heap into A,
- LDA (rHeap),Y          \ which contains the number of bytes in the heap
-
- STA XX20               \ Store the heap size in XX20
-
-.LL27a
-
- LDA (rHeap),Y          \ Fetch the Y-th line coordinate from the heap and send
- JSR OSWRCH             \ it to the I/O processor to add to the line buffer
+ JSR LL30               \ Draw a line from (X1, Y1) to (X2, Y2) to erase it from
+                        \ the screen
 
  INY                    \ Increment the heap pointer
 
- CPY XX20               \ If the heap counter is less than the size of the heap,
- BCC LL27a              \ loop back to LL27 to draw the next line from the heap
+                        \ --- End of replacement ------------------------------>
 
-                        \ --- End of added code ------------------------------->
+ JMP LL27               \ Loop back to LL27 to draw (i.e. erase) the next line
+                        \ from the heap
 
-.nolines
+.LLEX
+
+ LDA LSNUM              \ Store LSNUM in the first byte of the ship line heap
+ LDY #0
+ STA (XX19),Y
+
+.LL82
+
+                        \ --- End of replacement ------------------------------>
 
  RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: LSPUT
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a ship line using smooth animation, by drawing the ship's new
+\             line and erasing the corresponding old line from the screen
+\
+\ ------------------------------------------------------------------------------
+\
+\ This routine implements smoother ship animation by erasing and redrawing each
+\ individual line in the ship, rather than the approach in the other Acornsoft
+\ versions of the game, which erase the entire existing ship before drawing the
+\ new one.
+\
+\ Here's the new approach in this routine:
+\
+\   * Draw the new line
+\
+\   * Fetch the corresponding existing line (in position LSNUM) from the heap
+\
+\   * Store the new line in the heap at this position, replacing the old one
+\
+\   * If the existing line we just took from the heap is on-screen, erase it
+\
+\ Arguments:
+\
+\   LSNUM               The offset within the line heap where we add the new
+\                       line's coordinates
+\
+\   X1                  The screen x-coordinate of the start of the line to add
+\                       to the ship line heap
+\
+\   Y1                  The screen y-coordinate of the start of the line to add
+\                       to the ship line heap
+\
+\   X2                  The screen x-coordinate of the end of the line to add
+\                       to the ship line heap
+\
+\   Y2                  The screen y-coordinate of the end of the line to add
+\                       to the ship line heap
+\
+\   XX19(1 0)           XX19(1 0) shares its location with INWK(34 33), which
+\                       contains the ship line heap address pointer
+\
+\ Returns:
+\
+\   LSNUM               The offset of the next line in the line heap
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free ships: --------->
+
+.LSPUT
+
+ LDY LSNUM              \ Set Y = LSNUM, to get the offset within the ship line
+                        \ heap where we want to insert our new line
+
+ CPY LSNUM2             \ Compare LSNUM and LSNUM2 and store the flags on the
+ PHP                    \ stack so we can retrieve them later
+
+ LDX #3                 \ We now want to copy the line coordinates (X1, Y1) and
+                        \ (X2, Y2) to XX12...XX12+3, so set a counter to copy
+                        \ 4 bytes
+
+.LLXL
+
+ LDA X1,X               \ Copy the X-th byte of X1/Y1/X2/Y2 to the X-th byte of
+ STA XX12,X             \ XX12
+
+ DEX                    \ Decrement the loop counter
+
+ BPL LLXL               \ Loop back until we have copied all four bytes
+
+ JSR LL30               \ Draw a line from (X1, Y1) to (X2, Y2)
+
+ LDA (XX19),Y           \ Set X1 to the Y-th coordinate on the ship line heap,
+ STA X1                 \ i.e. one we are replacing in the heap
+
+ LDA XX12               \ Replace it with the X1 coordinate in XX12
+ STA (XX19),Y
+
+ INY                    \ Increment the index to point to the Y1 coordinate
+
+ LDA (XX19),Y           \ Set Y1 to the Y-th coordinate on the ship line heap,
+ STA Y1                 \ i.e. one we are replacing in the heap
+
+ LDA XX12+1             \ Replace it with the Y1 coordinate in XX12+1
+ STA (XX19),Y
+
+ INY                    \ Increment the index to point to the X2 coordinate
+
+ LDA (XX19),Y           \ Set X1 to the Y-th coordinate on the ship line heap,
+ STA X2
+
+ LDA XX12+2             \ Replace it with the X2 coordinate in XX12+2
+ STA (XX19),Y
+
+ INY                    \ Increment the index to point to the Y2 coordinate
+
+ LDA (XX19),Y           \ Set Y2 to the Y-th coordinate on the ship line heap,
+ STA Y2
+
+ LDA XX12+3             \ Replace it with the Y2 coordinate in XX12+3
+ STA (XX19),Y
+
+ INY                    \ Increment the index to point to the next coordinate
+ STY LSNUM              \ and store the updated index in LSNUM
+
+ PLP                    \ Restore the result of the comparison above, so if the
+ BCS LL82               \ original value of LSNUM >= LSNUM2, then we have
+                        \ already redrawn all the lines from the old ship's line
+                        \ heap, so return from the subroutine (as LL82 contains
+                        \ an RTS)
+
+ JMP LL30               \ Otherwise there are still more lines to erase from the
+                        \ old ship on-screen, so the coordinates in (X1, Y1) and
+                        \ (X2, Y2) that we just pulled from the ship line heap
+                        \ point to a line that is still on-screen, so call LL30
+                        \ to draw this line and erase it from the screen,
+                        \ returning from the subroutine using a tail call
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -41410,20 +41993,24 @@ ENDIF
  LDA XX12               \ Set Y2 (aka XX15+3) = y2_lo
  STA XX15+3
 
- LDA SWAP               \ If SWAP = 0, then we didn't have to swap the line
- BEQ noswap             \ coordinates around during the clipping process, so
-                        \ jump to noswap to skip the following swap
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
- LDA X1                 \ Otherwise the coordinates were swapped above,
- LDY X2                 \ so we swap (X1, Y1) and (X2, Y2) back again
- STA X2
- STY X1
- LDA Y1
- LDY Y2
- STA Y2
- STY Y1
+\LDA SWAP               \ If SWAP = 0, then we didn't have to swap the line
+\BEQ noswap             \ coordinates around during the clipping process, so
+\                       \ jump to noswap to skip the following swap
+\
+\LDA X1                 \ Otherwise the coordinates were swapped above,
+\LDY X2                 \ so we swap (X1, Y1) and (X2, Y2) back again
+\STA X2
+\STY X1
+\LDA Y1
+\LDY Y2
+\STA Y2
+\STY Y1
+\
+\.noswap
 
-.noswap
+                        \ --- End of removed code ----------------------------->
 
  CLC                    \ Clear the C flag as the clipped line fits on-screen
 
@@ -53945,6 +54532,229 @@ ENDMACRO
 
 \ ******************************************************************************
 \
+\       Name: EraseRestOfPlanet
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw all remaining lines in the ball line heap to erase the rest
+\             of the old planet
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.EraseRestOfPlanet
+
+ LDY LSNUM              \ Set Y to the offset in LSNUM, which points to the part
+                        \ of the heap that we are overwriting with new points
+
+ CPY LSNUM2             \ If LSNUM >= LSNUM2, then we have already redrawn all
+ BCS eras1              \ of the lines from the old circle's ball line heap, so
+                        \ skip the following
+
+ JSR DrawPlanetLine     \ Erase the next planet line from the ball line heap
+
+ JMP EraseRestOfPlanet  \ Loop back for the next line in the ball line heap
+
+.eras1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawPlanetLine
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a segment of the old planet from the ball line heap
+\
+\ ------------------------------------------------------------------------------
+\
+\ Other entry points:
+\
+\   DrawPlanetLine+2    If bit 7 of K3+8 is set, store the line coordinates in
+\                       K3+4 to K3+7 (X1, Y1, X2, Y2) and do not draw the line
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.DrawPlanetLine
+
+ STZ K3+8               \ Clear bit 7 of K3+8 so we draw the current line below
+
+ STZ K3+9               \ Clear bit 7 of K3+9 to indicate that there is no line
+                        \ to draw (we may change this below)
+
+ LDA LSNUM              \ If LSNUM = 1, then this is the first point from the
+ CMP #2                 \ heap, so jump to plin3 to set the previous coordinate
+ BCC plin3              \ and return from the subroutine
+
+ LDA X1                 \ Save X1, X2, Y1, Y2 and Y on the stack
+ PHA
+ LDA Y1
+ PHA
+ LDA X2
+ PHA
+ LDA Y2
+ PHA
+ TYA
+ PHA
+
+ LDY LSNUM              \ Set Y to the offset in LSNUM, which points to the part
+                        \ of the heap that we are overwriting with new points
+
+ CPY LSNUM2             \ If LSNUM >= LSNUM2, then we have already redrawn all
+ BCS plin1              \ of the lines from the old circle's ball line heap, so
+                        \ jump to plin1 to return from the subroutine
+
+                        \ Otherwise we need to draw the line from the heap, to
+                        \ erase it from the screen
+
+ LDA K3+2               \ Set X1 = K3+2 = screen x-coordinate of previous point
+ STA X1                 \ from the old heap
+
+ LDA K3+3               \ Set Y1 = K3+3 = screen y-coordinate of previous point
+ STA Y1                 \ from the old heap
+
+ LDA LSX2,Y             \ Set X2 to the y-coordinate from the LSNUM-th point in
+ STA X2                 \ the heap
+
+ STA K3+2               \ Store the x-coordinate of the point we are overwriting
+                        \ in K3+2, so we can use it on the next iteration
+
+ LDA LSY2,Y             \ Set Y2 to the y-coordinate from the LSNUM-th point in
+ STA Y2                 \ the heap
+
+ STA K3+3               \ Store the y-coordinate of the point we are overwriting
+                        \ in K3+3, so we can use it on the next iteration
+
+ INC LSNUM              \ Increment LSNUM to point to the next coordinate, so we
+                        \ work our way through the current heap
+
+ LDA Y1                 \ If Y1 or Y2 = &FF then this indicates a break in the
+ CMP #&FF               \ circle, so jump to plin1 to skip the following and
+ BEQ plin1              \ return from the subroutine, asthere is no line to
+ LDA Y2                 \ erase
+ CMP #&FF
+ BEQ plin1
+
+ DEC K3+9               \ Decrement K3+9 to &FF to indicate that there is a line
+                        \ to draw
+
+ BIT K3+8               \ If bit 7 of K3+8 is set, jump to plin2 to store the
+ BMI plin2              \ line coordinates rather than drawing the line
+
+ JSR LL30               \ The coordinates in (X1, Y1) and (X2, Y2) that we just
+                        \ pulled from the ball line heap point to a line that is
+                        \ still on-screen, so call LL30 to draw this line and
+                        \ erase it from the screen
+
+.plin1
+
+ PLA                    \ Restore Y, X1, X2, Y1 and Y2 from the stack
+ TAY
+ PLA
+ STA Y2
+ PLA
+ STA X2
+ PLA
+ STA Y1
+ PLA
+ STA X1
+
+ RTS                    \ Return from the subroutine
+
+.plin2
+
+ LDA X1                 \ Store X1, Y1, X2, Y2 in K3+4 to K3+7
+ STA K3+4
+ LDA Y1
+ STA K3+5
+ LDA X2
+ STA K3+6
+ LDA Y2
+ STA K3+7
+
+ JMP plin1              \ Jump to plin1 to return from the subroutine
+
+.plin3
+
+ LDA LSX2+1             \ Store the heap's first coordinate in K3+2 and K3+3
+ STA K3+2
+ LDA LSY2+1
+ STA K3+3
+
+ INC LSNUM              \ Increment LSNUM to point to the next coordinate, so we
+                        \ work our way through the current heap
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawNewPlanetLine
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a ball line, but only if it is different to the old line
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   K3+4 to K3+7        The (X1, Y1) and (X2, Y2) coordinates of the old line
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for flicker-free planets: ------->
+
+.DrawNewPlanetLine
+
+ BIT K3+9               \ If bit 7 of K3+9 is clear, then there is no old line
+ BPL nlin2              \ to draw, so jump to nlin2 to draw the new line only
+
+ LDA K3+4               \ If the old line equals the new line, jump to nlin3
+ CMP X1                 \ to skip drawing both lines
+ BNE nlin1
+ LDA K3+5
+ CMP Y1
+ BNE nlin1
+ LDA K3+6
+ CMP X2
+ BNE nlin1
+ LDA K3+7
+ CMP Y2
+ BEQ nlin3
+
+.nlin1
+
+                        \ If we get here then the old line is different to the
+                        \ new line, so we draw them both
+
+ JSR LL30               \ Draw the new line from (X1, Y1) to (X2, Y2)
+
+ LDA K3+4               \ Set up the old line's coordinates
+ STA X1
+ LDA K3+5
+ STA Y1
+ LDA K3+6
+ STA X2
+ LDA K3+7
+ STA Y2
+
+.nlin2
+
+ JSR LL30               \ Draw the old line to erase it
+
+.nlin3
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
 \       Name: MTIN
 \       Type: Variable
 \   Category: Text
@@ -54636,27 +55446,6 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: DrawLeftEyeNull
-\       Type: Subroutine
-\   Category: Drawing lines
-\    Summary: Draw a null ship line into the left-eye line heap
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.DrawLeftEyeNull
-
- LDA #255               \ Set Y2 = 255 to denote a null line
- STA XX15+3
-
- JMP DrawLeftEyeLine    \ Draw the line into the left-eye line heap, returning
-                        \ from the subroutine using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
 \       Name: DrawRightEyeNull
 \       Type: Subroutine
 \   Category: Drawing lines
@@ -54678,6 +55467,27 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: DrawLeftEyeNull
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw a null ship line into the left-eye line heap
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawLeftEyeNull
+
+ LDA #255               \ Set Y2 = 255 to denote a null line
+ STA XX15+3
+
+                        \ Fall through into DrawLeftEyeLine to draw the line
+                        \ into the left-eye line heap
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
 \       Name: DrawLeftEyeLine
 \       Type: Subroutine
 \   Category: Drawing lines
@@ -54689,27 +55499,35 @@ ENDIF
 
 .DrawLeftEyeLine
 
- LDA XX15               \ Add X1 to the end of the heap
- STA (XX19),Y
+ LDA #RED_3D            \ Send a #SETCOL RED_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
 
- INY                    \ Increment the heap pointer
+ LDA LSNUM              \ Store LSNUM in K2, so we can revert to this value to
+ STA K2                 \ draw the right-eye line
 
- LDA XX15+1             \ Add Y1 to the end of the heap
- STA (XX19),Y
+ JSR LSPUT              \ Draw this edge using smooth animation, by first
+                        \ drawing the ship's new line and then erasing the
+                        \ corresponding old line from the screen
 
- INY                    \ Increment the heap pointer
+.left1
 
- LDA XX15+2             \ Add X2 to the end of the heap
- STA (XX19),Y
+ BIT XX24               \ If XX24 = 0 then we just drew the first line of the
+ BPL left2              \ pair, so jump to left2 to flip the flag and reset
+                        \ LSNUm for the second of line of the pair
 
- INY                    \ Increment the heap pointer
+ STZ XX24               \ Otherwise we just drew the second line in the pair, so
+                        \ zero the XX24 flag to flag this and leave LSNUM at the
+                        \ correct value
 
- LDA XX15+3             \ Add Y2 to the end of the heap
- STA (XX19),Y
+ RTS                    \ Return from the subroutine
 
- INY                    \ Increment the heap pointer
+.left2
 
- STY U                  \ Store the updated ship line heap pointer in U
+ SEC                    \ Set bit 7 of XX24 to denote that only one line of the
+ ROR XX24               \ pair has been drawn
+
+ LDA K2                 \ Reset LSNUM to the value we stored above, so it's
+ STA LSNUM              \ pointing to the correct line in the line heap
 
  RTS                    \ Return from the subroutine
 
@@ -54728,29 +55546,57 @@ ENDIF
 
 .DrawRightEyeLine
 
- LDA XX15               \ Add X1 to the end of the heap
- STA (rHeap),Y
+ LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is cyan in the space view
 
- INY                    \ Increment the heap pointer
+ LDA XX19               \ Store the heap pointer in XX19(1 0) on the stack
+ PHA
+ LDA XX19+1
+ PHA
 
- LDA XX15+1             \ Add Y1 to the end of the heap
- STA (rHeap),Y
+ LDA rHeap              \ Set XX19(1 0) = rHeap(1 0), so it points to the
+ STA XX19               \ ship line heap for the right eye
+ LDA rHeap+1
+ STA XX19+1
 
- INY                    \ Increment the heap pointer
+ LDA LSNUM              \ Store LSNUM in K2, so we can revert to this value to
+ STA K2                 \ draw the right-eye line
 
- LDA XX15+2             \ Add X2 to the end of the heap
- STA (rHeap),Y
+ JSR LSPUT              \ Draw this edge using smooth animation, by first
+                        \ drawing the ship's new line and then erasing the
+                        \ corresponding old line from the screen
 
- INY                    \ Increment the heap pointer
+ PLA                    \ Restore the heap pointer to XX19(1 0)
+ STA XX19+1
+ PLA
+ STA XX19
 
- LDA XX15+3             \ Add Y2 to the end of the heap
- STA (rHeap),Y
+ JMP left1              \ Jump to left1 to set the line pair flag and reset
+                        \ LSNUM if required
 
- INY                    \ Increment the heap pointer
-
- STY U                  \ Store the updated ship line heap pointer in U
-
- RTS                    \ Return from the subroutine
+\LDA XX15               \ Add X1 to the end of the heap
+\STA (rHeap),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+1             \ Add Y1 to the end of the heap
+\STA (rHeap),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+2             \ Add X2 to the end of the heap
+\STA (rHeap),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\LDA XX15+3             \ Add Y2 to the end of the heap
+\STA (rHeap),Y
+\
+\INY                    \ Increment the heap pointer
+\
+\STY U                  \ Store the updated ship line heap pointer in U
+\
+\RTS                    \ Return from the subroutine
 
                         \ --- End of added code ------------------------------->
 
