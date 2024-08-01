@@ -37332,6 +37332,18 @@ ENDIF
  ORA K3+1               \ If either of the high bytes of the screen coordinates
  BNE nono               \ are non-zero, jump to nono as the ship is off-screen
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA K3                 \ Set A = screen x-coordinate of the ship dot + 3
+ CLC
+ ADC #3
+
+ BCS nono               \ If the addition pushed the dot off the right side of
+                        \ the screen, jump to nono as the ship's dot is off the
+                        \ right side of the space view
+
+                        \ --- End of added code ------------------------------->
+
  LDA K4                 \ Set A = the y-coordinate of the dot
 
  CMP #Y*2-2             \ If the y-coordinate is bigger than the y-coordinate of
@@ -37347,6 +37359,9 @@ ENDIF
 
  LDA K4                 \ Set A = y-coordinate of dot + 1 (so this is the second
  ADC #1                 \ row of the two-pixel-high dot)
+                        \
+                        \ The addition works as the Shpt routine clears the C
+                        \ flag
 
  JSR Shpt               \ Call Shpt with Y = 6 to set up bytes 5-8 in the ship
                         \ lines space, aborting the call to LL9 if the dot is
@@ -37386,62 +37401,154 @@ ENDIF
                         \ bytes define a horizontal 4-pixel dash, for either the
                         \ top or the bottom of the ship's dot
 
- STA (XX19),Y           \ Store A in byte Y of the ship line heap
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+\STA (XX19),Y           \ Store A in byte Y of the ship line heap (i.e. Y1)
+\
+\INY                    \ Store A in byte Y+2 of the ship line heap (i.e. Y2)
+\INY
+\STA (XX19),Y
+\
+\LDA K3                 \ Set A = screen x-coordinate of the ship dot
+\
+\DEY                    \ Store A in byte Y+1 of the ship line heap (i.e. X2)
+\STA (XX19),Y
+\
+\ADC #3                 \ Set A = screen x-coordinate of the ship dot + 3
+\
+\BCS nono-2             \ If the addition pushed the dot off the right side of
+\                       \ the screen, jump to nono-2 to return from the parent
+\                       \ subroutine early (i.e. LL9). This works because we
+\                       \ called Shpt from above with a JSR, so nono-2 removes
+\                       \ that return address from the stack, leaving the next
+\                       \ return address exposed. LL9 called SHPPT with a JMP.
+\                       \ so the next return address is the one that was put on
+\                       \ the stack by the original call to LL9. So the RTS in
+\                       \ nono will actually return us from the original call
+\                       \ to LL9, thus aborting the entire drawing process
+\
+\DEY                    \ Store A in byte Y-1 of the ship line heap (i.e. X1)
+\DEY
+\STA (XX19),Y
+\
+\RTS                    \ Return from the subroutine
 
- STA (rHeap),Y          \ Store A in byte Y of the ship line heap
+                        \ --- And replaced by: -------------------------------->
 
-                        \ This section will need updating for proper anaglyph -
-                        \ for now this just duplicates the dot in the right eye
+ STA (XX19),Y           \ Store A in byte Y of both ship line heaps (i.e. Y1)
+ STA (rHeap),Y
 
-                        \ --- End of added code ------------------------------->
-
- INY                    \ Store A in byte Y+2 of the ship line heap
+ INY                    \ Store A in byte Y+2 of both ship line heaps (i.e. Y2)
  INY
  STA (XX19),Y
+ STA (rHeap),Y
 
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+                        \ We now set X2 to the left end of the dot and X1 to
+                        \ the right end, as in the original
+                        \
+                        \ We are going to draw two dots, one for the left eye
+                        \ (into XX19) and one for the right (into rHeap), each
+                        \ of them as a double horizontal line that's 3 pixels
+                        \ long
+                        \
+                        \ As the ship is very distant, we will apply maximum
+                        \ positive parallax, so the left eye moves left and the
+                        \ right eye moves right, with both of them moving by
+                        \ MAX_PARALLAX pixels, like this:
+                        \
+                        \ Set rHeap to a line from X2 = K3 + MAX_PARALLAX to 
+                        \ X1 = K3 + MAX_PARALLAX + 3
+                        \
+                        \ Set XX19 to a line from X2 = K3 - MAX_PARALLAX to 
+                        \ X1 = K3 - MAX_PARALLAX + 3
 
- STA (rHeap),Y          \ Store A in byte Y of the ship line heap
+ DEY                    \ Decrement Y to point to X2 in the line heap
 
-                        \ --- End of added code ------------------------------->
+                        \ We start with the right eye
 
- LDA K3                 \ Set A = screen x-coordinate of the ship dot
+ LDA K3                 \ Set A = screen x-coordinate of the left end of the
+ ADC #MAX_PARALLAX      \ ship dot for the right eye, i.e. K3 + MAX_PARALLAX
+                        \
+                        \ The addition works as we only call the Shpt routine
+                        \ with the C flag clear and we know the first addition
+                        \ will not overflow (as we checked it before calling
+                        \ Shpt)
 
- DEY                    \ Store A in byte Y+1 of the ship line heap
+ BCC shpt1              \ If the right-eye dot fits on-screen, jump to shpt1 to
+                        \ draw the dot
+
+ LDA #255               \ Set Y2 = 255 for the right-eye dot, which sets it to a
+ INY                    \ null line, as it isn't on-screen
+ STA (rHeap),Y
+
+ DEY                    \ Make sure Y stil points at X2 for the left-eye dot
+
+ JMP shpt3              \ Jump to shpt3 to draw the left-eye dot, leaving Y
+                        \ pointing at X2
+
+.shpt1
+
+ DEY                    \ Store the x-coordinate in X1 and leave Y pointing at
+ DEY                    \ X2
+ STA (rHeap),Y
+ INY
+ INY
+
+ ADC #3                 \ Set A to the x-coordinate of the end of the dot, which
+ BCC shpt2              \ is 3 pixels wide, capping the result at 255 so it fits
+ LDA #255               \ on the screen (we know this subtraction will work as
+                        \ we only get here if the C flag is clear)
+
+.shpt2
+
+ STA (rHeap),Y          \ Store the x-coordinate in X2
+
+.shpt3
+
+                        \ Now we do the left eye, knowing that Y still points at
+                        \ X2
+
+ LDA K3                 \ Set A = screen x-coordinate of the right end of the
+ CLC                    \ ship dot for the left eye, i.e. K3 - MAX_PARALLAX + 3
+ ADC #3
+ SEC
+ SBC #MAX_PARALLAX
+
+ BCS shpt4              \ If the left-eye dot fits on-screen, jump to shpt4 to
+                        \ draw the dot
+
+ LDA #255               \ Set A = 255 to set as Y2 for the left-eye dot, which
+                        \ sets it to a null line, as it isn't on-screen
+
+ INY                    \ Increment Y to point to Y2
+
+ JMP shpt5              \ Jump to shpt5 to write the value to Y2 and return from
+                        \ the subroutine
+
+.shpt4
+
+ DEY                    \ Store the x-coordinate in X1 and leave Y pointing at
+ DEY                    \ X2
  STA (XX19),Y
+ INY
+ INY
 
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+ SBC #3                 \ Set A to the x-coordinate of the end of the dot, which
+ BCS shpt5              \ is 3 pixels wide, capping the result at 0 so it fits
+ LDA #0                 \ on the screen (we know this subtraction will work as
+                        \ we only get here if the C flag is set)
 
- STA (rHeap),Y          \ Store A in byte Y of the ship line heap
+.shpt5
 
-                        \ --- End of added code ------------------------------->
+ STA (XX19),Y           \ Store the x-coordinate in X2 (for a valid line) or Y2
+                        \ (if this line is not on-screen)
 
- ADC #3                 \ Set A = screen x-coordinate of the ship dot + 3
-
- BCS nono-2             \ If the addition pushed the dot off the right side of
-                        \ the screen, jump to nono-2 to return from the parent
-                        \ subroutine early (i.e. LL9). This works because we
-                        \ called Shpt from above with a JSR, so nono-2 removes
-                        \ that return address from the stack, leaving the next
-                        \ return address exposed. LL9 called SHPPT with a JMP.
-                        \ so the next return address is the one that was put on
-                        \ the stack by the original call to LL9. So the RTS in
-                        \ nono will actually return us from the original call
-                        \ to LL9, thus aborting the entire drawing process
-
- DEY                    \ Store A in byte Y-1 of the ship line heap
- DEY
- STA (XX19),Y
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
- STA (rHeap),Y          \ Store A in byte Y of the ship line heap
-
-                        \ --- End of added code ------------------------------->
+ CLC                    \ Clear the C flag (as we rely on the Shpt routine doing
+                        \ this)
 
  RTS                    \ Return from the subroutine
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
