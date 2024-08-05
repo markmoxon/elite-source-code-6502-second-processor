@@ -5563,6 +5563,137 @@ ENDIF
  STY T1                 \ which contains the pixel's y-coordinate, and store Y,
  TAY                    \ the index of this pixel's y-coordinate, in T1
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+                        \ We interrupt this part of the pixel-plotting routine
+                        \ to draw stardust particles using anaglyph 3D, using
+                        \ the particle distance in ZZ to determine the amount
+                        \ of parallax to add
+
+ TYA                    \ Store the pixel's y-coordinate on the stack so we can
+ PHA                    \ retrieve it below for the right eye
+
+ TXA                    \ Store the x-coordinate on the stack and in A
+ PHA
+
+                        \ We now calculate the amount of parallax from the
+                        \ particle distance in ZZ, which we copied into P above
+                        \
+                        \ Particles are spawned with a random distance in ZZ
+                        \ of 144 to 248, which is reduced each frame until the
+                        \ particle goes off the side of the screen, or ZZ
+                        \ reaches 16
+                        \
+                        \ As this is a stardust particle rather than an
+                        \ explosion particle, the distance is a multiple of 8
+                        \ and the last three bits are always zero
+                        \
+                        \ Stardust particles are plotted in two sizes:
+                        \
+                        \   * ZZ >= 80 -> 2 pixels wide, 1 pixel high
+                        \   * ZZ  < 80 -> 2 pixels wide, 2 pixels high
+                        \
+                        \ We add positive parallax (left eye goes right) when
+                        \ ZZ >= 80 and negative parallax (left eye goes left)
+                        \ when ZZ < 80
+
+ LDA P                  \ Set A = the pixel's distance in ZZ
+
+ SEC                    \ Set A = ZZ - 80
+ SBC #80                \
+                        \ So this is positive when ZZ >= 80 and negative when
+                        \ ZZ < 80, which is the correct sign for our parallax
+                        \
+                        \ ZZ is therefore in the ranges:
+                        \
+                        \   * 0 to 168 for positive parallax
+                        \
+                        \   * -1 to -64 for negative parallax
+                        \
+                        \ We now scale this result into the number of pixels of
+                        \ parallax to apply, which will be in the range -3 to +3
+                        \ pixels
+
+ BCS dust1              \ If the subtraction didn't underflow then the result
+                        \ is positive, so jump to dust1 to scale the positive
+                        \ parallax
+
+                        \ If we get here then the result is negative and in the
+                        \ range -1 to -64 (%11111111 to %11000000)
+
+ LDX #%11111111         \ Scale T to the range -1 to -4 by left-shifting the top
+ STX T                  \ four bits of T into bits 0 to 3 of %11111111
+ ASL A                  \
+ ROL T                  \ So %11111111 to %11000000 (-1 to -64) gets scaled to
+ ASL A                  \ %11111111 to %11111100 (-1 to -4)
+ ROL T
+ ASL A
+ ROL T
+ ASL A
+ ROL T
+
+ INC T                  \ Increment T to the range 0 to -3
+
+ JMP dust2              \ Jump to dust2 to apply the parallax in T
+
+.dust1
+
+                        \ If we get here then the result is positive and in the
+                        \ range 0 to 168 (%00000000 to %10101000)
+
+ LDX #%00000000         \ Scale T to the range 0 to 2 by left-shifting the top
+ STX T                  \ two bits of T into bits 0 to 1 of %00000000
+ ASL A                  \
+ ROL T                  \ So %00000000 to %10101000 (0 to 168) gets scaled to
+ ASL A                  \ %00000000 to %00000010 (0 to 2)
+ ROL T
+
+ INC T                  \ Increment T to the range 1 to 3
+
+.dust2
+
+                        \ By the time we get get here, T contains the parallax
+                        \ to apply, with T in the range -3 to +3, so we can
+                        \ simply shift each eye by this number of pixels
+
+                        \ We start by drawing the left-eye dot in red
+
+ PLA                    \ Fetch the x-coordinate from the stack and into A,
+ PHA                    \ leaving it on the stack for later
+
+ SEC                    \ Apply parallax to the left-eye dot
+ SBC T
+ TAX
+
+ LDA #RED_3D            \ Set the left-eye dot colour to red
+ STA COL
+
+ JSR dust3              \ Call the pixel-plotting code below, which we have
+                        \ turned into a subroutine, to draw the left-eye dot
+
+                        \ And now we draw the right-eye dot in cyan
+
+ PLA                    \ Retrieve the x-coordinate from the stack into A
+
+ CLC                    \ Apply parallax to the right-eye dot
+ ADC T
+ TAX
+
+ LDA #CYAN_3D           \ Set the right-eye dot colour to cyan
+ STA COL
+
+ PLA                    \ Retrieve the y-coordinate from the stack into Y
+ TAY
+
+ JSR dust3              \ Call the pixel-plotting code below, which we have
+                        \ turned into a subroutine, to draw the right-eye dot
+
+ JMP dust4              \ Jump down to dust4 draw the next particle
+
+.dust3
+
+                        \ --- End of added code ------------------------------->
+
  LDA ylookup,Y          \ Look up the page number of the character row that
  STA SC+1               \ contains the pixel with the y-coordinate in Y, and
                         \ store it in the high byte of SC(1 0) at SC+1
@@ -5604,9 +5735,18 @@ ENDIF
  BCS PX6                \ a medium distance away, so jump to PX6 to draw a
                         \ single pixel
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
+\AND #WHITE             \ X, and AND with #WHITE to make it white (i.e.
+\                       \ cyan/red)
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
- AND #WHITE             \ X, and AND with #WHITE to make it white (i.e.
-                        \ cyan/red)
+ AND COL                \ X, and AND with COL to make it anaglyph cyan or red
+
+                        \ --- End of replacement ------------------------------>
 
  EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
  STA (SC),Y             \ remove it later without ruining the background that's
@@ -5624,13 +5764,30 @@ ENDIF
 
 .PX6
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
+\AND #WHITE             \ X, and AND with #WHITE to make it white (i.e.
+\                       \ cyan/red)
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
- AND #WHITE             \ X, and AND with #WHITE to make it white (i.e.
-                        \ cyan/red)
+ AND COL                \ X, and AND with COL to make it anaglyph cyan or red
+
+                        \ --- End of replacement ------------------------------>
 
  EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
  STA (SC),Y             \ remove it later without ruining the background that's
                         \ already on-screen
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ RTS                    \ Return from the subroutine
+
+.dust4
+
+                        \ --- End of added code ------------------------------->
 
  LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
                         \ in the command block, which we stored in T1 above
