@@ -44,6 +44,13 @@
 
  LOAD% = &2400          \ The load address of the main I/O processor code
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ MAX_PARALLAX_P = 2     \ The maximum number of pixels that we apply for
+                        \ positive parallax (distant objects)
+
+                        \ --- End of added code ------------------------------->
+
  VSCAN = 57             \ Defines the split position in the split-screen mode
 
  Y = 96                 \ The centre y-coordinate of the 256 x 192 space view
