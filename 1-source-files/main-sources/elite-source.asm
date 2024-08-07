@@ -74,11 +74,11 @@
  Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
                         \ plane in the universe screen with each key press (1 0)
 
- MAX_PARALLAX_P = 2     \ The maximum number of pixels that we apply for
-                        \ positive parallax (distant objects)
+ MAX_PARALLAX_P = 2     \ The maximum number of pixels that we apply to each eye
+                        \ for positive parallax (distant objects)
 
- MAX_PARALLAX_N = 3     \ The maximum number of pixels that we apply for
-                        \ negative parallax (nearby objects)
+ MAX_PARALLAX_N = 3     \ The maximum number of pixels that we apply to each eye
+                        \ for negative parallax (nearby objects)
 
  PARALLAX_FACTOR = 1    \ Set parallax to z_hi/(2^PARALLAX_FACTOR), so increase
                         \ this value to reduce the amount of parallax
@@ -3466,9 +3466,10 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
-.LSY3
+.LSY2a
 
- SKIP 256               \ ???   
+ SKIP 256               \ The ball line heap for storing y-coordinates for the
+                        \ right eye
 
                         \ --- End of added code ------------------------------->
 
@@ -3637,9 +3638,10 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
-.LSX3
+.LSX2a
 
- SKIP 256               \ ???
+ SKIP 256               \ The ball line heap for storing x-coordinates for the
+                        \ right eye
 
                         \ --- End of added code ------------------------------->
 
