@@ -5387,23 +5387,105 @@ ENDIF
  LDA (OSSC),Y           \ Set P to byte #2 from the Y-th pixel block in OSSC,
  STA P                  \ which contains the point's distance value (ZZ)
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\AND #%00000111         \ If ZZ is a multiple of 8 (which will be the case for
+\BEQ PX5                \ pixels sent by the parasite's PIXEL routine), jump to
+\                       \ PX5
+
+                        \ --- And replaced by: -------------------------------->
+
  AND #%00000111         \ If ZZ is a multiple of 8 (which will be the case for
- BEQ PX5                \ pixels sent by the parasite's PIXEL routine), jump to
-                        \ PX5
+ BNE P%+5               \ pixels sent by the parasite's PIXEL routine), jump to
+ JMP PX5                \ PX5
+
+                        \ --- End of replacement ------------------------------>
 
                         \ Otherwise this pixel was sent by the parasite's PIXEL3
                         \ routine and will have an odd value of ZZ, and we use
                         \ the distance value to determine the dot's colour and
                         \ size
 
- TAX                    \ Set S to the ZZ-th value from the PXCL table, to get
- LDA PXCL,X             \ the correct colour byte for this pixel, depending on
- STA S                  \ the distance
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\TAX                    \ Set S to the ZZ-th value from the PXCL table, to get
+\LDA PXCL,X             \ the correct colour byte for this pixel, depending on
+\STA S                  \ the distance
+\
+\INY                    \ Increment Y to 3
+\
+\LDA (OSSC),Y           \ Set X to byte #3 from the Y-th pixel block in OSSC,
+\TAX                    \ contains the pixel's x-coordinate
+
+                        \ --- And replaced by: -------------------------------->
+
+ STA P                  \ Store bits 0 to 2 of byte #2 in P, so it contains a
+                        \ random number in bits 0 and 1, with bit 2 set
+
+ LDA (OSSC),Y           \ Set T to byte #2 from the Y-th pixel block in OSSC,
+ AND #%11111000         \ which contains the parallax calculation
+ STA T
+
+ LDA #2                 \ ??? - scale value properly in DOEXP and shift it here
+ STA T                  \ to get signed parallax in T
 
  INY                    \ Increment Y to 3
 
  LDA (OSSC),Y           \ Set X to byte #3 from the Y-th pixel block in OSSC,
- TAX                    \ contains the pixel's x-coordinate
+ TAX                    \ which contains the pixel's x-coordinate
+
+ PHA                    \ Store the x-coordinate on the stack to use in the
+                        \ right-eye calculation below
+
+                        \ We now do the left-eye x-coordinate calculation
+
+ SEC                    \ Set X = A - T to apply the left-eye parallax
+ SBC T
+ TAX
+
+ LDA #RED_3D            \ Set S to red
+ STA S
+
+ JSR expl3              \ Draw the left-eye explosion particle
+
+ LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
+                        \ in the command block, which we stored in T1 in expl3
+
+ DEY                    \ Decrement Y back to the previous coordinate
+
+.expl2
+
+                        \ We now do the right-eye x-coordinate calculation
+
+ PLA                    \ Fetch the x-coordinate from the stack
+
+ CLC                    \ Set X = A + T to apply the right-eye parallax
+ ADC T
+ TAX
+
+ LDA #CYAN_3D           \ Set S to cyan
+ STA S
+
+ JSR expl3              \ Draw the right-eye explosion particle
+
+ LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
+                        \ in the command block, which we stored in T1 above
+
+ INY                    \ Increment Y, so it now points to the first byte of
+                        \ the next pixel in the command block
+
+ CPY Q                  \ If the index hasn't reached the value in Q (which
+ BNE PXLO               \ contains the size of the pixel buffer), loop back to
+                        \ PXLO to draw the next pixel in the buffer
+
+ RTS                    \ Return from the subroutine
+
+.expl3
+
+                        \ We call this subroutine to draw a dot with the
+                        \ x-coordinate in X
+
+                        \ --- End of replacement ------------------------------>
 
  INY                    \ Increment Y to 4
 
@@ -5446,12 +5528,29 @@ ENDIF
  AND #%00000011         \ which will now be in the range 0-3, and will contain
  TAX                    \ the two pixels to show in the character row
 
- LDA P                  \ If the pixel's ZZ distance, which we stored in P, is
- BMI PX3                \ greater than 127, jump to PX3 to plot a 1-pixel dot
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- CMP #80                \ If the pixel's ZZ distance is < 80, then the dot is
- BCC PX2                \ pretty close, so jump to PX2 to draw a four-pixel
+\LDA P                  \ If the pixel's ZZ distance, which we stored in P, is
+\BMI PX3                \ greater than 127, jump to PX3 to plot a 1-pixel dot
+\
+\CMP #80                \ If the pixel's ZZ distance is < 80, then the dot is
+\BCC PX2                \ pretty close, so jump to PX2 to draw a four-pixel
                         \ square
+
+                        \ --- And replaced by: -------------------------------->
+
+                        \ P contains a random number in bits 0 and 1, with bit 2
+                        \ set
+
+ LDA P                  \ For 50% of the time, jump to PX3 to plot a 1-pixel
+ CMP #%00000110         \ (i.e. when P is %00000101 or %00000100)
+ BCC PX3
+
+ CMP #%00000110         \ For 25% of the time, jump to PX2 to draw a four-pixel
+ BEQ PX2                \ square (this isn't quite the 31% chance of the
+                        \ existing algorithm, but it's not far off)
+
+                        \ --- End of replacement ------------------------------>
 
  LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
  AND S                  \ X, and AND with the colour byte we fetched into S
@@ -5462,15 +5561,19 @@ ENDIF
  STA (SC),Y             \ remove it later without ruining the background that's
                         \ already on-screen
 
- LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
-                        \ in the command block, which we stored in T1 above
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- INY                    \ Increment Y, so it now points to the first byte of
-                        \ the next pixel in the command block
+\LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
+\                       \ in the command block, which we stored in T1 above
+\
+\INY                    \ Increment Y, so it now points to the first byte of
+\                       \ the next pixel in the command block
+\
+\CPY Q                  \ If the index hasn't reached the value in Q (which
+\BNE PXLO               \ contains the size of the pixel buffer), loop back to
+\                       \ PXLO to draw the next pixel in the buffer
 
- CPY Q                  \ If the index hasn't reached the value in Q (which
- BNE PXLO               \ contains the size of the pixel buffer), loop back to
-                        \ PXLO to draw the next pixel in the buffer
+                        \ --- End of removed code ----------------------------->
 
  RTS                    \ Return from the subroutine
 
@@ -5507,15 +5610,19 @@ ENDIF
  STA (SC),Y             \ remove it later without ruining the background that's
                         \ already on-screen
 
- LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
-                        \ in the command block, which we stored in T1 above
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- INY                    \ Increment Y, so it now points to the first byte of
-                        \ the next pixel in the command block
+\LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
+\                       \ in the command block, which we stored in T1 above
+\
+\INY                    \ Increment Y, so it now points to the first byte of
+\                       \ the next pixel in the command block
+\
+\CPY Q                  \ If the index hasn't reached the value in Q (which
+\BNE PXLO               \ contains the size of the pixel buffer), loop back to
+\                       \ PXLO to draw the next pixel in the buffer
 
- CPY Q                  \ If the index hasn't reached the value in Q (which
- BNE PXLO               \ contains the size of the pixel buffer), loop back to
-                        \ PXLO to draw the next pixel in the buffer
+                        \ --- End of removed code ----------------------------->
 
  RTS                    \ Return from the subroutine
 
@@ -5534,15 +5641,19 @@ ENDIF
  STA (SC),Y             \ remove it later without ruining the background that's
                         \ already on-screen
 
- LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
-                        \ in the command block, which we stored in T1 above
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- INY                    \ Increment Y, so it now points to the first byte of
-                        \ the next pixel in the command block
+\LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
+\                       \ in the command block, which we stored in T1 above
+\
+\INY                    \ Increment Y, so it now points to the first byte of
+\                       \ the next pixel in the command block
+\
+\CPY Q                  \ If the index hasn't reached the value in Q (which
+\BNE PXLO               \ contains the size of the pixel buffer), loop back to
+\                       \ PXLO to draw the next pixel in the buffer
 
- CPY Q                  \ If the index hasn't reached the value in Q (which
- BNE PXLO               \ contains the size of the pixel buffer), loop back to
-                        \ PXLO to draw the next pixel in the buffer
+                        \ --- End of removed code ----------------------------->
 
  RTS                    \ Return from the subroutine
 

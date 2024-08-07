@@ -3565,8 +3565,8 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- SKIP 1                 \ A "pair flag" that we use it to determine which lines
-                        \ we have drawn to the heap (and therefore when to
+ SKIP 1                 \ A "pair flag" that we use it to determine which ship
+                        \ lines we have drawn to the heap (and therefore when to
                         \ increment the pointer in LSNUM)
                         \
                         \   * Bit 7 set = only one of a line pair has been drawn
@@ -25282,13 +25282,57 @@ ENDIF
 
 .DOEXP
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA INWK+31            \ If bit 6 of the ship's byte #31 is clear, then the
+\AND #%01000000         \ ship is not already exploding so there is no existing
+\BEQ P%+5               \ explosion cloud to remove, so skip the following
+\                       \ instruction
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA INWK+31            \ If bit 6 of the ship's byte #31 is clear, then the
  AND #%01000000         \ ship is not already exploding so there is no existing
- BEQ P%+5               \ explosion cloud to remove, so skip the following
-                        \ instruction
+ BEQ skip1              \ explosion cloud to remove, so jump to skip1 to set up
+                        \ the data block for first use
+
+                        \ --- End of replacement ------------------------------>
 
  JSR PTCLS              \ Call PTCLS to remove the existing cloud by drawing it
                         \ again
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ JMP skip2              \ Skip the following, so that it is only run when we
+                        \ initiate the explosion
+
+.skip1
+                        \ We are going to hijack byte #3 to store the ship's
+                        \ z-coordinate distance, so we can use this to generate
+                        \ the same cloud on each step through the process
+                        \
+                        \ We need to do this as the distance can change during
+                        \ the explosion, but we now use the distance in the
+                        \ anaglyph 3D cloud, so we can't use the actual
+                        \ z-coordinate in our calculation and have to use the
+                        \ distance at the point of explosion
+
+ LDY #3                 \ Set Y = 3 to point to byte #3 in the ship heap
+
+ LDA INWK+6             \ Set ZZ to the high byte of (z_hi z_lo) - zPlane(1 0)
+ SEC                    \
+ SBC zPlane             \ i.e. the z-axis distance between the projection plane
+ LDA INWK+7             \ and the explosion (this works as we know the explosion
+ SBC zPlane+1           \ is in front of us, so z_sign is positive)
+ AND #%11111000
+ STA (XX19),Y
+
+                        \ ??? Add scaling of parallax here and put into top 5
+                        \ bits of ZZ, so it can be retrieved in elite-z
+
+.skip2
+
+                        \ --- End of added code ------------------------------->
 
  LDA INWK+6             \ Set T = z_lo
  STA T
@@ -25528,8 +25572,32 @@ ENDIF
 
 .EXL4
 
- JSR DORND2             \ Set ZZ to a random number, making sure the C flag
- STA ZZ                 \ doesn't affect the outcome
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\JSR DORND2             \ Set ZZ to a random number, making sure the C flag
+\STA ZZ                 \ doesn't affect the outcome
+
+                        \ --- And replaced by: -------------------------------->
+
+ TYA                    \ Store Y on the stack
+ PHA
+
+ LDY #3                 \ Fetch byte #3 from the ship line heap, where we stored
+ LDA (XX19),Y           \ the initial distance to the explosion, and put it in
+ STA ZZ                 \ ZZ
+
+ JSR DORND2             \ Set A to a random number, making sure the C flag
+                        \ doesn't affect the outcome
+
+ ORA #%00000100         \ Set the top 5 bits of ZZ to the initial distance, keep
+ AND #%00000111         \ the lower 2 bits as a random value, and set bit 2 so
+ ORA ZZ                 \ when we draw this, we use the explosion part of the
+ STA ZZ                 \ PIXEL routine
+
+ PLA                    \ Restore Y from the stack
+ TAY
+
+                        \ --- End of replacement ------------------------------>
 
  LDA K3+1               \ Set (A R) = (y_hi y_lo)
  STA R                  \           = y
