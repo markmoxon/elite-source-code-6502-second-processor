@@ -5736,8 +5736,7 @@ ENDIF
                         \   * -1 to -64 for negative parallax
                         \
                         \ We now scale this result into the number of pixels of
-                        \ parallax to apply, which will be in the range -3 to +3
-                        \ pixels
+                        \ parallax to apply
 
  BCS dust1              \ If the subtraction didn't underflow then the result
                         \ is positive, so jump to dust1 to scale the positive
@@ -5773,13 +5772,23 @@ ENDIF
  ASL A                  \ %00000000 to %00000010 (0 to 2)
  ROL T
 
- INC T                  \ Increment T to the range 1 to 3
+IF MAX_PARALLAX_P > 2
+
+ INC T                  \ Increment T to the range 1 to 3, but only if the
+                        \ maximum positive parallax is 3 or more (otherwise
+                        \ we stick to the range 0 to 2)
+
+                        \ So by this point T is the amount of parallax to apply
+                        \ in pixels, and it is either in the range -3 to +2 or
+                        \ -3 to +3, depending on the value of MAX_PARALLAX_P
+
+ENDIF
 
 .dust2
 
                         \ By the time we get get here, T contains the parallax
-                        \ to apply, with T in the range -3 to +3, so we can
-                        \ simply shift each eye by this number of pixels
+                        \ to apply in pixels, so we can simply shift each eye by
+                        \ this amount
 
                         \ We start by drawing the left-eye dot in red
 
