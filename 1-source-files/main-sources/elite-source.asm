@@ -25296,7 +25296,7 @@ ENDIF
 
  LDA INWK+31            \ If bit 6 of the ship's byte #31 is clear, then the
  AND #%01000000         \ ship is not already exploding so there is no existing
- BEQ skip1              \ explosion cloud to remove, so jump to skip1 to set up
+ BEQ dexp1              \ explosion cloud to remove, so jump to dexp1 to set up
                         \ the data block for first use
 
                         \ --- End of replacement ------------------------------>
@@ -25306,10 +25306,10 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- JMP skip2              \ Skip the following, so that it is only run when we
+ JMP dexp2              \ Skip the following, so that it is only run when we
                         \ initiate the explosion
 
-.skip1
+.dexp1
                         \ We are going to hijack byte #3 to store the ship's
                         \ z-coordinate distance, so we can use this to generate
                         \ the same cloud on each step through the process
@@ -25320,20 +25320,26 @@ ENDIF
                         \ z-coordinate in our calculation and have to use the
                         \ distance at the point of explosion
 
+ LDA INWK+6             \ Set zCoord(1 0) = (z_hi z_lo)
+ STA zCoord
+ LDA INWK+7
+ STA zCoord+1
+
+ LDX #&FF               \ Apply parallax to the coordinate and return the amount
+ JSR ApplyParallax      \ of parallax in P+2 (we set X = &FF so the routine does
+                        \ not update the XX3 and XX3a heaps, as we are only
+                        \ interested in the amount of parallax)
+
+ LDA P+2                \ Shift the amount of parallax into bits 3 to 7 of A
+ ASL A
+ ASL A
+ ASL A
+
  LDY #3                 \ Set Y = 3 to point to byte #3 in the ship heap
 
- LDA INWK+6             \ Set ZZ to the high byte of (z_hi z_lo) - zPlane(1 0)
- SEC                    \
- SBC zPlane             \ i.e. the z-axis distance between the projection plane
- LDA INWK+7             \ and the explosion (this works as we know the explosion
- SBC zPlane+1           \ is in front of us, so z_sign is positive)
- AND #%11111000
- STA (XX19),Y
+ STA (XX19),Y           \ Set ZZ to the amount of parallax in bits 3 to 7
 
-                        \ ??? Add scaling of parallax here and put into top 5
-                        \ bits of ZZ, so it can be retrieved in elite-z
-
-.skip2
+.dexp2
 
                         \ --- End of added code ------------------------------->
 
@@ -55349,8 +55355,25 @@ ENDIF
 \
 \ Arguments:
 \
-\   X                   The index into the line heap, pointing to the second
-\                       byte of the x-coordinate we just added
+\   X                   The index into the XX3 and XX3a line heaps, pointing to
+\                       the second byte of the x-coordinate we just added, which
+\                       gets updated with the new x-coordinates in both eyes
+\
+\                       If X = &FF then the heaps are not updated (so set this
+\                       if we just want to calculate the amount of parallax)
+\
+\   zCoord(1 0)         The z-coordinate of the point to which we apply parallax
+\
+\   zPlane(1 0)         The z-coordinate of the projection plane
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   P+2                 The number of pixels of parallax to apply as a signed
+\                       integer
+\
+\   X                   X is preserved
 \
 \ ******************************************************************************
 
@@ -55436,8 +55459,14 @@ ENDIF
 
                         \ We now apply P+2 pixels of parallax
 
- PLY                    \ Set Y to the heap index from the stack, leaving it
- PHY                    \ there
+ PLY                    \ Set Y to the heap index from the stack
+
+ CPY #&FF               \ If the index is &FF, skip updating the XX3 and XX3a
+ BEQ para4              \ heaps, as we are only interested in the result of the
+                        \ parallax calculation
+
+ PHY                    \ Store the line heap index on the stack so we can
+                        \ retrieve it below
 
  LDA XX3-1,Y            \ Subtract P+2 pixels from the left x-coordinate to move
  SEC                    \ the left-eye coordinate by the parallax, using the

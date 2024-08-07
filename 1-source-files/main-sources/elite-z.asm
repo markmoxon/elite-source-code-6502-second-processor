@@ -5422,12 +5422,26 @@ ENDIF
  STA P                  \ Store bits 0 to 2 of byte #2 in P, so it contains a
                         \ random number in bits 0 and 1, with bit 2 set
 
- LDA (OSSC),Y           \ Set T to byte #2 from the Y-th pixel block in OSSC,
- AND #%11111000         \ which contains the parallax calculation
- STA T
+ LDX #0                 \ Set A = 0 to use as a source of clear bit 7s when
+                        \ shifting positive parallax
 
- LDA #2                 \ ??? - scale value properly in DOEXP and shift it here
- STA T                  \ to get signed parallax in T
+ LDA (OSSC),Y           \ Set T to byte #2 from the Y-th pixel block in OSSC,
+ STA T                  \ which contains the amount of parallax in bits 3 to 7
+
+ BPL expl1              \ If A is negative, set X = %11111111 to use as a
+ LDX #%11111111         \ source of set bit 7s when shifting negative parallax
+
+.expl1
+
+ TXA                    \ Set A to the source of bit 7s for shifting the
+                        \ parallax
+
+ LSR A                  \ Shift (A T) right by 3 bits, so that T contains the
+ ROR T                  \ amount of parallax as a signed integer in pixels
+ LSR A
+ ROR T
+ LSR A
+ ROR T
 
  INY                    \ Increment Y to 3
 
