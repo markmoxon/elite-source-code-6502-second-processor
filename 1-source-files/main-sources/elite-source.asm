@@ -74,8 +74,11 @@
  Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
                         \ plane in the universe screen with each key press (1 0)
 
- MAX_PARALLAX = 3       \ The maximum number of pixels that we shift to the left
-                        \ or right when applying parallax
+ MAX_PARALLAX_P = 2     \ The maximum number of pixels that we apply for
+                        \ positive parallax (distant objects)
+
+ MAX_PARALLAX_N = 3     \ The maximum number of pixels that we apply for
+                        \ negative parallax (nearby objects)
 
  PARALLAX_FACTOR = 1    \ Set parallax to z_hi/(2^PARALLAX_FACTOR), so increase
                         \ this value to reduce the amount of parallax
@@ -37849,21 +37852,21 @@ ENDIF
                         \ As the ship is very distant, we will apply maximum
                         \ positive parallax, so the left eye moves left and the
                         \ right eye moves right, with both of them moving by
-                        \ MAX_PARALLAX pixels, like this:
+                        \ MAX_PARALLAX_P pixels, like this:
                         \
-                        \ Set rHeap to a line from X2 = K3 + MAX_PARALLAX to 
-                        \ X1 = K3 + MAX_PARALLAX + 3
+                        \ Set rHeap to a line from X2 = K3 + MAX_PARALLAX_P to
+                        \ X1 = K3 + MAX_PARALLAX_P + 3
                         \
-                        \ Set XX19 to a line from X2 = K3 - MAX_PARALLAX to 
-                        \ X1 = K3 - MAX_PARALLAX + 3
+                        \ Set XX19 to a line from X2 = K3 - MAX_PARALLAX_P to
+                        \ X1 = K3 - MAX_PARALLAX_P + 3
 
                         \ We start with the left eye
 
  LDA K3                 \ Set A = screen x-coordinate of the right end of the
- CLC                    \ ship dot for the left eye, i.e. K3 - MAX_PARALLAX + 3
+ CLC                    \ ship dot for the left eye = K3 - MAX_PARALLAX_P + 3
  ADC #3
  SEC
- SBC #MAX_PARALLAX
+ SBC #MAX_PARALLAX_P
 
  BCS shpt1              \ If the left-eye dot fits on-screen, jump to shpt1 to
                         \ draw the dot
@@ -37897,7 +37900,7 @@ ENDIF
  STA Y2
 
  LDA K3                 \ Set A = screen x-coordinate of the left end of the
- ADC #MAX_PARALLAX      \ ship dot for the right eye, i.e. K3 + MAX_PARALLAX
+ ADC #MAX_PARALLAX_P    \ ship dot for the right eye = K3 + MAX_PARALLAX_P
                         \
                         \ The addition works as we only call the Shpt routine
                         \ with the C flag clear and we know the first addition
@@ -55331,8 +55334,16 @@ ENDIF
 \
 \   zCoord(1 0) - zPlane(1 0)
 \
-\ We add this value to the x-coordinates, according to whether the point is in
-\ front of or beyond the projection plane.
+\ We apply this value to the x-coordinates, according to whether the point is
+\ beyond the projection plane or this side of it.
+\
+\ Points beyond the projection plane are said to have positive parallax and the
+\ value above is positive, and the left (red) eye moves left and the right
+\ (cyan) eye moves right.
+\
+\ Points this side of the projection plane are said to have negative parallax
+\ and the value above is negative, and the left (red) eye moves right and the
+\ right (cyan) eye moves left.
 \
 \ ------------------------------------------------------------------------------
 \
@@ -55347,166 +55358,106 @@ ENDIF
 
 .ApplyParallax
 
- LDA doParallax         \ If parallax is disabled, return from the subroutine
- BEQ para1
+ LDA doParallax         \ If parallax is disabled, jump to para4 to return from
+ BEQ para4              \ the subroutine
 
  PHX                    \ Store the line heap index on the stack so we can use
                         \ it below and restore it at the end of the routine
+
+ LDX #0                 \ Set X = 0 to use as a source of clear bit 7s when
+                        \ scaling positive parallax
 
  LDA zCoord             \ Set P(2 1) = zCoord(1 0) - zPlane(1 0)
  SEC                    \
  SBC zPlane             \ i.e. the z-axis distance between the point and the
  STA P+1                \ projection plane, as a signed 16-bit value
- LDA zCoord+1
- SBC zPlane+1
- STA P+2
+ LDA zCoord+1           \
+ SBC zPlane+1           \ In other words, P(2 1) contains the amount of parallax
+ STA P+2                \ we should be adding, with positive parallax for points
+                        \ that are beyond the projection plane (when the left
+                        \ eye moves left and the right eye moves right), and
+                        \ negative parallax for nearby points (when the left eye
+                        \ moves right and the right eye moves left)
 
- BCC para4              \ If zCoord < zPlane then the point is this side of the
-                        \ projection plane, so jump to para4 to apply negative
-                        \ parallax
+                        \ We now scale the value of P(2 1) to a value that we
+                        \ can use as the number of pixels of parallax
+                        \
+                        \ As the amount of parallax will be capped to just a few
+                        \ pixels, we can ignore the low byte and just scale the
+                        \ high byte in P+2
 
- BNE para2              \ If zCoord > zPlane then the point is beyond the
-                        \ projection plane, so jump to para2 to apply positive
-                        \ parallax
-
-                        \ If we get here then zCoord = zPlane and the point is
-                        \ on the projection plane, so leave the x-coordinates
-                        \ unchanged by returning from the subroutine
-
- PLX                    \ Restore the index from the stack into X
+ BPL para1              \ If P+2 is negative, set X = %11111111 to use as a
+ LDX #%11111111         \ source of set bit 7s when scaling negative parallax
 
 .para1
 
- RTS                    \ Return from the subroutine
+ TXA                    \ Set A to the appropriate type of bit 7s to use when
+                        \ scaling the parallax in P+2
 
-.para2
+ STA P+1                \ Store this signed high byte in P+1 so we can use it in
+                        \ the parallax calculation after the scaling is done
+                        \ (we can reuse P+1 as we don't need the low byte any
+                        \ more)
 
-                        \ If we get here then the point is beyond the projection
-                        \ plane and we apply positive parallax (so the left eye
-                        \ moves left and the right eye moves right)
-
-                        \ At this point, P(2 1) is positive and contains the
-                        \ capped distance of the point, which we now use to
-                        \ calculate the amount of parallax to apply
-
- LDA P+2                \ Set A = P+2
+                        \ We now scale the parallax in P+2 by PARALLAX_FACTOR
 
 IF PARALLAX_FACTOR > 0
 
  FOR I%, 1, PARALLAX_FACTOR
 
-  LSR A                 \ Set A = A / (2 ^ PARALLAX_FACTOR)
+  LSR A                 \ Set (A P+2) = (A P+2) / (2 ^ PARALLAX_FACTOR)
+  ROR P+2
 
  NEXT
 
 ENDIF
 
- CMP #MAX_PARALLAX      \ Cap A to a maximum value of MAX_PARALLAX
+                        \ We now cap the high byte to a value between
+                        \ -MAX_PARALLAX_N and MAX_PARALLAX_P
+
+ LDA P+2                \ If P+2 is negative, jump to para2 to cap the value
+ BMI para2              \ to a minimum value of -MAX_PARALLAX_N
+
+ CMP #MAX_PARALLAX_P    \ Cap P+2 to a maximum value of MAX_PARALLAX_P
  BCC para3
- LDA #MAX_PARALLAX
+ LDA #MAX_PARALLAX_P
+ BNE para3
+
+.para2
+
+ CMP #256-MAX_PARALLAX_N    \ Cap P+2 to a minimum value of -MAX_PARALLAX_N
+ BCS para3
+ LDA #256-MAX_PARALLAX_N
 
 .para3
 
- STA P+2                \ Store the new value in P+2, to use as the number of
+ STA P+2                \ Store the scaled value in P+2, to use as the number of
                         \ pixels of parallax to apply
 
-                        \ We now apply P+2 pixels of positive parallax (so
-                        \ the left eye moves left and the right eye moves
-                        \ right)
+                        \ We now apply P+2 pixels of parallax
 
  PLY                    \ Set Y to the heap index from the stack, leaving it
  PHY                    \ there
 
  LDA XX3-1,Y            \ Subtract P+2 pixels from the left x-coordinate to move
- SEC                    \ the left-eye coordinate to the left
- SBC P+2
- STA XX3-1,Y
+ SEC                    \ the left-eye coordinate by the parallax, using the
+ SBC P+2                \ value of P+1 as the high byte, which we already set to
+ STA XX3-1,Y            \ 0 or %11111111 according to the polarity of P+2
  LDA XX3,Y
- SBC #0
+ SBC P+1
  STA XX3,Y
 
  LDA XX3a-1,Y           \ Add P+2 pixels to the right x-coordinate to move the
- CLC                    \ right-eye coordinate to the right
- ADC P+2
- STA XX3a-1,Y
+ CLC                    \ right-eye coordinate by the parallax, using the
+ ADC P+2                \ value of P+1 as the high byte, which we already set to
+ STA XX3a-1,Y           \ 0 or %11111111 according to the polarity of P+2
  LDA XX3a,Y
- ADC #0
+ ADC P+1
  STA XX3a,Y
 
  PLX                    \ Restore the index from the stack into X
-
- RTS                    \ Return from the subroutine
 
 .para4
-
-                        \ If we get here then the point is this side of the
-                        \ projection plane and we apply negative parallax (so
-                        \ the left eye moves right and the right eye moves
-                        \ left)
-
-                        \ At this point, P(2 1) is negative, so we need to flip
-                        \ the sign to use for the parallax calculation
-
- LDA P+1                \ P(2 1) is negative, so we need to negate it using
- EOR #%11111111         \ two's complement, to make it positive, starting with
- CLC                    \ the low byte in P+1
- ADC #1
- STA P+1
-
- LDA P+2                \ And then the high byte in P+2
- EOR #%11111111
- ADC #0
- STA P+2
-
-                        \ At this point, P(2 1) is positive and contains the
-                        \ negated distance of the point, which we now use to
-                        \ calculate the amount of parallax to apply
-
- LDA P+2                \ Set A = P+2
-
-IF PARALLAX_FACTOR > 0
-
- FOR I%, 1, PARALLAX_FACTOR
-
-  LSR A                 \ Set A = A / (2 ^ PARALLAX_FACTOR)
-
- NEXT
-
-ENDIF
-
- CMP #MAX_PARALLAX      \ Cap A to a maximum value of MAX_PARALLAX
- BCC para5
- LDA #MAX_PARALLAX
-
-.para5
-
- STA P+2                \ Store the new value in P+2, to use as the number of
-                        \ pixels of parallax to apply
-
-                        \ We now apply P+2 pixels of negative parallax (so
-                        \ the left eye moves right and the right eye moves
-                        \ left)
-
- PLY                    \ Set Y to the heap index from the stack, leaving it
- PHY                    \ there
-
- LDA XX3-1,Y            \ Add P+2 pixels to the left x-coordinate to move the
- CLC                    \ left-eye coordinate to the right
- ADC P+2
- STA XX3-1,Y
- LDA XX3,Y
- ADC #0
- STA XX3,Y
-
- LDA XX3a-1,Y           \ Subtract P+2 pixels from the right x-coordinate to
- SEC                    \ move the right-eye coordinate to the left
- SBC P+2
- STA XX3a-1,Y
- LDA XX3a,Y
- SBC #0
- STA XX3a,Y
-
- PLX                    \ Restore the index from the stack into X
 
  RTS                    \ Return from the subroutine
 
