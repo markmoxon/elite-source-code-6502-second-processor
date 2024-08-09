@@ -968,16 +968,37 @@ ENDIF
  SKIP 1                 \ Temporary storage, used to store the original argument
                         \ in A in the logarithmic FMLTU and LL28 routines
 
-.safehouse
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
- SKIP 6                 \ Backup storage for the seeds for the selected system
-                        \
-                        \ The seeds for the current system get stored here as
-                        \ soon as a hyperspace is initiated, so we can fetch
-                        \ them in the hyp1 routine. This fixes a bug in an
-                        \ earlier version where you could hyperspace while
-                        \ docking and magically appear in your destination
-                        \ station
+\.safehouse
+\
+\SKIP 6                 \ Backup storage for the seeds for the selected system
+\                       \
+\                       \ The seeds for the current system get stored here as
+\                       \ soon as a hyperspace is initiated, so we can fetch
+\                       \ them in the hyp1 routine. This fixes a bug in an
+\                       \ earlier version where you could hyperspace while
+\                       \ docking and magically appear in your destination
+\                       \ station
+
+                        \ --- And replaced by: -------------------------------->
+
+.LSX2S
+
+ SKIP 2                 \ The address of LSX2 or LSX2a, depending on which eye
+                        \ we are drawing
+
+.LSY2S
+
+ SKIP 2                 \ The address of LSY2 or LSY2a, depending on which eye
+                        \ we are drawing
+
+.LSPS
+
+ SKIP 2                 \ The address of LSP or LSPa, depending on which eye
+                        \ we are drawing
+
+                        \ --- End of moved code ------------------------------->
 
 .messXC
 
@@ -3636,7 +3657,26 @@ ENDIF
                         \ the scroll text lines onto the Star Wars perspective
                         \ view and then onto the screen
 
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.safehouse
+
+ SKIP 6                 \ Backup storage for the seeds for the selected system
+                        \
+                        \ The seeds for the current system get stored here as
+                        \ soon as a hyperspace is initiated, so we can fetch
+                        \ them in the hyp1 routine. This fixes a bug in an
+                        \ earlier version where you could hyperspace while
+                        \ docking and magically appear in your destination
+                        \ station
+
+                        \ --- End of moved code ------------------------------->
+
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.LSPa
+
+ SKIP 1                 \ The ball line heap pointer for the right eye
 
 .LSX2a
 
@@ -9261,18 +9301,44 @@ ENDIF
                         \ that segment, and we start a new segment with the next
                         \ call to BLINE that does fit on-screen
 
- LDY LSP                \ If byte LSP-1 of LSY2 = &FF, jump to BL7 to tidy up
- LDA #&FF               \ and return from the subroutine, as the point that has
- CMP LSY2-1,Y           \ been passed to BLINE is the start of a segment, so all
- BEQ BL7                \ we need to do is save the coordinate in K5, without
-                        \ moving the pointer in LSP
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- STA LSY2,Y             \ Otherwise we just tried to plot a segment but it
-                        \ didn't fit on-screen, so put the &FF marker into the
+\LDY LSP                \ If byte LSP-1 of LSY2 = &FF, jump to BL7 to tidy up
+\LDA #&FF               \ and return from the subroutine, as the point that has
+\CMP LSY2-1,Y           \ been passed to BLINE is the start of a segment, so all
+\BEQ BL7                \ we need to do is save the coordinate in K5, without
+\                       \ moving the pointer in LSP
+\
+\STA LSY2,Y             \ Otherwise we just tried to plot a segment but it
+\                       \ didn't fit on-screen, so put the &FF marker into the
+\                       \ heap for this point, so the next call to BLINE starts
+\                       \ a new segment
+\
+\INC LSP                \ Increment LSP to point to the next point in the heap
+
+                        \ --- And replaced by: -------------------------------->
+
+                        \ If byte LSP-1 of LSY2 = &FF, jump to BL7 to tidy up
+ LDA (LSPS)             \ and return from the subroutine, as the point that has
+ TAY                    \ been passed to BLINE is the start of a segment, so all
+ DEY                    \ we need to do is save the coordinate in K5, without
+ LDA #&FF               \ moving the pointer in LSP
+ CMP (LSY2S),Y
+ BNE P%+6
+ INY
+ JMP BL7
+
+ INY                    \ Otherwise we just tried to plot a segment but it
+ STA (LSY2S),Y          \ didn't fit on-screen, so put the &FF marker into the
                         \ heap for this point, so the next call to BLINE starts
                         \ a new segment
-
- INC LSP                \ Increment LSP to point to the next point in the heap
+           
+ LDA (LSPS)             \ Increment LSP to point to the next point in the heap
+ CLC
+ ADC #1
+ STA (LSPS)
+ 
+                        \ --- End of replacement ------------------------------>
 
  BNE BL7                \ Jump to BL7 to tidy up and return from the subroutine
                         \ (this BNE is effectively a JMP, as LSP will never be
@@ -9333,13 +9399,36 @@ ENDIF
 
                         \ --- End of added code ------------------------------->
 
- LDY LSP                \ Set Y = LSP
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDY LSP                \ Set Y = LSP
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA (LSPS)             \ Set Y = LSP
+ TAY
+
+                        \ --- End of replacement ------------------------------>
 
                         \ --- Mod: Code added for flicker-free planets: ------->
 
- LDA LSY2-1,Y           \ If byte LSP-1 of LSY2 is not &FF, jump down to BL8
- CMP #&FF               \ to skip the following (X1, Y1) code
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA LSY2-1,Y           \ If byte LSP-1 of LSY2 is not &FF, jump down to BL8
+\CMP #&FF               \ to skip the following (X1, Y1) code
+\BNE BL8
+
+                        \ --- And replaced by: -------------------------------->
+
+ DEY                    \ If byte LSP-1 of LSY2 is not &FF, jump down to BL8
+ LDA (LSY2S),Y          \ to skip the following (X1, Y1) code
+ CMP #&FF
+ PHP
+ INY
+ PLP
  BNE BL8
+
+                        \ --- End of replacement ------------------------------>
 
                         \ Byte LSP-1 of LSY2 is &FF, which indicates that we
                         \ need to store (X1, Y1) in the heap
@@ -9348,11 +9437,23 @@ ENDIF
 
                         \ --- End of added code ------------------------------->
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA X1                 \ Store X1 in the LSP-th byte of LSX2
+\STA LSX2,Y
+\
+\LDA Y1                 \ Store Y1 in the LSP-th byte of LSY2
+\STA LSY2,Y
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA X1                 \ Store X1 in the LSP-th byte of LSX2
- STA LSX2,Y
+ STA (LSX2S),Y
 
  LDA Y1                 \ Store Y1 in the LSP-th byte of LSY2
- STA LSY2,Y
+ STA (LSY2S),Y
+
+                        \ --- End of replacement ------------------------------>
 
  INY                    \ Increment Y to point to the next byte in LSX2/LSY2
 
@@ -9370,15 +9471,37 @@ ENDIF
 
                         \ --- End of added code ------------------------------->
 
- LDA X2                 \ Store X2 in the LSP-th byte of LSX2
- STA LSX2,Y
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- LDA Y2                 \ Store Y2 in the LSP-th byte of LSX2
- STA LSY2,Y
+\LDA X2                 \ Store X2 in the LSP-th byte of LSX2
+\STA LSX2,Y
+\
+\LDA Y2                 \ Store Y2 in the LSP-th byte of LSX2
+\STA LSY2,Y
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA X2                 \ Store X2 in the LSP-th byte of LSX2
+ STA (LSX2S),Y
+
+ LDA Y2                 \ Store Y2 in the LSP-th byte of LSY2
+ STA (LSY2S),Y
+
+                        \ --- End of replacement ------------------------------>
 
  INY                    \ Increment Y to point to the next byte in LSX2/LSY2
 
- STY LSP                \ Update LSP to point to the same as Y
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\STY LSP                \ Update LSP to point to the same as Y
+
+                        \ --- And replaced by: -------------------------------->
+
+ TYA                    \ Update LSP to point to the same as Y
+ STA (LSPS)
+ TAY
+
+                        \ --- End of replacement ------------------------------>
 
                         \ --- Mod: Code removed for flicker-free planets: ----->
 
@@ -9389,13 +9512,27 @@ ENDIF
  JSR DrawNewPlanetLine  \ Draw a line from (X1, Y1) to (X2, Y2), but only if it
                         \ is different to the old line in K3+4 to K3+7
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA XX13               \ If XX13 is non-zero, jump up to BL5 to add a &FF
+\BNE BL5                \ marker to the end of the line heap. XX13 is non-zero
+\                       \ after the call to the clipping routine LL145 above if
+\                       \ the end of the line was clipped, meaning the next line
+\                       \ sent to BLINE can't join onto the end but has to start
+\                       \ a new segment, and that's what inserting the &FF
+\                       \ marker does
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA XX13               \ If XX13 is non-zero, jump up to BL5 to add a &FF
- BNE BL5                \ marker to the end of the line heap. XX13 is non-zero
-                        \ after the call to the clipping routine LL145 above if
+ BEQ P%+5               \ marker to the end of the line heap. XX13 is non-zero
+ JMP BL5                \ after the call to the clipping routine LL145 above if
                         \ the end of the line was clipped, meaning the next line
                         \ sent to BLINE can't join onto the end but has to start
                         \ a new segment, and that's what inserting the &FF
                         \ marker does
+
+                        \ --- End of replacement ------------------------------>
 
 .BL7
 
@@ -25978,6 +26115,13 @@ ENDIF
  STZ LSP                \ Reset the ball line heap by setting the ball line heap
                         \ pointer to 0
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STZ LSPa               \ Reset the ball line heap by setting the ball line heap
+                        \ pointer to 0 for the right eye
+
+                        \ --- End of added code ------------------------------->
+
  LDX #&FF               \ Set X = &FF (though this appears not to be used)
 
                         \ Fall through into FLFLLS to reset the LSO block
@@ -27496,20 +27640,117 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- BCS PL20A              \ If the call to CIRCLE returned with the C flag set,
-                        \ then the circle does not fit on-screen, so jump to
-                        \ PL20A to remove the planet from the screen and return
-                        \ from the subroutine
+\JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
+\
+\BCS PL20A              \ If the call to CIRCLE returned with the C flag set,
+\                       \ then the circle does not fit on-screen, so jump to
+\                       \ PL20A to remove the planet from the screen and return
+\                       \ from the subroutine
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA K3+1               \ Store the centre point's x-coordinate on the stack
+ PHA
+ LDA K3
+ PHA
+
+ LDA K4+1               \ Store the centre point's y-coordinate on the stack
+ PHA
+ LDA K4
+ PHA
+
+ LDA K+1                \ Store the planet's radius on the stack
+ PHA
+ LDA K
+ PHA
+
+ LDA #LO(LSX2)          \ Set LSX2S to the address of LSX2, so CIRCLE and BLINE
+ STA LSX2S              \ store the left-eye line y-coordinates in LSX2
+ LDA #HI(LSX2)
+ STA LSX2S+1
+
+ LDA #LO(LSY2)          \ Set LSY2S to the address of LSY2, so CIRCLE and BLINE
+ STA LSY2S              \ store the left-eye line y-coordinates in LSY2
+ LDA #HI(LSY2)
+ STA LSY2S+1
+
+ LDA #LO(LSP)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
+ STA LSPS               \ store the left-eye ball line heap pointer in LSP
+ LDA #HI(LSP)
+ STA LSPS+1
+
+ LDA K3                 \ Subtract maximum positive parallax for the left eye
+ SEC
+ SBC #MAX_PARALLAX_P
+ STA K3
+ LDA K3+1
+ SBC #0
+ STA K3+1
+
+ LDA #RED_3D            \ Send a #SETCOL RED_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
+
+ JSR DrawPlanet         \ Draw the planet
+
+ PLA                    \ Retrieve the planet's radius from the stack
+ STA K
+ PLA
+ STA K+1
+
+ PLA                    \ Retrieve the centre point's y-coordinate from the
+ STA K4                 \ stack
+ PLA
+ STA K4+1
+
+ PLA                    \ Retrieve the centre point's x-coordinate from the
+ STA K3                 \ stack
+ PLA
+ STA K3+1
+
+ LDA #LO(LSX2a)         \ Set LSX2S to the address of LSX2a, so CIRCLE and BLINE
+ STA LSX2S              \ store the right-eye line y-coordinates in LSX2a
+ LDA #HI(LSX2a)
+ STA LSX2S+1
+
+ LDA #LO(LSY2a)         \ Set LSY2S to the address of LSY2a, so CIRCLE and BLINE
+ STA LSY2S              \ store the right-eye line y-coordinates in LSY2a
+ LDA #HI(LSY2a)
+ STA LSY2S+1
+
+ LDA #LO(LSPa)          \ Set LSPS to the address of LSPa, so CIRCLE and BLINE
+ STA LSPS               \ store the right-eye ball line heap pointer in LSPa
+ LDA #HI(LSPa)
+ STA LSPS+1
+
+ LDA K3                 \ Add maximum positive parallax for the right eye
+ CLC
+ ADC #MAX_PARALLAX_P
+ STA K3
+ LDA K3+1
+ ADC #0
+ STA K3+1
+
+ LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is cyan in the space view
+
+ JMP DrawPlanet         \ Draw the planet and return from the subroutine using a
+                        \ tail call
 
                         \ --- End of replacement ------------------------------>
 
- LDA K+1                \ If K+1 is zero, jump to PL25 as K(1 0) < 256, so the
- BEQ PL25               \ planet fits on the screen and we can draw meridians or
-                        \ craters
+                        \ --- End of replacement ------------------------------>
 
-.PL20
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA K+1                \ If K+1 is zero, jump to PL25 as K(1 0) < 256, so the
+\BEQ PL25               \ planet fits on the screen and we can draw meridians or
+\                       \ craters
+\
+\.PL20
+
+                        \ --- End of removed code ----------------------------->
 
                         \ --- Mod: Code removed for flicker-free planets: ----->
 
@@ -27520,15 +27761,52 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
+\                       \ any lines that are left in the ball line heap, before
+\                       \ returning from the subroutine using a tail call
+\
+\.PL20A
+\
+\PLA                    \ Retrieve the centre point's x-coordinate from the
+\STA K3                 \ stack
+\PLA
+\STA K3+1
+\
+\JMP WPLS2              \ Call WPLS2 to remove the planet from the screen
+
+                        \ --- End of removed code ----------------------------->
+
+                        \ --- End of replacement ------------------------------>
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawPlanet
+
+ JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
+
+ BCS PL20A              \ If the call to CIRCLE returned with the C flag set,
+                        \ then the circle does not fit on-screen, so jump to
+                        \ PL20A to remove the planet from the screen and return
+                        \ from the subroutine
+
+ LDA K+1                \ If K+1 is zero, jump to PL25 as K(1 0) < 256, so the
+ BEQ PL25               \ planet fits on the screen and we can draw meridians or
+                        \ craters
+
+.PL20
+
  JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
                         \ any lines that are left in the ball line heap, before
                         \ returning from the subroutine using a tail call
 
 .PL20A
 
- JMP WPLS2              \ Call WPLS2 to remove the planet from the screen
+ JMP WPLS2              \ Call WPLS2 to remove the planet from the screen,
+                        \ returning from the subroutine using a tail call
 
-                        \ --- End of replacement ------------------------------>
+                        \ --- End of added code ------------------------------->
 
 .PL25
 
@@ -28861,8 +29139,17 @@ ENDIF
 
                         \ --- Mod: Code added for flicker-free planets: ------->
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #0                 \ Set LSX2 = 0 to indicate that the ball line heap is
+\STA LSX2               \ not empty, as we are about to fill it
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA #0                 \ Set LSX2 = 0 to indicate that the ball line heap is
- STA LSX2               \ not empty, as we are about to fill it
+ STA (LSX2S)            \ not empty, as we are about to fill it
+
+                        \ --- End of replacement ------------------------------>
 
                         \ --- End of added code ------------------------------->
 
@@ -28950,11 +29237,23 @@ ENDIF
  STZ LSNUM              \ Set LSNUM = 0, to point to the offset before the first
                         \ set of circle coordinates in the ball line heap
 
- LDX LSP                \ Set LSNUM2 to the last byte of the ball line heap
- STX LSNUM2
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- LDX #1                 \ Set LSP = 1 to reset the ball line heap pointer
- STX LSP
+\LDX LSP                \ Set LSNUM2 to the last byte of the ball line heap
+\STX LSNUM2
+\
+\LDX #1                 \ Set LSP = 1 to reset the ball line heap pointer
+\STX LSP
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA (LSPS)             \ Set LSNUM2 to the last byte of the ball line heap
+ STA LSNUM2
+
+ LDA #1                 \ Set LSP = 1 to reset the ball line heap pointer
+ STA (LSPS)
+
+                        \ --- End of replacement ------------------------------>
 
                         \ --- End of added code ------------------------------->
 
@@ -29070,6 +29369,25 @@ ENDIF
 
  STZ LSP                \ Reset the ball line heap by setting the ball line heap
                         \ pointer to 0
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA #LO(LSX2)          \ Set LSX2S to the address of LSX2, so CIRCLE and BLINE
+ STA LSX2S              \ store the left-eye line y-coordinates in LSX2
+ LDA #HI(LSX2)
+ STA LSX2S+1
+
+ LDA #LO(LSY2)          \ Set LSY2S to the address of LSY2, so CIRCLE and BLINE
+ STA LSY2S              \ store the left-eye line y-coordinates in LSY2
+ LDA #HI(LSY2)
+ STA LSY2S+1
+
+ LDA #LO(LSP)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
+ STA LSPS               \ store the left-eye ball line heap pointer in LSP
+ LDA #HI(LSP)
+ STA LSPS+1
+
+                        \ --- End of added code ------------------------------->
 
                         \ --- Mod: Code removed for flicker-free planets: ----->
 
@@ -29244,25 +29562,54 @@ ENDIF
 
 .WPLS2
 
- LDY LSX2               \ If LSX2 is non-zero (which indicates the ball line
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDY LSX2               \ If LSX2 is non-zero (which indicates the ball line
+\BNE WP1                \ heap is empty), jump to WP1 to reset the line heap
+\                       \ without redrawing the planet
+\
+\STY LSNUM              \ Reset LSNUM to the start of the ball line heap (we can
+\                       \ set this to 0 rather than 1 to take advantage of the
+\                       \ fact that Y is 0 - the effect is the same)
+\
+\LDA LSP                \ Set LSNUM2 to the end of the ball line heap
+\STA LSNUM2
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA (LSX2S)            \ If LSX2 is non-zero (which indicates the ball line
  BNE WP1                \ heap is empty), jump to WP1 to reset the line heap
                         \ without redrawing the planet
 
- STY LSNUM              \ Reset LSNUM to the start of the ball line heap (we can
+ STA LSNUM              \ Reset LSNUM to the start of the ball line heap (we can
                         \ set this to 0 rather than 1 to take advantage of the
-                        \ fact that Y is 0 - the effect is the same)
+                        \ fact that A is 0 - the effect is the same)
 
- LDA LSP                \ Set LSNUM2 to the end of the ball line heap
+ LDA (LSPS)             \ Set LSNUM2 to the end of the ball line heap
  STA LSNUM2
+
+                        \ --- End of replacement ------------------------------>
 
  JSR EraseRestOfPlanet  \ Draw the contents of the ball line heap to erase the
                         \ old planet
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #1                 \ Set LSP = 1 to reset the ball line heap pointer
+\STA LSP
+\
+\LDA #&FF               \ Set LSX2 = &FF to indicate the ball line heap is empty
+\STA LSX2
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA #1                 \ Set LSP = 1 to reset the ball line heap pointer
- STA LSP
+ STA (LSPS)
 
  LDA #&FF               \ Set LSX2 = &FF to indicate the ball line heap is empty
- STA LSX2
+ STA (LSX2S)
+
+                        \ --- End of replacement ------------------------------>
 
 .WP1
 
@@ -30877,6 +31224,14 @@ ENDIF
  LDX #&FF               \ Reset LSX2 and LSY2, the ball line heaps used by the
  STX LSX2               \ BLINE routine for drawing circles, to &FF, to set the
  STX LSY2               \ heap to empty
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STX LSX2a              \ Reset LSX2a and LSY2a, the ball line heaps used by the
+ STX LSY2a              \ BLINE routine for drawing circles, to &FF, to set the
+                        \ right eye ball line heap to empty
+
+                        \ --- End of added code ------------------------------->
 
  STX MSTG               \ Reset MSTG, the missile target, to &FF (no target)
 
@@ -32907,7 +33262,7 @@ ENDIF
 
  CMP CHK                \ Test the calculated checksum against CHK
 
-IF _REMOVE_CHECKSUMS
+IF _REMOVE_CHECKSUMS OR TRUE
 
  NOP                    \ If we have disabled checksums, then ignore the result
  NOP                    \ of the comparison and fall through into the next part
@@ -44218,6 +44573,12 @@ ENDIF
 
  STZ LSP                \ Reset the ball line heap pointer at LSP
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STZ LSPa               \ Reset the ball line heap pointer at LSPa
+
+                        \ --- End of added code ------------------------------->
+
  LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
  STA QQ17
 
@@ -54696,14 +55057,32 @@ ENDMACRO
  LDA K3+3               \ Set Y1 = K3+3 = screen y-coordinate of previous point
  STA Y1                 \ from the old heap
 
- LDA LSX2,Y             \ Set X2 to the y-coordinate from the LSNUM-th point in
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA LSX2,Y             \ Set X2 to the y-coordinate from the LSNUM-th point in
+\STA X2                 \ the heap
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA (LSX2S),Y          \ Set X2 to the y-coordinate from the LSNUM-th point in
  STA X2                 \ the heap
+
+                        \ --- End of replacement ------------------------------>
 
  STA K3+2               \ Store the x-coordinate of the point we are overwriting
                         \ in K3+2, so we can use it on the next iteration
 
- LDA LSY2,Y             \ Set Y2 to the y-coordinate from the LSNUM-th point in
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA LSY2,Y             \ Set Y2 to the y-coordinate from the LSNUM-th point in
+\STA Y2                 \ the heap
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA (LSY2S),Y          \ Set Y2 to the y-coordinate from the LSNUM-th point in
  STA Y2                 \ the heap
+
+                        \ --- End of replacement ------------------------------>
 
  STA K3+3               \ Store the y-coordinate of the point we are overwriting
                         \ in K3+3, so we can use it on the next iteration
@@ -54759,10 +55138,27 @@ ENDMACRO
 
 .plin3
 
- LDA LSX2+1             \ Store the heap's first coordinate in K3+2 and K3+3
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA LSX2+1             \ Store the heap's first coordinate in K3+2 and K3+3
+\STA K3+2
+\LDA LSY2+1
+\STA K3+3
+
+                        \ --- And replaced by: -------------------------------->
+
+ PHY                    \ Store the value of Y on the stack so we can preserve
+                        \ it
+
+ LDY #1                 \ Store the heap's first coordinate in K3+2 and K3+3
+ LDA (LSX2S),Y
  STA K3+2
- LDA LSY2+1
+ LDA (LSY2S),Y
  STA K3+3
+
+ PLY                    \ Retrieve Y from the stack
+
+                        \ --- End of replacement ------------------------------>
 
  INC LSNUM              \ Increment LSNUM to point to the next coordinate, so we
                         \ work our way through the current heap
