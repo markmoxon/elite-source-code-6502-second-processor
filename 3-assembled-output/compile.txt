@@ -3084,6 +3084,7 @@ WP workspace from  &D00  to &DFD
      9000
 .Y2VB
      9100
+Saving file '3-assembled-output/ANAGLYPH.bin'
 .MOS
      1000
 .COMC

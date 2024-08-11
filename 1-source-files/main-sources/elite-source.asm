@@ -3886,6 +3886,18 @@ ENDIF
                         \ set of character lines in the scroll text (as
                         \ projected screen coordinates) so they can be erased
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ ORG &0E00
+
+\ Code in here
+
+ SKIPTO &1000
+
+ SAVE "3-assembled-output/ANAGLYPH.bin", &0E00, &1000, &0E00
+
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \ ELITE A FILE

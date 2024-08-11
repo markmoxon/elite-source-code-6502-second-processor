@@ -150,7 +150,14 @@ if Encrypt:
 
 # Write output file for P.CODE
 
+# Modified for anaglyph 3D
+anaglyph_block = bytearray()
+anaglyph_file = open("3-assembled-output/ANAGLYPH.bin", "rb")
+anaglyph_block.extend(anaglyph_file.read())
+anaglyph_file.close()
+
 output_file = open("3-assembled-output/P.CODE.bin", "wb")
+output_file.write(anaglyph_block)
 output_file.write(data_block)
 output_file.close()
 
