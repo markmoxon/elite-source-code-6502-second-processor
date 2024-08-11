@@ -27639,33 +27639,7 @@ ENDIF
 
 .PL9
 
-                        \ --- Mod: Code removed for flicker-free planets: ----->
-
-\JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
-\                       \ processor for drawing on-screen, which will erase the
-\                       \ planet from the screen
-\
-\STZ LSP                \ Reset the ball line heap by setting the ball line heap
-\                       \ pointer to 0
-\
-\JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
-\
-\BCS PL20               \ If the call to CIRCLE returned with the C flag set,
-\                       \ then the circle does not fit on-screen, so jump to
-\                       \ PL20 to return from the subroutine
-
-                        \ --- And replaced by: -------------------------------->
-
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
-
-\JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
-\
-\BCS PL20A              \ If the call to CIRCLE returned with the C flag set,
-\                       \ then the circle does not fit on-screen, so jump to
-\                       \ PL20A to remove the planet from the screen and return
-\                       \ from the subroutine
-
-                        \ --- And replaced by: -------------------------------->
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
 
  LDA K3+1               \ Store the centre point's x-coordinate on the stack
  PHA
@@ -27682,20 +27656,7 @@ ENDIF
  LDA K
  PHA
 
- LDA #LO(LSX2)          \ Set LSX2S to the address of LSX2, so CIRCLE and BLINE
- STA LSX2S              \ store the left-eye line y-coordinates in LSX2
- LDA #HI(LSX2)
- STA LSX2S+1
-
- LDA #LO(LSY2)          \ Set LSY2S to the address of LSY2, so CIRCLE and BLINE
- STA LSY2S              \ store the left-eye line y-coordinates in LSY2
- LDA #HI(LSY2)
- STA LSY2S+1
-
- LDA #LO(LSP)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
- STA LSPS               \ store the left-eye ball line heap pointer in LSP
- LDA #HI(LSP)
- STA LSPS+1
+ JSR UseLeftBallLine    \ Switch to the ball line heap for the left eye
 
  LDA K3                 \ Subtract maximum positive parallax for the left eye
  SEC
@@ -27725,20 +27686,7 @@ ENDIF
  PLA
  STA K3+1
 
- LDA #LO(LSX2r)         \ Set LSX2S to the address of LSX2r, so CIRCLE and BLINE
- STA LSX2S              \ store the right-eye line y-coordinates in LSX2r
- LDA #HI(LSX2r)
- STA LSX2S+1
-
- LDA #LO(LSY2r)         \ Set LSY2S to the address of LSY2r, so CIRCLE and BLINE
- STA LSY2S              \ store the right-eye line y-coordinates in LSY2r
- LDA #HI(LSY2r)
- STA LSY2S+1
-
- LDA #LO(LSPr)          \ Set LSPS to the address of LSPr, so CIRCLE and BLINE
- STA LSPS               \ store the right-eye ball line heap pointer in LSPr
- LDA #HI(LSPr)
- STA LSPS+1
+ JSR UseRightBallLine   \ Switch to the ball line heap for the right eye
 
  LDA K3                 \ Add maximum positive parallax for the right eye
  CLC
@@ -27751,22 +27699,43 @@ ENDIF
  LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
  JSR DOCOL              \ switch to colour 3, which is cyan in the space view
 
- JMP DrawPlanet         \ Draw the planet and return from the subroutine using a
-                        \ tail call
+                        \ Fall through into DrawPlanet to draw the planet
 
-                        \ --- End of replacement ------------------------------>
+.DrawPlanet
 
-                        \ --- End of replacement ------------------------------>
+                        \ --- End of added code ------------------------------->
 
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+                        \ --- Mod: Code removed for flicker-free planets: ----->
 
-\LDA K+1                \ If K+1 is zero, jump to PL25 as K(1 0) < 256, so the
-\BEQ PL25               \ planet fits on the screen and we can draw meridians or
-\                       \ craters
+\JSR LS2FL              \ Call LS2FL to send the ball line heap to the I/O
+\                       \ processor for drawing on-screen, which will erase the
+\                       \ planet from the screen
 \
-\.PL20
+\STZ LSP                \ Reset the ball line heap by setting the ball line heap
+\                       \ pointer to 0
+\
+\JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
+\
+\BCS PL20               \ If the call to CIRCLE returned with the C flag set,
+\                       \ then the circle does not fit on-screen, so jump to
+\                       \ PL20 to return from the subroutine
 
-                        \ --- End of removed code ----------------------------->
+                        \ --- And replaced by: -------------------------------->
+
+ JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
+
+ BCS PL20A              \ If the call to CIRCLE returned with the C flag set,
+                        \ then the circle does not fit on-screen, so jump to
+                        \ PL20A to remove the planet from the screen and return
+                        \ from the subroutine
+
+                        \ --- End of replacement ------------------------------>
+
+ LDA K+1                \ If K+1 is zero, jump to PL25 as K(1 0) < 256, so the
+ BEQ PL25               \ planet fits on the screen and we can draw meridians or
+                        \ craters
+
+.PL20
 
                         \ --- Mod: Code removed for flicker-free planets: ----->
 
@@ -27777,52 +27746,15 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
-
-\JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
-\                       \ any lines that are left in the ball line heap, before
-\                       \ returning from the subroutine using a tail call
-\
-\.PL20A
-\
-\PLA                    \ Retrieve the centre point's x-coordinate from the
-\STA K3                 \ stack
-\PLA
-\STA K3+1
-\
-\JMP WPLS2              \ Call WPLS2 to remove the planet from the screen
-
-                        \ --- End of removed code ----------------------------->
-
-                        \ --- End of replacement ------------------------------>
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.DrawPlanet
-
- JSR CIRCLE             \ Call CIRCLE to draw the planet's new circle
-
- BCS PL20A              \ If the call to CIRCLE returned with the C flag set,
-                        \ then the circle does not fit on-screen, so jump to
-                        \ PL20A to remove the planet from the screen and return
-                        \ from the subroutine
-
- LDA K+1                \ If K+1 is zero, jump to PL25 as K(1 0) < 256, so the
- BEQ PL25               \ planet fits on the screen and we can draw meridians or
-                        \ craters
-
-.PL20
-
  JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
                         \ any lines that are left in the ball line heap, before
                         \ returning from the subroutine using a tail call
 
 .PL20A
 
- JMP WPLS2              \ Call WPLS2 to remove the planet from the screen,
-                        \ returning from the subroutine using a tail call
+ JMP WPLS2              \ Call WPLS2 to remove the planet from the screen
 
-                        \ --- End of added code ------------------------------->
+                        \ --- End of replacement ------------------------------>
 
 .PL25
 
@@ -29388,20 +29320,7 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- LDA #LO(LSX2)          \ Set LSX2S to the address of LSX2, so CIRCLE and BLINE
- STA LSX2S              \ store the left-eye line y-coordinates in LSX2
- LDA #HI(LSX2)
- STA LSX2S+1
-
- LDA #LO(LSY2)          \ Set LSY2S to the address of LSY2, so CIRCLE and BLINE
- STA LSY2S              \ store the left-eye line y-coordinates in LSY2
- LDA #HI(LSY2)
- STA LSY2S+1
-
- LDA #LO(LSP)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
- STA LSPS               \ store the left-eye ball line heap pointer in LSP
- LDA #HI(LSP)
- STA LSPS+1
+ JSR UseLeftBallLine    \ Switch to the ball line heap for the left eye
 
                         \ --- End of added code ------------------------------->
 
@@ -55239,6 +55158,70 @@ ENDMACRO
  JSR LL30               \ Draw the old line to erase it
 
 .nlin3
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: UseRightBallLine
+\       Type: Subroutine
+\   Category: Drawing circles
+\    Summary: Set the pointers to use the right-eye ball line
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.UseRightBallLine
+
+ LDA #LO(LSX2r)         \ Set LSX2S to the address of LSX2r, so CIRCLE and BLINE
+ STA LSX2S              \ store the right-eye line y-coordinates in LSX2r
+ LDA #HI(LSX2r)
+ STA LSX2S+1
+
+ LDA #LO(LSY2r)         \ Set LSY2S to the address of LSY2r, so CIRCLE and BLINE
+ STA LSY2S              \ store the right-eye line y-coordinates in LSY2r
+ LDA #HI(LSY2r)
+ STA LSY2S+1
+
+ LDA #LO(LSPr)          \ Set LSPS to the address of LSPr, so CIRCLE and BLINE
+ STA LSPS               \ store the right-eye ball line heap pointer in LSPr
+ LDA #HI(LSPr)
+ STA LSPS+1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: UseLeftBallLine
+\       Type: Subroutine
+\   Category: Drawing circles
+\    Summary: Set the pointers to use the left-eye ball line
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.UseLeftBallLine
+
+ LDA #LO(LSX2)          \ Set LSX2S to the address of LSX2, so CIRCLE and BLINE
+ STA LSX2S              \ store the left-eye line y-coordinates in LSX2
+ LDA #HI(LSX2)
+ STA LSX2S+1
+
+ LDA #LO(LSY2)          \ Set LSY2S to the address of LSY2, so CIRCLE and BLINE
+ STA LSY2S              \ store the left-eye line y-coordinates in LSY2
+ LDA #HI(LSY2)
+ STA LSY2S+1
+
+ LDA #LO(LSP)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
+ STA LSPS               \ store the left-eye ball line heap pointer in LSP
+ LDA #HI(LSP)
+ STA LSPS+1
 
  RTS                    \ Return from the subroutine
 
