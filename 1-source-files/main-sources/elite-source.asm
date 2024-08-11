@@ -3485,30 +3485,7 @@ ENDIF
 
  SKIP 100               \ The line buffer used by DASC to print justified text
 
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.LSY2r
-
- SKIP 78                \ The ball line heap for storing y-coordinates for the
-                        \ right eye
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: WP
-\       Type: Workspace
-\    Address: &0D00 to &0E3B
-\   Category: Workspaces
-\    Summary: Variables
-\
-\ ******************************************************************************
-
- ORG &0D00
-
-.WP
-
- SKIP 0                 \ The start of the WP workspace
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
 .LSX
 
@@ -3529,6 +3506,8 @@ ENDIF
                         \ universe can support either the sun or a space
                         \ station, but not both
 
+                        \ --- End of moved code ------------------------------->
+
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
  SKIP 9                 \ Add an extra 9 bytes to cope with double the lines for
@@ -3536,14 +3515,15 @@ ENDIF
                         \ (each requiring four bytes) plus a byte to store the
                         \ heap size, so that's 2 * 25 * 4 + 1 = 201
 
-.XX3r
+.LSY2r
 
- SKIP 40 * 4            \ Add a second calculation heap for the right eye, which
-                        \ needs to be able to store four bytes for each edge,
-                        \ where the mavimum number of edges required is 39 for
-                        \ for the Cobra Mk III wireframe, plus a laser line
+ SKIP 78                \ The ball line heap for storing y-coordinates for the
+                        \ right eye
 
                         \ --- End of added code ------------------------------->
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
 .SX
 
  SKIP NOST + 1          \ This is where we store the x_hi coordinates for all
@@ -3581,6 +3561,87 @@ ENDIF
 .LASY
 
  SKIP 1                 \ The y-coordinate of the tip of the laser line
+
+                        \ --- End of moved code ------------------------------->
+
+ PRINT "UP workspace from  ", ~UP," to ", ~P%
+
+\ ******************************************************************************
+\
+\       Name: WP
+\       Type: Workspace
+\    Address: &0D00 to &0E3B
+\   Category: Workspaces
+\    Summary: Variables
+\
+\ ******************************************************************************
+
+ ORG &0D00
+
+.WP
+
+ SKIP 0                 \ The start of the WP workspace
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+\.LSX
+\
+\SKIP 0                 \ LSX is an alias that points to the first byte of the
+\                       \ sun line heap at LSO
+\                       \
+\                       \   * &FF indicates the sun line heap is empty
+\                       \
+\                       \   * Otherwise the LSO heap contains the line data for
+\                       \     the sun
+\
+\.LSO
+\
+\SKIP 192               \ The ship line heap for the space station (see NWSPS)
+\                       \ and the sun line heap (see SUN)
+\                       \
+\                       \ The spaces can be shared as our local bubble of
+\                       \ universe can support either the sun or a space
+\                       \ station, but not both
+\
+\.SX
+\
+\SKIP NOST + 1          \ This is where we store the x_hi coordinates for all
+\                       \ the stardust particles
+\
+\.SXL
+\
+\SKIP NOST + 1          \ This is where we store the x_lo coordinates for all
+\                       \ the stardust particles
+\
+\.SY
+\
+\SKIP NOST + 1          \ This is where we store the y_hi coordinates for all
+\                       \ the stardust particles
+\
+\.SYL
+\
+\SKIP NOST + 1          \ This is where we store the y_lo coordinates for all
+\                       \ the stardust particles
+\
+\.SZ
+\
+\SKIP NOST + 1          \ This is where we store the z_hi coordinates for all
+\                       \ the stardust particles
+\
+\.SZL
+\
+\SKIP NOST + 1          \ This is where we store the z_lo coordinates for all
+\                       \ the stardust particles
+\
+\.LASX
+\
+\SKIP 1                 \ The x-coordinate of the tip of the laser line
+\
+\.LASY
+\
+\SKIP 1                 \ The y-coordinate of the tip of the laser line
+
+                        \ --- End of moved code ------------------------------->
 
 .XX24
 
@@ -3673,6 +3734,13 @@ ENDIF
                         \ --- End of moved code ------------------------------->
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.XX3r
+
+ SKIP 40 * 4            \ Add a second calculation heap for the right eye, which
+                        \ needs to be able to store four bytes for each edge,
+                        \ where the mavimum number of edges required is 39 for
+                        \ for the Cobra Mk III wireframe, plus a laser line
 
 .LSPr
 
@@ -33197,7 +33265,7 @@ ENDIF
 
  CMP CHK                \ Test the calculated checksum against CHK
 
-IF _REMOVE_CHECKSUMS OR TRUE
+IF _REMOVE_CHECKSUMS
 
  NOP                    \ If we have disabled checksums, then ignore the result
  NOP                    \ of the comparison and fall through into the next part
@@ -37592,70 +37660,75 @@ ENDMACRO
 
  LOAD_G% = LOAD% + P% - CODE%
 
-IF _MATCH_ORIGINAL_BINARIES
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- IF _SNG45
 
-  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
-  EQUB &FD, &08, &60, &A6, &83, &20, &68, &4B   \ unused and just contain random
-  EQUB &A6, &83, &4C, &D6, &12, &20, &C6, &4C   \ workspace noise left over from
-  EQUB &20, &76, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
-  EQUB &08, &20, &82, &45, &A9, &06, &85, &4A
-  EQUB &A9, &81, &4C, &C1, &44, &A2, &FF, &E8
-  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
-  EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
-  EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
-  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
-  EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
-  EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
-  EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
-  EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &62
-  EQUB &45, &A9, &C8, &20, &C7, &57, &A4, &97
-  EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
-  EQUB &1F, &D0, &08, &AD, &A4, &08, &09
+\IF _MATCH_ORIGINAL_BINARIES
+\
+\IF _SNG45
+\
+\ EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+\ EQUB &FD, &08, &60, &A6, &83, &20, &68, &4B   \ unused and just contain random
+\ EQUB &A6, &83, &4C, &D6, &12, &20, &C6, &4C   \ workspace noise left over from
+\ EQUB &20, &76, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+\ EQUB &08, &20, &82, &45, &A9, &06, &85, &4A
+\ EQUB &A9, &81, &4C, &C1, &44, &A2, &FF, &E8
+\ EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+\ EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
+\ EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
+\ EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+\ EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
+\ EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
+\ EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
+\ EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &62
+\ EQUB &45, &A9, &C8, &20, &C7, &57, &A4, &97
+\ EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
+\ EQUB &1F, &D0, &08, &AD, &A4, &08, &09
+\
+\ELIF _EXECUTIVE
+\
+\ EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+\ EQUB &FD, &08, &60, &A6, &83, &20, &8D, &4B   \ unused and just contain random
+\ EQUB &A6, &83, &4C, &D8, &12, &20, &EB, &4C   \ workspace noise left over from
+\ EQUB &20, &9B, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+\ EQUB &08, &20, &A7, &45, &A9, &06, &85, &4A
+\ EQUB &A9, &81, &4C, &E6, &44, &A2, &FF, &E8
+\ EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+\ EQUB &F6, &8A, &0A, &A8, &B9, &86, &1A, &85
+\ EQUB &05, &B9, &87, &1A, &85, &06, &A0, &20
+\ EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+\ EQUB &97, &90
+\
+\ELIF _SOURCE_DISC
+\
+\ EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
+\ EQUB &FD, &08, &60, &A6, &83, &20, &62, &4B   \ unused and just contain random
+\ EQUB &A6, &83, &4C, &D6, &12, &20, &C0, &4C   \ workspace noise left over from
+\ EQUB &20, &70, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
+\ EQUB &08, &20, &7C, &45, &A9, &06, &85, &4A
+\ EQUB &A9, &81, &4C, &BB, &44, &A2, &FF, &E8
+\ EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
+\ EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
+\ EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
+\ EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
+\ EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
+\ EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
+\ EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
+\ EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &5C
+\ EQUB &45, &A9, &C8, &20, &BE, &57, &A4, &97
+\ EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
+\ EQUB &1F, &D0, &08, &AD, &A4, &08, &09, &02
+\ EQUB &8D, &A4, &08, &E0, &0F, &F0, &08, &E0
+\
+\ENDIF
+\
+\ELSE
+\
+\ALIGN 256              \ Align the log tables so they start on page boundaries
+\
+\ENDIF
 
- ELIF _EXECUTIVE
-
-  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
-  EQUB &FD, &08, &60, &A6, &83, &20, &8D, &4B   \ unused and just contain random
-  EQUB &A6, &83, &4C, &D8, &12, &20, &EB, &4C   \ workspace noise left over from
-  EQUB &20, &9B, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
-  EQUB &08, &20, &A7, &45, &A9, &06, &85, &4A
-  EQUB &A9, &81, &4C, &E6, &44, &A2, &FF, &E8
-  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
-  EQUB &F6, &8A, &0A, &A8, &B9, &86, &1A, &85
-  EQUB &05, &B9, &87, &1A, &85, &06, &A0, &20
-  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
-  EQUB &97, &90
-
- ELIF _SOURCE_DISC
-
-  EQUB &A5, &19, &8D, &FC, &08, &A5, &1A, &8D   \ These bytes appear to be
-  EQUB &FD, &08, &60, &A6, &83, &20, &62, &4B   \ unused and just contain random
-  EQUB &A6, &83, &4C, &D6, &12, &20, &C0, &4C   \ workspace noise left over from
-  EQUB &20, &70, &43, &8D, &53, &08, &8D, &69   \ the BBC Micro assembly process
-  EQUB &08, &20, &7C, &45, &A9, &06, &85, &4A
-  EQUB &A9, &81, &4C, &BB, &44, &A2, &FF, &E8
-  EQUB &BD, &52, &08, &F0, &CB, &C9, &01, &D0
-  EQUB &F6, &8A, &0A, &A8, &B9, &76, &1A, &85
-  EQUB &05, &B9, &77, &1A, &85, &06, &A0, &20
-  EQUB &B1, &05, &10, &E3, &29, &7F, &4A, &C5
-  EQUB &97, &90, &DC, &F0, &09, &E9, &01, &0A
-  EQUB &09, &80, &91, &05, &D0, &D1, &A9, &00
-  EQUB &91, &05, &F0, &CB, &86, &97, &A5, &44
-  EQUB &C5, &97, &D0, &0A, &A0, &0C, &20, &5C
-  EQUB &45, &A9, &C8, &20, &BE, &57, &A4, &97
-  EQUB &BE, &52, &08, &E0, &02, &F0, &96, &E0
-  EQUB &1F, &D0, &08, &AD, &A4, &08, &09, &02
-  EQUB &8D, &A4, &08, &E0, &0F, &F0, &08, &E0
-
- ENDIF
-
-ELSE
-
- ALIGN 256              \ Align the log tables so they start on page boundaries
-
-ENDIF
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \
@@ -46360,59 +46433,55 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.LTDEF
 
-\.LTDEF
-\
-\EQUB &63, &34, &47, &76, &97   \ Letter definition for ","
-\EQUB &35, &00, &00, &00, &00   \ Letter definition for "-"
-\EQUB &63, &34, &47, &76, &00   \ Letter definition for "."
-\EQUB &61, &00, &00, &00, &00   \ Letter definition for "/"
-\EQUB &73, &31, &15, &57, &00   \ Letter definition for "0"
-\EQUB &31, &17, &00, &00, &00   \ Letter definition for "1"
-\EQUB &02, &25, &53, &36, &68   \ Letter definition for "2"
-\EQUB &02, &28, &86, &35, &00   \ Letter definition for "3"
-\EQUB &82, &23, &35, &00, &00   \ Letter definition for "4"
-\EQUB &20, &03, &35, &58, &86   \ Letter definition for "5"
-\EQUB &20, &06, &68, &85, &53   \ Letter definition for "6"
-\EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
-\EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
-\EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
-\EQUB &00, &00, &00, &00, &00   \ Letter definition for ":" (blank)
-\EQUB &00, &00, &00, &00, &00   \ Letter definition for ";" (blank)
-\EQUB &00, &00, &00, &00, &00   \ Letter definition for "<" (blank)
-\EQUB &00, &00, &00, &00, &00   \ Letter definition for "=" (blank)
-\EQUB &00, &00, &00, &00, &00   \ Letter definition for ">" (blank)
-\EQUB &00, &00, &00, &00, &00   \ Letter definition for "?" (blank)
-\EQUB &00, &00, &00, &00, &00   \ Letter definition for "@" (blank)
-\EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
-\EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
-\EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
-\EQUB &60, &05, &56, &00, &00   \ Letter definition for "D"
-\EQUB &86, &60, &02, &35, &00   \ Letter definition for "E"
-\EQUB &60, &02, &35, &00, &00   \ Letter definition for "F"
-\EQUB &45, &58, &86, &60, &02   \ Letter definition for "G"
-\EQUB &60, &28, &35, &00, &00   \ Letter definition for "H"
-\EQUB &17, &00, &00, &00, &00   \ Letter definition for "I"
-\EQUB &28, &86, &63, &00, &00   \ Letter definition for "J"
-\EQUB &60, &23, &83, &00, &00   \ Letter definition for "K"
-\EQUB &86, &60, &00, &00, &00   \ Letter definition for "L"
-\EQUB &60, &04, &42, &28, &00   \ Letter definition for "M"
-\EQUB &60, &08, &82, &00, &00   \ Letter definition for "N"
-\EQUB &60, &02, &28, &86, &00   \ Letter definition for "O"
-\EQUB &60, &02, &25, &53, &00   \ Letter definition for "P"
-\EQUB &60, &02, &28, &86, &48   \ Letter definition for "Q"
-\EQUB &60, &02, &25, &53, &48   \ Letter definition for "R"
-\EQUB &20, &03, &35, &58, &86   \ Letter definition for "S"
-\EQUB &02, &17, &00, &00, &00   \ Letter definition for "T"
-\EQUB &28, &86, &60, &00, &00   \ Letter definition for "U"
-\EQUB &27, &70, &00, &00, &00   \ Letter definition for "V"
-\EQUB &28, &84, &46, &60, &00   \ Letter definition for "W"
-\EQUB &26, &08, &00, &00, &00   \ Letter definition for "X"
-\EQUB &74, &04, &24, &00, &00   \ Letter definition for "Y"
-\EQUB &02, &26, &68, &00, &00   \ Letter definition for "Z"
-
-                        \ --- End of moved code ------------------------------->
+ EQUB &63, &34, &47, &76, &97   \ Letter definition for ","
+ EQUB &35, &00, &00, &00, &00   \ Letter definition for "-"
+ EQUB &63, &34, &47, &76, &00   \ Letter definition for "."
+ EQUB &61, &00, &00, &00, &00   \ Letter definition for "/"
+ EQUB &73, &31, &15, &57, &00   \ Letter definition for "0"
+ EQUB &31, &17, &00, &00, &00   \ Letter definition for "1"
+ EQUB &02, &25, &53, &36, &68   \ Letter definition for "2"
+ EQUB &02, &28, &86, &35, &00   \ Letter definition for "3"
+ EQUB &82, &23, &35, &00, &00   \ Letter definition for "4"
+ EQUB &20, &03, &35, &58, &86   \ Letter definition for "5"
+ EQUB &20, &06, &68, &85, &53   \ Letter definition for "6"
+ EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
+ EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
+ EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ":" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ";" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "<" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "=" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ">" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "?" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "@" (blank)
+ EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
+ EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
+ EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
+ EQUB &60, &05, &56, &00, &00   \ Letter definition for "D"
+ EQUB &86, &60, &02, &35, &00   \ Letter definition for "E"
+ EQUB &60, &02, &35, &00, &00   \ Letter definition for "F"
+ EQUB &45, &58, &86, &60, &02   \ Letter definition for "G"
+ EQUB &60, &28, &35, &00, &00   \ Letter definition for "H"
+ EQUB &17, &00, &00, &00, &00   \ Letter definition for "I"
+ EQUB &28, &86, &63, &00, &00   \ Letter definition for "J"
+ EQUB &60, &23, &83, &00, &00   \ Letter definition for "K"
+ EQUB &86, &60, &00, &00, &00   \ Letter definition for "L"
+ EQUB &60, &04, &42, &28, &00   \ Letter definition for "M"
+ EQUB &60, &08, &82, &00, &00   \ Letter definition for "N"
+ EQUB &60, &02, &28, &86, &00   \ Letter definition for "O"
+ EQUB &60, &02, &25, &53, &00   \ Letter definition for "P"
+ EQUB &60, &02, &28, &86, &48   \ Letter definition for "Q"
+ EQUB &60, &02, &25, &53, &48   \ Letter definition for "R"
+ EQUB &20, &03, &35, &58, &86   \ Letter definition for "S"
+ EQUB &02, &17, &00, &00, &00   \ Letter definition for "T"
+ EQUB &28, &86, &60, &00, &00   \ Letter definition for "U"
+ EQUB &27, &70, &00, &00, &00   \ Letter definition for "V"
+ EQUB &28, &84, &46, &60, &00   \ Letter definition for "W"
+ EQUB &26, &08, &00, &00, &00   \ Letter definition for "X"
+ EQUB &74, &04, &24, &00, &00   \ Letter definition for "Y"
+ EQUB &02, &26, &68, &00, &00   \ Letter definition for "Z"
 
 \ ******************************************************************************
 \
@@ -46423,27 +46492,23 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.NOFX
 
-\.NOFX
-\
-\EQUB 4                 \ Grid points 0-2
-\EQUB 8
-\EQUB 12
-\
-\EQUB 4                 \ Grid points 3-5
-\EQUB 8
-\EQUB 12
-\
-\EQUB 4                 \ Grid points 6-8
-\EQUB 8
-\EQUB 12
-\
-\EQUB 4                 \ Grid points 9-B
-\EQUB 8
-\EQUB 12
+ EQUB 4                 \ Grid points 0-2
+ EQUB 8
+ EQUB 12
 
-                        \ --- End of moved code ------------------------------->
+ EQUB 4                 \ Grid points 3-5
+ EQUB 8
+ EQUB 12
+
+ EQUB 4                 \ Grid points 6-8
+ EQUB 8
+ EQUB 12
+
+ EQUB 4                 \ Grid points 9-B
+ EQUB 8
+ EQUB 12
 
 \ ******************************************************************************
 \
@@ -46454,27 +46519,23 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.NOFY
 
-\.NOFY
-\
-\EQUB 0                 \ Grid points 0-2
-\EQUB 0
-\EQUB 0
-\
-\EQUB WY                \ Grid points 3-5
-\EQUB WY
-\EQUB WY
-\
-\EQUB 2*WY              \ Grid points 6-8
-\EQUB 2*WY
-\EQUB 2*WY
-\
-\EQUB 2.5*WY            \ Grid points 9-B
-\EQUB 2.5*WY
-\EQUB 2.5*WY
+ EQUB 0                 \ Grid points 0-2
+ EQUB 0
+ EQUB 0
 
-                        \ --- End of moved code ------------------------------->
+ EQUB WY                \ Grid points 3-5
+ EQUB WY
+ EQUB WY
+
+ EQUB 2*WY              \ Grid points 6-8
+ EQUB 2*WY
+ EQUB 2*WY
+
+ EQUB 2.5*WY            \ Grid points 9-B
+ EQUB 2.5*WY
+ EQUB 2.5*WY
 
 \ ******************************************************************************
 \
@@ -46485,27 +46546,23 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.acorn
 
-\.acorn
-\
-\IF _SNG45 OR _SOURCE_DISC
-\
-\EQUS ":::ACORNSOFT::::"
-\EQUS ";;;;;;;;;;;;;;;;"
-\EQUS "::::PRESENTS"
-\EQUB 0
-\
-\ELIF _EXECUTIVE
-\
-\EQUS ":::PIZZASOFT::::"
-\EQUS ";;;;;;;;;;;;;;;;"
-\EQUS "::::PRESENTS"
-\EQUB 0
-\
-\ENDIF
+IF _SNG45 OR _SOURCE_DISC
 
-                        \ --- End of moved code ------------------------------->
+ EQUS ":::ACORNSOFT::::"
+ EQUS ";;;;;;;;;;;;;;;;"
+ EQUS "::::PRESENTS"
+ EQUB 0
+
+ELIF _EXECUTIVE
+
+ EQUS ":::PIZZASOFT::::"
+ EQUS ";;;;;;;;;;;;;;;;"
+ EQUS "::::PRESENTS"
+ EQUB 0
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -46516,17 +46573,13 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.byian
 
-\.byian
-\
-\EQUS "::::::BY:;::::::"
-\EQUS ";;;;IAN;BELL;;;;"
-\EQUS "::::::AND:::::::"
-\EQUS ";;DAVID;BRABEN"
-\EQUB 0
-
-                        \ --- End of moved code ------------------------------->
+ EQUS "::::::BY:;::::::"
+ EQUS ";;;;IAN;BELL;;;;"
+ EQUS "::::::AND:::::::"
+ EQUS ";;DAVID;BRABEN"
+ EQUB 0
 
 \ ******************************************************************************
 \
@@ -46537,20 +46590,16 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.executive
 
-\.executive
-\
-\IF _EXECUTIVE
-\
-\EQUS "::::::THE;::::::"
-\EQUS ";;;EXECUTIVE;;;;"
-\EQUS "::::VERSION"
-\EQUB 0
-\
-\ENDIF
+IF _EXECUTIVE
 
-                        \ --- End of moved code ------------------------------->
+ EQUS "::::::THE;::::::"
+ EQUS ";;;EXECUTIVE;;;;"
+ EQUS "::::VERSION"
+ EQUB 0
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -46561,29 +46610,25 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.true3
 
-\.true3
-\
-\IF _SNG45 OR _SOURCE_DISC
-\
-\EQUS "THE:GALAXY:IS:IN"
-\EQUS "TURMOIL,THE:NAVY"
-\EQUS "FAR:AWAY:AS::THE"
-\EQUS "EMPIRE:CRUMBLES."
-\EQUB 0
-\
-\ELIF _EXECUTIVE
-\
-\EQUS "CONGRATULATIONS:"
-\EQUS ";ON;OBTAINING;A;"
-\EQUS "::COPY:OF:THIS::"
-\EQUS "ELUSIVE;PRODUCT."
-\EQUB 0
-\
-\ENDIF
+IF _SNG45 OR _SOURCE_DISC
 
-                        \ --- End of moved code ------------------------------->
+ EQUS "THE:GALAXY:IS:IN"
+ EQUS "TURMOIL,THE:NAVY"
+ EQUS "FAR:AWAY:AS::THE"
+ EQUS "EMPIRE:CRUMBLES."
+ EQUB 0
+
+ELIF _EXECUTIVE
+
+ EQUS "CONGRATULATIONS:"
+ EQUS ";ON;OBTAINING;A;"
+ EQUS "::COPY:OF:THIS::"
+ EQUS "ELUSIVE;PRODUCT."
+ EQUB 0
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -51150,50 +51195,46 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.MTIN
 
-\.MTIN
-\
-\EQUB 16                \ Token  0: a random extended token between 16 and 20
-\EQUB 21                \ Token  1: a random extended token between 21 and 25
-\EQUB 26                \ Token  2: a random extended token between 26 and 30
-\EQUB 31                \ Token  3: a random extended token between 31 and 35
-\EQUB 155               \ Token  4: a random extended token between 155 and 159
-\EQUB 160               \ Token  5: a random extended token between 160 and 164
-\EQUB 46                \ Token  6: a random extended token between 46 and 50
-\EQUB 165               \ Token  7: a random extended token between 165 and 169
-\EQUB 36                \ Token  8: a random extended token between 36 and 40
-\EQUB 41                \ Token  9: a random extended token between 41 and 45
-\EQUB 61                \ Token 10: a random extended token between 61 and 65
-\EQUB 51                \ Token 11: a random extended token between 51 and 55
-\EQUB 56                \ Token 12: a random extended token between 56 and 60
-\EQUB 170               \ Token 13: a random extended token between 170 and 174
-\EQUB 66                \ Token 14: a random extended token between 66 and 70
-\EQUB 71                \ Token 15: a random extended token between 71 and 75
-\EQUB 76                \ Token 16: a random extended token between 76 and 80
-\EQUB 81                \ Token 17: a random extended token between 81 and 85
-\EQUB 86                \ Token 18: a random extended token between 86 and 90
-\EQUB 140               \ Token 19: a random extended token between 140 and 144
-\EQUB 96                \ Token 20: a random extended token between 96 and 100
-\EQUB 101               \ Token 21: a random extended token between 101 and 105
-\EQUB 135               \ Token 22: a random extended token between 135 and 139
-\EQUB 130               \ Token 23: a random extended token between 130 and 134
-\EQUB 91                \ Token 24: a random extended token between 91 and 95
-\EQUB 106               \ Token 25: a random extended token between 106 and 110
-\EQUB 180               \ Token 26: a random extended token between 180 and 184
-\EQUB 185               \ Token 27: a random extended token between 185 and 189
-\EQUB 190               \ Token 28: a random extended token between 190 and 194
-\EQUB 225               \ Token 29: a random extended token between 225 and 229
-\EQUB 230               \ Token 30: a random extended token between 230 and 234
-\EQUB 235               \ Token 31: a random extended token between 235 and 239
-\EQUB 240               \ Token 32: a random extended token between 240 and 244
-\EQUB 245               \ Token 33: a random extended token between 245 and 249
-\EQUB 250               \ Token 34: a random extended token between 250 and 254
-\EQUB 115               \ Token 35: a random extended token between 115 and 119
-\EQUB 120               \ Token 36: a random extended token between 120 and 124
-\EQUB 125               \ Token 37: a random extended token between 125 and 129
-
-                        \ --- End of moved code ------------------------------->
+ EQUB 16                \ Token  0: a random extended token between 16 and 20
+ EQUB 21                \ Token  1: a random extended token between 21 and 25
+ EQUB 26                \ Token  2: a random extended token between 26 and 30
+ EQUB 31                \ Token  3: a random extended token between 31 and 35
+ EQUB 155               \ Token  4: a random extended token between 155 and 159
+ EQUB 160               \ Token  5: a random extended token between 160 and 164
+ EQUB 46                \ Token  6: a random extended token between 46 and 50
+ EQUB 165               \ Token  7: a random extended token between 165 and 169
+ EQUB 36                \ Token  8: a random extended token between 36 and 40
+ EQUB 41                \ Token  9: a random extended token between 41 and 45
+ EQUB 61                \ Token 10: a random extended token between 61 and 65
+ EQUB 51                \ Token 11: a random extended token between 51 and 55
+ EQUB 56                \ Token 12: a random extended token between 56 and 60
+ EQUB 170               \ Token 13: a random extended token between 170 and 174
+ EQUB 66                \ Token 14: a random extended token between 66 and 70
+ EQUB 71                \ Token 15: a random extended token between 71 and 75
+ EQUB 76                \ Token 16: a random extended token between 76 and 80
+ EQUB 81                \ Token 17: a random extended token between 81 and 85
+ EQUB 86                \ Token 18: a random extended token between 86 and 90
+ EQUB 140               \ Token 19: a random extended token between 140 and 144
+ EQUB 96                \ Token 20: a random extended token between 96 and 100
+ EQUB 101               \ Token 21: a random extended token between 101 and 105
+ EQUB 135               \ Token 22: a random extended token between 135 and 139
+ EQUB 130               \ Token 23: a random extended token between 130 and 134
+ EQUB 91                \ Token 24: a random extended token between 91 and 95
+ EQUB 106               \ Token 25: a random extended token between 106 and 110
+ EQUB 180               \ Token 26: a random extended token between 180 and 184
+ EQUB 185               \ Token 27: a random extended token between 185 and 189
+ EQUB 190               \ Token 28: a random extended token between 190 and 194
+ EQUB 225               \ Token 29: a random extended token between 225 and 229
+ EQUB 230               \ Token 30: a random extended token between 230 and 234
+ EQUB 235               \ Token 31: a random extended token between 235 and 239
+ EQUB 240               \ Token 32: a random extended token between 240 and 244
+ EQUB 245               \ Token 33: a random extended token between 245 and 249
+ EQUB 250               \ Token 34: a random extended token between 250 and 254
+ EQUB 115               \ Token 35: a random extended token between 115 and 119
+ EQUB 120               \ Token 36: a random extended token between 120 and 124
+ EQUB 125               \ Token 37: a random extended token between 125 and 129
 
 \ ******************************************************************************
 \
@@ -54899,11 +54940,15 @@ ENDMACRO
  FACE     -169,       55,      -89,         31    \ Face 10
  FACE        0,        0,     -196,         31    \ Face 11
 
- EQUB &A9, &80          \ These bytes appear to be unused
- EQUB &14, &2B
- EQUB &20, &FD
- EQUB &B8, &90
- EQUB &01, &60
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\EQUB &A9, &80          \ These bytes appear to be unused
+\EQUB &14, &2B
+\EQUB &20, &FD
+\EQUB &B8, &90
+\EQUB &01, &60
+
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \
@@ -55226,326 +55271,6 @@ ENDMACRO
  RTS                    \ Return from the subroutine
 
                         \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: MTIN
-\       Type: Variable
-\   Category: Text
-\    Summary: Lookup table for random tokens in the extended token table (0-37)
-\  Deep dive: Extended text tokens
-\
-\ ------------------------------------------------------------------------------
-\
-\ The ERND token type, which is part of the extended token system, takes an
-\ argument between 0 and 37, and returns a randomly chosen token in the range
-\ specified in this table. This is used to generate the extended description of
-\ each system.
-\
-\ For example, the entry at position 13 in this table (counting from 0) is 66,
-\ so ERND 14 will expand into a random token in the range 66-70, i.e. one of
-\ "JUICE", "BRANDY", "WATER", "BREW" and "GARGLE BLASTERS".
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.MTIN
-
- EQUB 16                \ Token  0: a random extended token between 16 and 20
- EQUB 21                \ Token  1: a random extended token between 21 and 25
- EQUB 26                \ Token  2: a random extended token between 26 and 30
- EQUB 31                \ Token  3: a random extended token between 31 and 35
- EQUB 155               \ Token  4: a random extended token between 155 and 159
- EQUB 160               \ Token  5: a random extended token between 160 and 164
- EQUB 46                \ Token  6: a random extended token between 46 and 50
- EQUB 165               \ Token  7: a random extended token between 165 and 169
- EQUB 36                \ Token  8: a random extended token between 36 and 40
- EQUB 41                \ Token  9: a random extended token between 41 and 45
- EQUB 61                \ Token 10: a random extended token between 61 and 65
- EQUB 51                \ Token 11: a random extended token between 51 and 55
- EQUB 56                \ Token 12: a random extended token between 56 and 60
- EQUB 170               \ Token 13: a random extended token between 170 and 174
- EQUB 66                \ Token 14: a random extended token between 66 and 70
- EQUB 71                \ Token 15: a random extended token between 71 and 75
- EQUB 76                \ Token 16: a random extended token between 76 and 80
- EQUB 81                \ Token 17: a random extended token between 81 and 85
- EQUB 86                \ Token 18: a random extended token between 86 and 90
- EQUB 140               \ Token 19: a random extended token between 140 and 144
- EQUB 96                \ Token 20: a random extended token between 96 and 100
- EQUB 101               \ Token 21: a random extended token between 101 and 105
- EQUB 135               \ Token 22: a random extended token between 135 and 139
- EQUB 130               \ Token 23: a random extended token between 130 and 134
- EQUB 91                \ Token 24: a random extended token between 91 and 95
- EQUB 106               \ Token 25: a random extended token between 106 and 110
- EQUB 180               \ Token 26: a random extended token between 180 and 184
- EQUB 185               \ Token 27: a random extended token between 185 and 189
- EQUB 190               \ Token 28: a random extended token between 190 and 194
- EQUB 225               \ Token 29: a random extended token between 225 and 229
- EQUB 230               \ Token 30: a random extended token between 230 and 234
- EQUB 235               \ Token 31: a random extended token between 235 and 239
- EQUB 240               \ Token 32: a random extended token between 240 and 244
- EQUB 245               \ Token 33: a random extended token between 245 and 249
- EQUB 250               \ Token 34: a random extended token between 250 and 254
- EQUB 115               \ Token 35: a random extended token between 115 and 119
- EQUB 120               \ Token 36: a random extended token between 120 and 124
- EQUB 125               \ Token 37: a random extended token between 125 and 129
-
-                        \ --- End of moved code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: LTDEF
-\       Type: Variable
-\   Category: Demo
-\    Summary: Line definitions for characters in the Star Wars scroll text
-\  Deep dive: The 6502 Second Processor demo mode
-\
-\ ------------------------------------------------------------------------------
-\
-\ Characters in the scroll text are drawn using lines on a 3x6 numbered grid
-\ like this:
-\
-\   0   1   2
-\   .   .   .
-\   3   4   5
-\   .   .   .
-\   6   7   8
-\   9   A   B
-\
-\ The low nibble of each byte is the starting point for that line segment, and
-\ the high nibble is the end point, so a value of &28, for example, means
-\ "draw a line from point 8 to point 2". This table contains definitions for all
-\ the characters we can use in the scroll text, as lines on the above grid.
-\
-\ See the deep dive on "the 6502 Second Processor demo mode" for details.
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.LTDEF
-
- EQUB &63, &34, &47, &76, &97   \ Letter definition for ","
- EQUB &35, &00, &00, &00, &00   \ Letter definition for "-"
- EQUB &63, &34, &47, &76, &00   \ Letter definition for "."
- EQUB &61, &00, &00, &00, &00   \ Letter definition for "/"
- EQUB &73, &31, &15, &57, &00   \ Letter definition for "0"
- EQUB &31, &17, &00, &00, &00   \ Letter definition for "1"
- EQUB &02, &25, &53, &36, &68   \ Letter definition for "2"
- EQUB &02, &28, &86, &35, &00   \ Letter definition for "3"
- EQUB &82, &23, &35, &00, &00   \ Letter definition for "4"
- EQUB &20, &03, &35, &58, &86   \ Letter definition for "5"
- EQUB &20, &06, &68, &85, &53   \ Letter definition for "6"
- EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
- EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
- EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
- EQUB &00, &00, &00, &00, &00   \ Letter definition for ":" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for ";" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "<" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "=" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for ">" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "?" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "@" (blank)
- EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
- EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
- EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
- EQUB &60, &05, &56, &00, &00   \ Letter definition for "D"
- EQUB &86, &60, &02, &35, &00   \ Letter definition for "E"
- EQUB &60, &02, &35, &00, &00   \ Letter definition for "F"
- EQUB &45, &58, &86, &60, &02   \ Letter definition for "G"
- EQUB &60, &28, &35, &00, &00   \ Letter definition for "H"
- EQUB &17, &00, &00, &00, &00   \ Letter definition for "I"
- EQUB &28, &86, &63, &00, &00   \ Letter definition for "J"
- EQUB &60, &23, &83, &00, &00   \ Letter definition for "K"
- EQUB &86, &60, &00, &00, &00   \ Letter definition for "L"
- EQUB &60, &04, &42, &28, &00   \ Letter definition for "M"
- EQUB &60, &08, &82, &00, &00   \ Letter definition for "N"
- EQUB &60, &02, &28, &86, &00   \ Letter definition for "O"
- EQUB &60, &02, &25, &53, &00   \ Letter definition for "P"
- EQUB &60, &02, &28, &86, &48   \ Letter definition for "Q"
- EQUB &60, &02, &25, &53, &48   \ Letter definition for "R"
- EQUB &20, &03, &35, &58, &86   \ Letter definition for "S"
- EQUB &02, &17, &00, &00, &00   \ Letter definition for "T"
- EQUB &28, &86, &60, &00, &00   \ Letter definition for "U"
- EQUB &27, &70, &00, &00, &00   \ Letter definition for "V"
- EQUB &28, &84, &46, &60, &00   \ Letter definition for "W"
- EQUB &26, &08, &00, &00, &00   \ Letter definition for "X"
- EQUB &74, &04, &24, &00, &00   \ Letter definition for "Y"
- EQUB &02, &26, &68, &00, &00   \ Letter definition for "Z"
-
-                        \ --- End of moved code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: NOFX
-\       Type: Variable
-\   Category: Demo
-\    Summary: The x-coordinates of the scroll text letter grid
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.NOFX
-
- EQUB 4                 \ Grid points 0-2
- EQUB 8
- EQUB 12
-
- EQUB 4                 \ Grid points 3-5
- EQUB 8
- EQUB 12
-
- EQUB 4                 \ Grid points 6-8
- EQUB 8
- EQUB 12
-
- EQUB 4                 \ Grid points 9-B
- EQUB 8
- EQUB 12
-
-                        \ --- End of moved code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: NOFY
-\       Type: Variable
-\   Category: Demo
-\    Summary: The y-coordinates of the scroll text letter grid
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.NOFY
-
- EQUB 0                 \ Grid points 0-2
- EQUB 0
- EQUB 0
-
- EQUB WY                \ Grid points 3-5
- EQUB WY
- EQUB WY
-
- EQUB 2*WY              \ Grid points 6-8
- EQUB 2*WY
- EQUB 2*WY
-
- EQUB 2.5*WY            \ Grid points 9-B
- EQUB 2.5*WY
- EQUB 2.5*WY
-
-                        \ --- End of moved code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: acorn
-\       Type: Variable
-\   Category: Demo
-\    Summary: The text for the demo's opening scroll text
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.acorn
-
-IF _SNG45 OR _SOURCE_DISC
-
- EQUS ":::ACORNSOFT::::"
- EQUS ";;;;;;;;;;;;;;;;"
- EQUS "::::PRESENTS"
- EQUB 0
-
-ELIF _EXECUTIVE
-
- EQUS ":::PIZZASOFT::::"
- EQUS ";;;;;;;;;;;;;;;;"
- EQUS "::::PRESENTS"
- EQUB 0
-
-ENDIF
-
-                        \ --- End of moved code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: byian
-\       Type: Variable
-\   Category: Demo
-\    Summary: The text for the demo's middle scroll text
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.byian
-
- EQUS "::::::BY:;::::::"
- EQUS ";;;;IAN;BELL;;;;"
- EQUS "::::::AND:::::::"
- EQUS ";;DAVID;BRABEN"
- EQUB 0
-
-                        \ --- End of moved code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: executive
-\       Type: Variable
-\   Category: Demo
-\    Summary: Extra text for the demo in the Executive version
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.executive
-
-IF _EXECUTIVE
-
- EQUS "::::::THE;::::::"
- EQUS ";;;EXECUTIVE;;;;"
- EQUS "::::VERSION"
- EQUB 0
-
-ENDIF
-
-                        \ --- End of moved code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: true3
-\       Type: Variable
-\   Category: Demo
-\    Summary: The text for the demo's final scroll text
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.true3
-
-IF _SNG45 OR _SOURCE_DISC
-
- EQUS "THE:GALAXY:IS:IN"
- EQUS "TURMOIL,THE:NAVY"
- EQUS "FAR:AWAY:AS::THE"
- EQUS "EMPIRE:CRUMBLES."
- EQUB 0
-
-ELIF _EXECUTIVE
-
- EQUS "CONGRATULATIONS:"
- EQUS ";ON;OBTAINING;A;"
- EQUS "::COPY:OF:THIS::"
- EQUS "ELUSIVE;PRODUCT."
- EQUB 0
-
-ENDIF
-
-                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
