@@ -985,17 +985,17 @@ ENDIF
 
 .LSX2S
 
- SKIP 2                 \ The address of LSX2 or LSX2a, depending on which eye
+ SKIP 2                 \ The address of LSX2 or LSX2r, depending on which eye
                         \ we are drawing
 
 .LSY2S
 
- SKIP 2                 \ The address of LSY2 or LSY2a, depending on which eye
+ SKIP 2                 \ The address of LSY2 or LSY2r, depending on which eye
                         \ we are drawing
 
 .LSPS
 
- SKIP 2                 \ The address of LSP or LSPa, depending on which eye
+ SKIP 2                 \ The address of LSP or LSPr, depending on which eye
                         \ we are drawing
 
                         \ --- End of moved code ------------------------------->
@@ -3487,7 +3487,7 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
-.LSY2a
+.LSY2r
 
  SKIP 256               \ The ball line heap for storing y-coordinates for the
                         \ right eye
@@ -3536,7 +3536,7 @@ ENDIF
                         \ (each requiring four bytes) plus a byte to store the
                         \ heap size, so that's 2 * 25 * 4 + 1 = 201
 
-.XX3a
+.XX3r
 
  SKIP 40 * 4            \ Add a second calculation heap for the right eye, which
                         \ needs to be able to store four bytes for each edge,
@@ -3674,11 +3674,11 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
-.LSPa
+.LSPr
 
  SKIP 1                 \ The ball line heap pointer for the right eye
 
-.LSX2a
+.LSX2r
 
  SKIP 256               \ The ball line heap for storing x-coordinates for the
                         \ right eye
@@ -25466,7 +25466,7 @@ ENDIF
 
  LDX #&FF               \ Apply parallax to the coordinate and return the amount
  JSR ApplyParallax      \ of parallax in P+2 (we set X = &FF so the routine does
-                        \ not update the XX3 and XX3a heaps, as we are only
+                        \ not update the XX3 and XX3r heaps, as we are only
                         \ interested in the amount of parallax)
 
  LDA P+2                \ Shift the amount of parallax into bits 3 to 7 of A
@@ -26117,7 +26117,7 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- STZ LSPa               \ Reset the ball line heap by setting the ball line heap
+ STZ LSPr               \ Reset the ball line heap by setting the ball line heap
                         \ pointer to 0 for the right eye
 
                         \ --- End of added code ------------------------------->
@@ -27709,19 +27709,19 @@ ENDIF
  PLA
  STA K3+1
 
- LDA #LO(LSX2a)         \ Set LSX2S to the address of LSX2a, so CIRCLE and BLINE
- STA LSX2S              \ store the right-eye line y-coordinates in LSX2a
- LDA #HI(LSX2a)
+ LDA #LO(LSX2r)         \ Set LSX2S to the address of LSX2r, so CIRCLE and BLINE
+ STA LSX2S              \ store the right-eye line y-coordinates in LSX2r
+ LDA #HI(LSX2r)
  STA LSX2S+1
 
- LDA #LO(LSY2a)         \ Set LSY2S to the address of LSY2a, so CIRCLE and BLINE
- STA LSY2S              \ store the right-eye line y-coordinates in LSY2a
- LDA #HI(LSY2a)
+ LDA #LO(LSY2r)         \ Set LSY2S to the address of LSY2r, so CIRCLE and BLINE
+ STA LSY2S              \ store the right-eye line y-coordinates in LSY2r
+ LDA #HI(LSY2r)
  STA LSY2S+1
 
- LDA #LO(LSPa)          \ Set LSPS to the address of LSPa, so CIRCLE and BLINE
- STA LSPS               \ store the right-eye ball line heap pointer in LSPa
- LDA #HI(LSPa)
+ LDA #LO(LSPr)          \ Set LSPS to the address of LSPr, so CIRCLE and BLINE
+ STA LSPS               \ store the right-eye ball line heap pointer in LSPr
+ LDA #HI(LSPr)
  STA LSPS+1
 
  LDA K3                 \ Add maximum positive parallax for the right eye
@@ -31227,8 +31227,8 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- STX LSX2a              \ Reset LSX2a and LSY2a, the ball line heaps used by the
- STX LSY2a              \ BLINE routine for drawing circles, to &FF, to set the
+ STX LSX2r              \ Reset LSX2r and LSY2r, the ball line heaps used by the
+ STX LSY2r              \ BLINE routine for drawing circles, to &FF, to set the
                         \ right eye ball line heap to empty
 
                         \ --- End of added code ------------------------------->
@@ -40291,7 +40291,7 @@ ENDIF
  SEC
  SBC R
 
- STA XX3a,X             \ Store the low byte of the result in the X-th byte of
+ STA XX3r,X             \ Store the low byte of the result in the X-th byte of
                         \ the heap at XX3
 
  INX                    \ Increment the heap pointer in X to point to the next
@@ -40300,7 +40300,7 @@ ENDIF
  LDA #0                 \ And then subtract the high bytes
  SBC U
 
- STA XX3a,X             \ Store the low byte of the result in the X-th byte of
+ STA XX3r,X             \ Store the low byte of the result in the X-th byte of
                         \ the heap at XX3
 
  JMP LL66a              \ Jump down to LL66a
@@ -40627,7 +40627,7 @@ ENDIF
  CLC
  ADC #128
 
- STA XX3a,X             \ Store the low byte of the result in the fifth byte of
+ STA XX3r,X             \ Store the low byte of the result in the fifth byte of
                         \ the coordinate block we are adding to XX3 (as X points
                         \ to the second byte)
 
@@ -40637,7 +40637,7 @@ ENDIF
  LDA U                  \ And then add the high bytes
  ADC #0
 
- STA XX3a,X             \ Store the high byte of the result in the sixth byte of
+ STA XX3r,X             \ Store the high byte of the result in the sixth byte of
                         \ the coordinate block we are adding to XX3 (as X points
                         \ to the second byte)
 
@@ -40687,8 +40687,8 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- STA XX3a,X             \ Store the low byte of the result in the X-th byte of
-                        \ the heap at XX3a
+ STA XX3r,X             \ Store the low byte of the result in the X-th byte of
+                        \ the heap at XX3r
 
                         \ --- End of added code ------------------------------->
 
@@ -40703,8 +40703,8 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- STA XX3a,X             \ Store the high byte of the result in the X-th byte of
-                        \ the heap at XX3a
+ STA XX3r,X             \ Store the high byte of the result in the X-th byte of
+                        \ the heap at XX3r
 
                         \ --- End of added code ------------------------------->
 
@@ -40760,8 +40760,8 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- STA XX3a,X             \ Store the low byte of the result in the X-th byte of
-                        \ the heap at XX3a
+ STA XX3r,X             \ Store the low byte of the result in the X-th byte of
+                        \ the heap at XX3r
 
                         \ --- End of added code ------------------------------->
 
@@ -40776,8 +40776,8 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- STA XX3a,X             \ Store the high byte of the result in the X-th byte of
-                        \ the heap at XX3a
+ STA XX3r,X             \ Store the high byte of the result in the X-th byte of
+                        \ the heap at XX3r
 
                         \ --- End of added code ------------------------------->
 
@@ -41265,32 +41265,32 @@ ENDIF
  LDX K2+1               \ Set X to the number of the vertex at the start of the
                         \ edge, which we stored in K2+1 above
 
- LDA XX3a+1,X           \ Fetch the x_hi coordinate of the edge's start vertex
- STA XX15+1             \ from the XX3a heap into XX15+1
+ LDA XX3r+1,X           \ Fetch the x_hi coordinate of the edge's start vertex
+ STA XX15+1             \ from the XX3r heap into XX15+1
 
- LDA XX3a,X             \ Fetch the x_lo coordinate of the edge's start vertex
- STA XX15               \ from the XX3a heap into XX15
+ LDA XX3r,X             \ Fetch the x_lo coordinate of the edge's start vertex
+ STA XX15               \ from the XX3r heap into XX15
 
- LDA XX3a+2,X           \ Fetch the y_lo coordinate of the edge's start vertex
- STA XX15+2             \ from the XX3a heap into XX15+2
+ LDA XX3r+2,X           \ Fetch the y_lo coordinate of the edge's start vertex
+ STA XX15+2             \ from the XX3r heap into XX15+2
 
- LDA XX3a+3,X           \ Fetch the y_hi coordinate of the edge's start vertex
- STA XX15+3             \ from the XX3a heap into XX15+3
+ LDA XX3r+3,X           \ Fetch the y_hi coordinate of the edge's start vertex
+ STA XX15+3             \ from the XX3r heap into XX15+3
 
  LDX K2+2               \ Set X to the number of the vertex at the end of the
                         \ edge, which we stored in K2+2
 
- LDA XX3a,X             \ Fetch the x_lo coordinate of the edge's end vertex
- STA XX15+4             \ from the XX3a heap into XX15+4
+ LDA XX3r,X             \ Fetch the x_lo coordinate of the edge's end vertex
+ STA XX15+4             \ from the XX3r heap into XX15+4
 
- LDA XX3a+3,X           \ Fetch the y_hi coordinate of the edge's end vertex
- STA XX12+1             \ from the XX3a heap into XX11+1
+ LDA XX3r+3,X           \ Fetch the y_hi coordinate of the edge's end vertex
+ STA XX12+1             \ from the XX3r heap into XX11+1
 
- LDA XX3a+2,X           \ Fetch the y_lo coordinate of the edge's end vertex
- STA XX12               \ from the XX3a heap into XX12
+ LDA XX3r+2,X           \ Fetch the y_lo coordinate of the edge's end vertex
+ STA XX12               \ from the XX3r heap into XX12
 
- LDA XX3a+1,X           \ Fetch the x_hi coordinate of the edge's end vertex
- STA XX15+5             \ from the XX3a heap into XX15+5
+ LDA XX3r+1,X           \ Fetch the x_hi coordinate of the edge's end vertex
+ STA XX15+5             \ from the XX3r heap into XX15+5
 
  JSR LL147              \ Call LL147 to see if the new line segment needs to be
                         \ clipped to fit on-screen, returning the clipped line's
@@ -44575,7 +44575,7 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- STZ LSPa               \ Reset the ball line heap pointer at LSPa
+ STZ LSPr               \ Reset the ball line heap pointer at LSPr
 
                         \ --- End of added code ------------------------------->
 
@@ -55753,7 +55753,7 @@ ENDIF
 \
 \ Arguments:
 \
-\   X                   The index into the XX3 and XX3a line heaps, pointing to
+\   X                   The index into the XX3 and XX3r line heaps, pointing to
 \                       the second byte of the x-coordinate we just added, which
 \                       gets updated with the new x-coordinates in both eyes
 \
@@ -55859,7 +55859,7 @@ ENDIF
 
  PLY                    \ Set Y to the heap index from the stack
 
- CPY #&FF               \ If the index is &FF, skip updating the XX3 and XX3a
+ CPY #&FF               \ If the index is &FF, skip updating the XX3 and XX3r
  BEQ para4              \ heaps, as we are only interested in the result of the
                         \ parallax calculation
 
@@ -55874,13 +55874,13 @@ ENDIF
  SBC P+1
  STA XX3,Y
 
- LDA XX3a-1,Y           \ Add P+2 pixels to the right x-coordinate to move the
+ LDA XX3r-1,Y           \ Add P+2 pixels to the right x-coordinate to move the
  CLC                    \ right-eye coordinate by the parallax, using the
  ADC P+2                \ value of P+1 as the high byte, which we already set to
- STA XX3a-1,Y           \ 0 or %11111111 according to the polarity of P+2
- LDA XX3a,Y
+ STA XX3r-1,Y           \ 0 or %11111111 according to the polarity of P+2
+ LDA XX3r,Y
  ADC P+1
- STA XX3a,Y
+ STA XX3r,Y
 
  PLX                    \ Restore the index from the stack into X
 
