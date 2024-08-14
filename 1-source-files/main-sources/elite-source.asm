@@ -21730,6 +21730,13 @@ ENDIF
 
  JSR FLFLLS             \ Call FLFLLS to reset the LSO block
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA #WHITE_3D          \ Set the colour to white
+ JSR DOCOL
+
+                        \ --- End of added code ------------------------------->
+
  JSR SUN                \ Call SUN to plot a sun with radius K at pixel
                         \ coordinate (K3, K4)
 
@@ -27688,6 +27695,13 @@ ENDIF
                         \ planet with radius K, returning from the subroutine
                         \ using a tail call
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA #MAX_PARALLAX_P    \ Set the colour to the amount of parallax to use when
+ JSR DOCOL              \ drawing the sun in the I/O processor
+
+                        \ --- End of added code ------------------------------->
+
  JMP SUN                \ Otherwise jump to SUN to draw the sun with radius K,
                         \ returning from the subroutine using a tail call
 
@@ -28946,44 +28960,52 @@ ENDIF
                         \ screen, so jump to PLF23 to just draw the old line
                         \ without drawing the new one
 
-                        \ At this point the old line is from XX to XX+1 and the
-                        \ new line is from X1 to X2, and both fit on-screen. We
-                        \ now want to remove the old line and draw the new one.
-                        \ We could do this by simply drawing the old one then
-                        \ drawing the new one, but instead Elite does this by
-                        \ drawing first from X1 to XX and then from X2 to XX+1,
-                        \ which you can see in action by looking at all the
-                        \ permutations below of the four points on the line and
-                        \ imagining what happens if you draw from X1 to XX and
-                        \ X2 to XX+1 using EOR logic. The six possible
-                        \ permutations are as follows, along with the result of
-                        \ drawing X1 to XX and then X2 to XX+1:
-                        \
-                        \   X1    X2    XX____XX+1      ->      +__+  +  +
-                        \
-                        \   X1    XX____X2____XX+1      ->      +__+__+  +
-                        \
-                        \   X1    XX____XX+1  X2        ->      +__+__+__+
-                        \
-                        \   XX____X1____XX+1  X2        ->      +  +__+__+
-                        \
-                        \   XX____XX+1  X1    X2        ->      +  +  +__+
-                        \
-                        \   XX____X1____X2____XX+1      ->      +  +__+  +
-                        \
-                        \ They all end up with a line between X1 and X2, which
-                        \ is what we want. There's probably a mathematical proof
-                        \ of why this works somewhere, but the above is probably
-                        \ easier to follow.
-                        \
-                        \ We can draw from X1 to XX and X2 to XX+1 by swapping
-                        \ XX and X2 and drawing from X1 to X2, and then drawing
-                        \ from XX to XX+1, so let's do this now
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- LDA X2                 \ Swap XX and X2
- LDX XX
- STX X2
- STA XX
+\                       \ At this point the old line is from XX to XX+1 and the
+\                       \ new line is from X1 to X2, and both fit on-screen. We
+\                       \ now want to remove the old line and draw the new one.
+\                       \ We could do this by simply drawing the old one then
+\                       \ drawing the new one, but instead Elite does this by
+\                       \ drawing first from X1 to XX and then from X2 to XX+1,
+\                       \ which you can see in action by looking at all the
+\                       \ permutations below of the four points on the line and
+\                       \ imagining what happens if you draw from X1 to XX and
+\                       \ X2 to XX+1 using EOR logic. The six possible
+\                       \ permutations are as follows, along with the result of
+\                       \ drawing X1 to XX and then X2 to XX+1:
+\                       \
+\                       \   X1    X2    XX____XX+1      ->      +__+  +  +
+\                       \
+\                       \   X1    XX____X2____XX+1      ->      +__+__+  +
+\                       \
+\                       \   X1    XX____XX+1  X2        ->      +__+__+__+
+\                       \
+\                       \   XX____X1____XX+1  X2        ->      +  +__+__+
+\                       \
+\                       \   XX____XX+1  X1    X2        ->      +  +  +__+
+\                       \
+\                       \   XX____X1____X2____XX+1      ->      +  +__+  +
+\                       \
+\                       \ They all end up with a line between X1 and X2, which
+\                       \ is what we want. There's probably a mathematical proof
+\                       \ of why this works somewhere, but the above is probably
+\                       \ easier to follow.
+\                       \
+\                       \ We can draw from X1 to XX and X2 to XX+1 by swapping
+\                       \ XX and X2 and drawing from X1 to X2, and then drawing
+\                       \ from XX to XX+1, so let's do this now
+\
+\LDA X2                 \ Swap XX and X2
+\LDX XX
+\STX X2
+\STA XX
+
+                        \ ??? Unfortunately this hack makes the sun lines
+                        \ flicker as we are now redrawing the whole line, so
+                        \ this needs changing
+
+                        \ --- End of removed code ----------------------------->
 
  JSR HLOIN              \ Draw a horizontal line from (X1, Y1) to (X2, Y1)
 

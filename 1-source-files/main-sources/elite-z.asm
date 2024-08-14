@@ -259,6 +259,30 @@
 
  SKIP 1                 \ Screen address (high byte)
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.LSAV
+
+ SKIP 1                 \ The x-coordinate of the left end of the white part of
+                        \ the sun line being drawn in HLOIN
+
+.RSAV
+
+ SKIP 1                 \ The x-coordinate of the right end of the white part of
+                        \ the sun line being drawn in HLOIN
+
+.X1SAV
+
+ SKIP 1                 \ The value of X1 passed to the HLOIN routine when
+                        \ drawing a sun line
+
+.X2SAV
+
+ SKIP 1                 \ The value of X2 passed to the HLOIN routine when
+                        \ drawing a sun line
+
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: TINA
@@ -4919,6 +4943,14 @@ ENDIF
 \
 \ ******************************************************************************
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.hori1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
 .HLOIN
 
  LDY #0                 \ Fetch byte #0 from the parameter block (which gives
@@ -4947,17 +4979,35 @@ ENDIF
                         \ line from in the parameter block once we have drawn
                         \ this one
 
- AND #3                 \ Set A to the correct order of red/yellow pixels to
- TAY                    \ make this line an orange colour (by using bits 0-1 of
- LDA orange,Y           \ the pixel y-coordinate as the index into the orange
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\AND #3                 \ Set A to the correct order of red/yellow pixels to
+\TAY                    \ make this line an orange colour (by using bits 0-1 of
+\LDA orange,Y           \ the pixel y-coordinate as the index into the orange
                         \ lookup table)
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #WHITE_3D          \ Set A to white rather than orange
+
+                        \ --- End of replacement ------------------------------>
 
 .HLOIN3
 
  STA S                  \ Store the line colour in S
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\CPX X2                 \ If X1 = X2 then the start and end points are the same,
+\BEQ HL6                \ so jump to HL6 to move on to the next line
+
+                        \ --- And replaced by: -------------------------------->
+
  CPX X2                 \ If X1 = X2 then the start and end points are the same,
- BEQ HL6                \ so return from the subroutine (as HL6 contains an RTS)
+ BNE P%+5               \ so jump to hori13 to move on to the next line
+ JMP hori13
+
+                        \ --- End of replacement ------------------------------>
 
  BCC HL5                \ If X1 < X2, jump to HL5 to skip the following code, as
                         \ (X1, Y1) is already the left point
@@ -4972,6 +5022,162 @@ ENDIF
 
  DEC X2                 \ Decrement X2 so we do not draw a pixel at the end
                         \ point
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA COL                \ If COL >= CYAN_3D then we have passed a real colour to
+ CMP #CYAN_3D           \ the routine, so jump to hori12 to skip the anaglyph
+ BCS hori12             \ code and draw the line in the specified colour
+
+                        \ If we get here then we have passed an amount of
+                        \ parallax instead of a colour, so we need to draw this
+                        \ line in anaglyph 3D, applying the amount of parallax
+                        \ in COL
+
+ LDA X1                 \ Store the original x-coordinates in X1SAV and X2SAV
+ STA X1SAV
+ LDA X2
+ STA X2SAV
+
+ LDA X1SAV              \ If the sun is up against the left edge, do not draw
+ CMP #MAX_PARALLAX_P+3  \ the left fringe by setting the left end of the white
+ BCS hori2              \ portion in LSAV to the original x-coordinate in T1
+ STA LSAV               \ and skipping the following
+ BCC hori6
+
+.hori2
+
+ SEC                    \ Set A = X1SAV - COL, keeping the result above 0
+ SBC COL
+ BCS hori3
+ LDA #0
+
+.hori3
+
+ STA X1                 \ Store the result in X1, so this is the x-coordinate of
+                        \ the left end of the left fringe
+
+ LDA X1SAV              \ Set X2 = X1SAV + COL, keeping the result below 255
+ CLC
+ ADC COL
+ BCC hori4
+ LDA #255
+
+.hori4
+
+ STA X2                 \ Store the result in X2, so this is the x-coordinate of
+                        \ the right end of the left fringe
+
+ TAX                    \ Increment the x-coordinate, keeping the result below
+ INX                    \ 255
+ BNE hori5
+ LDX #255
+
+.hori5
+
+ STX LSAV               \ Store the x-coordinate in LSAV to use as the start of
+                        \ the white line in the middle
+
+ LDA #RED_3D            \ Set the colour of the left fringe (left eye) to red
+ STA S
+
+ JSR hori14             \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.hori6
+
+ LDA X2SAV              \ Set A = X2SAV, the x-coordinate of the right end of
+                        \ the line
+
+ CMP #253-MAX_PARALLAX_P\ If the sun is up against the right edge, do not draw
+ BCC hori7              \ the right fringe by setting the left end of the white
+ STA RSAV               \ portion in RSAV to the original x-coordinate in X2SAV
+ BCS hori11             \ and skipping the following
+
+.hori7
+
+ SEC                    \ Set A = X2SAV - COL, keeping the result above 0
+ SBC COL
+ BCS hori8
+ LDA #0
+
+.hori8
+
+ STA X1                 \ Store the result in X1, so this is the x-coordinate of
+                        \ the left end of the right fringe
+
+ TAX                    \ Decrement the x-coordinate, keeping the result above 0
+ BEQ hori9
+ DEX
+
+.hori9
+
+ STX RSAV               \ Store the x-coordinate in Y2+2 to use as the end of
+                        \ the white line in the middle
+
+ LDA X2SAV              \ Set A = X2SAV + COL, keeping the result below 253
+ CLC
+ ADC COL
+ BCC hori10
+ LDA #253
+
+.hori10
+
+ STA X2                 \ Store the result in X2, so this is the x-coordinate of
+                        \ the right end of the right fringe
+
+ LDA #CYAN_3D           \ Set the colour of the right fringe (right eye) to cyan
+ STA S
+
+ JSR hori14             \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.hori11
+
+ LDA #WHITE_3D          \ Set the colour to white for the central portion
+ STA S
+
+ LDA LSAV               \ If the start coordinate of the white portion is on or
+ CMP RSAV               \ after the end coordinate, jump to hori13 to skip
+ BCS hori13             \ drawing the line centre, as the eyes do not overlap
+
+ STA X1                 \ Set X1 = LSAV as the start of the white portion
+
+ LDA RSAV               \ Set X2 = RSAV as the end of the white portion
+ STA X2
+
+.hori12
+
+ JSR hori14             \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.hori13
+
+ LDY Y2                 \ Set Y to the parameter block offset for this line's Y1
+                        \ coordinate, which we stored in Y2 before we drew the
+                        \ line
+
+ INY                    \ Increment Y so that it points to the first parameter
+                        \ for the next line in the parameter block
+
+ CPY Q                  \ If Y = Q then we have drawn all the lines in the
+ BEQ P%+5               \ parameter block, so skip the next instruction to
+                        \ return from the subroutine
+
+ JMP HLLO               \ There is another line in the parameter block after the
+                        \ one we just drew, so jump to HLLO with Y pointing to
+                        \ the new line's coordinates, so we can draw it
+
+ RTS                    \ Return from the subroutine
+
+.hori14
+
+                        \ The horizontal line code is now a subroutine, as we
+                        \ have terminated it with an RTS below
+
+ LDX X1                 \ Set X = X1
+
+                        \ --- End of added code ------------------------------->
 
  LDY Y1                 \ Look up the page number of the character row that
  LDA ylookup,Y          \ contains the pixel with the y-coordinate in Y1, and
@@ -5115,20 +5321,24 @@ ENDIF
 
 .HL6
 
- LDY Y2                 \ Set Y to the parameter block offset for this line's Y1
-                        \ coordinate, which we stored in Y2 before we drew the
-                        \ line
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- INY                    \ Increment Y so that it points to the first parameter
-                        \ for the next line in the parameter block
+\LDY Y2                 \ Set Y to the parameter block offset for this line's Y1
+\                       \ coordinate, which we stored in Y2 before we drew the
+\                       \ line
+\
+\INY                    \ Increment Y so that it points to the first parameter
+\                       \ for the next line in the parameter block
+\
+\CPY Q                  \ If Y = Q then we have drawn all the lines in the
+\BEQ P%+5               \ parameter block, so skip the next instruction to
+\                       \ return from the subroutine
+\
+\JMP HLLO               \ There is another line in the parameter block after the
+\                       \ one we just drew, so jump to HLLO with Y pointing to
+\                       \ the new line's coordinates, so we can draw it
 
- CPY Q                  \ If Y = Q then we have drawn all the lines in the
- BEQ P%+5               \ parameter block, so skip the next instruction to
-                        \ return from the subroutine
-
- JMP HLLO               \ There is another line in the parameter block after the
-                        \ one we just drew, so jump to HLLO with Y pointing to
-                        \ the new line's coordinates, so we can draw it
+                        \ --- End of removed code ----------------------------->
 
  RTS                    \ Return from the subroutine
 
@@ -5179,20 +5389,24 @@ ENDIF
  STA (SC),Y             \ SC(1 0), using EOR logic so it merges with whatever is
                         \ already on-screen
 
- LDY Y2                 \ Set Y to the parameter block offset for this line's Y1
-                        \ coordinate, which we stored in Y2 before we drew the
-                        \ line
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- INY                    \ Increment Y so that it points to the first parameter
-                        \ for the next line in the parameter block
+\LDY Y2                 \ Set Y to the parameter block offset for this line's Y1
+\                       \ coordinate, which we stored in Y2 before we drew the
+\                       \ line
+\
+\INY                    \ Increment Y so that it points to the first parameter
+\                       \ for the next line in the parameter block
+\
+\CPY Q                  \ If Y = Q then we have drawn all the lines in the
+\BEQ P%+5               \ parameter block, so skip the next instruction to
+\                       \ return from the subroutine
+\
+\JMP HLLO               \ There is another line in the parameter block after the
+\                       \ one we just drew, so jump to HLLO with Y pointing to
+\                       \ the new line's coordinates, so we can draw it
 
- CPY Q                  \ If Y = Q then we have drawn all the lines in the
- BEQ P%+5               \ parameter block, so skip the next instruction to
-                        \ return from the subroutine
-
- JMP HLLO               \ There is another line in the parameter block after the
-                        \ one we just drew, so jump to HLLO with Y pointing to
-                        \ the new line's coordinates, so we can draw it
+                        \ --- End of removed code ----------------------------->
 
  RTS                    \ Return from the subroutine
 
@@ -5304,21 +5518,10 @@ ENDIF
 
 .orange
 
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
-
-\EQUB %10100101         \ Four mode 1 pixels of colour 2, 1, 2, 1 (red/yellow)
-\EQUB %10100101
-\EQUB %01011010         \ Four mode 1 pixels of colour 1, 2, 1, 2 (yellow/red)
-\EQUB %01011010
-
-                        \ --- And replaced by: -------------------------------->
-
- EQUB %11111111         \ Eight mode 1 pixels of colour 3 (white)
- EQUB %11111111
- EQUB %11111111
- EQUB %11111111
-
-                        \ --- End of replacement ------------------------------>
+ EQUB %10100101         \ Four mode 1 pixels of colour 2, 1, 2, 1 (red/yellow)
+ EQUB %10100101
+ EQUB %01011010         \ Four mode 1 pixels of colour 1, 2, 1, 2 (yellow/red)
+ EQUB %01011010
 
 \ ******************************************************************************
 \
