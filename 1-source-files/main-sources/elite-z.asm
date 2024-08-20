@@ -5900,6 +5900,25 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
+ LDA COL                \ If the colour is non-zero then this is stardust, so
+ BNE dust1              \ jump to dust1 to keep going
+
+                        \ If we get here then this is a system chart, so we draw
+                        \ the pixel once and in white
+
+ LDA #WHITE_3D          \ Set the colour to white
+ STA COL
+
+ JSR dust4              \ Call the pixel-plotting code below, which we have
+                        \ turned into a subroutine, to draw the dot
+
+ LDA #0                 \ Reset the colour to 0 for the next dot
+ STA COL
+
+ JMP dust5              \ Jump down to dust5 draw the next dot
+
+.dust1
+
                         \ We interrupt this part of the pixel-plotting routine
                         \ to draw stardust particles using anaglyph 3D, using
                         \ the particle distance in ZZ to determine the amount
@@ -5948,8 +5967,8 @@ ENDIF
                         \ We now scale this result into the number of pixels of
                         \ parallax to apply
 
- BCS dust1              \ If the subtraction didn't underflow then the result
-                        \ is positive, so jump to dust1 to scale the positive
+ BCS dust2              \ If the subtraction didn't underflow then the result
+                        \ is positive, so jump to dust2 to scale the positive
                         \ parallax
 
                         \ If we get here then the result is negative and in the
@@ -5968,9 +5987,9 @@ ENDIF
 
  INC T                  \ Increment T to the range 0 to -3
 
- JMP dust2              \ Jump to dust2 to apply the parallax in T
+ JMP dust3              \ Jump to dust3 to apply the parallax in T
 
-.dust1
+.dust2
 
                         \ If we get here then the result is positive and in the
                         \ range 0 to 168 (%00000000 to %10101000)
@@ -5994,7 +6013,7 @@ IF MAX_PARALLAX_P > 2
 
 ENDIF
 
-.dust2
+.dust3
 
                         \ By the time we get get here, T contains the parallax
                         \ to apply in pixels, so we can simply shift each eye by
@@ -6012,7 +6031,7 @@ ENDIF
  LDA #RED_3D            \ Set the left-eye dot colour to red
  STA COL
 
- JSR dust3              \ Call the pixel-plotting code below, which we have
+ JSR dust4              \ Call the pixel-plotting code below, which we have
                         \ turned into a subroutine, to draw the left-eye dot
 
                         \ And now we draw the right-eye dot in cyan
@@ -6029,12 +6048,12 @@ ENDIF
  PLA                    \ Retrieve the y-coordinate from the stack into Y
  TAY
 
- JSR dust3              \ Call the pixel-plotting code below, which we have
+ JSR dust4              \ Call the pixel-plotting code below, which we have
                         \ turned into a subroutine, to draw the right-eye dot
 
- JMP dust4              \ Jump down to dust4 draw the next particle
+ JMP dust5              \ Jump down to dust5 draw the next particle
 
-.dust3
+.dust4
 
                         \ --- End of added code ------------------------------->
 
@@ -6129,7 +6148,7 @@ ENDIF
 
  RTS                    \ Return from the subroutine
 
-.dust4
+.dust5
 
                         \ --- End of added code ------------------------------->
 

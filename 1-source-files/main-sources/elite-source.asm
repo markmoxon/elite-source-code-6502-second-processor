@@ -9031,6 +9031,12 @@ ENDIF
  LDA #2                 \ Set PBUP = 2 to reset the pixel buffer (as the size in
  STA PBUP               \ PBUP includes the two OSWORD size bytes)
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.pmod1
+
+                        \ --- End of added code ------------------------------->
+
  LDA #DUST              \ Send a #SETCOL DUST command to the I/O processor to
  JSR DOCOL              \ switch to stripe 3-2-3-2, which is cyan/red in the
                         \ space view
@@ -20234,6 +20240,13 @@ ENDIF
                         \ for this system on the chart by passing it as the
                         \ distance argument to the PIXEL routine below
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STZ pmod1+1            \ Modify the PBFL routine to draw in colour 0 so the
+                        \ following pixels are drawn in white
+
+                        \ --- End of added code ------------------------------->
+
  LDA QQ15+1             \ Fetch the s0_hi seed into A, which gives us the
                         \ galactic y-coordinate of this system
 
@@ -20264,6 +20277,13 @@ ENDIF
 
  JSR PBFL               \ Call PBFL to send the contents of the pixel buffer to
                         \ the I/O processor for plotting on-screen
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA #DUST              \ Modify the PBFL routine to draw in colour DUST once
+ STA pmod1+1            \ again
+
+                        \ --- End of added code ------------------------------->
 
  LDA QQ9                \ Set QQ19 to the selected system's x-coordinate
  STA QQ19
