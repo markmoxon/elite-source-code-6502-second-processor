@@ -3487,43 +3487,6 @@ ENDIF
 
                         \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
-.LSX
-
- SKIP 0                 \ LSX is an alias that points to the first byte of the
-                        \ sun line heap at LSO
-                        \
-                        \   * &FF indicates the sun line heap is empty
-                        \
-                        \   * Otherwise the LSO heap contains the line data for
-                        \     the sun
-
-.LSO
-
- SKIP 192               \ The ship line heap for the space station (see NWSPS)
-                        \ and the sun line heap (see SUN)
-                        \
-                        \ The spaces can be shared as our local bubble of
-                        \ universe can support either the sun or a space
-                        \ station, but not both
-
-                        \ --- End of moved code ------------------------------->
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
- SKIP 9                 \ Add an extra 9 bytes to cope with double the lines for
-                        \ the Dodo station, which needs storage for 25 edges
-                        \ (each requiring four bytes) plus a byte to store the
-                        \ heap size, so that's 2 * 25 * 4 + 1 = 201
-
-.LSY2r
-
- SKIP 78                \ The ball line heap for storing y-coordinates for the
-                        \ right eye
-
-                        \ --- End of added code ------------------------------->
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
 .SX
 
  SKIP NOST + 1          \ This is where we store the x_hi coordinates for all
@@ -3562,7 +3525,34 @@ ENDIF
 
  SKIP 1                 \ The y-coordinate of the tip of the laser line
 
+.safehouse
+
+ SKIP 6                 \ Backup storage for the seeds for the selected system
+                        \
+                        \ The seeds for the current system get stored here as
+                        \ soon as a hyperspace is initiated, so we can fetch
+                        \ them in the hyp1 routine. This fixes a bug in an
+                        \ earlier version where you could hyperspace while
+                        \ docking and magically appear in your destination
+                        \ station
+
                         \ --- End of moved code ------------------------------->
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.LSY2r
+
+ SKIP 78                \ The ball line heap for storing y-coordinates for the
+                        \ right eye
+
+.XX3r
+
+ SKIP 40 * 4            \ Add a second calculation heap for the right eye, which
+                        \ needs to be able to store four bytes for each edge,
+                        \ where the mavimum number of edges required is 39 for
+                        \ for the Cobra Mk III wireframe, plus a laser line
+
+                        \ --- End of added code ------------------------------->
 
  PRINT "UP workspace from  ", ~UP," to ", ~P%
 
@@ -3582,27 +3572,36 @@ ENDIF
 
  SKIP 0                 \ The start of the WP workspace
 
+.LSX
+
+ SKIP 0                 \ LSX is an alias that points to the first byte of the
+                        \ sun line heap at LSO
+                        \
+                        \   * &FF indicates the sun line heap is empty
+                        \
+                        \   * Otherwise the LSO heap contains the line data for
+                        \     the sun
+
+.LSO
+
+ SKIP 192               \ The ship line heap for the space station (see NWSPS)
+                        \ and the sun line heap (see SUN)
+                        \
+                        \ The spaces can be shared as our local bubble of
+                        \ universe can support either the sun or a space
+                        \ station, but not both
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ SKIP 9                 \ Add an extra 9 bytes to cope with double the lines for
+                        \ the Dodo station, which needs storage for 25 edges
+                        \ (each requiring four bytes) plus a byte to store the
+                        \ heap size, so that's 2 * 25 * 4 + 1 = 201
+
+                        \ --- End of added code ------------------------------->
+
                         \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
-\.LSX
-\
-\SKIP 0                 \ LSX is an alias that points to the first byte of the
-\                       \ sun line heap at LSO
-\                       \
-\                       \   * &FF indicates the sun line heap is empty
-\                       \
-\                       \   * Otherwise the LSO heap contains the line data for
-\                       \     the sun
-\
-\.LSO
-\
-\SKIP 192               \ The ship line heap for the space station (see NWSPS)
-\                       \ and the sun line heap (see SUN)
-\                       \
-\                       \ The spaces can be shared as our local bubble of
-\                       \ universe can support either the sun or a space
-\                       \ station, but not both
-\
 \.SX
 \
 \SKIP NOST + 1          \ This is where we store the x_hi coordinates for all
@@ -3718,29 +3717,7 @@ ENDIF
                         \ the scroll text lines onto the Star Wars perspective
                         \ view and then onto the screen
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.safehouse
-
- SKIP 6                 \ Backup storage for the seeds for the selected system
-                        \
-                        \ The seeds for the current system get stored here as
-                        \ soon as a hyperspace is initiated, so we can fetch
-                        \ them in the hyp1 routine. This fixes a bug in an
-                        \ earlier version where you could hyperspace while
-                        \ docking and magically appear in your destination
-                        \ station
-
-                        \ --- End of moved code ------------------------------->
-
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.XX3r
-
- SKIP 40 * 4            \ Add a second calculation heap for the right eye, which
-                        \ needs to be able to store four bytes for each edge,
-                        \ where the mavimum number of edges required is 39 for
-                        \ for the Cobra Mk III wireframe, plus a laser line
 
 .LSPr
 
@@ -3888,13 +3865,13 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- ORG &0E00
+ ORG &0E20
 
-\ Code in here
+\ Code can go in here
 
  SKIPTO &1000
 
- SAVE "3-assembled-output/ANAGLYPH.bin", &0E00, &1000, &0E00
+ SAVE "3-assembled-output/ANAGLYPH.bin", &0E20, &1000, &0E20
 
                         \ --- End of added code ------------------------------->
 
@@ -55777,30 +55754,6 @@ ENDIF
 
  JMP left1              \ Jump to left1 to set the line pair flag and reset
                         \ LSNUM if required
-
-\LDA XX15               \ Add X1 to the end of the heap
-\STA (rHeap),Y
-\
-\INY                    \ Increment the heap pointer
-\
-\LDA XX15+1             \ Add Y1 to the end of the heap
-\STA (rHeap),Y
-\
-\INY                    \ Increment the heap pointer
-\
-\LDA XX15+2             \ Add X2 to the end of the heap
-\STA (rHeap),Y
-\
-\INY                    \ Increment the heap pointer
-\
-\LDA XX15+3             \ Add Y2 to the end of the heap
-\STA (rHeap),Y
-\
-\INY                    \ Increment the heap pointer
-\
-\STY U                  \ Store the updated ship line heap pointer in U
-\
-\RTS                    \ Return from the subroutine
 
                         \ --- End of added code ------------------------------->
 

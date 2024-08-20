@@ -55,15 +55,15 @@ ENDIF
 
 IF _REMOVE_CHECKSUMS
  IF _SNG45 OR _SOURCE_DISC
-  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E00, &0010D1
+  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E20, &0010D1
  ELIF _EXECUTIVE
-  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E00, &0010D3
+  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E20, &0010D3
  ENDIF
 ELSE
  IF _SNG45 OR _SOURCE_DISC
-  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E00, &00106A
+  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E20, &00106A
  ELIF _EXECUTIVE
-  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E00, &00106C
+  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E20, &00106C
  ENDIF
 ENDIF
 
