@@ -10856,13 +10856,26 @@ ENDIF
                         \
                         \ followed by a newline and an indent of 6 characters
 
- LDA CRGO               \ If our ship's cargo capacity is < 26 (i.e. we do not
- CMP #26                \ have a cargo bay extension), skip the following two
- BCC P%+7               \ instructions
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- LDA #107               \ We do have a cargo bay extension, so print recursive
- JSR plf2               \ token 107 ("LARGE CARGO{sentence case} BAY"), followed
-                        \ by a newline and an indent of 6 characters
+\LDA CRGO               \ If our ship's cargo capacity is < 26 (i.e. we do not
+\CMP #26                \ have a cargo bay extension), skip the following two
+\BCC P%+7               \ instructions
+\
+\LDA #107               \ We do have a cargo bay extension, so print recursive
+\JSR plf2               \ token 107 ("LARGE CARGO{sentence case} BAY"), followed
+\                       \ by a newline and an indent of 6 characters
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA ESCP               \ If we don't have an escape pod fitted (i.e. ESCP is
+ BEQ P%+7               \ zero), skip the following two instructions
+
+ LDA #112               \ We do have an escape pod fitted, so print recursive
+ JSR plf2               \ token 112 ("ESCAPE POD"), followed by a newline and an
+                        \ indent of 6 characters
+
+                        \ --- End of replacement ------------------------------>
 
  LDA BST                \ If we don't have fuel scoops fitted, skip the
  BEQ P%+7               \ following two instructions
