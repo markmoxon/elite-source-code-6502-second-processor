@@ -83,3 +83,7 @@ ENDIF
  PUTFILE "1-source-files/universe-files/U.SPIRAL.bin", "U.SPIRAL", &000000, &000000
  PUTFILE "1-source-files/universe-files/U.PLANE.bin", "U.PLANE", &000000, &000000
 
+ PUTFILE "1-source-files/other-files/E.MAX.bin", "E.MAX", &000000, &000000
+ PUTFILE "1-source-files/other-files/E.MISS1.bin", "E.MISS1", &000000, &000000
+ PUTFILE "1-source-files/other-files/E.MISS2.bin", "E.MISS2", &000000, &000000
+ PUTFILE "1-source-files/other-files/E.FIGHT.bin", "E.FIGHT", &000000, &000000
