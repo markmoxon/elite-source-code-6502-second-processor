@@ -25537,40 +25537,21 @@ ENDIF
 
 .DOEXP
 
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
-
-\LDA INWK+31            \ If bit 6 of the ship's byte #31 is clear, then the
-\AND #%01000000         \ ship is not already exploding so there is no existing
-\BEQ P%+5               \ explosion cloud to remove, so skip the following
-\                       \ instruction
-
-                        \ --- And replaced by: -------------------------------->
-
  LDA INWK+31            \ If bit 6 of the ship's byte #31 is clear, then the
  AND #%01000000         \ ship is not already exploding so there is no existing
- BEQ dexp1              \ explosion cloud to remove, so jump to dexp1 to set up
-                        \ the data block for first use
-
-                        \ --- End of replacement ------------------------------>
+ BEQ P%+5               \ explosion cloud to remove, so skip the following
 
  JSR PTCLS              \ Call PTCLS to remove the existing cloud by drawing it
                         \ again
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- JMP dexp2              \ Skip the following, so that it is only run when we
-                        \ initiate the explosion
-
-.dexp1
                         \ We are going to hijack byte #3 to store the ship's
                         \ z-coordinate distance, so we can use this to generate
                         \ the same cloud on each step through the process
                         \
-                        \ We need to do this as the distance can change during
-                        \ the explosion, but we now use the distance in the
-                        \ anaglyph 3D cloud, so we can't use the actual
-                        \ z-coordinate in our calculation and have to use the
-                        \ distance at the point of explosion
+                        \ We need to do this as we use the distance when drawing
+                        \ the cloud in anaglyph 3D
 
  LDA INWK+6             \ Set zCoord(1 0) = (z_hi z_lo)
  STA zCoord
@@ -25590,8 +25571,6 @@ ENDIF
  LDY #3                 \ Set Y = 3 to point to byte #3 in the ship heap
 
  STA (XX19),Y           \ Set ZZ to the amount of parallax in bits 3 to 7
-
-.dexp2
 
                         \ --- End of added code ------------------------------->
 
