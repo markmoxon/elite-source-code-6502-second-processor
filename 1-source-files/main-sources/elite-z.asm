@@ -845,8 +845,7 @@ ENDIF
  EQUB &B0, &A0          \   #CYAN_3D  = cyan
  EQUB &96, &86          \   #RED_3D   = red
  EQUB &F0, &E0          \   #WHITE_3D = white
- EQUB &D6, &C6          \   #GREEN  = cyan/white stripe
-                        \   #WHITE  = red/white stripe
+ EQUB &D6, &C6
 
                         \ --- End of replacement ------------------------------>
 
