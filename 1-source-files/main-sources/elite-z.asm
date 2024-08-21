@@ -8906,14 +8906,28 @@ ENDMACRO
  AND #%00001000         \ counts, when bit 4 is set, so this is what we use to
                         \ flash the "danger" colour
 
- AND FLH                \ A will be zeroed if flashing colours are disabled
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\AND FLH                \ A will be zeroed if flashing colours are disabled
+
+                        \ --- End of removed code ----------------------------->
 
  BEQ P%+5               \ If A is zero, skip the next two instructions
 
- LDA #GREEN2            \ Otherwise flashing colours are enabled and it's the
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #GREEN2            \ Otherwise flashing colours are enabled and it's the
+\RTS                    \ main loop iteration where we flash them, so set A to
+\                       \ dashboard colour 2 (green) and return from the
+\                       \ subroutine
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #0                 \ Otherwise flashing colours are enabled and it's the
  RTS                    \ main loop iteration where we flash them, so set A to
-                        \ dashboard colour 2 (green) and return from the
-                        \ subroutine
+                        \ black and return from the subroutine
+
+                        \ --- End of replacement ------------------------------>
 
  LDA #RED2              \ Set A to dashboard colour 1 (red)
 
