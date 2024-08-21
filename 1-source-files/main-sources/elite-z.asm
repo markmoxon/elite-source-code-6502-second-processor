@@ -95,7 +95,11 @@
 
  WHITE_3D = %11111111   \ Four mode 1 pixels of colour 3 (white)
 
- YELLOW  = %11111111    \ Set all non-3Dcolours to white
+ CYAN2_3D = %00000011   \ Two mode 2 pixels of colour 1 (cyan)
+
+ RED2_3D  = %00001100   \ Two mode 2 pixels of colour 2 (red)
+
+ YELLOW  = %11111111    \ Set all non-3D colours to white
  RED     = %11111111
  CYAN    = %11111111
  GREEN   = %11111111
@@ -2245,6 +2249,124 @@ ENDIF
 
 .SC48
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDY #3                 \ Set A to byte #3 from the parameter block (the stick
+ LDA (OSSC),Y           \ height) and store it in Q
+ STA Q
+
+ DEY                    \ Fetch byte #2 from the parameter block (the sign of
+ LDA (OSSC),Y           \ the stick height) and shift bit 7 into the C flag, so
+ ASL A                  \ C now contains the sign of the stick height
+
+ LDY #6                 \ Fetch byte #6 from the parameter block (the screen
+ LDA (OSSC),Y           \ y-coordinate)
+
+ BCS scan1              \ If the stick direction is negative (i.e. it goes
+                        \ upwards from the dot, jump to scan1
+
+ SEC                    \ The stick direction is positive (i.e. it goes upwards
+ SBC Q                  \ from the dot), so we get the y-coordinate of the
+                        \ bottom of the stick by subtracting the stick height
+                        \ from the dot's y-coordinate
+
+ JMP scan2              \ Jump to scan2 to continue
+
+.scan1
+
+ CLC                    \ The stick direction is negative (i.e. it goes
+ ADC Q                  \ downwards from the dot), so we get the y-coordinate of
+                        \ the top of the stick by adding the stick height to the
+                        \ dot's y-coordinate
+
+.scan2
+
+                        \ By this point A contains the y-coordinate of the end
+                        \ of the stick as it touches the 3D ellipse, which we
+                        \ can use to determine the z-distance of the ship's dot
+                        \ on the scanner
+                        \
+                        \ The centre line of the scanner is at y-coordinate 220,
+                        \ so we can apply 0, 1 or 2 pixels of parallax as
+                        \ follows, depending on the value in A:
+                        \
+                        \   * ...-210 = 2 pixels of positive parallax
+                        \   * 211-216 = 1 pixel of positive parallax
+                        \   * 217-223 = no parallax
+                        \   * 224-231 = 1 pixel of negative parallax
+                        \   * 232-... = 2 pixels of negative parallax
+                        \
+                        \ So we now calculate the amount of parallax
+
+ LDY #0                 \ Set Y = 0 to store the amount of parallax
+
+ CMP #224               \ If A >= 224, jump to scan4 to calculate negative
+ BCS scan4              \ parallax
+
+ CMP #217               \ If A >= 217 then A is in the range 217 to 223, so jump
+ BCS scan6              \ to scan6 as there is no parallax to apply, so we only
+                        \ draw the ship once on the scanner, in white
+
+ INY                    \ If we get here then A < 217, so increment Y to 1
+
+ CMP #211               \ If A >= 211, jump to scan5 as we are done (Y = 1)
+ BCS scan5
+
+ INY                    \ If we get here then A < 211, so increment Y to 2
+
+ BCC scan5              \ Jump to scan5 as we are done (Y = 2) (this BCC is
+                        \ effectively a JMP as we just passed through a BCS)
+
+.scan4
+
+ DEY                    \ If we get here then A >= 224, so decrement Y to -1
+
+ CMP #232               \ If A < 232, jump to scan5 as we are done (Y = -1)
+ BCC scan5
+
+ DEY                    \ If we get here then A >= 232, so decrement Y to -2
+
+.scan5
+
+                        \ If we get here then there is some parallax to apply
+
+ STY LSAV               \ Store the amount of parallax in LSAV
+
+ LDY #5                 \ Fetch byte #5 from the parameter block (the screen
+ LDA (OSSC),Y           \ x-coordinate) and store it in X1SAV
+ STA X1SAV
+
+                        \ We now draw the ship twice, once for each eye,
+                        \ starting with the left eye in red
+
+ SEC                    \ Subtract the parallax from the x-coordinate and store
+ SBC LSAV               \ in X1 (so for positive parallax the left eye goes left
+ STA X1                 \ and for negative parallax it goes right)
+
+ LDA #RED2_3D           \ Set the colour to red
+ STA COL
+
+ LDY #6                 \ Call scan7+1 to draw the stick (we set Y = 6 so the
+ JSR scan7+1            \ code at the start of the subroutine fetches byte #6)
+
+                        \ And now we do the right eye in cyan
+
+ LDA X1SAV              \ Add the parallax to the x-coordinate and store in X1
+ CLC                    \ (so for positive parallax the right eye goes right and
+ ADC LSAV               \ for negative parallax it goes left)
+ STA X1
+
+ LDA #CYAN2_3D          \ Set the colour to cyan
+ STA COL
+
+ LDY #6                 \ Call scan7+1 to draw the stick, returning from the
+ JMP scan7+1            \ subroutine using a tail call (we set Y = 6 so the code
+                        \ at the start of the subroutine fetches byte #6)
+
+.scan6
+
+                        \ --- End of added code ------------------------------->
+
  LDY #4                 \ Fetch byte #4 from the parameter block (the colour)
  LDA (OSSC),Y           \ and store it in COL
  STA COL
@@ -2252,6 +2374,12 @@ ENDIF
  INY                    \ Fetch byte #5 from the parameter block (the screen
  LDA (OSSC),Y           \ x-coordinate) and store it in X1
  STA X1
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.scan7
+
+                        \ --- End of added code ------------------------------->
 
  INY                    \ Fetch byte #6 from the parameter block (the screen
  LDA (OSSC),Y           \ y-coordinate) and store it in Y1
@@ -9306,8 +9434,8 @@ ENDMACRO
 
                         \ --- And replaced by: -------------------------------->
 
- EQUB &30, &40
- EQUB &20, &10
+ EQUB &30, &40          \ Set all colours to white except 1 (cyan) and 2 (red)
+ EQUB &26, &11
  EQUB &80, &70
  EQUB &60, &50
  EQUB &C0, &B0

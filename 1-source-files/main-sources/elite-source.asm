@@ -297,7 +297,11 @@ ENDIF
 
  WHITE_3D = %11111111   \ Four mode 1 pixels of colour 3 (white)
 
- YELLOW  = %11111111    \ Set all non-3Dcolours to white
+ CYAN2_3D = %00000011   \ Two mode 2 pixels of colour 1 (cyan)
+
+ RED2_3D  = %00001100   \ Two mode 2 pixels of colour 2 (red)
+
+ YELLOW  = %11111111    \ Set all non-3D colours to white
  RED     = %11111111
  CYAN    = %11111111
  GREEN   = %11111111
