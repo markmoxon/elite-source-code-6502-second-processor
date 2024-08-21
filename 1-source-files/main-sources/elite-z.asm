@@ -2039,13 +2039,27 @@ ENDIF
  LDA (OSSC),Y           \ colour) and store it in COL
  STA COL
 
- CMP #WHITE2            \ If the dash's colour is not white, jump to CPIX2 to
- BNE CPIX2              \ draw a single-height dash in the compass, as it is
-                        \ showing that the planet or station is behind us
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
-                        \ Otherwise the dash is white, which is in front of us,
-                        \ so fall through into CPIX4 to draw a double-height
-                        \ dash in the compass
+\CMP #WHITE2            \ If the dash's colour is not white, jump to CPIX2 to
+\BNE CPIX2              \ draw a single-height dash in the compass, as it is
+\                       \ showing that the planet or station is behind us
+\
+\                       \ Otherwise the dash is white, which is in front of us,
+\                       \ so fall through into CPIX4 to draw a double-height
+\                       \ dash in the compass
+
+                        \ --- And replaced by: -------------------------------->
+
+ CMP #WHITE2            \ If the dash's colour is white, jump to CPIX4 to draw
+ BEQ CPIX4              \ draw a double-height dash in the compass, as it is
+                        \ showing that the planet or station is in front of us
+
+ LDA #WHITE2            \ Otherwise the dash is behind us, so set the colour to
+ STA COL                \ white and jump to CPIX2 to draw a single-height dash
+ BNE CPIX2              \ in the compass
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \

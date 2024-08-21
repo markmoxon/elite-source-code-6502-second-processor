@@ -26561,9 +26561,19 @@ ENDIF
  LDX XX15+2             \ If the z-coordinate of the XX15 vector is positive,
  BPL P%+4               \ skip the following instruction
 
- LDA #GREEN2            \ The z-coordinate of XX15 is negative, so the planet or
-                        \ station is behind us and the compass dot should be in
-                        \ green, so set A accordingly
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #GREEN2            \ The z-coordinate of XX15 is negative, so the planet or
+\                       \ station is behind us and the compass dot should be in
+\                       \ green, so set A accordingly
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #0                 \ The z-coordinate of XX15 is negative, so the planet or
+                        \ station is behind us and the compass dot should be a
+                        \ one-pixel dash, so set A accordingly
+
+                        \ --- End of replacement ------------------------------>
 
  STA COMC               \ Store the compass colour in COMC
 
