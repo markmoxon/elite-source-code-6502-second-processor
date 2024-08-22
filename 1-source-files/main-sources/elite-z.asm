@@ -8415,10 +8415,21 @@ ENDMACRO
 
  JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
 
- LDA #%00001111         \ Set locations &4000 &41F8 to %00001111, as otherwise
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #%00001111         \ Set locations &4000 &41F8 to %00001111, as otherwise
+\STA &4000              \ the top-left and top-right corners will be black (as
+\STA &41F8              \ the lines overlap at the corners, and the EOR logic
+                        \ used by LOIN will otherwise make them black)
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #WHITE             \ Set locations &4000 &41F8 to %11111111, as otherwise
  STA &4000              \ the top-left and top-right corners will be black (as
  STA &41F8              \ the lines overlap at the corners, and the EOR logic
                         \ used by LOIN will otherwise make them black)
+
+                        \ --- End of replacement ------------------------------>
 
  RTS                    \ Return from the subroutine
 
