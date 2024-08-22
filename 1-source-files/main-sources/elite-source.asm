@@ -4061,6 +4061,19 @@ ENDIF
                         \ the I/O processor code is used to store the CATF flag,
                         \ not this one)
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+                        \ We can use CATF to store the anaglyph 3D palette
+                        \ (1 = right, 2 = left, 3 = both):
+                        \
+                        \   * 0 = cyan, red, white
+                        \
+                        \   * 16 = blue, red, magenta
+                        \
+                        \   * 32 = red, green, yellow
+
+                        \ --- End of added code ------------------------------->
+
 .ZIP
 
  SKIP 0                 \ This label is not used but is in the original source
@@ -56438,7 +56451,7 @@ ENDIF
 
 .show8
 
- CMP #&70               \ If we didn't press "P", jump to show7
+ CMP #&70               \ If we didn't press "P", jump to show9
  BNE show9
 
  LDA #1                 \ Enable parallax
@@ -56448,12 +56461,34 @@ ENDIF
 
 .show9
 
- CMP #&1B               \ If we didn't press ESCAPE, jump to show10
- BEQ show10
+ CMP #&61               \ If we didn't press "A", jump to show11
+ BNE show11
+
+ LDA CATF               \ Cycle the palette in CATF through 0, 16 and 32
+ CLC
+ ADC #16
+ CMP #48
+ BNE show10
+ LDA #0
+
+.show10
+
+ STA CATF               \ Update CATF with the new palette choice
+
+ ORA #%10000000         \ Send a #SETVDU19 command to the I/O processor with
+ JSR DOVDU19            \ the palette number with bit 7 set, to swap out the
+                        \ palettes
 
  JMP show1              \ Jump to show1 to redraw the scene
 
-.show10
+.show11
+
+ CMP #&1B               \ If we didn't press ESCAPE, jump to show12
+ BEQ show12
+
+ JMP show1              \ Jump to show1 to redraw the scene
+
+.show12
 
  RTS                    \ Return from the subroutine
 

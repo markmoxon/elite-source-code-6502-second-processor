@@ -805,7 +805,7 @@ ENDIF
 
  EQUB &00, &31          \ 1 = cyan, 2 = red, 3 = white (anaglyph 3D space view)
  EQUB &21, &17          \
- EQUB &71, &61          \ Set with a #SETVDU19 16 command
+ EQUB &71, &61          \ Set with a #SETVDU19 16 command, after which:
  EQUB &57, &47          \
  EQUB &B0, &A0          \   #CYAN_3D  = cyan
  EQUB &96, &86          \   #RED_3D   = red
@@ -9434,7 +9434,7 @@ ENDMACRO
                         \ --- And replaced by: -------------------------------->
 
  EQUB &30, &40          \ Set all colours to white except 1 (cyan) and 2 (red)
- EQUB &26, &11
+ EQUB &26, &11          \ to set the dashboard to white
  EQUB &80, &70
  EQUB &60, &50
  EQUB &C0, &B0
@@ -9443,6 +9443,90 @@ ENDMACRO
  EQUB &E0, &D0
 
                         \ --- End of replacement ------------------------------>
+
+\ ******************************************************************************
+\
+\       Name: TVT1a
+\       Type: Variable
+\   Category: Drawing the screen
+\    Summary: Palette data for the dashboard in anaglyph 3D
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.TVT1a
+
+ EQUB &30, &40          \ Set all colours to white except 1 (cyan) and 2 (red)
+ EQUB &26, &11          \ to set the dashboard to white
+ EQUB &80, &70
+ EQUB &60, &50
+ EQUB &C0, &B0
+ EQUB &A0, &90
+ EQUB &07, &F0
+ EQUB &E0, &D0
+
+ EQUB &32, &42          \ Set all colours to magenta except 1 (blue) and 2 (red)
+ EQUB &26, &13          \ to set the dashboard to magenta
+ EQUB &82, &72
+ EQUB &62, &52
+ EQUB &C2, &B2
+ EQUB &A2, &92
+ EQUB &07, &F2
+ EQUB &E2, &D2
+
+ EQUB &34, &44          \ Set all colours to yellow except 1 (red) and 2 (green)
+ EQUB &25, &16          \ to set the dashboard to yellow
+ EQUB &84, &74
+ EQUB &64, &54
+ EQUB &C4, &B4
+ EQUB &A4, &94
+ EQUB &07, &F4
+ EQUB &E4, &D4
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: TVT3a
+\       Type: Variable
+\   Category: Drawing the screen
+\    Summary: Palette data for the space view in anaglyph 3D
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.TVT3a
+
+ EQUB &00, &31          \ 1 = cyan, 2 = red, 3 = white (anaglyph 3D space view)
+ EQUB &21, &17          \
+ EQUB &71, &61          \ Set with a #SETVDU19 0 command, after which:
+ EQUB &57, &47          \
+ EQUB &B0, &A0          \   #CYAN_3D  = cyan
+ EQUB &96, &86          \   #RED_3D   = red
+ EQUB &F0, &E0          \   #WHITE_3D = white
+ EQUB &D6, &C6
+
+ EQUB &02, &33          \ 1 = blue, 2 = red, 3 = magenta (anaglyph 3D space view)
+ EQUB &23, &17          \
+ EQUB &73, &63          \ Set with a #SETVDU19 0 command, after which:
+ EQUB &57, &47          \
+ EQUB &B2, &A2          \   #CYAN_3D  = blue
+ EQUB &96, &86          \   #RED_3D   = red
+ EQUB &F2, &E2          \   #WHITE_3D = magenta
+ EQUB &D6, &C6
+
+ EQUB &04, &36          \ 1 = red, 2 = green, 3 = yellow (anaglyph 3D space view)
+ EQUB &26, &17          \
+ EQUB &76, &66          \ Set with a #SETVDU19 0 command, after which:
+ EQUB &57, &47          \
+ EQUB &B4, &A4          \   #CYAN_3D  = red
+ EQUB &95, &85          \   #RED_3D   = green
+ EQUB &F4, &E4          \   #WHITE_3D = yellow
+ EQUB &D5, &C5
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -9762,6 +9846,61 @@ ENDMACRO
 \ ******************************************************************************
 
 .SETVDU19
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ BPL svdu2              \ If this is a normal palette change then bit 7 will be
+                        \ clear, so jump to svdu2 to process it
+
+                        \ Bit 7 of the palette number is set, which means this
+                        \ is a request to change the anaglyph 3D palette, so we
+                        \ now copy the correct palettes from TVT1a and TVT3a
+                        \ into TVT1 and TVT3
+
+ AND #%01111111         \ Clear bit 7 of the palette number to leave 0, 16 or 32
+                        \ in A
+
+ STA LSAV               \ Store the palette number in LSAV
+
+ TXA                    \ Store X and Y on the stack so we can preserve them
+ PHA
+ TYA
+ PHA
+
+ LDX LSAV               \ We are going to copy all palette colours from the
+                        \ relevant tables, so fetch the index into X
+
+ LDY #0                 \ Set Y to 0 to use as a loop counter
+
+.svdu1
+
+ LDA TVT1a,X            \ Copy the X-th byte from TVT1a into the Y-th byte of
+ STA TVT1,Y             \ TVT1 (for the dashboard)
+
+ LDA TVT3a,X            \ Copy the X-th byte from TVT3a into the Y-th byte of
+ STA TVT3,Y             \ TVT3 (for the space view), TVT3+16 (for the chart
+ STA TVT3+16,Y          \ view), TVT3+32 (for the title screen) and TVT3+48
+ STA TVT3+32,Y          \ (for the trade view)
+ STA TVT3+48,Y
+
+ INX                    \ Increment the index
+
+ INY                    \ Increment the loop counter
+
+ CPY #16                \ Loop back until we have copied all 16 bytes
+ BNE svdu1
+
+ PLA                    \ Restore X and Y from the stack
+ TAY
+ PLA
+ TAX
+
+ LDA #0                 \ Set A = 0 to switch to the space view palette (as we
+                        \ only change the palette in the Universe file viewer)
+
+.svdu2
+
+                        \ --- End of added code ------------------------------->
 
  STA VNT3+1             \ Store the new colour in VNT3+1, in the IRQ1 routine,
                         \ which modifies which TVT3 palette block gets applied
