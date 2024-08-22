@@ -33602,25 +33602,7 @@ ENDIF
  CMP #f0                \ Did we press f0? If not, skip the following
  BNE titl1              \ instruction
 
- LDA #1                 \ Clear the top part of the screen, draw a white border,
- JSR TT66               \ and set the current view type in QQ11 to 1
-
- LDA #'U'               \ Change the directory to U
- STA S1%+3
-
- JSR GTNMEW             \ The f0 key was pressed, so call GTNMEW to fetch the
-                        \ name of the commander file to load (including drive
-                        \ number and directory) into INWK
-
- JSR LoadUniverse       \ Call LoadUniverse to load the commander file
-
- JSR ConvertToAnaglyph  \ Convert the ship line heaps to double the size
-
- LDA #'E'               \ Change the directory back to E
- STA S1%+3
-
- JSR ShowUniverse       \ Display the universe file and allow anaglyph settings
-                        \ to be tweaked
+ JSR UniverseEditor     \ Show the universe file viewer
 
  JMP TT170              \ Restart the game at the title screen
 
@@ -47295,6 +47277,12 @@ ENDMACRO
  EJMP 12
  EQUB VE
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.token8
+
+                        \ --- End of added code ------------------------------->
+
  ETOK 154               \ Token 8:      "{single cap}COMMANDER'S NAME? "
  ECHR '`'               \
  ECHR 'S'               \ Encoded as:   "[154]'S[200]"
@@ -55849,6 +55837,8 @@ ENDIF
  LDY #&21
  STY &0C0A
 
+.lmod1
+
  LDA #&FF               \ Call SaveLoadFile with A = &FF to load the universe
  JSR SaveLoadFile       \ file to address K%
 
@@ -55856,6 +55846,8 @@ ENDIF
                         \ entered during the call to SaveLoadFile and the file
                         \ wasn't loaded, so jump to load1 to skip the following
                         \ and return from the subroutine
+
+.LoadUniverseDrive0
 
  JSR StoreName          \ Transfer the universe filename from INWK to NAME, to
                         \ set it as the current filename
@@ -55958,6 +55950,8 @@ ENDIF
  BCS slod3              \ If the C flag is set, then an invalid drive number was
                         \ entered, so jump to slod3 to return from the
                         \ subroutine
+
+.LoadFileDrive0
 
  PHA                    \ Store A on the stack so we can restore it after the
                         \ call to DODOSVN
@@ -56332,6 +56326,80 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: defaultFile
+\       Type: Variable
+\   Category: Universe editor
+\    Summary: The default universe file to display in the universe editor
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.defaultFile
+
+ EQUS ":0.U.BOXART2"
+ EQUB 13
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: UniverseEditor
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Implement a universe file viewer in anaglyph 3D
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.UniverseEditor
+
+ LDA #1                 \ Clear the top part of the screen, draw a white border,
+ JSR TT66               \ and set the current view type in QQ11 to 1
+
+                        \ We start by showing the default universe file, as
+                        \ defined in the defaultFile variable
+
+ LDX #12                \ First we want to copy the drive and directory part of
+                        \ the commander file from S1% (which equals NA%-5), so
+                        \ set a counter in x for 5 bytes, as the string is of
+                        \ the form ":0.E."
+
+.file1
+
+ LDA defaultFile,X      \ Copy the X-th byte from NA%-5 to INWK
+ STA INWK,X
+
+ DEX                    \ Decrement the loop counter
+
+ BPL file1              \ Loop back until the whole drive and directory string
+                        \ has been copied to INWK to INWK+4
+
+ LDA #&60               \ Run the initialisation code at the start of the
+ STA lmod1              \ LoadUniverse routine but stop before the call to
+ JSR LoadUniverse       \ SaveLoadFile
+ LDA #&A9
+ STA lmod1
+
+ LDA #&FF               \ Call LoadFileNoDrive with A = &FF to load the universe
+ JSR LoadFileDrive0     \ file to address K% without asking for a drive number
+
+ JSR LoadUniverseDrive0 \ Call LoadUniverseDrive0 to load the commander file
+
+ JSR ConvertToAnaglyph  \ Convert the ship line heaps to double the size
+
+ JSR ShowUniverse       \ Display the universe file and allow anaglyph settings
+                        \ to be tweaked (this needs to be a JSR so the return
+                        \ address gets put on the stack - we can't use a tail
+                        \ call here)
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
 \       Name: ShowUniverse
 \       Type: Subroutine
 \   Category: Universe editor
@@ -56343,6 +56411,35 @@ ENDIF
 
 .ShowUniverse
 
+ TSX                    \ Transfer the stack pointer to X and store it in stack,
+ STX stack              \ so we can restore it in the break handler
+
+ LDA #&4C               \ Stop MEBRK error handler from returning to the SVE
+ STA SVE                \ routine, jump back here instead
+ LDA #LO(ShowUniverse)
+ STA SVE+1
+ LDA #HI(ShowUniverse)
+ STA SVE+2
+
+ LDA #LO(MEBRK)         \ Set BRKV to point to the MEBRK routine, disabling
+ SEI                    \ interrupts while we make the change and re-enabling
+ STA BRKV               \ them once we are done. MEBRK is the BRKV handler for
+ LDA #HI(MEBRK)         \ disc access operations, and replaces the standard BRKV
+ STA BRKV+1             \ handler in BRBR while disc access operations are
+ CLI                    \ happening
+
+ LDA #&11               \ Change token 8 in TKN1 from "Commander's Name" to
+ STA token8             \ "File Name" by changing the first three tokens to:
+ LDA #&1E               \
+ STA token8+1           \ ECHR 'F'
+ LDA #&B2               \ ECHR 'I'
+ STA token8+2           \ ETWO 'L', 'E'
+
+ LDA #'U'               \ Change the directory to U
+ STA S1%+3
+
+.show1
+
  LDX #0                 \ Draw the front view, returning from the subroutine
  STX VIEW               \ using a tail call
 
@@ -56351,7 +56448,7 @@ ENDIF
  JSR NWSTARS            \ Set up a new stardust field (not sure why LOOK1
                         \ doesn't draw the stardust - it should)
 
-.show1
+.show2
 
  JSR DrawShips          \ Draw all ships, returning from the subroutine using a
                         \ tail call
@@ -56383,30 +56480,30 @@ ENDIF
  JSR DrawShips
  PLA
 
- CMP #&8D               \ If we didn't press the right arrow, jump to show2
- BNE show2
+ CMP #&8D               \ If we didn't press the right arrow, jump to show3
+ BNE show3
 
  INC halfEyeSpacing     \ Increment the eye spacing
 
- JMP show1              \ Jump to show1 to redraw the scene
-
-.show2
-
- CMP #&8C               \ If we didn't press the left arrow, jump to show4
- BNE show4
-
- DEC halfEyeSpacing     \ Decrement the eye spacing, keeping it positive
- BPL show3
- STZ halfEyeSpacing
+ JMP show2              \ Jump to show2 to redraw the scene
 
 .show3
 
- JMP show1              \ Jump to show1 to redraw the scene
+ CMP #&8C               \ If we didn't press the left arrow, jump to show5
+ BNE show5
+
+ DEC halfEyeSpacing     \ Decrement the eye spacing, keeping it positive
+ BPL show4
+ STZ halfEyeSpacing
 
 .show4
 
- CMP #&8F               \ If we didn't press the up arrow, jump to show5
- BNE show5
+ JMP show2              \ Jump to show2 to redraw the scene
+
+.show5
+
+ CMP #&8F               \ If we didn't press the up arrow, jump to show6
+ BNE show6
 
  LDA zPlane             \ Increment zPlane(1 0) by Z_PLANE_DELTA
  CLC
@@ -56416,12 +56513,12 @@ ENDIF
  ADC #HI(Z_PLANE_DELTA)
  STA zPlane+1
 
- JMP show1              \ Jump to show1 to redraw the scene
+ JMP show2              \ Jump to show2 to redraw the scene
 
-.show5
+.show6
 
- CMP #&8E               \ If we didn't press the down arrow, jump to show7
- BNE show7
+ CMP #&8E               \ If we didn't press the down arrow, jump to show8
+ BNE show8
 
  LDA zPlane             \ Decrement zPlane(1 0) by Z_PLANE_DELTA, keeeping
  SEC                    \ it positive
@@ -56429,49 +56526,49 @@ ENDIF
  TAX
  LDA zPlane+1
  SBC #HI(Z_PLANE_DELTA)
- BCC show6
+ BCC show7
  STA zPlane+1
  STX zPlane
 
- JMP show1              \ Jump to show1 to redraw the scene
-
-.show6
-
- JSR BEEP
- JMP show1              \ Jump to show1 to redraw the scene
+ JMP show2              \ Jump to show2 to redraw the scene
 
 .show7
 
- CMP #&6F               \ If we didn't press "O", jump to show8
- BNE show8
-
- STZ doParallax         \ Disable parallax
-
- JMP show1              \ Jump to show1 to redraw the scene
+ JSR BEEP
+ JMP show2              \ Jump to show2 to redraw the scene
 
 .show8
 
- CMP #&70               \ If we didn't press "P", jump to show9
+ CMP #&6F               \ If we didn't press "O", jump to show9
  BNE show9
+
+ STZ doParallax         \ Disable parallax
+
+ JMP show2              \ Jump to show2 to redraw the scene
+
+.show9
+
+ CMP #&70               \ If we didn't press "P", jump to show10
+ BNE show10
 
  LDA #1                 \ Enable parallax
  STA doParallax
 
- JMP show1              \ Jump to show1 to redraw the scene
+ JMP show2              \ Jump to show2 to redraw the scene
 
-.show9
+.show10
 
- CMP #&61               \ If we didn't press "A", jump to show11
- BNE show11
+ CMP #&61               \ If we didn't press "A", jump to show12
+ BNE show12
 
  LDA CATF               \ Cycle the palette in CATF through 0, 16 and 32
  CLC
  ADC #16
  CMP #48
- BNE show10
+ BNE show11
  LDA #0
 
-.show10
+.show11
 
  STA CATF               \ Update CATF with the new palette choice
 
@@ -56479,18 +56576,57 @@ ENDIF
  JSR DOVDU19            \ the palette number with bit 7 set, to swap out the
                         \ palettes
 
- JMP show1              \ Jump to show1 to redraw the scene
-
-.show11
-
- CMP #&1B               \ If we didn't press ESCAPE, jump to show12
- BEQ show12
-
- JMP show1              \ Jump to show1 to redraw the scene
+ JMP show2              \ Jump to show2 to redraw the scene
 
 .show12
 
- RTS                    \ Return from the subroutine
+ CMP #&40               \ If we didn't press "@", jump to show13
+ BNE show13
+
+ LDA #1                 \ Clear the top part of the screen, draw a white border,
+ JSR TT66               \ and set the current view type in QQ11 to 1
+
+ JSR GTNMEW             \ The f0 key was pressed, so call GTNMEW to fetch the
+                        \ name of the commander file to load (including drive
+                        \ number and directory) into INWK
+
+ JSR LoadUniverse       \ Call LoadUniverse to load the commander file
+
+ JSR ConvertToAnaglyph  \ Convert the ship line heaps to double the size
+
+ JMP show1              \ Jump to show1 to clear the screen and draw the scene
+
+.show13
+
+ CMP #&1B               \ If we didn't press ESCAPE, jump to show14
+ BEQ show14
+
+ JMP show2              \ Jump to show2 to redraw the scene
+
+.show14
+
+ LDA #'E'               \ Change the directory back to E
+ STA S1%+3
+
+ LDA #&CD               \ Revert token 8 in TKN1 to "Commander's Name" by
+ STA token8             \ changing the first three tokens back to:
+ LDA #&70               \
+ STA token8+1           \ ETOK 154
+ LDA #&04               \ ECHR '`'
+ STA token8+2           \ ECHR 'S'
+
+ LDA #&20               \ Return MEBRK error handler to its default state
+ SEI
+ STA SVE
+ LDA #LO(ZEBC)
+ STA SVE+1
+ LDA #HI(ZEBC)
+ STA SVE+2
+ CLI
+
+ JMP BRKBK              \ Jump to BRKBK to set BRKV back to the standard BRKV
+                        \ handler for the game, and return from the subroutine
+                        \ using a tail call
 
 \ ******************************************************************************
 \
