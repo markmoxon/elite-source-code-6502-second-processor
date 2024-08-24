@@ -3544,6 +3544,16 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
+.circle3D
+
+ SKIP 1                 \ A flag that determines whether we are drawing circles
+                        \ in 3D (for the planet) or in 2D (for charts and
+                        \ tunnels)
+                        \
+                        \   * 0 = 2D
+                        \
+                        \   * Non-zero = 3D
+
 .LSY2r
 
  SKIP 78                \ The ball line heap for storing y-coordinates for the
@@ -3555,6 +3565,25 @@ ENDIF
                         \ needs to be able to store four bytes for each edge,
                         \ where the mavimum number of edges required is 39 for
                         \ for the Cobra Mk III wireframe, plus a laser line
+
+.planetLinePtr
+
+ SKIP 1                 \ The line heap pointer when drawing the planet circle
+
+.craterLinePtr
+
+ SKIP 1                 \ The line heap pointer when drawing the planet crater
+                        \ or meriaidn
+
+.meridian2Ptr
+
+ SKIP 1                 \ The value of the line heap pointer when we have just
+                        \ drawn the first meridian but before the second
+
+.LSPl
+
+ SKIP 1                 \ The ball line heap pointer for the left eye for
+                        \ planets
 
                         \ --- End of added code ------------------------------->
 
@@ -9325,10 +9354,6 @@ ENDIF
 \                       drawing anything (as we need two points, i.e. two calls,
 \                       before we can draw a line)
 \
-\   K                   The circle's radius
-\
-\   K3(1 0)             Pixel x-coordinate of the centre of the circle
-\
 \   K4(1 0)             Pixel y-coordinate of the centre of the circle
 \
 \   K5(1 0)             Screen x-coordinate of the previous point added to the
@@ -9336,8 +9361,6 @@ ENDIF
 \
 \   K5(3 2)             Screen y-coordinate of the previous point added to the
 \                       ball line heap (if this is not the first point)
-\
-\   SWAP                If non-zero, we swap (X1, Y1) and (X2, Y2)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -9364,7 +9387,13 @@ ENDIF
  STA K6+2               \
  LDA K4+1               \ so K6(3 2) now contains the y-coordinate of the new
  ADC T                  \ point on the circle but as a screen coordinate, to go
- STA K6+3               \ along with the screen y-coordinate in K6(1 0)
+ STA K6+3               \ along with the screen x-coordinate in K6(1 0)
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.BLINEPlanet
+
+                        \ --- End of added code ------------------------------->
 
  LDA FLAG               \ If FLAG = 0, jump down to BL1
  BEQ BL1
@@ -9414,12 +9443,11 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
-                        \ If byte LSP-1 of LSY2 = &FF, jump to BL7 to tidy up
- LDA (LSPS)             \ and return from the subroutine, as the point that has
- TAY                    \ been passed to BLINE is the start of a segment, so all
- DEY                    \ we need to do is save the coordinate in K5, without
- LDA #&FF               \ moving the pointer in LSP
- CMP (LSY2S),Y
+ LDA (LSPS)             \ If byte LSP-1 of LSY2 = &FF, jump to BL7 to tidy up
+ TAY                    \ and return from the subroutine, as the point that has
+ DEY                    \ been passed to BLINE is the start of a segment, so all
+ LDA #&FF               \ we need to do is save the coordinate in K5, without
+ CMP (LSY2S),Y          \ moving the pointer in LSP
  BNE P%+6
  INY
  JMP BL7
@@ -9798,7 +9826,7 @@ ENDIF
                         \         = 256 * speed / z_hi
                         \
                         \ The maximum value returned is P = 2 and R = 128 (see
-                        \ DV42 for an explanation)
+                        \ DV42 for an explan2tion)
 
  LDA R                  \ Set A = R, so now:
                         \
@@ -10140,7 +10168,7 @@ ENDIF
                         \         = 256 * speed / z_hi
                         \
                         \ The maximum value returned is P = 2 and R = 128 (see
-                        \ DV42 for an explanation)
+                        \ DV42 for an explan2tion)
 
  LDA R                  \ Set A = R, so now:
                         \
@@ -26229,6 +26257,9 @@ ENDIF
  STZ LSPr               \ Reset the ball line heap by setting the ball line heap
                         \ pointer to 0 for the right eye
 
+ STZ LSPl               \ Reset the ball line heap by setting the ball line heap
+                        \ pointer to 0 for the right eye
+
                         \ --- End of added code ------------------------------->
 
  LDX #&FF               \ Set X = &FF (though this appears not to be used)
@@ -27751,67 +27782,21 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- LDA K3+1               \ Store the centre point's x-coordinate on the stack
- PHA
- LDA K3
- PHA
-
- LDA K4+1               \ Store the centre point's y-coordinate on the stack
- PHA
- LDA K4
- PHA
-
- LDA K+1                \ Store the planet's radius on the stack
- PHA
- LDA K
- PHA
-
  JSR UseLeftBallLine    \ Switch to the ball line heap for the left eye
 
- LDA K3                 \ Subtract maximum positive parallax for the left eye
- SEC
- SBC #MAX_PARALLAX_P
- STA K3
- LDA K3+1
- SBC #0
- STA K3+1
+ STZ planetLinePtr      \ Zero planetLinePtr so we can use it as a pointer into
+                        \ the XX3r heap, where we will store the calculated
+                        \ screen coordinates for each point in the planet (so
+                        \ we don't have to do the calculations twice for
+                        \ anaglyph 3D)
 
- LDA #RED_3D            \ Send a #SETCOL RED_3D command to the I/O processor to
- JSR DOCOL              \ switch to colour 2, which is red in the space view
+ STZ craterLinePtr      \ Zero craterLinePtr so we can use it as a pointer into
+                        \ the XX3 heap, where we will store the calculated
+                        \ screen coordinates for each point in the crater or
+                        \ meridian
 
- JSR DrawPlanet         \ Draw the planet
-
- PLA                    \ Retrieve the planet's radius from the stack
- STA K
- PLA
- STA K+1
-
- PLA                    \ Retrieve the centre point's y-coordinate from the
- STA K4                 \ stack
- PLA
- STA K4+1
-
- PLA                    \ Retrieve the centre point's x-coordinate from the
- STA K3                 \ stack
- PLA
- STA K3+1
-
- JSR UseRightBallLine   \ Switch to the ball line heap for the right eye
-
- LDA K3                 \ Add maximum positive parallax for the right eye
- CLC
- ADC #MAX_PARALLAX_P
- STA K3
- LDA K3+1
- ADC #0
- STA K3+1
-
- LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
- JSR DOCOL              \ switch to colour 3, which is cyan in the space view
-
-                        \ Fall through into DrawPlanet to draw the planet
-
-.DrawPlanet
+ LDA #&FF               \ Set circle3D to non-zero so circles are drawn in 3D
+ STA circle3D
 
                         \ --- End of added code ------------------------------->
 
@@ -27847,7 +27832,7 @@ ENDIF
 
 .PL20
 
-                        \ --- Mod: Code removed for flicker-free planets: ----->
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
 \JMP LS2FL              \ The planet doesn't fit on-screen, so jump to LS2FL to
 \                       \ send the ball line heap to the I/O processor for
@@ -27856,8 +27841,8 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
-                        \ any lines that are left in the ball line heap, before
+ JMP DrawAnaglyphPlanet \ We have finished drawing the planet into the heap, so
+                        \ jump to DrawAnaglyphPlanet to draw the planet in 3D,
                         \ returning from the subroutine using a tail call
 
 .PL20A
@@ -27944,6 +27929,13 @@ ENDIF
 
  JSR PLS2               \ Call PLS2 to draw the first meridian
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA craterLinePtr      \ Store the current heap index in meridian2Ptr so we can
+ STA meridian2Ptr       \ insert a line break here when we draw the meridians 
+
+                        \ --- End of added code ------------------------------->
+
  LDA INWK+14            \ Set P = -nosev_z_hi
  EOR #%10000000
  STA P
@@ -27968,18 +27960,19 @@ ENDIF
                         \
                         \   (XX16+3 K2+3) = sidev_y / z
 
-                        \ --- Mod: Code removed for flicker-free planets: ----->
+ JSR PLS2               \ Call PLS2 to draw the second meridian
 
-\JSR PLS2               \ Call PLS2 to draw the second meridian
-\
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
 \JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
 \                       \ processor for drawing on-screen, returning from the
 \                       \ subroutine using a tail call
 
                         \ --- And replaced by: -------------------------------->
 
- JMP PLS2               \ Jump to PLS2 to draw the second meridian, returning
-                        \ from the subroutine using a tail call
+ JMP DrawAnaglyphPlanet \ We have finished drawing the meridians into the heap,
+                        \ so jump to DrawAnaglyphPlanet to draw the planet in
+                        \ 3D, returning from the subroutine using a tail call
 
                         \ --- End of replacement ------------------------------>
 
@@ -28110,18 +28103,19 @@ ENDIF
  STZ CNT2               \ Set CNT2 = 0 as we are drawing a full ellipse, so we
                         \ don't need to apply an offset
 
-                        \ --- Mod: Code removed for flicker-free planets: ----->
+ JSR PLS22              \ Call PLS22 to draw the crater
 
-\JSR PLS22              \ Call PLS22 to draw the crater
-\
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
 \JMP LS2FL              \ Jump to LS2FL to send the ball line heap to the I/O
 \                       \ processor for drawing on-screen, returning from the
 \                       \ subroutine using a tail call
 
                         \ --- And replaced by: -------------------------------->
 
- JMP PLS22              \ Jump to PLS22 to draw the crater, returning from the
-                        \ subroutine using a tail call
+ JMP DrawAnaglyphPlanet \ We have finished drawing the crater into the heap,
+                        \ so jump to DrawAnaglyphPlanet to draw the planet in
+                        \ 3D, returning from the subroutine using a tail call
 
                         \ --- End of replacement ------------------------------>
 
@@ -28562,8 +28556,17 @@ ENDIF
                         \ our ellipse segment (we already calculated the
                         \ x-coordinate in K3(1 0) above)
 
- JSR BLINE              \ Call BLINE to draw this segment, which also returns
-                        \ the updated value of CNT in A
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\JSR BLINE              \ Call BLINE to draw this segment, which also returns
+\                       \ the updated value of CNT in A
+
+                        \ --- And replaced by: -------------------------------->
+
+ JSR BLINEHeapCrater    \ Call BLINEHeapCrater to draw this segment into the XX3
+                        \ heap, which also returns the updated value of CNT in A
+
+                        \ --- End of replacement ------------------------------>
 
  CMP TGT                \ If CNT > TGT then jump to PL40 to stop drawing the
  BEQ P%+4               \ ellipse (which is how we draw half-ellipses)
@@ -28579,17 +28582,7 @@ ENDIF
 
 .PL40
 
-                        \ --- Mod: Code removed for flicker-free planets: ----->
-
-\RTS                    \ Return from the subroutine
-
-                        \ --- And replaced by: -------------------------------->
-
- JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
-                        \ any lines that are left in the ball line heap,
-                        \ returning from the subroutine using a tail call
-
-                        \ --- End of replacement ------------------------------>
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -29329,6 +29322,13 @@ ENDIF
  INX                    \ Set CNT = 0, our counter that goes up to 64, counting
  STX CNT                \ segments in our circle
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STX planetLinePtr      \ Set planetLinePtr = 0 to point at the start of the
+                        \ planet heap
+
+                        \ --- End of added code ------------------------------->
+
 .PLL3
 
  LDA CNT                \ Set A = CNT
@@ -29413,12 +29413,35 @@ ENDIF
  ADC #0                 \ now negated the y-coordinate in (T X)
  STA T
 
- CLC                    \ Clear the C flag so we can do some more addition below
+ CLC                    \ Clear the C flag so the addition at the start of BLINE
+                        \ will work
 
 .PL38
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\JSR BLINE              \ Call BLINE to draw this segment, which also increases
+\                       \ CNT by STP, the step size
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA circle3D           \ If circle3D is zero then jump to circ1 to draw the
+ BEQ circ1              \ circle in 2D
+
+ JSR BLINEHeapPlanet    \ Otherwise we need to draw the circle in anaglyph 3D,
+                        \ so call BLINEHeapPlanet to draw this segment into the
+                        \ XX3r heap and increase CNT by STP, the step size
+
+ JMP circ2              \ Skip the following to move on to the next segment
+
+.circ1
+
  JSR BLINE              \ Call BLINE to draw this segment, which also increases
                         \ CNT by STP, the step size
+
+.circ2
+
+                        \ --- End of replacement ------------------------------>
 
  CMP #65                \ If CNT >= 65 then skip the next instruction
  BCS P%+5
@@ -29438,7 +29461,11 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- JSR UseLeftBallLine    \ Switch to the ball line heap for the left eye
+ STZ circle3D           \ Set circle3D to zero so circles are drawn in 2D
+
+ JSR UseLeftBallLine    \ Switch to the ball line heap for the left eye (as the
+                        \ left eye uses the heaps and pointers from the original
+                        \ code)
 
                         \ --- End of added code ------------------------------->
 
@@ -29629,6 +29656,25 @@ ENDIF
 \STA LSNUM2
 
                         \ --- And replaced by: -------------------------------->
+
+ JSR UseLeftBallLine    \ Switch to the ball line heap for the left eye
+
+ LDA #LO(LSPl)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
+ STA LSPS               \ store the left-eye ball line heap pointer in LSP
+ LDA #HI(LSPl)
+ STA LSPS+1
+
+ LDA #RED_3D            \ Send a #SETCOL RED_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
+
+ JSR wipe1              \ Call wipe1 below to wipe the left eye from the screen
+
+ JSR UseRightBallLine   \ Switch to the ball line heap for the right eye
+
+ LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is cyan in the space view
+
+.wipe1
 
  LDA (LSX2S)            \ If LSX2 is non-zero (which indicates the ball line
  BNE WP1                \ heap is empty), jump to WP1 to reset the line heap
@@ -43165,7 +43211,7 @@ ENDIF
 \ This routine has multiple stages. This stage does the following:
 \
 \   * Rotate the ship's location in space by the amount of pitch and roll of
-\     our ship. See below for a deeper explanation of this routine
+\     our ship. See below for a deeper explan2tion of this routine
 \
 \ ******************************************************************************
 
@@ -43749,7 +43795,7 @@ ENDIF
 \ rotation more stable (though more elliptic).
 \
 \ If that paragraph makes sense to you, then you should probably be writing
-\ this commentary! For the rest of us, there's a detailed explanation of all
+\ this commentary! For the rest of us, there's a detailed explan2tion of all
 \ this in the deep dive on "Pitching and rolling".
 \
 \ ------------------------------------------------------------------------------
@@ -44617,6 +44663,8 @@ ENDIF
 
  STZ LSPr               \ Reset the ball line heap pointer at LSPr
 
+ STZ LSPl               \ Reset the ball line heap pointer at LSPl
+
                         \ --- End of added code ------------------------------->
 
  LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
@@ -44939,7 +44987,7 @@ ENDIF
                         \ Now, we convert the x_hi coordinate of the ship into
                         \ the screen x-coordinate of the dot on the scanner,
                         \ using the following (see the deep dive on "The 3D
-                        \ scanner" for an explanation):
+                        \ scanner" for an explan2tion):
                         \
                         \   X1 = 123 + (x_sign x_hi)
 
@@ -44967,7 +45015,7 @@ ENDIF
                         \ Next, we convert the z_hi coordinate of the ship into
                         \ the y-coordinate of the base of the ship's stick,
                         \ like this (see the deep dive on "The 3D scanner" for
-                        \ an explanation):
+                        \ an explan2tion):
                         \
                         \   SC = 220 - (z_sign z_hi) / 4
                         \
@@ -45000,7 +45048,7 @@ ENDIF
 
                         \ Now for the stick height, which we calculate using the
                         \ following (see the deep dive on "The 3D scanner" for
-                        \ an explanation):
+                        \ an explan2tion):
                         \
                         \ A = - (y_sign y_hi) / 2
 
@@ -56627,6 +56675,317 @@ ENDIF
  JMP BRKBK              \ Jump to BRKBK to set BRKV back to the standard BRKV
                         \ handler for the game, and return from the subroutine
                         \ using a tail call
+
+\ ******************************************************************************
+\
+\       Name: BLINEHeapPlanet
+\       Type: Subroutine
+\   Category: Drawing circles
+\    Summary: Store a circle segment's coordinate in the XX3r heap
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.BLINEHeapPlanet
+
+ LDY planetLinePtr      \ Fetch the pointer to the next free coordinate in the
+                        \ planet heap
+
+ LDA K6                 \ Store the x-coordinate in K6(1 0) in the heap
+ STA XX3r,Y
+ INY
+ LDA K6+1
+ STA XX3r,Y
+ INY
+
+ TXA                    \ Store (T X) + K4(1 0) in the heap (the y-coordinate
+ ADC K4                 \ of the circle point)
+ STA XX3r,Y
+ INY
+ LDA K4+1
+ ADC T
+ STA XX3r,Y
+ INY
+
+ STY planetLinePtr      \ Update the pointer in planetLinePtr
+
+ LDA CNT                \ Set CNT = CNT + STP
+ CLC
+ ADC STP
+ STA CNT
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: BLINEHeapCrater
+\       Type: Subroutine
+\   Category: Drawing circles
+\    Summary: Store a crater or meridian segment's coordinate in the XX3 heap
+\
+\ ******************************************************************************
+
+.BLINEHeapCrater
+
+ LDY craterLinePtr      \ Fetch the pointer to the next free coordinate in the
+                        \ crater/meridian heap
+
+ LDA K6                 \ Store the x-coordinate in K6(1 0) in the heap
+ STA XX3,Y
+ INY
+ LDA K6+1
+ STA XX3,Y
+ INY
+
+ TXA                    \ Store (T X) + K4(1 0) in the heap (the y-coordinate
+ ADC K4                 \ of the circle point)
+ STA XX3,Y
+ INY
+ LDA K4+1
+ ADC T
+ STA XX3,Y
+ INY
+
+ STY craterLinePtr      \ Update the pointer in planetLinePtr
+
+ LDA CNT                \ Set CNT = CNT + STP
+ CLC
+ ADC STP
+ STA CNT
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawAnaglyphPlanet
+\       Type: Subroutine
+\   Category: Drawing circles
+\    Summary: Draw a planet in anaglyph 3D from the coordinates in the XX3r heap
+\             (for the planet) and XX3 heap (for the crater/meridian)
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawAnaglyphPlanet
+
+ JSR UseLeftBallLine    \ Switch to the ball line heap for the left eye
+
+ LDA #LO(LSPl)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
+ STA LSPS               \ store the left-eye ball line heap pointer in LSP
+ LDA #HI(LSPl)
+ STA LSPS+1
+
+ LDA #0                 \ Set LSX2 = 0 to indicate that the ball line heap is
+ STA (LSX2S)            \ not empty, as we are about to fill it
+
+ STZ LSNUM              \ Set LSNUM = 0, to point to the offset before the first
+                        \ set of circle coordinates in the ball line heap
+
+ LDA (LSPS)             \ Set LSNUM2 to the last byte of the ball line heap
+ STA LSNUM2
+
+ LDA #1                 \ Set LSP = 1 to reset the ball line heap pointer
+ STA (LSPS)
+
+ LDA #RED_3D            \ Send a #SETCOL RED_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
+
+ LDY #&FF               \ Set FLAG = &FF to reset the ball line heap in the call
+ STY FLAG               \ to the BLINE routine below
+
+ INY                    \ Set a coordinate counter in Y, starting from 0
+
+ STY CNT                \ Set CNT = 0 to use as a segment counter
+
+.plan1
+
+ LDA XX3r,Y             \ Fetch the x-coordinate, subtract parallax and store in
+ SEC                    \ K6(1 0)
+ SBC #MAX_PARALLAX_P
+ STA K6
+ INY
+ LDA XX3r,Y
+ SBC #0
+ STA K6+1
+ INY
+
+ LDA XX3r,Y             \ Fetch the y-coordinate into K6(3 2)
+ STA K6+2
+ INY
+ LDA XX3r,Y
+ STA K6+3
+ INY
+
+ PHY                    \ Store the counter on the stack so we can retrieve it
+                        \ after the call to BlineAnaglyph
+
+ JSR BLINEPlanet        \ Call BLINEPlanet to draw the line, skipping the
+                        \ calculation at the start of BLINE as we already did it
+
+ PLY                    \ Restore the counter from the stack
+
+ CPY planetLinePtr      \ If Y < planetLinePtr then we have more lines to draw,
+ BCC plan1              \ so loop back to plan1 to draw them
+
+                        \ Now for the crater/meridian
+
+ LDY #&FF               \ Set FLAG = &FF to reset the ball line heap in the call
+ STY FLAG               \ to the BLINE routine below
+
+ INY                    \ Set a coordinate counter in Y, starting from 0
+
+.plan2
+
+ CPY meridian2Ptr       \ If this is not the point between two meridians, skip
+ BNE plan3              \ following
+
+ LDA #&FF               \ Set FLAG = &FF to reset the ball line heap in the call
+ STA FLAG               \ to the BLINE routine below
+
+.plan3
+
+ LDA XX3,Y             \ Fetch the x-coordinate, subtract parallax and store in
+ SEC                    \ K6(1 0)
+ SBC #MAX_PARALLAX_P
+ STA K6
+ INY
+ LDA XX3,Y
+ SBC #0
+ STA K6+1
+ INY
+
+ LDA XX3,Y             \ Fetch the y-coordinate into K6(3 2)
+ STA K6+2
+ INY
+ LDA XX3,Y
+ STA K6+3
+ INY
+
+ PHY                    \ Store the counter on the stack so we can retrieve it
+                        \ after the call to BlineAnaglyph
+
+ JSR BLINEPlanet        \ Call BLINEPlanet to draw the line, skipping the
+                        \ calculation at the start of BLINE as we already did it
+
+ PLY                    \ Restore the counter from the stack
+
+ CPY craterLinePtr      \ If Y < craterLinePtr then we have more lines to draw,
+ BCC plan2              \ so loop back to plan1 to draw them
+
+
+ JSR EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
+                        \ any lines that are left in the ball line heap
+
+                        \ Now for the right eye
+
+ JSR UseRightBallLine   \ Switch to the ball line heap for the right eye
+
+ LDA #0                 \ Set LSX2 = 0 to indicate that the ball line heap is
+ STA (LSX2S)            \ not empty, as we are about to fill it
+
+ STZ LSNUM              \ Set LSNUM = 0, to point to the offset before the first
+                        \ set of circle coordinates in the ball line heap
+
+ LDA (LSPS)             \ Set LSNUM2 to the last byte of the ball line heap
+ STA LSNUM2
+
+ LDA #1                 \ Set LSP = 1 to reset the ball line heap pointer
+ STA (LSPS)
+
+ LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is cyan in the space view
+
+ LDY #&FF               \ Set FLAG = &FF to reset the ball line heap in the call
+ STY FLAG               \ to the BLINE routine below
+
+ INY                    \ Set a coordinate counter in Y, starting from 0
+
+ STY CNT                \ Set CNT = 0 to use as a segment counter
+
+.plan4
+
+ LDA XX3r,Y             \ Fetch the x-coordinate, add parallax and store in
+ CLC                    \ K6(1 0)
+ ADC #MAX_PARALLAX_P
+ STA K6
+ INY
+ LDA XX3r,Y
+ ADC #0
+ STA K6+1
+ INY
+
+ LDA XX3r,Y             \ Fetch the y-coordinate into K6(3 2)
+ STA K6+2
+ INY
+ LDA XX3r,Y
+ STA K6+3
+ INY
+
+ PHY                    \ Store the counter on the stack so we can retrieve it
+                        \ after the call to BlineAnaglyph
+
+ JSR BLINEPlanet        \ Call BLINEPlanet to draw the line, skipping the
+                        \ calculation at the start of BLINE as we already did it
+
+ PLY                    \ Restore the counter from the stack
+
+ CPY planetLinePtr      \ If Y < planetLinePtr then we have more lines to draw,
+ BCC plan4              \ so loop back to plan4 to draw them
+
+                        \ Now for the crater/meridian
+
+ LDY #&FF               \ Set FLAG = &FF to reset the ball line heap in the call
+ STY FLAG               \ to the BLINE routine below
+
+ INY                    \ Set a coordinate counter in Y, starting from 0
+
+.plan5
+
+ CPY meridian2Ptr       \ If this is not the point between two meridians, skip
+ BNE plan6              \ following
+
+ LDA #&FF               \ Set FLAG = &FF to reset the ball line heap in the call
+ STA FLAG               \ to the BLINE routine below
+
+.plan6
+
+ LDA XX3,Y              \ Fetch the x-coordinate, add parallax and store in
+ CLC                    \ K6(1 0)
+ ADC #MAX_PARALLAX_P
+ STA K6
+ INY
+ LDA XX3,Y
+ ADC #0
+ STA K6+1
+ INY
+
+ LDA XX3,Y             \ Fetch the y-coordinate into K6(3 2)
+ STA K6+2
+ INY
+ LDA XX3,Y
+ STA K6+3
+ INY
+
+ PHY                    \ Store the counter on the stack so we can retrieve it
+                        \ after the call to BlineAnaglyph
+
+ JSR BLINEPlanet        \ Call BLINEPlanet to draw the line, skipping the
+                        \ calculation at the start of BLINE as we already did it
+
+ PLY                    \ Restore the counter from the stack
+
+ CPY craterLinePtr      \ If Y < craterLinePtr then we have more lines to draw,
+ BCC plan5              \ so loop back to plan5 to draw them
+
+ JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
+                        \ any lines that are left in the ball line heap,
+                        \ returning from the subroutine using a tail call
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
