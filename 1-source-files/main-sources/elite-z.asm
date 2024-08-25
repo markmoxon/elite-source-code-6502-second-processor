@@ -8342,94 +8342,79 @@ ENDMACRO
                         \ starts
 
 .BOX
+
                         \ --- Mod: Code removed for anaglyph 3D: -------------->
 
 \LDA #%00001111         \ Set COL = %00001111 to act as a four-pixel yellow
 \STA COL                \ character byte (i.e. set the line colour to yellow)
-
-                        \ --- And replaced by: -------------------------------->
-
- LDA #%11111111         \ Set COL = %11111111 to act as a four-pixel white
- STA COL                \ character byte (i.e. set the line colour to white)
-
-                        \ --- End of replacement ------------------------------>
-
- LDY #1                 \ Move the text cursor to row 1
- STY YC
-
- LDY #11                \ Move the text cursor to column 11
- STY XC
-
- LDX #0                 \ Set X1 = Y1 = Y2 = 0
- STX X1
- STX Y1
- STX Y2
-
-\STX QQ17               \ This instruction is commented out in the original
-                        \ source
-
- DEX                    \ Set X2 = 255
- STX X2
-
- JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2), so that's from
-                        \ (0, 0) to (255, 0), along the very top of the screen
-
- LDA #2                 \ Set X1 = X2 = 2
- STA X1
- STA X2
-
- JSR BOS2               \ Call BOS2 below, which will call BOS1 twice, and then
-                        \ fall through into BOS2 again, so we effectively do
-                        \ BOS1 four times, decrementing X1 and X2 each time
-                        \ before calling LOIN, so this whole loop-within-a-loop
-                        \ mind-bender ends up drawing these four lines:
-                        \
-                        \   (1, 0)   to (1, 191)
-                        \   (0, 0)   to (0, 191)
-                        \   (255, 0) to (255, 191)
-                        \   (254, 0) to (254, 191)
-                        \
-                        \ So that's a 2-pixel wide vertical border along the
-                        \ left edge of the upper part of the screen, and a
-                        \ 2-pixel wide vertical border along the right edge
-
-.BOS2
-
- JSR BOS1               \ Call BOS1 below and then fall through into it, which
-                        \ ends up running BOS1 twice. This is all part of the
-                        \ loop-the-loop border-drawing mind-bender explained
-                        \ above
-
-.BOS1
-
- LDA #0                 \ Set Y1 = 0
- STA Y1
-
- LDA #2*Y-1             \ Set Y2 = 2 * #Y - 1. The constant #Y is 96, the
- STA Y2                 \ y-coordinate of the mid-point of the space view, so
-                        \ this sets Y2 to 191, the y-coordinate of the bottom
-                        \ pixel row of the space view
-
- DEC X1                 \ Decrement X1 and X2
- DEC X2
-
- JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
-
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
-
+\
+\LDY #1                 \ Move the text cursor to row 1
+\STY YC
+\
+\LDY #11                \ Move the text cursor to column 11
+\STY XC
+\
+\LDX #0                 \ Set X1 = Y1 = Y2 = 0
+\STX X1
+\STX Y1
+\STX Y2
+\
+\\STX QQ17              \ This instruction is commented out in the original
+\                       \ source
+\
+\DEX                    \ Set X2 = 255
+\STX X2
+\
+\JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2), so that's from
+\                       \ (0, 0) to (255, 0), along the very top of the screen
+\
+\LDA #2                 \ Set X1 = X2 = 2
+\STA X1
+\STA X2
+\
+\JSR BOS2               \ Call BOS2 below, which will call BOS1 twice, and then
+\                       \ fall through into BOS2 again, so we effectively do
+\                       \ BOS1 four times, decrementing X1 and X2 each time
+\                       \ before calling LOIN, so this whole loop-within-a-loop
+\                       \ mind-bender ends up drawing these four lines:
+\                       \
+\                       \   (1, 0)   to (1, 191)
+\                       \   (0, 0)   to (0, 191)
+\                       \   (255, 0) to (255, 191)
+\                       \   (254, 0) to (254, 191)
+\                       \
+\                       \ So that's a 2-pixel wide vertical border along the
+\                       \ left edge of the upper part of the screen, and a
+\                       \ 2-pixel wide vertical border along the right edge
+\
+\.BOS2
+\
+\JSR BOS1               \ Call BOS1 below and then fall through into it, which
+\                       \ ends up running BOS1 twice. This is all part of the
+\                       \ loop-the-loop border-drawing mind-bender explained
+\                       \ above
+\
+\.BOS1
+\
+\LDA #0                 \ Set Y1 = 0
+\STA Y1
+\
+\LDA #2*Y-1             \ Set Y2 = 2 * #Y - 1. The constant #Y is 96, the
+\STA Y2                 \ y-coordinate of the mid-point of the space view, so
+\                       \ this sets Y2 to 191, the y-coordinate of the bottom
+\                       \ pixel row of the space view
+\
+\DEC X1                 \ Decrement X1 and X2
+\DEC X2
+\
+\JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
+\
 \LDA #%00001111         \ Set locations &4000 &41F8 to %00001111, as otherwise
 \STA &4000              \ the top-left and top-right corners will be black (as
 \STA &41F8              \ the lines overlap at the corners, and the EOR logic
-                        \ used by LOIN will otherwise make them black)
+\                       \ used by LOIN will otherwise make them black)
 
-                        \ --- And replaced by: -------------------------------->
-
- LDA #WHITE             \ Set locations &4000 &41F8 to %11111111, as otherwise
- STA &4000              \ the top-left and top-right corners will be black (as
- STA &41F8              \ the lines overlap at the corners, and the EOR logic
-                        \ used by LOIN will otherwise make them black)
-
-                        \ --- End of replacement ------------------------------>
+                        \ --- End of removed code ----------------------------->
 
  RTS                    \ Return from the subroutine
 

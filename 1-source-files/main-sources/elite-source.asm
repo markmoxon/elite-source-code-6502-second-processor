@@ -44743,64 +44743,72 @@ ENDIF
 
 .BOX
 
- LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
- JSR DOCOL              \ switch to colour 2, which is yellow
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- LDX #0                 \ Set QQ17 = 0 to switch to ALL CAPS
- STX QQ17
+\LDA #YELLOW            \ Send a #SETCOL YELLOW command to the I/O processor to
+\JSR DOCOL              \ switch to colour 2, which is yellow
+\
+\LDX #0                 \ Set QQ17 = 0 to switch to ALL CAPS
+\STX QQ17
+\
+\STX X1                 \ Set (X1, Y1) to (0, 0)
+\STX Y1
+\
+\STX Y2                 \ Set Y2 = 0
+\
+\DEX                    \ Set X2 = 255
+\STX X2
+\
+\JSR LL30               \ Draw a line from (X1, Y1) to (X2, Y2), so that's
+\                       \ (0, 0) to (255, 0), along the very top of the screen
+\
+\LDA #2                 \ Set X1 = X2 = 2
+\STA X1
+\STA X2
+\
+\JSR BOS2               \ Call BOS2 below, which will call BOS1 twice, and then
+\                       \ fall through into BOS2 again, so we effectively do
+\                       \ BOS1 four times, decrementing X1 and X2 each time
+\                       \ before calling LOIN, so this whole loop-within-a-loop
+\                       \ mind-bender ends up drawing these four lines:
+\                       \
+\                       \   (1, 0)   to (1, 191)
+\                       \   (0, 0)   to (0, 191)
+\                       \   (255, 0) to (255, 191)
+\                       \   (254, 0) to (254, 191)
+\                       \
+\                       \ So that's a 2-pixel wide vertical border along the
+\                       \ left edge of the upper part of the screen, and a
+\                       \ 2-pixel wide vertical border along the right edge
+\
+\.BOS2
+\
+\JSR BOS1               \ Call BOS1 below and then fall through into it, which
+\                       \ ends up running BOS1 twice. This is all part of the
+\                       \ loop-the-loop border-drawing mind-bender explained
+\                       \ above
+\
+\.BOS1
+\
+\LDA #0                 \ Set Y1 = 0
+\STA Y1
+\
+\LDA #2*Y-1             \ Set Y2 = 2 * #Y - 1. The constant #Y is 96, the
+\STA Y2                 \ y-coordinate of the mid-point of the space view, so
+\                       \ this sets Y2 to 191, the y-coordinate of the bottom
+\                       \ pixel row of the space view
+\
+\DEC X1                 \ Decrement X1 and X2
+\DEC X2
+\
+\JMP LL30               \ Draw a line from (X1, Y1) to (X2, Y2), and return from
+\                       \ the subroutine using a tail call
 
- STX X1                 \ Set (X1, Y1) to (0, 0)
- STX Y1
+                        \ --- And replaced by: -------------------------------->
 
- STX Y2                 \ Set Y2 = 0
+ RTS                    \ Return from the subroutine
 
- DEX                    \ Set X2 = 255
- STX X2
-
- JSR LL30               \ Draw a line from (X1, Y1) to (X2, Y2), so that's
-                        \ (0, 0) to (255, 0), along the very top of the screen
-
- LDA #2                 \ Set X1 = X2 = 2
- STA X1
- STA X2
-
- JSR BOS2               \ Call BOS2 below, which will call BOS1 twice, and then
-                        \ fall through into BOS2 again, so we effectively do
-                        \ BOS1 four times, decrementing X1 and X2 each time
-                        \ before calling LOIN, so this whole loop-within-a-loop
-                        \ mind-bender ends up drawing these four lines:
-                        \
-                        \   (1, 0)   to (1, 191)
-                        \   (0, 0)   to (0, 191)
-                        \   (255, 0) to (255, 191)
-                        \   (254, 0) to (254, 191)
-                        \
-                        \ So that's a 2-pixel wide vertical border along the
-                        \ left edge of the upper part of the screen, and a
-                        \ 2-pixel wide vertical border along the right edge
-
-.BOS2
-
- JSR BOS1               \ Call BOS1 below and then fall through into it, which
-                        \ ends up running BOS1 twice. This is all part of the
-                        \ loop-the-loop border-drawing mind-bender explained
-                        \ above
-
-.BOS1
-
- LDA #0                 \ Set Y1 = 0
- STA Y1
-
- LDA #2*Y-1             \ Set Y2 = 2 * #Y - 1. The constant #Y is 96, the
- STA Y2                 \ y-coordinate of the mid-point of the space view, so
-                        \ this sets Y2 to 191, the y-coordinate of the bottom
-                        \ pixel row of the space view
-
- DEC X1                 \ Decrement X1 and X2
- DEC X2
-
- JMP LL30               \ Draw a line from (X1, Y1) to (X2, Y2), and return from
-                        \ the subroutine using a tail call
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
