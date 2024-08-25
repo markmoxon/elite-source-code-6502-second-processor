@@ -8708,8 +8708,18 @@ ENDMACRO
                         \ The above sets the following indicators to show red
                         \ for high values and yellow/white for low values
 
- LDA #14                \ Set T1 to 14, the threshold at which we change the
- STA T1                 \ indicator's colour
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #14                \ Set T1 to 14, the threshold at which we change the
+\STA T1                 \ indicator's colour
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #21                \ Set T1 to 21, the threshold at which we change the
+ STA T1                 \ indicator's colour (this stops the speed indicator
+                        \ flashing when at full speed, as that's just annoying)
+
+                        \ --- End of replacement ------------------------------>
 
  LDA DELTA              \ Fetch our ship's speed into A, in the range 0-40
 
