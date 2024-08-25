@@ -317,6 +317,10 @@ ENDIF
  WHITE2  = %11111111
  STRIPE  = %11111111
 
+ RED2_M    = %00000011  \ Red identifier for missiles
+
+ YELLOW2_M = %00001111  \ Yellow identifier for missiles
+
                         \ --- End of replacement ------------------------------>
 
  NRU% = 0               \ The number of planetary systems with extended system
@@ -4999,12 +5003,25 @@ ENDIF
                         \ value &FF, as we just loaded it from MSTG and checked
                         \ that it was negative)
 
- LDY #YELLOW2           \ Change the leftmost missile indicator to yellow
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDY #YELLOW2           \ Change the leftmost missile indicator to yellow
+\JSR MSBAR              \ on the missile bar (this call changes the leftmost
+\                       \ indicator because we set X to the number of missiles
+\                       \ in NOMSL above, and the indicators are numbered from
+\                       \ right to left, so X is the number of the leftmost
+\                       \ indicator)
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDY #YELLOW2_M         \ Change the leftmost missile indicator to yellow
  JSR MSBAR              \ on the missile bar (this call changes the leftmost
                         \ indicator because we set X to the number of missiles
                         \ in NOMSL above, and the indicators are numbered from
                         \ right to left, so X is the number of the leftmost
                         \ indicator)
+
+                        \ --- End of replacement ------------------------------>
 
 .MA25
 
@@ -5722,11 +5739,23 @@ ENDIF
  JSR BEEP               \ We have missile lock and an armed missile, so call
                         \ the BEEP subroutine to make a short, high beep
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDX XSAV               \ Call ABORT2 to store the details of this missile
+\LDY #RED2              \ lock, with the targeted ship's slot number in X
+\JSR ABORT2             \ (which we stored in XSAV at the start of this ship's
+\                       \ loop at MAL1), and set the colour of the missile
+\                       \ indicator to the colour in Y (red = &0E)
+
+                        \ --- And replaced by: -------------------------------->
+
  LDX XSAV               \ Call ABORT2 to store the details of this missile
- LDY #RED2              \ lock, with the targeted ship's slot number in X
+ LDY #RED2_M            \ lock, with the targeted ship's slot number in X
  JSR ABORT2             \ (which we stored in XSAV at the start of this ship's
                         \ loop at MAL1), and set the colour of the missile
                         \ indicator to the colour in Y (red = &0E)
+
+                        \ --- End of replacement ------------------------------>
 
 .MA47
 
@@ -33361,7 +33390,7 @@ ENDIF
 
  CMP CHK                \ Test the calculated checksum against CHK
 
-IF _REMOVE_CHECKSUMS
+IF _REMOVE_CHECKSUMS OR TRUE
 
  NOP                    \ If we have disabled checksums, then ignore the result
  NOP                    \ of the comparison and fall through into the next part

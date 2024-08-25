@@ -115,6 +115,10 @@
  WHITE2  = %11111111
  STRIPE  = %11111111
 
+ RED2_M    = %00000011  \ Red identifier for missiles
+
+ YELLOW2_M = %00001111  \ Yellow identifier for missiles
+
                         \ --- End of replacement ------------------------------>
 
  PARMAX = 15            \ The number of dashboard parameters transmitted with
@@ -7631,15 +7635,70 @@ ENDMACRO
                         \ #RED2, or 0 for black, so this is a 2-pixel wide mode
                         \ 2 character row byte in the specified colour
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA T1                 \ Store the indicator colour in T1
+
+ BEQ miss1              \ Set A to the correct colour byte for the missile
+ LDA #%00111111         \ (i.e. black or white)
+
+.miss1
+
+                        \ --- End of added code ------------------------------->
+
  LDY #5                 \ We now want to draw this line five times to do the
                         \ left two pixels of the indicator, so set a counter in
                         \ Y
 
 .MBL1
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\STA (SC),Y             \ Draw the 3-pixel row, and as we do not use EOR logic,
+\                       \ this will overwrite anything that is already there
+\                       \ (so drawing a black missile will delete what's there)
+
+                        \ --- And replaced by: -------------------------------->
+
+ CPY #3                 \ If this is not the middle row of the indicator (Y = 3)
+ BNE miss3              \ or this is not a red or yellow indicator, jump to
+ LDX T1                 \ miss3
+ CPX #RED2_M
+ BEQ miss2
+ CPX #YELLOW2_M
+ BNE miss3
+
+ PHA                    \ Store the missile colour on the stack
+
+ LDA #%10101010         \ If we get here then this is the middle row of the
+ STA (SC),Y             \ indicator and the indicator is yellow, so draw a white
+                        \ and black pixel in the first two pixels of the row
+
+ PLA                    \ Retrieve the missile colour
+
+ JMP miss4              \ Jump to miss4 to skip the following
+
+.miss2
+
+ PHA                    \ Store the missile colour on the stack
+
+ LDA #0                 \ If we get here then this is the middle row of the
+ STA (SC),Y             \ indicator and the indicator is red, so draw two black
+                        \ pixels in the first two pixels of the row
+
+ PLA                    \ Retrieve the missile colour
+
+ JMP miss4              \ Jump to miss4 to skip the following
+
+.miss3
+
  STA (SC),Y             \ Draw the 3-pixel row, and as we do not use EOR logic,
                         \ this will overwrite anything that is already there
                         \ (so drawing a black missile will delete what's there)
+
+.miss4
+
+                        \ --- End of replacement ------------------------------>
 
  DEY                    \ Decrement the counter for the next row
 
@@ -7665,9 +7724,39 @@ ENDMACRO
 
 .MBL2
 
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\STA (SC),Y             \ Draw the 1-pixel row, and as we do not use EOR logic,
+\                       \ this will overwrite anything that is already there
+\                       \ (so drawing a black missile will delete what's there)
+
+                        \ --- And replaced by: -------------------------------->
+
+ CPY #3                 \ If this is not the middle row of the indicator (Y = 3)
+ BNE miss5              \ or this is not a red indicator, jump to miss3
+ LDX T1
+ CPX #RED2_M
+ BNE miss5
+
+ PHA                    \ Store the missile colour on the stack
+
+ LDA #0                 \ If we get here then this is the middle row of the
+ STA (SC),Y             \ indicator and the indicator is red, so draw a black
+                        \ pixel in the left pixel of the row
+
+ PLA                    \ Retrieve the missile colour
+
+ JMP miss6              \ Jump to miss6 to skip the following
+
+.miss5
+
  STA (SC),Y             \ Draw the 1-pixel row, and as we do not use EOR logic,
                         \ this will overwrite anything that is already there
                         \ (so drawing a black missile will delete what's there)
+
+.miss6
+
+                        \ --- End of replacement ------------------------------>
 
  DEY                    \ Decrement the counter for the next row
 
