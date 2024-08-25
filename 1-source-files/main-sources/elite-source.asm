@@ -3580,11 +3580,6 @@ ENDIF
  SKIP 1                 \ The value of the line heap pointer when we have just
                         \ drawn the first meridian but before the second
 
-.LSPl
-
- SKIP 1                 \ The ball line heap pointer for the left eye for
-                        \ planets
-
                         \ --- End of added code ------------------------------->
 
  PRINT "UP workspace from  ", ~UP," to ", ~P%
@@ -26257,9 +26252,6 @@ ENDIF
  STZ LSPr               \ Reset the ball line heap by setting the ball line heap
                         \ pointer to 0 for the right eye
 
- STZ LSPl               \ Reset the ball line heap by setting the ball line heap
-                        \ pointer to 0 for the right eye
-
                         \ --- End of added code ------------------------------->
 
  LDX #&FF               \ Set X = &FF (though this appears not to be used)
@@ -29231,8 +29223,19 @@ ENDIF
  STA STP                \ Set STP = A. STP is the step size for the circle, so
                         \ the above sets a smaller step size for bigger circles
 
-                        \ Fall through into CIRCLE3 to draw the circle with the
-                        \ correct step size
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\                       \ Fall through into CIRCLE3 to draw the circle with the
+\                       \ correct step size
+
+                        \ --- And replaced by: -------------------------------->
+
+ JMP circ1              \ Jump into CIRCLE3 to draw the circle with the correct
+                        \ step size, but without resetting the line heap (as we
+                        \ now do that later, after all the coordinates have been
+                        \ calculated, in DrawAnaglyphPlanet)
+
+                        \ --- End of replacement ------------------------------>
 
 \ ******************************************************************************
 \
@@ -29311,6 +29314,8 @@ ENDIF
 
  LDA #1                 \ Set LSP = 1 to reset the ball line heap pointer
  STA (LSPS)
+
+.circ1
 
                         \ --- End of replacement ------------------------------>
 
@@ -29425,21 +29430,21 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- LDA circle3D           \ If circle3D is zero then jump to circ1 to draw the
- BEQ circ1              \ circle in 2D
+ LDA circle3D           \ If circle3D is zero then jump to circ2 to draw the
+ BEQ circ2              \ circle in 2D
 
  JSR BLINEHeapPlanet    \ Otherwise we need to draw the circle in anaglyph 3D,
                         \ so call BLINEHeapPlanet to draw this segment into the
                         \ XX3r heap and increase CNT by STP, the step size
 
- JMP circ2              \ Skip the following to move on to the next segment
+ JMP circ3              \ Skip the following to move on to the next segment
 
-.circ1
+.circ2
 
  JSR BLINE              \ Call BLINE to draw this segment, which also increases
                         \ CNT by STP, the step size
 
-.circ2
+.circ3
 
                         \ --- End of replacement ------------------------------>
 
@@ -29658,11 +29663,6 @@ ENDIF
                         \ --- And replaced by: -------------------------------->
 
  JSR UseLeftBallLine    \ Switch to the ball line heap for the left eye
-
- LDA #LO(LSPl)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
- STA LSPS               \ store the left-eye ball line heap pointer in LSP
- LDA #HI(LSPl)
- STA LSPS+1
 
  LDA #RED_3D            \ Send a #SETCOL RED_3D command to the I/O processor to
  JSR DOCOL              \ switch to colour 2, which is red in the space view
@@ -44663,8 +44663,6 @@ ENDIF
 
  STZ LSPr               \ Reset the ball line heap pointer at LSPr
 
- STZ LSPl               \ Reset the ball line heap pointer at LSPl
-
                         \ --- End of added code ------------------------------->
 
  LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
@@ -56773,11 +56771,6 @@ ENDIF
 .DrawAnaglyphPlanet
 
  JSR UseLeftBallLine    \ Switch to the ball line heap for the left eye
-
- LDA #LO(LSPl)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
- STA LSPS               \ store the left-eye ball line heap pointer in LSP
- LDA #HI(LSPl)
- STA LSPS+1
 
  LDA #0                 \ Set LSX2 = 0 to indicate that the ball line heap is
  STA (LSX2S)            \ not empty, as we are about to fill it
