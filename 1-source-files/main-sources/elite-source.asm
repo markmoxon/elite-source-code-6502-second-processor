@@ -28134,6 +28134,8 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
+ STZ meridian2Ptr       \ Zero meridian2Ptr so we don't insert a gap
+
  JMP DrawAnaglyphPlanet \ We have finished drawing the crater into the heap,
                         \ so jump to DrawAnaglyphPlanet to draw the planet in
                         \ 3D, returning from the subroutine using a tail call
