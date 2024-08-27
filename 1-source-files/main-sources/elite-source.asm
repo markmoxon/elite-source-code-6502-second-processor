@@ -29047,9 +29047,9 @@ ENDIF
 \STX X2
 \STA XX
 
-                        \ ??? Unfortunately this hack makes the sun lines
-                        \ flicker as we are now redrawing the whole line, so
-                        \ this needs changing
+                        \ Unfortunately this hack makes the sun lines flicker
+                        \ as we are now redrawing the whole line, so this needs
+                        \ changing ???
 
                         \ --- End of removed code ----------------------------->
 
@@ -41157,12 +41157,33 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
+ STZ XX24               \ Set XX24 = 0 to flag that neither line has been drawn
+                        \ yet
+
+                        \ Currently we draw the laser line in the same place
+                        \ for each eye, but this can probably be improved ???
+
+ LDA X1                 \ Save the laser line coordinates on the stack, as they
+ PHA                    \ will get corrupted when we draw the left-eye line
+ LDA X2
+ PHA
+ LDA Y1
+ PHA
+ LDA Y2
+ PHA
+
  JSR DrawLeftEyeLine    \ Draw the laser line in the left-eye line heap
 
-\ Draw right eye laser line in a different place to the left eye
-\ (Right eye line is currently null) ???
+ PLA                    \ Retrieve the laser line coordinates from the stack
+ STA Y2
+ PLA
+ STA Y1
+ PLA
+ STA X2
+ PLA
+ STA X1
 
- JSR DrawRightEyeNull   \ Draw the laser line in the right-eye line heap
+ JSR DrawRightEyeLine   \ Draw the laser line in the right-eye line heap
 
                         \ --- End of replacement ------------------------------>
 
