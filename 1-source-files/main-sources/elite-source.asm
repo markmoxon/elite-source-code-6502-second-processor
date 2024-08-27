@@ -55970,8 +55970,6 @@ ENDIF
  LDA K%+&2E4+21+37
  STA SLSP+1
 
-\JSR ResetExplosions    \ Reset any explosions so they restart on loading
-
 .load1
 
  RTS
@@ -56216,6 +56214,28 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: DrawExplosion
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Draw an explosion
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawExplosion
+
+ LDA INWK+31            \ If bit 3 of the ship's byte #31 is clear, then nothing
+ AND #%00001000         \ is being drawn on-screen for this ship anyway, so jump
+ BEQ draw3              \ to draw3 to return from the subroutine
+
+ JMP PTCLS              \ Call PTCLS to redraw the cloud, returning from the
+                        \ subroutine using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
 \       Name: GetShipData
 \       Type: Subroutine
 \   Category: Universe editor
@@ -56304,20 +56324,71 @@ ENDIF
 
  JSR MV5                \ Draw the ship on the scanner
 
+                        \ Fall through into DrawShipStore to store the ship's
+                        \ data and draw the ship on-screen
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawShipStore
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Store the ship's data and draw the ship
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawShipStore
+
  JSR STORE              \ Store the updated scanner byte
+
+                        \ Fall through into DrawShipAxes to draw the ship
+                        \ on-screen with the correct axes for the view
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawShipAxes
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Draw the ship with the correct axes for the view
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawShipAxes
 
  JSR PLUT               \ Call PLUT to update the geometric axes in INWK to
                         \ match the view (front, rear, left, right)
 
- LDA #%00100000         \ If bit 5 of the ship's byte #31 is set, then the ship
- BIT XX1+31             \ is currently exploding, so do not draw the explosion
- BNE ship1
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: DrawShip
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Draw the ship
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawShip
 
  JSR LL9                \ Draw the ship
 
-.ship1
+ LDY #31                \ Fetch the ship's explosion/killed state from byte #31
+ LDA INWK+31            \ and copy it to byte #31 in INF (so the ship's data in
+ STA (INF),Y            \ K% gets updated)
 
- RTS                    \ Return from the subroutine
+ LDX currentSlot        \ Get the ship data for the current slot, as otherwise
+ JMP GetShipData        \ we will leave the wrong axes in INWK, and return from
+                        \ the subroutine using a tail call
 
                         \ --- End of added code ------------------------------->
 
@@ -56427,6 +56498,156 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: currentSlot
+\       Type: Variable
+\   Category: Universe editor
+\    Summary: Temporary storage for the current slot in the universe editor
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.currentSlot
+
+ EQUB 0
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ResetExplosions
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Restart any exploding ships to the point just before they explode
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ResetExplosions
+
+ LDX #2                 \ Set a counter in X to loop through all the slots,
+                        \ starting with the first ship slot
+
+.rexp1
+
+ STX currentSlot        \ Store the counter in currentSlot
+
+ LDY FRIN,X             \ If the slot is empty, jump to rexp3 to return from the
+ BEQ rexp3              \ subroutine
+
+ JSR GetShipData        \ Fetch the ship data for this slot
+
+ LDA INWK+31            \ If bit 5 of INWK+31 is clear, then the ship is not
+ AND #%00100000         \ exploding, so jump to the next slot
+ BEQ rexp2
+
+ LDA INWK+31            \ Reset the explosion by clearing bits 3, 5 and 6 and
+ ORA #%10000000         \ setting bit 7 of the ship's INWK+31 byte
+ AND #%10010111
+ STA INWK+31
+
+ JSR KickstartExplosion \ Kickstart the explosion
+
+.rexp2
+
+ LDX currentSlot        \ Restore the counter from currentSlot
+
+ INX                    \ Decrement the counter
+
+ CPX #NOSH
+ BCC rexp1              \ Loop back until all slots are processed
+
+.rexp3
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: KickstartExplosion
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Restart an explosion by working through the first four steps
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.KickstartExplosion
+
+ JSR RevertExplosionMod \ Revert the explosion modification so it implements the
+                        \ normal explosion cloud
+
+ JSR DrawShipStore      \ Store the ship data and draw the ship (but not on the
+                        \ scanner)
+
+ JSR DrawShip           \ Draw the ship (but not on the scanner, and without
+                        \ storing or updating the axes)
+
+ JSR DrawShip           \ Draw the ship (but not on the scanner, and without
+                        \ storing or updating the axes)
+
+ JSR DrawShip           \ Draw the ship (but not on the scanner, and without
+                        \ storing or updating the axes)
+
+ JMP ApplyExplosionMod  \ Modify the explosion code so it doesn't update the
+                        \ explosion, returning from the subroutine using a tail
+                        \ call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ApplyExplosionMod
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Apply mods for explosions
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ApplyExplosionMod
+
+ LDA #&4C               \ Modify DOEXP so that it jumps to DrawExplosion instead
+ STA DOEXP              \ to draw the cloud but without progressing it
+ LDA #LO(DrawExplosion)
+ STA DOEXP+1
+ LDA #Hi(DrawExplosion)
+ STA DOEXP+2
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: RevertExplosionMod
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Reverse mods for explosions
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.RevertExplosionMod
+
+ LDA #&A5               \ Revert DOEXP to its default behaviour of drawing the
+ STA DOEXP              \ cloud
+ LDA #&64
+ STA DOEXP+1
+ LDA #&29
+ STA DOEXP+2
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
 \       Name: UniverseEditor
 \       Type: Subroutine
 \   Category: Universe editor
@@ -56476,6 +56697,9 @@ ENDIF
                         \ to be tweaked (this needs to be a JSR so the return
                         \ address gets put on the stack - we can't use a tail
                         \ call here)
+
+ JSR RevertExplosionMod \ Revert the explosion modification so it implements the
+                        \ normal explosion cloud
 
  RTS                    \ Return from the subroutine
 
@@ -56530,6 +56754,8 @@ ENDIF
 
  JSR NWSTARS            \ Set up a new stardust field (not sure why LOOK1
                         \ doesn't draw the stardust - it should)
+
+ JSR ResetExplosions    \ Reset any explosions so they restart on loading
 
 .show2
 
