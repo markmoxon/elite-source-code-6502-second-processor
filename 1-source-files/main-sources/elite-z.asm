@@ -6651,10 +6651,21 @@ ENDIF
  STY SC+1               \ (as each row takes up 2 pages), and store it in the
                         \ high byte of SC(1 0) at SC+1
 
- LDA #%01000000         \ Now to draw the same line but from the right edge of
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #%01000000         \ Now to draw the same line but from the right edge of
+\                       \ the screen, so set a pixel mask in A to check the
+\                       \ second pixel of the last byte, so we skip the 2-pixel
+\                       \ screen border at the right edge of the screen
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #%00010001         \ Now to draw the same line but from the right edge of
                         \ the screen, so set a pixel mask in A to check the
-                        \ second pixel of the last byte, so we skip the 2-pixel
-                        \ screen border at the right edge of the screen
+                        \ second pixel of the last byte, so we start at the
+                        \ right edge of the screen
+
+                        \ --- End of replacement ------------------------------>
 
  LDY #248               \ Set Y = 248 so the call to HAS3 starts drawing the
                         \ line in the last byte of the screen row, at the right
@@ -6699,8 +6710,17 @@ ENDIF
                         \ so the call to HAS3 starts drawing from the last
                         \ character in that first half
 
- LDA #%00010000         \ We want to start drawing from the last pixel, so we
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #%00010000         \ We want to start drawing from the last pixel, so we
                         \ set a mask in A to the last pixel in the 4-pixel byte
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #%00010001         \ We want to start drawing from the last pixel, so we
+                        \ set a mask in A to the last pixel in the 4-pixel byte
+
+                        \ --- End of replacement ------------------------------>
 
  JSR HAS3               \ Call HAS3, which draws a line from the halfway point
                         \ across the left half of the screen, going left until
@@ -6726,11 +6746,23 @@ ENDIF
                         \ four times, each time starting one character row lower
                         \ on-screen)
 
- LDA #16                \ We want to draw 15 vertical lines, one every 16 pixels
-                        \ across the screen, with the first at x-coordinate 16,
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #16                \ We want to draw 15 vertical lines, one every 16 pixels
+\                       \ across the screen, with the first at x-coordinate 16,
+\                       \ so set this in A to act as the x-coordinate of each
+\                       \ line as we work our way through them from left to
+\                       \ right, incrementing by 16 for each new line
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #0                 \ We want to draw 16 vertical lines, one every 16 pixels
+                        \ across the screen, with the first at x-coordinate 0,
                         \ so set this in A to act as the x-coordinate of each
                         \ line as we work our way through them from left to
                         \ right, incrementing by 16 for each new line
+
+                        \ --- End of replacement ------------------------------>
 
  LDX #&40               \ Set X = &40, the high byte of the start of screen
  STX R                  \ memory (the screen starts at location &4000) and the
@@ -6831,10 +6863,20 @@ ENDIF
 
 .HAS2
 
- LDA #%00100010         \ Set A to the pixel pattern for a mode 1 character row
-                        \ byte with the third pixel set, so we start drawing the
-                        \ horizontal line just to the right of the 2-pixel
-                        \ border along the edge of the screen
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #%00100010         \ Set A to the pixel pattern for a mode 1 character row
+\                       \ byte with the third pixel set, so we start drawing the
+\                       \ horizontal line just to the right of the 2-pixel
+\                       \ border along the edge of the screen
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #%00010001         \ Set A to the pixel pattern for a mode 1 character row
+                        \ byte with the fourth pixel set, so we start drawing the
+                        \ horizontal line from the right edge of the screen
+
+                        \ --- End of replacement ------------------------------>
 
 .HAL2
 
@@ -6993,7 +7035,15 @@ ENDIF
  SBC #8                 \ to the next character block to the left
  TAY
 
- LDA #%00010000         \ Set a mask in A to the last pixel in the 4-pixel byte
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #%00010000         \ Set a mask in A to the last pixel in the 4-pixel byte
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #%00010001         \ Set a mask in A to the last pixel in the 4-pixel byte
+
+                        \ --- End of replacement ------------------------------>
 
  BCS HAS3               \ If the above subtraction didn't underflow, jump back
                         \ to HAS3 to keep drawing the line in the next character

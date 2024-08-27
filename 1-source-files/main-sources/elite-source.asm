@@ -13095,6 +13095,13 @@ ENDIF
  BPL HAL9               \ Loop back to copy the next byte until we have copied
                         \ three of them (i.e. Y was 3 before the DEY)
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA CNT2               \ CNT2 gets repurposed by LL9, so store it on the stack
+ PHA                    \ to avoid it being corrupted
+
+                        \ --- End of added code ------------------------------->
+
  TXA                    \ Store X on the stack so we can retrieve it after the
  PHA                    \ call to HAS1 (as it contains the index of the next
                         \ byte in HATB
@@ -13103,6 +13110,13 @@ ENDIF
 
  PLA                    \ Restore the value of X, so X points to the next byte
  TAX                    \ in HATB after the three bytes we copied into XX15
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ PLA                    \ Restore CNT2 from the stack
+ STA CNT2
+
+                        \ --- End of added code ------------------------------->
 
  DEC CNT2               \ Decrement the outer loop counter in CNT2
 
