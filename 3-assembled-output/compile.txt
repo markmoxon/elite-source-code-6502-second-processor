@@ -12389,8 +12389,7 @@ Saving file '3-assembled-output/ELTE.bin'
      507F   86 86      STX &86
      5081   20 66 51   JSR &5166
      5084   CD 64 10   CMP &1064
-     5087   EA         NOP
-     5088   EA         NOP
+     5087   D0 F8      BNE &5081
      5089   49 A9      EOR #&A9
      508B   AA         TAX
      508C   AD B2 08   LDA &08B2
