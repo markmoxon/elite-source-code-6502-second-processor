@@ -5507,7 +5507,7 @@ ENDIF
  AND #%00000011         \ which will now be in the range 0-3, and will contain
  TAX                    \ the two pixels to show in the character row
 
- LDA P                  \ Fetch the pixel's distance into P
+ LDA P                  \ Fetch the pixel's distance from P
 
  CMP #80                \ If the pixel's ZZ distance is >= 80, then the dot is
  BCS PX6                \ a medium distance away, so jump to PX6 to draw a
