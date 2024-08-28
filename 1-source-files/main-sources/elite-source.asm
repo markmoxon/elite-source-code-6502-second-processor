@@ -3897,9 +3897,387 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
+.X1UBr
+
+ SKIP 256               \ The x-coordinates of the start points for character
+                        \ lines in the scroll text (as projected screen
+                        \ coordinates)
+
+.Y1UBr
+
+ SKIP 256               \ The y-coordinates of the start points for character
+                        \ lines in the scroll text (as projected screen
+                        \ coordinates)
+
+.X2UBr
+
+ SKIP 256               \ The x-coordinates of the end points for character
+                        \ lines in the scroll text (as projected screen
+                        \ coordinates)
+
+.Y2UBr
+
+ SKIP 256               \ The y-coordinates of the end points for character
+                        \ lines in the scroll text (as projected screen
+                        \ coordinates)
+
+.X1VBr
+
+ SKIP 256               \ The x-coordinates of the start points for the previous
+                        \ set of character lines in the scroll text (as
+                        \ projected screen coordinates) so they can be erased
+
+.Y1VBr
+
+ SKIP 256               \ The y-coordinates of the start points for the previous
+                        \ set of character lines in the scroll text (as
+                        \ projected screen coordinates) so they can be erased
+
+.X2VBr
+
+ SKIP 256               \ The x-coordinates of the end points for the previous
+                        \ set of character lines in the scroll text (as
+                        \ projected screen coordinates) so they can be erased
+
+.Y2VBr
+
+ SKIP 256               \ The y-coordinates of the end points for the previous
+                        \ set of character lines in the scroll text (as
+                        \ projected screen coordinates) so they can be erased
+
+.xStart
+
+ SKIP 2                 \ The x-coordinate of the start of the current character
+                        \ line for the right eye
+
+.yStart
+
+ SKIP 2                 \ The y-coordinate of the start of the current character
+                        \ line for the right eye
+
+.xEnd
+
+ SKIP 2                 \ The x-coordinate of the end of the current character
+                        \ line for the right eye
+
+.yEnd
+
+ SKIP 2                 \ The y-coordinate of the end of the current character
+                        \ line for the right eye
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\ ANAGLYPH FILE
+\
+\ Produces the binary file ANAGLYPH.bin that gets appended by elite-checksum.py.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
  ORG &0E20
 
-\ Code can go in here
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: LTDEF
+\       Type: Variable
+\   Category: Demo
+\    Summary: Line definitions for characters in the Star Wars scroll text
+\  Deep dive: The 6502 Second Processor demo mode
+\
+\ ------------------------------------------------------------------------------
+\
+\ Characters in the scroll text are drawn using lines on a 3x6 numbered grid
+\ like this:
+\
+\   0   1   2
+\   .   .   .
+\   3   4   5
+\   .   .   .
+\   6   7   8
+\   9   A   B
+\
+\ The low nibble of each byte is the starting point for that line segment, and
+\ the high nibble is the end point, so a value of &28, for example, means
+\ "draw a line from point 8 to point 2". This table contains definitions for all
+\ the characters we can use in the scroll text, as lines on the above grid.
+\
+\ See the deep dive on "the 6502 Second Processor demo mode" for details.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.LTDEF
+
+ EQUB &63, &34, &47, &76, &97   \ Letter definition for ","
+ EQUB &35, &00, &00, &00, &00   \ Letter definition for "-"
+ EQUB &63, &34, &47, &76, &00   \ Letter definition for "."
+ EQUB &61, &00, &00, &00, &00   \ Letter definition for "/"
+ EQUB &73, &31, &15, &57, &00   \ Letter definition for "0"
+ EQUB &31, &17, &00, &00, &00   \ Letter definition for "1"
+ EQUB &02, &25, &53, &36, &68   \ Letter definition for "2"
+ EQUB &02, &28, &86, &35, &00   \ Letter definition for "3"
+ EQUB &82, &23, &35, &00, &00   \ Letter definition for "4"
+ EQUB &20, &03, &35, &58, &86   \ Letter definition for "5"
+ EQUB &20, &06, &68, &85, &53   \ Letter definition for "6"
+ EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
+ EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
+ EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ":" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ";" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "<" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "=" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for ">" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "?" (blank)
+ EQUB &00, &00, &00, &00, &00   \ Letter definition for "@" (blank)
+ EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
+ EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
+ EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
+ EQUB &60, &05, &56, &00, &00   \ Letter definition for "D"
+ EQUB &86, &60, &02, &35, &00   \ Letter definition for "E"
+ EQUB &60, &02, &35, &00, &00   \ Letter definition for "F"
+ EQUB &45, &58, &86, &60, &02   \ Letter definition for "G"
+ EQUB &60, &28, &35, &00, &00   \ Letter definition for "H"
+ EQUB &17, &00, &00, &00, &00   \ Letter definition for "I"
+ EQUB &28, &86, &63, &00, &00   \ Letter definition for "J"
+ EQUB &60, &23, &83, &00, &00   \ Letter definition for "K"
+ EQUB &86, &60, &00, &00, &00   \ Letter definition for "L"
+ EQUB &60, &04, &42, &28, &00   \ Letter definition for "M"
+ EQUB &60, &08, &82, &00, &00   \ Letter definition for "N"
+ EQUB &60, &02, &28, &86, &00   \ Letter definition for "O"
+ EQUB &60, &02, &25, &53, &00   \ Letter definition for "P"
+ EQUB &60, &02, &28, &86, &48   \ Letter definition for "Q"
+ EQUB &60, &02, &25, &53, &48   \ Letter definition for "R"
+ EQUB &20, &03, &35, &58, &86   \ Letter definition for "S"
+ EQUB &02, &17, &00, &00, &00   \ Letter definition for "T"
+ EQUB &28, &86, &60, &00, &00   \ Letter definition for "U"
+ EQUB &27, &70, &00, &00, &00   \ Letter definition for "V"
+ EQUB &28, &84, &46, &60, &00   \ Letter definition for "W"
+ EQUB &26, &08, &00, &00, &00   \ Letter definition for "X"
+ EQUB &74, &04, &24, &00, &00   \ Letter definition for "Y"
+ EQUB &02, &26, &68, &00, &00   \ Letter definition for "Z"
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: RUPLA
+\       Type: Variable
+\   Category: Text
+\    Summary: System numbers that have extended description overrides
+\  Deep dive: Extended system descriptions
+\             Extended text tokens
+\             The Constrictor mission
+\
+\ ------------------------------------------------------------------------------
+\
+\ This table contains the extended token numbers to show as the specified
+\ system's extended description, if the criteria in the RUGAL table are met.
+\
+\ The three variables work as follows:
+\
+\   * The RUPLA table contains the system numbers
+\
+\   * The RUGAL table contains the galaxy numbers and mission criteria
+\
+\   * The RUTOK table contains the extended token to display instead of the
+\     normal extended description if the criteria in RUPLA and RUGAL are met
+\
+\ See the PDESC routine for details of how extended system descriptions work.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.RUPLA
+
+ EQUB 211               \ System 211, Galaxy 0                 Teorge = Token  1
+ EQUB 150               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
+ EQUB 36                \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
+ EQUB 28                \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
+ EQUB 253               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
+ EQUB 79                \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
+ EQUB 53                \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
+ EQUB 118               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
+ EQUB 100               \ System 100, Galaxy 2                 Arredi = Token  9
+ EQUB 32                \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
+ EQUB 68                \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
+ EQUB 164               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
+ EQUB 220               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
+ EQUB 106               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
+ EQUB 16                \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
+ EQUB 162               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
+ EQUB 3                 \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
+ EQUB 107               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
+ EQUB 26                \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
+ EQUB 192               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
+ EQUB 184               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
+ EQUB 5                 \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
+ EQUB 101               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
+ EQUB 193               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
+ EQUB 41                \ System  41, Galaxy 2                 Anreer = Token 25
+
+IF _SOURCE_DISC
+
+ EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
+
+ELIF _EXECUTIVE
+
+ EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
+ EQUB 46                \ System  46, Galaxy 0               Riedquat = Token 27
+
+ENDIF
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: RUGAL
+\       Type: Variable
+\   Category: Text
+\    Summary: The criteria for systems with extended description overrides
+\  Deep dive: Extended system descriptions
+\             Extended text tokens
+\             The Constrictor mission
+\
+\ ------------------------------------------------------------------------------
+\
+\ This table contains the criteria for printing an extended description override
+\ for a system. The galaxy number is in bits 0-6, while bit 7 determines whether
+\ to show this token during mission 1 only (bit 7 is clear, i.e. a value of &0x
+\ in the table below), or all of the time (bit 7 is set, i.e. a value of &8x in
+\ the table below).
+\
+\ In other words, Teorge, Arredi, Anreer and Lave have extended description
+\ overrides that are always shown, while the rest only appear when mission 1 is
+\ in progress.
+\
+\ The three variables work as follows:
+\
+\   * The RUPLA table contains the system numbers
+\
+\   * The RUGAL table contains the galaxy numbers and mission criteria
+\
+\   * The RUTOK table contains the extended token to display instead of the
+\     normal extended description if the criteria in RUPLA and RUGAL are met
+\
+\ See the PDESC routine for details of how extended system descriptions work.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.RUGAL
+
+ EQUB &80               \ System 211, Galaxy 0                 Teorge = Token  1
+ EQUB &00               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
+ EQUB &00               \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
+ EQUB &00               \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
+ EQUB &01               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
+ EQUB &01               \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
+ EQUB &01               \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
+ EQUB &01               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
+ EQUB &82               \ System 100, Galaxy 2                 Arredi = Token  9
+ EQUB &01               \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
+ EQUB &01               \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
+ EQUB &01               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
+ EQUB &01               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
+ EQUB &01               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
+ EQUB &01               \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
+ EQUB &01               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
+ EQUB &01               \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
+ EQUB &01               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
+ EQUB &01               \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
+ EQUB &01               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
+ EQUB &01               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
+ EQUB &01               \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
+ EQUB &02               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
+ EQUB &01               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
+ EQUB &82               \ System  41, Galaxy 2                 Anreer = Token 25
+
+IF _SOURCE_DISC
+
+ EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
+
+ELIF _EXECUTIVE
+
+ EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
+ EQUB &80               \ System   7, Galaxy 0               Riedquat = Token 27
+
+ENDIF
+
+                        \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: MTIN
+\       Type: Variable
+\   Category: Text
+\    Summary: Lookup table for random tokens in the extended token table (0-37)
+\  Deep dive: Extended text tokens
+\
+\ ------------------------------------------------------------------------------
+\
+\ The ERND token type, which is part of the extended token system, takes an
+\ argument between 0 and 37, and returns a randomly chosen token in the range
+\ specified in this table. This is used to generate the extended description of
+\ each system.
+\
+\ For example, the entry at position 13 in this table (counting from 0) is 66,
+\ so ERND 14 will expand into a random token in the range 66-70, i.e. one of
+\ "JUICE", "BRANDY", "WATER", "BREW" and "GARGLE BLASTERS".
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+
+.MTIN
+
+ EQUB 16                \ Token  0: a random extended token between 16 and 20
+ EQUB 21                \ Token  1: a random extended token between 21 and 25
+ EQUB 26                \ Token  2: a random extended token between 26 and 30
+ EQUB 31                \ Token  3: a random extended token between 31 and 35
+ EQUB 155               \ Token  4: a random extended token between 155 and 159
+ EQUB 160               \ Token  5: a random extended token between 160 and 164
+ EQUB 46                \ Token  6: a random extended token between 46 and 50
+ EQUB 165               \ Token  7: a random extended token between 165 and 169
+ EQUB 36                \ Token  8: a random extended token between 36 and 40
+ EQUB 41                \ Token  9: a random extended token between 41 and 45
+ EQUB 61                \ Token 10: a random extended token between 61 and 65
+ EQUB 51                \ Token 11: a random extended token between 51 and 55
+ EQUB 56                \ Token 12: a random extended token between 56 and 60
+ EQUB 170               \ Token 13: a random extended token between 170 and 174
+ EQUB 66                \ Token 14: a random extended token between 66 and 70
+ EQUB 71                \ Token 15: a random extended token between 71 and 75
+ EQUB 76                \ Token 16: a random extended token between 76 and 80
+ EQUB 81                \ Token 17: a random extended token between 81 and 85
+ EQUB 86                \ Token 18: a random extended token between 86 and 90
+ EQUB 140               \ Token 19: a random extended token between 140 and 144
+ EQUB 96                \ Token 20: a random extended token between 96 and 100
+ EQUB 101               \ Token 21: a random extended token between 101 and 105
+ EQUB 135               \ Token 22: a random extended token between 135 and 139
+ EQUB 130               \ Token 23: a random extended token between 130 and 134
+ EQUB 91                \ Token 24: a random extended token between 91 and 95
+ EQUB 106               \ Token 25: a random extended token between 106 and 110
+ EQUB 180               \ Token 26: a random extended token between 180 and 184
+ EQUB 185               \ Token 27: a random extended token between 185 and 189
+ EQUB 190               \ Token 28: a random extended token between 190 and 194
+ EQUB 225               \ Token 29: a random extended token between 225 and 229
+ EQUB 230               \ Token 30: a random extended token between 230 and 234
+ EQUB 235               \ Token 31: a random extended token between 235 and 239
+ EQUB 240               \ Token 32: a random extended token between 240 and 244
+ EQUB 245               \ Token 33: a random extended token between 245 and 249
+ EQUB 250               \ Token 34: a random extended token between 250 and 254
+ EQUB 115               \ Token 35: a random extended token between 115 and 119
+ EQUB 120               \ Token 36: a random extended token between 120 and 124
+ EQUB 125               \ Token 37: a random extended token between 125 and 129
+
+                        \ --- End of moved code ------------------------------->
 
  SKIPTO &1000
 
@@ -46073,6 +46451,17 @@ ENDIF
 
  STY YS                 \ Store Y, the index into the TB tables, in YS
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ JSR ApplyEyeSpacingToX \ Calculate the 3D coordinates for this point through
+                        \ both eyes, returning the results in (x_sign x_hi x_lo)
+                        \ and xRightEye(2 1 0) for the left and right eyes
+                        \
+                        \ This also copies the z-coordinate from (z_hi z_lo) to
+                        \ zCoord(1 0) for use in the parallax routine
+
+                        \ --- End of added code ------------------------------->
+
  JSR PROJ               \ Project the line's start coordinate onto the screen,
                         \ returning:
                         \
@@ -46092,6 +46481,39 @@ ENDIF
  LDA K4+1
  STA XX15+3
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA xRightEye          \ Set (x_sign x_hi x_lo) = xRightEye(2 1 0)
+ STA INWK
+ LDA xRightEye+1
+ STA INWK+1
+ LDA xRightEye+2
+ STA INWK+2
+
+ JSR PROJ               \ Project the line's start coordinate onto the screen
+                        \ for the right eye, returning:
+                        \
+                        \   * K3(1 0) = the screen x-coordinate
+                        \   * K4(1 0) = the screen y-coordinate
+
+ LDY YS                 \ Retrieve the value of Y from YS, so it once again
+                        \ contains the index into the TB tables
+
+ LDA K3                 \ Set xStart(1 0) = K3(1 0)
+ STA xStart
+ LDA K3+1
+ STA xStart+1
+
+ LDA K4                 \ Set yStart(1 0) = K4(1 0)
+ STA yStart
+ LDA K4+1
+ STA yStart+1
+
+                        \ So we now have the projected right eye coordinates for
+                        \ the starting point in xStart(1 0) and yStart(1 0)
+
+                        \ --- End of replacement ------------------------------>
+
                         \ We now fetch the line's end point as 3D space
                         \ coordinates, project it onto the Star Wars perspective
                         \ scroll text, and project it again onto the 2D screen
@@ -46103,8 +46525,17 @@ ENDIF
  SEC                    \ Set A = A - BALI
  SBC BALI               \       = Y2 - BALI
 
- BCC GR6                \ If Y2 < BALI, jump down to GR6 to process the next
-                        \ line, as this one is not yet on-screen
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\BCC GR6                \ If Y2 < BALI, jump down to GR6 to process the next
+\                       \ line, as this one is not yet on-screen
+
+                        \ --- And replaced by: -------------------------------->
+
+ BCS P%+5               \ If Y2 < BALI, jump down to GR6 to process the next
+ JMP GR6                \ line, as this one is not yet on-screen
+
+                        \ --- End of replacement ------------------------------>
 
  STA R                  \ Set R = Y2 - BALI
 
@@ -46184,6 +46615,14 @@ ENDIF
                         \
                         \   (x_sign x_hi x_lo) = X2 - 128
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ JSR ApplyEyeSpacingToX \ Calculate the 3D coordinates for this point through
+                        \ both eyes, returning the results in (x_sign x_hi x_lo)
+                        \ and xRightEye(2 1 0) for the left and right eyes
+
+                        \ --- End of added code ------------------------------->
+
  JSR PROJ               \ Project the line's end coordinate onto the screen,
                         \ returning:
                         \
@@ -46194,6 +46633,33 @@ ENDIF
  STA XX15+4
  LDA K3+1
  STA XX15+5
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA xRightEye          \ Set (x_sign x_hi x_lo) = xRightEye(2 1 0)
+ STA INWK
+ LDA xRightEye+1
+ STA INWK+1
+ LDA xRightEye+2
+ STA INWK+2
+
+ JSR PROJ               \ Project the line's start coordinate onto the screen
+                        \ for the right eye, returning:
+                        \
+                        \   * K3(1 0) = the screen x-coordinate
+                        \   * K4(1 0) = the screen y-coordinate
+
+ LDA K3                 \ Set xEnd(1 0) = K3(1 0)
+ STA xEnd
+ LDA K3+1
+ STA xEnd+1
+
+ LDA K4                 \ Set yEnd(1 0) = K4(1 0)
+ STA yEnd
+ LDA K4+1
+ STA yEnd+1
+
+                        \ --- End of added code ------------------------------->
 
  LDA K4                 \ Set XX12(1 0) = K4(1 0)
  STA XX12
@@ -46210,12 +46676,24 @@ ENDIF
                         \ clipped to fit on-screen, returning the clipped line's
                         \ end-points in (X1, Y1) and (X2, Y2)
 
- LDY YS                 \ Retrieve the value of Y from YS, so it once again
-                        \ contains the index into the TB tables
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- BCS GR6                \ If the C flag is set then the line is not visible on
-                        \ screen, so loop back to GRIDL via GR6 to process the
-                        \ next line to draw in the scroll text
+\LDY YS                 \ Retrieve the value of Y from YS, so it once again
+\                       \ contains the index into the TB tables
+\
+\BCS GR6                \ If the C flag is set then the line is not visible on
+\                       \ screen, so loop back to GRIDL via GR6 to process the
+\                       \ next line to draw in the scroll text
+
+                        \ --- And replaced by: -------------------------------->
+
+ BCC scro0              \ If the C flag is set then the line is not visible on
+ LDA #255               \ screen, so et Y2 = 255 to denote a null line for the
+ STA Y2                 \ left eye
+
+.scro0
+
+                        \ --- End of replacement ------------------------------>
 
  INC UPO                \ Increment the table pointer in UPO to point to the
                         \ next free slot in the UB tables
@@ -46230,6 +46708,82 @@ ENDIF
  STA X2UB,X
  LDA Y2
  STA Y2UB,X
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+                        \ We now clip the right-eye line, whose coordinates are
+                        \ in xStart(1 0), yStart(1 0), xEnd(1 0) and yEnd(1 0)
+
+ LDA xStart             \ Set XX15(1 0) = xStart(1 0)
+ STA XX15
+ LDA xStart+1
+ STA XX15+1
+
+ LDA yStart             \ Set XX15(3 2) = yStart(1 0)
+ STA XX15+2
+ LDA yStart+1
+ STA XX15+3
+
+ LDA xEnd               \ Set XX15(5 4) = xEnd(1 0)
+ STA XX15+4
+ LDA xEnd+1
+ STA XX15+5
+
+ LDA yEnd               \ Set XX12(1 0) = yEnd(1 0)
+ STA XX12
+ LDA yEnd+1
+ STA XX12+1
+
+ JSR LL145              \ Call LL145 to see if the new line segment needs to be
+                        \ clipped to fit on-screen, returning the clipped line's
+                        \ end-points in (X1, Y1) and (X2, Y2)
+
+ BCC scro2              \ If the C flag is clear then the line is visible on
+                        \ screen, so jump to scro2 to draw the line
+
+                        \ If we get here then the right-eye line is not visible
+
+ LDX UPO                \ Load the UPO table pointer into X
+
+ LDA Y2UB,X             \ If the left-eye line is visible, then jump to scro1
+ CMP #255               \ to draw a null right-eye line
+ BNE scro1
+
+                        \ If we get here then neither eye's line is visible
+
+ DEC UPO                \ Decrement UPO to remove both lines from the heap
+
+ LDY YS                 \ Retrieve the value of Y from YS, so it once again
+                        \ contains the index into the TB tables
+
+ JMP GRIDL              \ Loop back to GRIDL to process the next line to draw
+                        \ in the scroll text
+
+.scro1
+
+                        \ If we get here then the right-eye line is not visible
+                        \ but the left-eye is visible
+
+ LDA #255               \ Set Y2 = 255 to denote a null line for the right eye
+ STA Y2
+
+.scro2
+
+ LDX UPO                \ Load the UPO table pointer into X
+
+ LDA X1                 \ Store the line coordinates (X1, Y1) and (X2, Y2) in
+ STA X1UBr,X            \ the next free slot in the UB tables
+ LDA Y1
+ STA Y1UBr,X
+ LDA X2
+ STA X2UBr,X
+ LDA Y2
+ STA Y2UBr,X
+
+ LDY YS                 \ Retrieve the value of Y from YS, so it once again
+                        \ contains the index into the TB tables
+
+                        \ --- End of added code ------------------------------->
 
 .GR6
 
@@ -46252,8 +46806,17 @@ ENDIF
                         \ number of coordinates in the X1UB, Y1UB, X2UB and Y2UB
                         \ tables (i.e. the number of lines we projected)
 
- BEQ GREX2              \ If UPO = 0 then there are no projected lines to draw,
-                        \ so jump to GREX2 to return from the subroutine
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\BEQ GREX2              \ If UPO = 0 then there are no projected lines to draw,
+\                       \ so jump to GREX2 to return from the subroutine
+
+                        \ --- And replaced by: -------------------------------->
+
+ BNE P%+3               \ If UPO = 0 then there are no projected lines to draw,
+ RTS                    \ so return from the subroutine
+
+                        \ --- End of replacement ------------------------------>
 
                         \ We now loop through the projected lines, using Y as a
                         \ loop counter that doubles as an index into the line
@@ -46264,6 +46827,13 @@ ENDIF
                         \ UB table, before copying the Y-th VB line coordinates
                         \ into the UB table (so the UB table contains the lines
                         \ that are now on-screen)
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA #RED_3D            \ Send a #SETCOL RED_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
+
+                        \ --- End of added code ------------------------------->
 
 .GRL2
 
@@ -46304,6 +46874,56 @@ ENDIF
 
  JSR LBFL               \ Call LBFL to draw the line in the line buffer
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDY UPO                \ Set Y to the UPO table pointer, which contains the
+                        \ number of coordinates in the X1UB, Y1UB, X2UB and Y2UB
+                        \ tables (i.e. the number of lines we projected)
+
+ LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is cyan in the space view
+
+.GRL2r
+
+ LDA Y1VBr,Y            \ If there is no Y-th line in the VB table, jump to GR4r
+ BEQ GR4r
+
+ STA Y1                 \ Otherwise copy the Y-th line's coordinates from the VB
+ LDA X1VBr,Y            \ table into (X1, Y1) and (X2, Y2)
+ STA X1
+ LDA X2VBr,Y
+ STA X2
+ LDA Y2VBr,Y
+ STA Y2
+
+ JSR LOIN               \ Draw the line from (X1, Y1) to (X2, Y2)
+
+.GR4r
+
+ LDA X1UBr,Y            \ Copy the Y-th line's coordinates from the UB table
+ STA X1                 \ into both the VB table and into (X1, Y1) and (X2, Y2)
+ STA X1VBr,Y
+ LDA Y1UBr,Y
+ STA Y1
+ STA Y1VBr,Y
+ LDA X2UBr,Y
+ STA X2
+ STA X2VBr,Y
+ LDA Y2UBr,Y
+ STA Y2
+ STA Y2VBr,Y
+
+ JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
+
+ DEY                    \ Decrement the number of coordinates in Y
+
+ BNE GRL2r              \ Loop back to GRL2r to draw the next set of coordinates
+                        \ until we have done them all
+
+ JSR LBFL               \ Call LBFL to draw the line in the line buffer
+
+                        \ --- End of added code ------------------------------->
+
 .GREX2
 
  RTS                    \ Return from the subroutine
@@ -46327,6 +46947,12 @@ ENDIF
 .SLL1
 
  STA Y1VB,Y             \ Zero the Y-th byte from Y1VB
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ STA Y1VBr,Y            \ Zero the Y-th byte from Y1VBr
+
+                        \ --- End of added code ------------------------------->
 
  DEY                    \ Decrement the loop counter
 
@@ -46597,55 +47223,59 @@ ENDIF
 \
 \ ******************************************************************************
 
-.LTDEF
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
- EQUB &63, &34, &47, &76, &97   \ Letter definition for ","
- EQUB &35, &00, &00, &00, &00   \ Letter definition for "-"
- EQUB &63, &34, &47, &76, &00   \ Letter definition for "."
- EQUB &61, &00, &00, &00, &00   \ Letter definition for "/"
- EQUB &73, &31, &15, &57, &00   \ Letter definition for "0"
- EQUB &31, &17, &00, &00, &00   \ Letter definition for "1"
- EQUB &02, &25, &53, &36, &68   \ Letter definition for "2"
- EQUB &02, &28, &86, &35, &00   \ Letter definition for "3"
- EQUB &82, &23, &35, &00, &00   \ Letter definition for "4"
- EQUB &20, &03, &35, &58, &86   \ Letter definition for "5"
- EQUB &20, &06, &68, &85, &53   \ Letter definition for "6"
- EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
- EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
- EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
- EQUB &00, &00, &00, &00, &00   \ Letter definition for ":" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for ";" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "<" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "=" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for ">" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "?" (blank)
- EQUB &00, &00, &00, &00, &00   \ Letter definition for "@" (blank)
- EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
- EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
- EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
- EQUB &60, &05, &56, &00, &00   \ Letter definition for "D"
- EQUB &86, &60, &02, &35, &00   \ Letter definition for "E"
- EQUB &60, &02, &35, &00, &00   \ Letter definition for "F"
- EQUB &45, &58, &86, &60, &02   \ Letter definition for "G"
- EQUB &60, &28, &35, &00, &00   \ Letter definition for "H"
- EQUB &17, &00, &00, &00, &00   \ Letter definition for "I"
- EQUB &28, &86, &63, &00, &00   \ Letter definition for "J"
- EQUB &60, &23, &83, &00, &00   \ Letter definition for "K"
- EQUB &86, &60, &00, &00, &00   \ Letter definition for "L"
- EQUB &60, &04, &42, &28, &00   \ Letter definition for "M"
- EQUB &60, &08, &82, &00, &00   \ Letter definition for "N"
- EQUB &60, &02, &28, &86, &00   \ Letter definition for "O"
- EQUB &60, &02, &25, &53, &00   \ Letter definition for "P"
- EQUB &60, &02, &28, &86, &48   \ Letter definition for "Q"
- EQUB &60, &02, &25, &53, &48   \ Letter definition for "R"
- EQUB &20, &03, &35, &58, &86   \ Letter definition for "S"
- EQUB &02, &17, &00, &00, &00   \ Letter definition for "T"
- EQUB &28, &86, &60, &00, &00   \ Letter definition for "U"
- EQUB &27, &70, &00, &00, &00   \ Letter definition for "V"
- EQUB &28, &84, &46, &60, &00   \ Letter definition for "W"
- EQUB &26, &08, &00, &00, &00   \ Letter definition for "X"
- EQUB &74, &04, &24, &00, &00   \ Letter definition for "Y"
- EQUB &02, &26, &68, &00, &00   \ Letter definition for "Z"
+\.LTDEF
+\
+\EQUB &63, &34, &47, &76, &97   \ Letter definition for ","
+\EQUB &35, &00, &00, &00, &00   \ Letter definition for "-"
+\EQUB &63, &34, &47, &76, &00   \ Letter definition for "."
+\EQUB &61, &00, &00, &00, &00   \ Letter definition for "/"
+\EQUB &73, &31, &15, &57, &00   \ Letter definition for "0"
+\EQUB &31, &17, &00, &00, &00   \ Letter definition for "1"
+\EQUB &02, &25, &53, &36, &68   \ Letter definition for "2"
+\EQUB &02, &28, &86, &35, &00   \ Letter definition for "3"
+\EQUB &82, &23, &35, &00, &00   \ Letter definition for "4"
+\EQUB &20, &03, &35, &58, &86   \ Letter definition for "5"
+\EQUB &20, &06, &68, &85, &53   \ Letter definition for "6"
+\EQUB &02, &28, &00, &00, &00   \ Letter definition for "7"
+\EQUB &60, &02, &28, &86, &35   \ Letter definition for "8"
+\EQUB &82, &20, &03, &35, &00   \ Letter definition for "9"
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for ":" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for ";" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for "<" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for "=" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for ">" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for "?" (blank)
+\EQUB &00, &00, &00, &00, &00   \ Letter definition for "@" (blank)
+\EQUB &60, &02, &28, &35, &00   \ Letter definition for "A"
+\EQUB &60, &02, &28, &86, &35   \ Letter definition for "B"
+\EQUB &86, &60, &02, &00, &00   \ Letter definition for "C"
+\EQUB &60, &05, &56, &00, &00   \ Letter definition for "D"
+\EQUB &86, &60, &02, &35, &00   \ Letter definition for "E"
+\EQUB &60, &02, &35, &00, &00   \ Letter definition for "F"
+\EQUB &45, &58, &86, &60, &02   \ Letter definition for "G"
+\EQUB &60, &28, &35, &00, &00   \ Letter definition for "H"
+\EQUB &17, &00, &00, &00, &00   \ Letter definition for "I"
+\EQUB &28, &86, &63, &00, &00   \ Letter definition for "J"
+\EQUB &60, &23, &83, &00, &00   \ Letter definition for "K"
+\EQUB &86, &60, &00, &00, &00   \ Letter definition for "L"
+\EQUB &60, &04, &42, &28, &00   \ Letter definition for "M"
+\EQUB &60, &08, &82, &00, &00   \ Letter definition for "N"
+\EQUB &60, &02, &28, &86, &00   \ Letter definition for "O"
+\EQUB &60, &02, &25, &53, &00   \ Letter definition for "P"
+\EQUB &60, &02, &28, &86, &48   \ Letter definition for "Q"
+\EQUB &60, &02, &25, &53, &48   \ Letter definition for "R"
+\EQUB &20, &03, &35, &58, &86   \ Letter definition for "S"
+\EQUB &02, &17, &00, &00, &00   \ Letter definition for "T"
+\EQUB &28, &86, &60, &00, &00   \ Letter definition for "U"
+\EQUB &27, &70, &00, &00, &00   \ Letter definition for "V"
+\EQUB &28, &84, &46, &60, &00   \ Letter definition for "W"
+\EQUB &26, &08, &00, &00, &00   \ Letter definition for "X"
+\EQUB &74, &04, &24, &00, &00   \ Letter definition for "Y"
+\EQUB &02, &26, &68, &00, &00   \ Letter definition for "Z"
+
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -50443,44 +51073,48 @@ ENDMACRO
 \
 \ ******************************************************************************
 
-.RUPLA
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
- EQUB 211               \ System 211, Galaxy 0                 Teorge = Token  1
- EQUB 150               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
- EQUB 36                \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
- EQUB 28                \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
- EQUB 253               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
- EQUB 79                \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
- EQUB 53                \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
- EQUB 118               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
- EQUB 100               \ System 100, Galaxy 2                 Arredi = Token  9
- EQUB 32                \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
- EQUB 68                \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
- EQUB 164               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
- EQUB 220               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
- EQUB 106               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
- EQUB 16                \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
- EQUB 162               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
- EQUB 3                 \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
- EQUB 107               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
- EQUB 26                \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
- EQUB 192               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
- EQUB 184               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
- EQUB 5                 \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
- EQUB 101               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
- EQUB 193               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
- EQUB 41                \ System  41, Galaxy 2                 Anreer = Token 25
+\.RUPLA
+\
+\EQUB 211               \ System 211, Galaxy 0                 Teorge = Token  1
+\EQUB 150               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
+\EQUB 36                \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
+\EQUB 28                \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
+\EQUB 253               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
+\EQUB 79                \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
+\EQUB 53                \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
+\EQUB 118               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
+\EQUB 100               \ System 100, Galaxy 2                 Arredi = Token  9
+\EQUB 32                \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
+\EQUB 68                \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
+\EQUB 164               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
+\EQUB 220               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
+\EQUB 106               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
+\EQUB 16                \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
+\EQUB 162               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
+\EQUB 3                 \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
+\EQUB 107               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
+\EQUB 26                \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
+\EQUB 192               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
+\EQUB 184               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
+\EQUB 5                 \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
+\EQUB 101               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
+\EQUB 193               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
+\EQUB 41                \ System  41, Galaxy 2                 Anreer = Token 25
+\
+\IF _SOURCE_DISC
+\
+\EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
+\
+\ELIF _EXECUTIVE
+\
+\EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
+\EQUB 46                \ System  46, Galaxy 0               Riedquat = Token 27
+\
+\ENDIF
 
-IF _SOURCE_DISC
-
- EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
-
-ELIF _EXECUTIVE
-
- EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
- EQUB 46                \ System  46, Galaxy 0               Riedquat = Token 27
-
-ENDIF
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -50517,44 +51151,48 @@ ENDIF
 \
 \ ******************************************************************************
 
-.RUGAL
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
- EQUB &80               \ System 211, Galaxy 0                 Teorge = Token  1
- EQUB &00               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
- EQUB &00               \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
- EQUB &00               \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
- EQUB &01               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
- EQUB &01               \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
- EQUB &01               \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
- EQUB &01               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
- EQUB &82               \ System 100, Galaxy 2                 Arredi = Token  9
- EQUB &01               \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
- EQUB &01               \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
- EQUB &01               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
- EQUB &01               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
- EQUB &01               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
- EQUB &01               \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
- EQUB &01               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
- EQUB &01               \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
- EQUB &01               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
- EQUB &01               \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
- EQUB &01               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
- EQUB &01               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
- EQUB &01               \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
- EQUB &02               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
- EQUB &01               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
- EQUB &82               \ System  41, Galaxy 2                 Anreer = Token 25
+\.RUGAL
+\
+\EQUB &80               \ System 211, Galaxy 0                 Teorge = Token  1
+\EQUB &00               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
+\EQUB &00               \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
+\EQUB &00               \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
+\EQUB &01               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
+\EQUB &01               \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
+\EQUB &01               \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
+\EQUB &01               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
+\EQUB &82               \ System 100, Galaxy 2                 Arredi = Token  9
+\EQUB &01               \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
+\EQUB &01               \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
+\EQUB &01               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
+\EQUB &01               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
+\EQUB &01               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
+\EQUB &01               \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
+\EQUB &01               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
+\EQUB &01               \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
+\EQUB &01               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
+\EQUB &01               \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
+\EQUB &01               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
+\EQUB &01               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
+\EQUB &01               \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
+\EQUB &02               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
+\EQUB &01               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
+\EQUB &82               \ System  41, Galaxy 2                 Anreer = Token 25
+\
+\IF _SOURCE_DISC
+\
+\EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
+\
+\ELIF _EXECUTIVE
+\
+\EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
+\EQUB &80               \ System   7, Galaxy 0               Riedquat = Token 27
+\
+\ENDIF
 
-IF _SOURCE_DISC
-
- EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
-
-ELIF _EXECUTIVE
-
- EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
- EQUB &80               \ System   7, Galaxy 0               Riedquat = Token 27
-
-ENDIF
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -51365,46 +52003,50 @@ ENDIF
 \
 \ ******************************************************************************
 
-.MTIN
+                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
 
- EQUB 16                \ Token  0: a random extended token between 16 and 20
- EQUB 21                \ Token  1: a random extended token between 21 and 25
- EQUB 26                \ Token  2: a random extended token between 26 and 30
- EQUB 31                \ Token  3: a random extended token between 31 and 35
- EQUB 155               \ Token  4: a random extended token between 155 and 159
- EQUB 160               \ Token  5: a random extended token between 160 and 164
- EQUB 46                \ Token  6: a random extended token between 46 and 50
- EQUB 165               \ Token  7: a random extended token between 165 and 169
- EQUB 36                \ Token  8: a random extended token between 36 and 40
- EQUB 41                \ Token  9: a random extended token between 41 and 45
- EQUB 61                \ Token 10: a random extended token between 61 and 65
- EQUB 51                \ Token 11: a random extended token between 51 and 55
- EQUB 56                \ Token 12: a random extended token between 56 and 60
- EQUB 170               \ Token 13: a random extended token between 170 and 174
- EQUB 66                \ Token 14: a random extended token between 66 and 70
- EQUB 71                \ Token 15: a random extended token between 71 and 75
- EQUB 76                \ Token 16: a random extended token between 76 and 80
- EQUB 81                \ Token 17: a random extended token between 81 and 85
- EQUB 86                \ Token 18: a random extended token between 86 and 90
- EQUB 140               \ Token 19: a random extended token between 140 and 144
- EQUB 96                \ Token 20: a random extended token between 96 and 100
- EQUB 101               \ Token 21: a random extended token between 101 and 105
- EQUB 135               \ Token 22: a random extended token between 135 and 139
- EQUB 130               \ Token 23: a random extended token between 130 and 134
- EQUB 91                \ Token 24: a random extended token between 91 and 95
- EQUB 106               \ Token 25: a random extended token between 106 and 110
- EQUB 180               \ Token 26: a random extended token between 180 and 184
- EQUB 185               \ Token 27: a random extended token between 185 and 189
- EQUB 190               \ Token 28: a random extended token between 190 and 194
- EQUB 225               \ Token 29: a random extended token between 225 and 229
- EQUB 230               \ Token 30: a random extended token between 230 and 234
- EQUB 235               \ Token 31: a random extended token between 235 and 239
- EQUB 240               \ Token 32: a random extended token between 240 and 244
- EQUB 245               \ Token 33: a random extended token between 245 and 249
- EQUB 250               \ Token 34: a random extended token between 250 and 254
- EQUB 115               \ Token 35: a random extended token between 115 and 119
- EQUB 120               \ Token 36: a random extended token between 120 and 124
- EQUB 125               \ Token 37: a random extended token between 125 and 129
+\.MTIN
+\
+\EQUB 16                \ Token  0: a random extended token between 16 and 20
+\EQUB 21                \ Token  1: a random extended token between 21 and 25
+\EQUB 26                \ Token  2: a random extended token between 26 and 30
+\EQUB 31                \ Token  3: a random extended token between 31 and 35
+\EQUB 155               \ Token  4: a random extended token between 155 and 159
+\EQUB 160               \ Token  5: a random extended token between 160 and 164
+\EQUB 46                \ Token  6: a random extended token between 46 and 50
+\EQUB 165               \ Token  7: a random extended token between 165 and 169
+\EQUB 36                \ Token  8: a random extended token between 36 and 40
+\EQUB 41                \ Token  9: a random extended token between 41 and 45
+\EQUB 61                \ Token 10: a random extended token between 61 and 65
+\EQUB 51                \ Token 11: a random extended token between 51 and 55
+\EQUB 56                \ Token 12: a random extended token between 56 and 60
+\EQUB 170               \ Token 13: a random extended token between 170 and 174
+\EQUB 66                \ Token 14: a random extended token between 66 and 70
+\EQUB 71                \ Token 15: a random extended token between 71 and 75
+\EQUB 76                \ Token 16: a random extended token between 76 and 80
+\EQUB 81                \ Token 17: a random extended token between 81 and 85
+\EQUB 86                \ Token 18: a random extended token between 86 and 90
+\EQUB 140               \ Token 19: a random extended token between 140 and 144
+\EQUB 96                \ Token 20: a random extended token between 96 and 100
+\EQUB 101               \ Token 21: a random extended token between 101 and 105
+\EQUB 135               \ Token 22: a random extended token between 135 and 139
+\EQUB 130               \ Token 23: a random extended token between 130 and 134
+\EQUB 91                \ Token 24: a random extended token between 91 and 95
+\EQUB 106               \ Token 25: a random extended token between 106 and 110
+\EQUB 180               \ Token 26: a random extended token between 180 and 184
+\EQUB 185               \ Token 27: a random extended token between 185 and 189
+\EQUB 190               \ Token 28: a random extended token between 190 and 194
+\EQUB 225               \ Token 29: a random extended token between 225 and 229
+\EQUB 230               \ Token 30: a random extended token between 230 and 234
+\EQUB 235               \ Token 31: a random extended token between 235 and 239
+\EQUB 240               \ Token 32: a random extended token between 240 and 244
+\EQUB 245               \ Token 33: a random extended token between 245 and 249
+\EQUB 250               \ Token 34: a random extended token between 250 and 254
+\EQUB 115               \ Token 35: a random extended token between 115 and 119
+\EQUB 120               \ Token 36: a random extended token between 120 and 124
+\EQUB 125               \ Token 37: a random extended token between 125 and 129
+
+                        \ --- End of moved code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -55526,6 +56168,88 @@ ENDMACRO
  PLA                    \ Restore X and T
  STA T
  PLX
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ApplyEyeSpacingToX
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Apply eye spacing to a 3D coordinate
+\
+\ ------------------------------------------------------------------------------
+\
+\ Given the 3D x-coordinate of a point in space, calculate the x-coordinate
+\ relative to each eye.
+\
+\ The calculation simply subtracts or adds half the eye separation to get the
+\ left or right x-coordinate.
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   (x_sign x_hi x_lo)  The 3D x-coordinate of the point to transform
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   (x_sign x_hi x_lo)  The 3D x-coordinate relative to the left eye (red)
+\
+\   xRightEye(2 1 0)    The 3D x-coordinate relative to the right eye (cyan)
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ApplyEyeSpacingToX
+
+ LDA INWK+6             \ Set zCoord(1 0) = (z_hi z_lo) for use in ApplyParallax
+ STA zCoord
+ LDA INWK+7
+ STA zCoord+1
+
+ LDA INWK               \ Copy the vertex x-coordinate from (x_sign x_hi x_lo)
+ STA XX18               \ to XX18(2 1 0)
+ LDA INWK+1
+ STA XX18+1
+ LDA INWK+2
+ STA XX18+2
+
+ STZ K+3                \ Set K(3 2 1) = x-offset of right eye (cyan)
+ STZ K+2                \              = halfEyeSpacing
+ LDA halfEyeSpacing
+ STA K+1
+
+ LDX #0                 \ Set K(3 2 1) = K(3 2 1) + XX18(2 1 0)
+ JSR MVT3
+
+ LDA K+1                \ Store the right-eye coordinate in xRightEye(2 1 0)
+ STA xRightEye
+ LDA K+2
+ STA xRightEye+1
+ LDA K+3
+ STA xRightEye+2
+
+ LDA #%10000000         \ Set K(3 2 1) = x-offset of left eye (red)
+ STA K+3                \              = -halfEyeSpacing
+ STZ K+2
+ LDA halfEyeSpacing
+ STA K+1
+
+ LDX #0                 \ Set K(3 2 1) = K(3 2 1) + XX18(2 1 0)
+ JSR MVT3
+
+ LDA K+1                \ Store the left-eye coordinate in (x_sign x_hi x_lo)
+ STA INWK
+ LDA K+2
+ STA INWK+1
+ LDA K+3
+ STA INWK+2
 
  RTS                    \ Return from the subroutine
 
