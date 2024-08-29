@@ -5193,10 +5193,8 @@ ENDIF
  CMP #CYAN_3D           \ the routine, so jump to hori12 to skip the anaglyph
  BCS hori12             \ code and draw the line in the specified colour
 
-                        \ If we get here then we have passed an amount of
-                        \ parallax instead of a colour, so we need to draw this
-                        \ line in anaglyph 3D, applying the amount of parallax
-                        \ in COL
+                        \ If we get here then we need to draw this line in
+                        \ anaglyph 3D, applying MAX_PARALLAX_P parallax
 
  LDA X1                 \ Store the original x-coordinates in X1SAV and X2SAV
  STA X1SAV
@@ -5204,15 +5202,15 @@ ENDIF
  STA X2SAV
 
  LDA X1SAV              \ If the sun is up against the left edge, do not draw
- CMP #MAX_PARALLAX_P+3  \ the left fringe by setting the left end of the white
+ CMP #MAX_PARALLAX_P+1  \ the left fringe by setting the left end of the white
  BCS hori2              \ portion in LSAV to the original x-coordinate in T1
  STA LSAV               \ and skipping the following
  BCC hori6
 
 .hori2
 
- SEC                    \ Set A = X1SAV - COL, keeping the result above 0
- SBC COL
+ SEC                    \ Set A = X1SAV - MAX_PARALLAX_P, keeping the result
+ SBC #MAX_PARALLAX_P    \ above 0
  BCS hori3
  LDA #0
 
@@ -5221,9 +5219,9 @@ ENDIF
  STA X1                 \ Store the result in X1, so this is the x-coordinate of
                         \ the left end of the left fringe
 
- LDA X1SAV              \ Set X2 = X1SAV + COL, keeping the result below 255
- CLC
- ADC COL
+ LDA X1SAV              \ Set X2 = X1SAV + MAX_PARALLAX_P, keeping the result
+ CLC                    \ below 255
+ ADC #MAX_PARALLAX_P
  BCC hori4
  LDA #255
 
@@ -5253,15 +5251,15 @@ ENDIF
  LDA X2SAV              \ Set A = X2SAV, the x-coordinate of the right end of
                         \ the line
 
- CMP #253-MAX_PARALLAX_P\ If the sun is up against the right edge, do not draw
+ CMP #255-MAX_PARALLAX_P\ If the sun is up against the right edge, do not draw
  BCC hori7              \ the right fringe by setting the left end of the white
  STA RSAV               \ portion in RSAV to the original x-coordinate in X2SAV
  BCS hori11             \ and skipping the following
 
 .hori7
 
- SEC                    \ Set A = X2SAV - COL, keeping the result above 0
- SBC COL
+ SEC                    \ Set A = X2SAV - MAX_PARALLAX_P, keeping the result
+ SBC #MAX_PARALLAX_P    \ above 0
  BCS hori8
  LDA #0
 
@@ -5276,14 +5274,14 @@ ENDIF
 
 .hori9
 
- STX RSAV               \ Store the x-coordinate in Y2+2 to use as the end of
+ STX RSAV               \ Store the x-coordinate in RSAV to use as the end of
                         \ the white line in the middle
 
- LDA X2SAV              \ Set A = X2SAV + COL, keeping the result below 253
- CLC
- ADC COL
+ LDA X2SAV              \ Set A = X2SAV + MAX_PARALLAX_P, keeping the result
+ CLC                    \ below 255
+ ADC #MAX_PARALLAX_P
  BCC hori10
- LDA #253
+ LDA #255
 
 .hori10
 

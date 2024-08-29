@@ -28157,8 +28157,8 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- LDA #MAX_PARALLAX_P    \ Set the colour to the amount of parallax to use when
- JSR DOCOL              \ drawing the sun in the I/O processor
+ LDA #1                 \ Set the colour to a value less than CYAN_3D so we draw
+ JSR DOCOL              \ the sun in anaglyph 3D
 
                         \ --- End of added code ------------------------------->
 
@@ -30265,9 +30265,19 @@ ENDIF
                         \ next two instructions, as the result already fits on
                         \ the screen
 
- LDA #254               \ The high byte is positive and non-zero, so we went
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #254               \ The high byte is positive and non-zero, so we went
+\STA X2                 \ past the right edge of the screen, so clip X2 to the
+\                       \ x-coordinate of the right edge of the screen
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #255               \ The high byte is positive and non-zero, so we went
  STA X2                 \ past the right edge of the screen, so clip X2 to the
                         \ x-coordinate of the right edge of the screen
+
+                        \ --- End of replacement ------------------------------>
 
  LDA YY                 \ We now calculate:
  SEC                    \
@@ -30293,9 +30303,19 @@ ENDIF
  BPL ED1                \ If the addition is positive then the calculation has
                         \ underflowed, so jump to ED1 to return a failure
 
- LDA #2                 \ The high byte is negative and non-zero, so we went
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #2                 \ The high byte is negative and non-zero, so we went
+\STA X1                 \ past the left edge of the screen, so clip X1 to the
+                        \ x-coordinate of the left edge of the screen
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #0                 \ The high byte is negative and non-zero, so we went
  STA X1                 \ past the left edge of the screen, so clip X1 to the
                         \ x-coordinate of the left edge of the screen
+
+                        \ --- End of replacement ------------------------------>
 
  CLC                    \ The line does fit on-screen, so clear the C flag to
                         \ indicate success
