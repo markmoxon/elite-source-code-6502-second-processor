@@ -41598,28 +41598,71 @@ ENDIF
  STZ XX24               \ Set XX24 = 0 to flag that neither line has been drawn
                         \ yet
 
-                        \ Currently we draw the laser line in the same place
-                        \ for each eye, but this can probably be improved ???
-
- LDA X1                 \ Save the laser line coordinates on the stack, as they
- PHA                    \ will get corrupted when we draw the left-eye line
- LDA X2
- PHA
- LDA Y1
- PHA
- LDA Y2
- PHA
-
  JSR DrawLeftEyeLine    \ Draw the laser line in the left-eye line heap
 
- PLA                    \ Retrieve the laser line coordinates from the stack
- STA Y2
- PLA
- STA Y1
- PLA
- STA X2
- PLA
- STA X1
+                        \ And now for the right-eye line, which is the same
+                        \ except it emanates from the right-eye projection of
+                        \ the gun vertex
+
+ LDY #6                 \ Fetch byte #6 of the ship's blueprint, which is the
+ LDA (XX0),Y            \ number * 4 of the vertex where the ship has its lasers
+
+ TAY                    \ Put the vertex number into Y, where it can act as an
+                        \ index into list of vertex screen coordinates we added
+                        \ to the XX3 heap
+
+ LDX XX3r,Y             \ Fetch the x_lo coordinate of the laser vertex from the
+ STX XX15               \ XX3r heap into XX15
+
+ INX                    \ If X = 255 then the laser vertex is not visible, as
+ BEQ lasr1              \ the value we stored in part 2 wasn't overwritten by
+                        \ the vertex calculation in part 6 and 7, so jump to
+                        \ lasr1 to draw a null laser beam
+
+ LDX XX3r+1,Y           \ Fetch the x_hi coordinate of the laser vertex from the
+ STX XX15+1             \ XX3r heap into XX15+1
+
+ INX                    \ If X = 255 then the laser vertex is not visible, as
+ BEQ lasr1              \ the value we stored in part 2 wasn't overwritten by
+                        \ a vertex calculation in part 6 and 7, so jump to lasr1
+                        \ to draw a null laser beam
+
+ LDX XX3r+2,Y           \ Fetch the y_lo coordinate of the laser vertex from the
+ STX XX15+2             \ XX3r heap into XX15+2
+
+ LDX XX3r+3,Y           \ Fetch the y_hi coordinate of the laser vertex from the
+ STX XX15+3             \ XX3r heap into XX15+3
+
+ LDA #0                 \ Set XX15(5 4) = 0, so their laser beam fires to the
+ STA XX15+4             \ left edge of the screen
+ STA XX15+5
+
+ STA XX12+1             \ Set XX12(1 0) = the ship's z_lo coordinate, which will
+ LDA XX1+6              \ effectively make the vertical position of the end of
+ STA XX12               \ the laser beam move around as the ship moves in space
+
+ LDA XX1+2              \ If the ship's x_sign is positive, skip the next
+ BPL P%+4               \ instruction
+
+ DEC XX15+4             \ The ship's x_sign is negative (i.e. it's on the left
+                        \ side of the screen), so switch the laser beam so it
+                        \ goes to the right edge of the screen by decrementing
+                        \ XX15(5 4) to 255
+
+ JSR LL145              \ Call LL145 to see if the laser beam needs to be
+                        \ clipped to fit on-screen, returning the clipped line's
+                        \ end-points in (X1, Y1) and (X2, Y2)
+
+ BCC lasr2              \ If the C flag is clear then the line is visible on
+                        \ screen, so skip the following
+
+.lasr1
+
+ LDA #255               \ The right-eye laser line is not on-screen but the
+ STA Y2                 \ left-eye line was, so set Y2 = 255 to denote a null
+                        \ line for the right eye
+
+.lasr2
 
  JSR DrawRightEyeLine   \ Draw the laser line in the right-eye line heap
 
@@ -46748,7 +46791,7 @@ ENDIF
                         \ --- And replaced by: -------------------------------->
 
  BCC scro0              \ If the C flag is set then the line is not visible on
- LDA #255               \ screen, so et Y2 = 255 to denote a null line for the
+ LDA #255               \ screen, so set Y2 = 255 to denote a null line for the
  STA Y2                 \ left eye
 
 .scro0
