@@ -57367,7 +57367,7 @@ ENDIF
 
 .defaultFile
 
- EQUS ":0.U.BOXART2"
+ EQUS ":0.U.SPIRAL"
  EQUB 13
 
                         \ --- End of added code ------------------------------->
