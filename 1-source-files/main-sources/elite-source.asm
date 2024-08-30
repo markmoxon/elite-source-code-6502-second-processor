@@ -18802,11 +18802,36 @@ ENDIF
  BNE LASLI-1            \ then jump to MA9 to return from the main flight loop
                         \ (as LASLI-1 is an RTS)
 
- LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+\JSR DOCOL              \ switch to colour 2, which is red in the space view
+\
+\LDA #32                \ Set A = 32 and Y = 224 for the first set of laser
+\LDY #224               \ lines (the wider pair of lines)
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #RED_3D            \ Send a #SETCOL RED_3D command to the I/O processor to
  JSR DOCOL              \ switch to colour 2, which is red in the space view
 
  LDA #32                \ Set A = 32 and Y = 224 for the first set of laser
  LDY #224               \ lines (the wider pair of lines)
+
+ JSR lasl1
+
+ LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
+ JSR DOCOL              \ switch to colour 3, which is cyan in the space view
+
+ LDA #32+MAX_PARALLAX_N     \ Apply negative parallax for the second set of laser
+ LDY #224-MAX_PARALLAX_N    \ lines (the narrower pair of lines)
+
+.lasl1
+
+ PHA                    \ Store the coordinates on the stack
+ PHY
+
+                        \ --- End of replacement ------------------------------>
 
 IF _SNG45
 
@@ -18826,8 +18851,23 @@ IF _SNG45
 
 ENDIF
 
- LDA #48                \ Fall through into las with A = 48 and Y = 208 to draw
- LDY #208               \ a second set of lines (the narrower pair)
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA #48                \ Fall through into las with A = 48 and Y = 208 to draw
+\LDY #208               \ a second set of lines (the narrower pair)
+
+                        \ --- And replaced by: -------------------------------->
+
+ PLA                    \ Set Y = Y - 16 for the narrower pair
+ SEC
+ SBC #16
+ TAY
+
+ PLA                    \ Set A = A + 16 for the narrower pair
+ CLC
+ ADC #16
+
+                        \ --- End of replacement ------------------------------>
 
                         \ The following routine draws two laser lines, one from
                         \ the centre point down to point A on the bottom row,
