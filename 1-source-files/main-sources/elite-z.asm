@@ -288,25 +288,77 @@
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
-.LSAV
+.V
+
+ SKIP 1                 \ Temporary storage
+
+.xCoreStart
 
  SKIP 1                 \ The x-coordinate of the left end of the white part of
                         \ the sun line being drawn in HLOIN
 
-.RSAV
+.xCoreEnd
 
  SKIP 1                 \ The x-coordinate of the right end of the white part of
                         \ the sun line being drawn in HLOIN
 
-.X1SAV
+.xLeftStart
 
- SKIP 1                 \ The value of X1 passed to the HLOIN routine when
-                        \ drawing a sun line
+ SKIP 1                 \ The x-coordinate of the start of the left fringe
 
-.X2SAV
+.xLeftEnd
 
- SKIP 1                 \ The value of X2 passed to the HLOIN routine when
-                        \ drawing a sun line
+ SKIP 1                 \ The x-coordinate of the end of the left fringe
+
+.xRightStart
+
+ SKIP 1                 \ The x-coordinate of the start of the left fringe
+
+.xRightEnd
+
+ SKIP 1                 \ The x-coordinate of the end of the left fringe
+
+.xCoreStartNew
+
+ SKIP 1                 \ The x-coordinate of the left end of the white part of
+                        \ the sun line being drawn in HLOIN
+
+.xCoreEndNew
+
+ SKIP 1                 \ The x-coordinate of the right end of the white part of
+                        \ the sun line being drawn in HLOIN
+
+.xLeftStartNew
+
+ SKIP 1                 \ The x-coordinate of the start of the left fringe
+
+.xLeftEndNew
+
+ SKIP 1                 \ The x-coordinate of the end of the left fringe
+
+.xRightStartNew
+
+ SKIP 1                 \ The x-coordinate of the start of the left fringe
+
+.xRightEndNew
+
+ SKIP 1                 \ The x-coordinate of the end of the left fringe
+
+.xStart
+
+ SKIP 1                 \ The start x-coordinate for a sun line
+
+.xEnd
+
+ SKIP 1                 \ The end x-coordinate for a sun line
+
+.twoStageLine
+
+ SKIP 1                 \ A flag to determine if this is a two-stage line
+                        \
+                        \ * 255 = this is a two-stage line
+                        \
+                        \ * Other value = this is not a two-stage line
 
                         \ --- End of added code ------------------------------->
 
@@ -1266,27 +1318,38 @@ ENDIF
  LDA #&FF               \ Set the text and graphics colour to cyan
  STA COL
 
- LDA TINA               \ If the contents of locations TINA to TINA+3 are "TINA"
- CMP #'T'               \ then keep going, otherwise jump to PUTBACK to point
- BNE PUTBACK            \ WRCHV to USOSWRCH, and then end the program, as from
- LDA TINA+1             \ now on the handlers pointed to by the vectors will
- CMP #'I'               \ handle everything
- BNE PUTBACK
- LDA TINA+2
- CMP #'N'
- BNE PUTBACK
- LDA TINA+3
- CMP #'A'
- BNE PUTBACK
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- JSR TINA+4             \ TINA to TINA+3 contains the string "TINA", so call the
-                        \ subroutine at TINA+4
-                        \
-                        \ This allows us to add a code hook into the start-up
-                        \ process by populating the TINW workspace at &0B00 with
-                        \ "TINA" followed by the code for a subroutine, and it
-                        \ will be called just before the setup code terminates
-                        \ on the I/O processor
+ LDA #0                 \ Reset the two-stage line flag to indicate normal
+ STA twoStageLine       \ one-stage lines
+
+                        \ --- End of added code ------------------------------->
+
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDA TINA               \ If the contents of locations TINA to TINA+3 are "TINA"
+\CMP #'T'               \ then keep going, otherwise jump to PUTBACK to point
+\BNE PUTBACK            \ WRCHV to USOSWRCH, and then end the program, as from
+\LDA TINA+1             \ now on the handlers pointed to by the vectors will
+\CMP #'I'               \ handle everything
+\BNE PUTBACK
+\LDA TINA+2
+\CMP #'N'
+\BNE PUTBACK
+\LDA TINA+3
+\CMP #'A'
+\BNE PUTBACK
+\
+\JSR TINA+4             \ TINA to TINA+3 contains the string "TINA", so call the
+\                       \ subroutine at TINA+4
+\                       \
+\                       \ This allows us to add a code hook into the start-up
+\                       \ process by populating the TINW workspace at &0B00 with
+\                       \ "TINA" followed by the code for a subroutine, and it
+\                       \ will be called just before the setup code terminates
+\                       \ on the I/O processor
+
+                        \ --- End of removed code ----------------------------->
 
                         \ Fall through into PUTBACK to point WRCHV to USOSWRCH,
                         \ and then end the program, as from now on the handlers
@@ -2352,17 +2415,17 @@ ENDIF
 
                         \ If we get here then there is some parallax to apply
 
- STY LSAV               \ Store the amount of parallax in LSAV
+ STY U                  \ Store the amount of parallax in U
 
  LDY #5                 \ Fetch byte #5 from the parameter block (the screen
- LDA (OSSC),Y           \ x-coordinate) and store it in X1SAV
- STA X1SAV
+ LDA (OSSC),Y           \ x-coordinate) and store it in V
+ STA V
 
                         \ We now draw the ship twice, once for each eye,
                         \ starting with the left eye in red
 
  SEC                    \ Subtract the parallax from the x-coordinate and store
- SBC LSAV               \ in X1 (so for positive parallax the left eye goes left
+ SBC U                  \ in X1 (so for positive parallax the left eye goes left
  STA X1                 \ and for negative parallax it goes right)
 
  LDA #RED2_3D           \ Set the colour to red
@@ -2373,9 +2436,9 @@ ENDIF
 
                         \ And now we do the right eye in cyan
 
- LDA X1SAV              \ Add the parallax to the x-coordinate and store in X1
+ LDA V                  \ Add the parallax to the x-coordinate and store in X1
  CLC                    \ (so for positive parallax the right eye goes right and
- ADC LSAV               \ for negative parallax it goes left)
+ ADC U                  \ for negative parallax it goes left)
  STA X1
 
  LDA #CYAN2_3D          \ Set the colour to cyan
@@ -5107,14 +5170,6 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.hori1
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
 .HLOIN
 
  LDY #0                 \ Fetch byte #0 from the parameter block (which gives
@@ -5167,10 +5222,29 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- CPX X2                 \ If X1 = X2 then the start and end points are the same,
- BNE P%+5               \ so jump to hori13 to move on to the next line
- JMP hori13
+ CPX X2                 \ If X1 <> X2 then jump to hori0 to skip the following
+ BNE hori0
 
+                        \ If we get here then X1 = X2, so the start and end
+                        \ points are the same and we do not have a line to draw
+
+ LDA Y1                 \ If Y1 <> 255 then jump to horia to skip the following
+ CMP #255
+ BNE horia
+
+ STX xLeftStart         \ This is the first part in a two-part line and the line
+ STX xLeftEnd           \ in the first part (the new line) is blank, so set the
+ STX xCoreStart         \ coordinates of the new line to pass the fact that it
+ STX xCoreEnd           \ is blank to the second part (by ensuring the start and
+ STX xRightStart        \ end coordinates are the same)
+ STX xRightEnd
+
+.horia
+
+ JMP hori5              \ Jump to hori5 to move on to the next line, as there is
+                        \ no line to draw
+
+.hori0
                         \ --- End of replacement ------------------------------>
 
  BCC HL5                \ If X1 < X2, jump to HL5 to skip the following code, as
@@ -5190,130 +5264,83 @@ ENDIF
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
  LDA COL                \ If COL >= CYAN_3D then we have passed a real colour to
- CMP #CYAN_3D           \ the routine, so jump to hori12 to skip the anaglyph
- BCS hori12             \ code and draw the line in the specified colour
+ CMP #CYAN_3D           \ the routine, so jump to hori4 to skip the anaglyph
+ BCC hori1              \ code and draw the line in the specified colour
+ JMP hori4
+
+.hori1
 
                         \ If we get here then we need to draw this line in
                         \ anaglyph 3D, applying MAX_PARALLAX_P parallax
 
- LDA X1                 \ Store the original x-coordinates in X1SAV and X2SAV
- STA X1SAV
- LDA X2
- STA X2SAV
+ LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
+ CMP #255               \ line in a two-stage line so jump to hori2
+ BNE hori2
 
- LDA X1SAV              \ If the sun is up against the left edge, do not draw
- CMP #MAX_PARALLAX_P+1  \ the left fringe by setting the left end of the white
- BCS hori2              \ portion in LSAV to the original x-coordinate in T1
- STA LSAV               \ and skipping the following
- BCC hori6
+                        \ This is the second line in a two-stage line
+
+ LDA xCoreStart         \ Copy the values from the previous call into the
+ STA xCoreStartNew      \ variables for the new line (as the new line was the
+ LDA xCoreEnd           \ first to be sent)
+ STA xCoreEndNew
+ LDA xLeftStart
+ STA xLeftStartNew
+ LDA xLeftEnd
+ STA xLeftEndNew
+ LDA xRightStart
+ STA xRightStartNew
+ LDA xRightEnd
+ STA xRightEndNew
 
 .hori2
 
- SEC                    \ Set A = X1SAV - MAX_PARALLAX_P, keeping the result
- SBC #MAX_PARALLAX_P    \ above 0
- BCS hori3
- LDA #0
+ LDA X1                 \ Store the original x-coordinates in xStart and xEnd
+ STA xStart
+ LDA X2
+ STA xEnd
+
+ JSR DrawFringes        \ Calculate the coordinates for the fringes and core
+                        \ white line for this sun line, and draw them (but only
+                        \ if Y1 <> 255, so we don't draw anything on the first
+                        \ stage of a two-stage line)
+
+ LDA Y1                 \ If Y1 = 255 then skip drawing the core white line and
+ CMP #255               \ move on to the next line
+ BEQ hori5
+
+ LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
+ CMP #255               \ line in a two-stage line so jump to hori2
+ BNE hori3
+
+                        \ This is the second line in a two-stage line
+
+ JMP DrawWhiteLine      \ Draw the core white line, returning to hori6 once done
 
 .hori3
-
- STA X1                 \ Store the result in X1, so this is the x-coordinate of
-                        \ the left end of the left fringe
-
- LDA X1SAV              \ Set X2 = X1SAV + MAX_PARALLAX_P, keeping the result
- CLC                    \ below 255
- ADC #MAX_PARALLAX_P
- BCC hori4
- LDA #255
-
-.hori4
-
- STA X2                 \ Store the result in X2, so this is the x-coordinate of
-                        \ the right end of the left fringe
-
- TAX                    \ Increment the x-coordinate, keeping the result below
- INX                    \ 255
- BNE hori5
- LDX #255
-
-.hori5
-
- STX LSAV               \ Store the x-coordinate in LSAV to use as the start of
-                        \ the white line in the middle
-
- LDA #RED_3D            \ Set the colour of the left fringe (left eye) to red
- STA S
-
- JSR hori14             \ Draw a horizontal line from (X1, Y1) on the left to
-                        \ (X2, Y1) on the right
-
-.hori6
-
- LDA X2SAV              \ Set A = X2SAV, the x-coordinate of the right end of
-                        \ the line
-
- CMP #255-MAX_PARALLAX_P\ If the sun is up against the right edge, do not draw
- BCC hori7              \ the right fringe by setting the left end of the white
- STA RSAV               \ portion in RSAV to the original x-coordinate in X2SAV
- BCS hori11             \ and skipping the following
-
-.hori7
-
- SEC                    \ Set A = X2SAV - MAX_PARALLAX_P, keeping the result
- SBC #MAX_PARALLAX_P    \ above 0
- BCS hori8
- LDA #0
-
-.hori8
-
- STA X1                 \ Store the result in X1, so this is the x-coordinate of
-                        \ the left end of the right fringe
-
- TAX                    \ Decrement the x-coordinate, keeping the result above 0
- BEQ hori9
- DEX
-
-.hori9
-
- STX RSAV               \ Store the x-coordinate in RSAV to use as the end of
-                        \ the white line in the middle
-
- LDA X2SAV              \ Set A = X2SAV + MAX_PARALLAX_P, keeping the result
- CLC                    \ below 255
- ADC #MAX_PARALLAX_P
- BCC hori10
- LDA #255
-
-.hori10
-
- STA X2                 \ Store the result in X2, so this is the x-coordinate of
-                        \ the right end of the right fringe
-
- LDA #CYAN_3D           \ Set the colour of the right fringe (right eye) to cyan
- STA S
-
- JSR hori14             \ Draw a horizontal line from (X1, Y1) on the left to
-                        \ (X2, Y1) on the right
-
-.hori11
 
  LDA #WHITE_3D          \ Set the colour to white for the central portion
  STA S
 
- LDA LSAV               \ If the start coordinate of the white portion is on or
- CMP RSAV               \ after the end coordinate, jump to hori13 to skip
- BCS hori13             \ drawing the line centre, as the eyes do not overlap
+ LDA xCoreStart         \ If the start coordinate of the white portion is on or
+ CMP xCoreEnd           \ after the end coordinate, jump to hori5 to skip
+ BCS hori5              \ drawing the line centre, as the eyes do not overlap
 
- STA X1                 \ Set X1 = LSAV as the start of the white portion
+ STA X1                 \ Set X1 = xCoreStart as the start of the white portion
 
- LDA RSAV               \ Set X2 = RSAV as the end of the white portion
+ LDA xCoreEnd           \ Set X2 = xCoreEnd as the end of the white portion
  STA X2
 
-.hori12
+.hori4
 
- JSR hori14             \ Draw a horizontal line from (X1, Y1) on the left to
+ JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
 
-.hori13
+.hori5
+
+ LDY Y1                 \ Set twoStageLine to Y1, so it will be 255 if this line
+ STY twoStageLine       \ was the first in a two-stage line
+
+.hori6
 
  LDY Y2                 \ Set Y to the parameter block offset for this line's Y1
                         \ coordinate, which we stored in Y2 before we drew the
@@ -5332,7 +5359,7 @@ ENDIF
 
  RTS                    \ Return from the subroutine
 
-.hori14
+.hori7
 
                         \ The horizontal line code is now a subroutine, as we
                         \ have terminated it with an RTS below
@@ -5600,6 +5627,297 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: DrawWhiteLine
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw the white part of a sun line but without the flicker
+\
+\ ******************************************************************************
+
+.DrawWhiteLine
+
+ LDA #WHITE_3D          \ Set the colour to white for the central portion
+ STA S
+
+ LDA xCoreStartNew      \ If there is a new line, jump to whit1
+ CMP xCoreEndNew
+ BCC whit1
+
+ LDA xCoreStart         \ If there is no old line, jump to whit3
+ CMP xCoreEnd
+ BCS whit3
+
+                        \ If we get here there is an old line but no new line
+
+ LDA xCoreStart         \ Set X1 and X2 to the old line, so we erase it
+ STA X1
+ LDA xCoreEnd
+ STA X2
+
+ JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+ JMP whit3              \ Jump to whit3 to draw the fringes, if any
+
+.whit1
+
+                        \ If we get here there is a new line
+
+ LDA xCoreStart         \ If there is an old line, jump to whit2
+ CMP xCoreEnd
+ BCC whit2
+
+                        \ If we get here there is a new line but no old line
+
+ LDA xCoreStartNew      \ Set X1 and X2 to the new line, so we erase it
+ STA X1
+ LDA xCoreEndNew
+ STA X2
+
+ JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+ JMP whit3              \ Jump to whit3 to draw the fringes, if any
+
+.whit2
+
+                        \ If we get here there are both old and new lines
+
+ LDA xCoreStartNew      \ Draw new line
+ STA X1
+ LDA xCoreEndNew
+ STA X2
+
+ JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+ LDA xCoreStart         \ Draw old line
+ STA X1
+ LDA xCoreEnd
+ STA X2
+
+ JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.whit3
+
+                        \ We also need to draw the fringes of the first line in
+                        \ the two-stage process, as we didn't draw them first
+                        \ time around (this is the new line)
+
+ LDA xLeftStartNew      \ If there is no left fringe, jump to whit4 to skip the
+ CMP xLeftEndNew        \ following
+ BCS whit4
+
+ STA X1                 \ Set X1 = xLeftStartNew as the start of the left
+                        \ fringe
+
+ LDA xLeftEndNew        \ Set X2 = xLeftEndNew as the end of the left fringe
+ STA X2
+
+ LDA #RED_3D            \ Set the colour of the left fringe (left eye) to red
+ STA S
+
+ JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.whit4
+
+ LDA xRightStartNew     \ If there is no left fringe, jump to whit5 to skip the
+ CMP xRightEndNew       \ following
+ BCS whit5
+
+ STA X1                 \ Set X1 = xRightStartNew as the start of the right
+                        \ fringe
+
+ LDA xRightEndNew       \ Set X2 = xRightEndNew as the end of the right fringe
+ STA X2
+
+ LDA #CYAN_3D           \ Set the colour of the right fringe (right eye) to cyan
+ STA S
+
+ JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.whit5
+
+ LDA #0                 \ Reset the flag as we have now drawn the second line
+ STA twoStageLine
+
+ JMP hori6              \ Rejoin the sun line loop to move on to the next
+                        \ line
+
+\ ******************************************************************************
+\
+\       Name: DrawFringes
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Draw the fringes for a sun line and calculate the coordinates of
+\             the white part
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   xStart              The x-coordinate of the start of the line
+\
+\   xEnd                The x-coordinate of the end of the line
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   xLeftStart          The x-coordinate of the start of the left fringe
+\
+\   xLeftEnd            The x-coordinate of the end of the left fringe
+\
+\   xCoreStart          The x-coordinate of the start of the white part of the
+\                       sun line (the core)
+\
+\   xCoreEnd            The x-coordinate of the end of the white part of the
+\                       sun line (the core)
+\
+\   xRightStart         The x-coordinate of the start of the right fringe
+\
+\   xRightEnd           The x-coordinate of the end of the right fringe
+\
+\ ******************************************************************************
+
+.DrawFringes
+
+                        \ We start with the left fringe
+
+ LDA xStart             \ If the sun is not up against the left edge, jump to
+ CMP #MAX_PARALLAX_P+1  \ frin1 to draw the left fringe
+ BCS frin1
+
+ STA xCoreStart         \ The sun is up against the left edge, so set the left
+ STA xLeftStart         \ fringe and the start of the core to the original
+ STA xLeftEnd           \ x-coordinate in xStart
+
+ BCC frin5              \ Jump to frin5 to skip the left fringe calculation
+                        \ (this BCC is effectively a JMP as we passed through a
+                        \ BCS above)
+
+.frin1
+
+                        \ Calculate and draw the left fringe
+
+ SEC                    \ Set A = xStart - MAX_PARALLAX_P, keeping the result
+ SBC #MAX_PARALLAX_P    \ above 0
+ BCS frin2
+ LDA #0
+
+.frin2
+
+ STA X1                 \ Store the result in X1, so this is the x-coordinate of
+                        \ the left end of the left fringe
+
+ STA xLeftStart         \ Store the result in xLeftStart
+
+ LDA xStart             \ Set X2 = xStart + MAX_PARALLAX_P, keeping the result
+ CLC                    \ below 255
+ ADC #MAX_PARALLAX_P
+ BCC frin3
+ LDA #254
+
+.frin3
+
+ STA X2                 \ Store the result in X2, so this is the x-coordinate of
+                        \ the right end of the left fringe
+
+ STA xLeftEnd           \ Store the result in xLeftStart
+
+ TAX                    \ Increment the x-coordinate, keeping the result below
+ INX                    \ 254
+ BNE frin4
+ LDX #254
+
+.frin4
+
+ STX xCoreStart         \ Store the x-coordinate in xCoreStart to use as the
+                        \ start of the white line in the middle
+
+ LDA Y1                 \ If Y1 = 255 then skip drawing the line
+ CMP #255
+ BEQ frin5
+
+ LDA #RED_3D            \ Set the colour of the left fringe (left eye) to red
+ STA S
+
+ JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.frin5
+
+                        \ Now we do the right fringe
+
+ LDA xEnd                   \ If the sun is not up against the left edge, jump
+ CMP #255-MAX_PARALLAX_P    \ to frin6 to draw the left fringe
+ BCC frin6
+
+ STA xCoreEnd           \ The sun is up against the right edge, so set the right
+ STA xRightStart        \ fringe and the end of the core to the original
+ STA xRightEnd          \ x-coordinate in xEnd
+
+ BCS frin10             \ Jump to frin10 to skip the right fringe calculation
+                        \ (this BCS is effectively a JMP as we passed through a
+                        \ BCC above)
+
+.frin6
+
+                        \ Calculate and draw the right fringe
+
+ SEC                    \ Set A = xEnd - MAX_PARALLAX_P, keeping the result
+ SBC #MAX_PARALLAX_P    \ above 0
+ BCS frin7
+ LDA #0
+
+.frin7
+
+ STA X1                 \ Store the result in X1, so this is the x-coordinate of
+                        \ the left end of the right fringe
+
+ STA xRightStart        \ Store the result in xRightStart
+
+ TAX                    \ Decrement the x-coordinate, keeping the result above 0
+ BEQ frin8
+ DEX
+
+.frin8
+
+ STX xCoreEnd           \ Store the x-coordinate in xCoreEnd to use as the end
+                        \ of the white line in the middle
+
+ LDA xEnd               \ Set A = xEnd + MAX_PARALLAX_P, keeping the result
+ CLC                    \ below 254
+ ADC #MAX_PARALLAX_P
+ BCC frin9
+ LDA #254
+
+.frin9
+
+ STA X2                 \ Store the result in X2, so this is the x-coordinate of
+                        \ the right end of the right fringe
+
+ STA xRightEnd          \ Store the result in xRightEnd
+
+ LDA Y1                 \ If Y1 = 255 then skip drawing the line
+ CMP #255
+ BEQ frin10
+
+ LDA #CYAN_3D           \ Set the colour of the right fringe (right eye) to cyan
+ STA S
+
+ JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.frin10
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
 \       Name: TWFL
 \       Type: Variable
 \   Category: Drawing pixels
@@ -5678,12 +5996,16 @@ ENDIF
 \
 \ ******************************************************************************
 
-.orange
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- EQUB %10100101         \ Four mode 1 pixels of colour 2, 1, 2, 1 (red/yellow)
- EQUB %10100101
- EQUB %01011010         \ Four mode 1 pixels of colour 1, 2, 1, 2 (yellow/red)
- EQUB %01011010
+\.orange
+\
+\EQUB %10100101         \ Four mode 1 pixels of colour 2, 1, 2, 1 (red/yellow)
+\EQUB %10100101
+\EQUB %01011010         \ Four mode 1 pixels of colour 1, 2, 1, 2 (yellow/red)
+\EQUB %01011010
+
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \
@@ -10039,14 +10361,14 @@ ENDMACRO
  AND #%01111111         \ Clear bit 7 of the palette number to leave 0, 16 or 32
                         \ in A
 
- STA LSAV               \ Store the palette number in LSAV
+ STA U                  \ Store the palette number in U
 
  TXA                    \ Store X and Y on the stack so we can preserve them
  PHA
  TYA
  PHA
 
- LDX LSAV               \ We are going to copy all palette colours from the
+ LDX U                  \ We are going to copy all palette colours from the
                         \ relevant tables, so fetch the index into X
 
  LDY #0                 \ Set Y to 0 to use as a loop counter
@@ -10108,9 +10430,8 @@ ENDMACRO
  BEQ SlowDownMainLoop   \ until the sync counter counts down, returning from the
                         \ subroutine using a tail call
 
- JMP StartMainLoop      \ Otherwise the parameter must be 0, so jump to
-                        \ StartMainLoop to restart the sync counter, returning
-                        \ from the subroutine using a tail call
+                        \ Otherwise the parameter must be 0, so fall through
+                        \ into StartMainLoop to restart the sync counter
 
                         \ --- End of added code ------------------------------->
 

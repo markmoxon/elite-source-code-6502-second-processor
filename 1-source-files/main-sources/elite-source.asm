@@ -28197,8 +28197,8 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- LDA #1                 \ Set the colour to a value less than CYAN_3D so we draw
- JSR DOCOL              \ the sun in anaglyph 3D
+ LDA #1                 \ Set the colour to 1, so the I/O processor draws the
+ JSR DOCOL              \ sun in anaglyph 3D
 
                         \ --- End of added code ------------------------------->
 
@@ -29464,14 +29464,33 @@ ENDIF
 \LDX XX
 \STX X2
 \STA XX
+\
+\JSR HLOIN              \ Draw a horizontal line from (X1, Y1) to (X2, Y1)
 
-                        \ Unfortunately this hack makes the sun lines flicker
-                        \ as we are now redrawing the whole line, so this needs
-                        \ changing ???
+                        \ --- And replaced by: -------------------------------->
 
-                        \ --- End of removed code ----------------------------->
+                        \ If we get here then there is already a sun line on the
+                        \ screen at this point, so we now need to replace it
+                        \ with the new line, but without flickering the white
+                        \ part of the line
 
- JSR HLOIN              \ Draw a horizontal line from (X1, Y1) to (X2, Y1)
+ LDA Y1                 \ Save Y1 on the stack
+ PHA
+
+ LDA #255               \ Set Y1 = 255 so the new line is drawn first but is
+ STA Y1                 \ flagged so we don't actually draw it until the old
+                        \ line is sent below
+
+ JSR HLOIN              \ Draw the new white line from (X1, Y1) to (X2, Y1)
+
+ PLA                    \ Restore Y1 from the stack
+ STA Y1
+
+                        \ Fall through into PLF23 to draw the old line, but
+                        \ because the new line was drawn with Y1 = 255, we will
+                        \ only draw one line, and without flicker
+
+                        \ --- End of replacement ------------------------------>
 
 .PLF23
 
@@ -29505,8 +29524,17 @@ ENDIF
                         \ out the width, so this makes the line get wider, as we
                         \ move up towards the sun's centre
 
- BNE PLFL               \ If V is non-zero, jump back up to PLFL to do the next
-                        \ screen line up
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\BNE PLFL               \ If V is non-zero, jump back up to PLFL to do the next
+\                       \ screen line up
+
+                        \ --- And replaced by: -------------------------------->
+
+ BEQ P%+5               \ If V is non-zero, jump back up to PLFL to do the next
+ JMP PLFL               \ screen line up
+
+                        \ --- End of replacement ------------------------------>
 
  DEC V+1                \ Otherwise V is 0 and we have reached the centre of the
                         \ sun, so decrement V+1 to -1 so we start incrementing V
