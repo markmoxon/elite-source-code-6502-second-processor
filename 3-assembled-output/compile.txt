@@ -43544,9 +43544,9 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      35D5   86 9A      STX &9A
      35D7   86 9D      STX &9D
      35D9   86 9E      STX &9E
-.horia
+.hori1
      35DB   4C 3D 36   JMP &363D
-.hori0
+.hori2
      35DE   90 07      BCC &35E7
      35E0   A5 92      LDA &92
      35E2   85 90      STA &90
@@ -43558,7 +43558,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      35EB   C9 0F      CMP #&0F
      35ED   90 03      BCC &35F2
      35EF   4C 3A 36   JMP &363A
-.hori1
+.hori3
      35F2   A5 A7      LDA &A7
      35F4   C9 FF      CMP #&FF
      35F6   D0 18      BNE &3610
@@ -43574,7 +43574,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      360A   85 A3      STA &A3
      360C   A5 9E      LDA &9E
      360E   85 A4      STA &A4
-.hori2
+.hori4
      3610   A5 90      LDA &90
      3612   85 A5      STA &A5
      3614   A5 92      LDA &92
@@ -43587,7 +43587,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3623   C9 FF      CMP #&FF
      3625   D0 03      BNE &362A
      3627   4C D4 36   JMP &36D4
-.hori3
+.hori5
      362A   A9 FF      LDA #&FF
      362C   85 83      STA &83
      362E   A5 99      LDA &99
@@ -43596,19 +43596,19 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      3634   85 90      STA &90
      3636   A5 9A      LDA &9A
      3638   85 92      STA &92
-.hori4
+.hori6
      363A   20 4C 36   JSR &364C
-.hori5
+.hori7
      363D   A4 91      LDY &91
      363F   84 A7      STY &A7
-.hori6
+.hori8
      3641   A4 93      LDY &93
      3643   C8         INY
      3644   C4 81      CPY &81
      3646   F0 03      BEQ &364B
      3648   4C B0 35   JMP &35B0
      364B   60         RTS
-.hori7
+.hori9
      364C   A6 90      LDX &90
      364E   A4 91      LDY &91
      3650   B9 00 2B   LDA &2B00,Y

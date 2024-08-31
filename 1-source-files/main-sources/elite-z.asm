@@ -5222,15 +5222,15 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- CPX X2                 \ If X1 <> X2 then jump to hori0 to skip the following
- BNE hori0
+ CPX X2                 \ If X1 <> X2 then jump to hori2 to skip the following
+ BNE hori2
 
                         \ If we get here then X1 = X2, so the start and end
                         \ points are the same and we do not have a line to draw
 
- LDA Y1                 \ If Y1 <> 255 then jump to horia to skip the following
+ LDA Y1                 \ If Y1 <> 255 then jump to hori1 to skip the following
  CMP #255
- BNE horia
+ BNE hori1
 
  STX xLeftStart         \ This is the first part in a two-part line and the line
  STX xLeftEnd           \ in the first part (the new line) is blank, so set the
@@ -5239,12 +5239,12 @@ ENDIF
  STX xRightStart        \ end coordinates are the same)
  STX xRightEnd
 
-.horia
+.hori1
 
- JMP hori5              \ Jump to hori5 to move on to the next line, as there is
+ JMP hori7              \ Jump to hori7 to move on to the next line, as there is
                         \ no line to draw
 
-.hori0
+.hori2
                         \ --- End of replacement ------------------------------>
 
  BCC HL5                \ If X1 < X2, jump to HL5 to skip the following code, as
@@ -5264,18 +5264,18 @@ ENDIF
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
  LDA COL                \ If COL >= CYAN_3D then we have passed a real colour to
- CMP #CYAN_3D           \ the routine, so jump to hori4 to skip the anaglyph
- BCC hori1              \ code and draw the line in the specified colour
- JMP hori4
+ CMP #CYAN_3D           \ the routine, so jump to hori6 to skip the anaglyph
+ BCC hori3              \ code and draw the line in the specified colour
+ JMP hori6
 
-.hori1
+.hori3
 
                         \ If we get here then we need to draw this line in
                         \ anaglyph 3D, applying MAX_PARALLAX_P parallax
 
  LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
- CMP #255               \ line in a two-stage line so jump to hori2
- BNE hori2
+ CMP #255               \ line in a two-stage line so jump to hori4
+ BNE hori4
 
                         \ This is the second line in a two-stage line
 
@@ -5292,7 +5292,7 @@ ENDIF
  LDA xRightEnd
  STA xRightEndNew
 
-.hori2
+.hori4
 
  LDA X1                 \ Store the original x-coordinates in xStart and xEnd
  STA xStart
@@ -5306,41 +5306,41 @@ ENDIF
 
  LDA Y1                 \ If Y1 = 255 then skip drawing the core white line and
  CMP #255               \ move on to the next line
- BEQ hori5
+ BEQ hori7
 
  LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
- CMP #255               \ line in a two-stage line so jump to hori2
- BNE hori3
+ CMP #255               \ line in a two-stage line so jump to hori4
+ BNE hori5
 
                         \ This is the second line in a two-stage line
 
- JMP DrawWhiteLine      \ Draw the core white line, returning to hori6 once done
+ JMP DrawWhiteLine      \ Draw the core white line, returning to hori8 once done
 
-.hori3
+.hori5
 
  LDA #WHITE_3D          \ Set the colour to white for the central portion
  STA S
 
  LDA xCoreStart         \ If the start coordinate of the white portion is on or
- CMP xCoreEnd           \ after the end coordinate, jump to hori5 to skip
- BCS hori5              \ drawing the line centre, as the eyes do not overlap
+ CMP xCoreEnd           \ after the end coordinate, jump to hori7 to skip
+ BCS hori7              \ drawing the line centre, as the eyes do not overlap
 
  STA X1                 \ Set X1 = xCoreStart as the start of the white portion
 
  LDA xCoreEnd           \ Set X2 = xCoreEnd as the end of the white portion
  STA X2
 
-.hori4
+.hori6
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
 
-.hori5
+.hori7
 
  LDY Y1                 \ Set twoStageLine to Y1, so it will be 255 if this line
  STY twoStageLine       \ was the first in a two-stage line
 
-.hori6
+.hori8
 
  LDY Y2                 \ Set Y to the parameter block offset for this line's Y1
                         \ coordinate, which we stored in Y2 before we drew the
@@ -5359,7 +5359,7 @@ ENDIF
 
  RTS                    \ Return from the subroutine
 
-.hori7
+.hori9
 
                         \ The horizontal line code is now a subroutine, as we
                         \ have terminated it with an RTS below
@@ -5654,7 +5654,7 @@ ENDIF
  LDA xCoreEnd
  STA X2
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
 
  JMP whit3              \ Jump to whit3 to draw the fringes, if any
@@ -5674,7 +5674,7 @@ ENDIF
  LDA xCoreEndNew
  STA X2
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
 
  JMP whit3              \ Jump to whit3 to draw the fringes, if any
@@ -5688,7 +5688,7 @@ ENDIF
  LDA xCoreEndNew
  STA X2
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
 
  LDA xCoreStart         \ Draw old line
@@ -5696,7 +5696,7 @@ ENDIF
  LDA xCoreEnd
  STA X2
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
 
 .whit3
@@ -5718,7 +5718,7 @@ ENDIF
  LDA #RED_3D            \ Set the colour of the left fringe (left eye) to red
  STA S
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
 
 .whit4
@@ -5736,7 +5736,7 @@ ENDIF
  LDA #CYAN_3D           \ Set the colour of the right fringe (right eye) to cyan
  STA S
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
 
 .whit5
@@ -5744,7 +5744,7 @@ ENDIF
  LDA #0                 \ Reset the flag as we have now drawn the second line
  STA twoStageLine
 
- JMP hori6              \ Rejoin the sun line loop to move on to the next
+ JMP hori8              \ Rejoin the sun line loop to move on to the next
                         \ line
 
 \ ******************************************************************************
@@ -5845,7 +5845,7 @@ ENDIF
  LDA #RED_3D            \ Set the colour of the left fringe (left eye) to red
  STA S
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
 
 .frin5
@@ -5909,7 +5909,7 @@ ENDIF
  LDA #CYAN_3D           \ Set the colour of the right fringe (right eye) to cyan
  STA S
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
 
 .frin10
