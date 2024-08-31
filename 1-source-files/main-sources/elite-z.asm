@@ -5627,6 +5627,39 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: SwapCoordsAndDraw
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Ensure line coordinates are the right way around and draw the line
+\
+\ ******************************************************************************
+
+.SwapCoordsAndDraw
+
+ LDX X1                 \ If X1 < X2 then jump to swap1 to draw the line, as the
+ CPX X2                 \ coordinates are already ordered correctly
+ BCC swap1
+
+ BEQ swap2              \ If X1 = X2 then jump to swap2 to skip drawing the line
+
+ LDA X2                 \ Swap X1 and X2, decrementing X1 and incrementing X2 as
+ DEX                    \ we do the swap (latter is only required for clever
+ STX X2                 \ logic, which doesn't actually work) ???
+ TAX
+ INX
+ STX X1
+
+.swap1
+
+ JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.swap2
+
+ RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
 \       Name: DrawWhiteLine
 \       Type: Subroutine
 \   Category: Drawing lines
@@ -5681,23 +5714,33 @@ ENDIF
 
 .whit2
 
-                        \ If we get here there are both old and new lines
+                        \ If we get here there are both old and new lines so we
+                        \ apply the clever logic from part 3 of SUN in the
+                        \ parasite code
+                        \
+                        \ Old line = xCoreStart to xCoreEnd (XX to XX+1)
+                        \ New line = xCoreStartNew to xCoreEndNew (X1 to X2)
+
+ LDA xCoreEndNew        \ Swap xCoreStart and xCoreEndNew
+ LDX xCoreStart         \
+ STX xCoreEndNew        \ This does not work ???
+ STA xCoreStart
 
  LDA xCoreStartNew      \ Draw new line
  STA X1
  LDA xCoreEndNew
  STA X2
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
-                        \ (X2, Y1) on the right
+ JSR SwapCoordsAndDraw  \ Make sure the coordinates are ordered properly and
+                        \ draw the line
 
  LDA xCoreStart         \ Draw old line
  STA X1
  LDA xCoreEnd
  STA X2
 
- JSR hori7              \ Draw a horizontal line from (X1, Y1) on the left to
-                        \ (X2, Y1) on the right
+ JSR SwapCoordsAndDraw  \ Make sure the coordinates are ordered properly and
+                        \ draw the line
 
 .whit3
 
