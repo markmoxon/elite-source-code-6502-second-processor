@@ -5636,20 +5636,20 @@ ENDIF
 
 .SwapCoordsAndDraw
 
- LDX X1                 \ If X1 < X2 then jump to swap1 to draw the line, as the
- CPX X2                 \ coordinates are already ordered correctly
+ LDX X1                 \ If X1 < X2 then jump to swap1 to draw the line, as
+ CPX X2                 \ the coordinates are already ordered correctly
  BCC swap1
-
+ 
  BEQ swap2              \ If X1 = X2 then jump to swap2 to skip drawing the line
 
- LDA X2                 \ Swap X1 and X2, decrementing X1 and incrementing X2 as
- DEX                    \ we do the swap (latter is only required for clever
- STX X2                 \ logic, which doesn't actually work) ???
- TAX
- INX
- STX X1
+ LDA X2                 \ Swap X1 and X2 so that X1 < X2
+ STX X2
+ STA X1
 
 .swap1
+
+ DEC X2                 \ Decrement the new end point, so we don't draw the last
+                        \ pixel
 
  JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
                         \ (X2, Y1) on the right
@@ -5721,20 +5721,18 @@ ENDIF
                         \ Old line = xCoreStart to xCoreEnd (XX to XX+1)
                         \ New line = xCoreStartNew to xCoreEndNew (X1 to X2)
 
- LDA xCoreEndNew        \ Swap xCoreStart and xCoreEndNew
- LDX xCoreStart         \
- STX xCoreEndNew        \ This does not work ???
- STA xCoreStart
+ INC xCoreEndNew        \ Add the final pixel back to the end of each line, as
+ INC xCoreEnd           \ we removed them above
 
- LDA xCoreStartNew      \ Draw new line
+ LDA xCoreStartNew      \ Draw the left portion of the line
  STA X1
- LDA xCoreEndNew
+ LDA xCoreStart
  STA X2
 
  JSR SwapCoordsAndDraw  \ Make sure the coordinates are ordered properly and
                         \ draw the line
 
- LDA xCoreStart         \ Draw old line
+ LDA xCoreEndNew        \ Draw the right portion of the line
  STA X1
  LDA xCoreEnd
  STA X2
