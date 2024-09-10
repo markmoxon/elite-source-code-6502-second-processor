@@ -3584,6 +3584,16 @@ ENDIF
  SKIP 1                 \ The value of the line heap pointer when we have just
                         \ drawn the first meridian but before the second
 
+.showingViewName
+
+ SKIP 1                 \ A flag to record whether we are showing a view name
+                        \ in the space view (so we can remove it again after a
+                        \ short delay)
+                        \
+                        \   * 0 = we are not currently showing the view name
+                        \
+                        \   * Non-zero = we are currently showing the view name
+
                         \ --- End of added code ------------------------------->
 
  PRINT "UP workspace from  ", ~UP," to ", ~P%
@@ -32016,10 +32026,29 @@ ENDIF
 
 .me2
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA showingViewName    \ If showingViewName is zero then we are not showing the
+ BEQ mess1              \ view name, so skip the following
+
+ JSR RemoveViewName     \ The view name is being shown, so remove it
+
+ JMP mess2              \ Jump to mess2 to skip showing a new message
+
+.mess1
+
+                        \ --- End of added code ------------------------------->
+
  LDA MCH                \ Fetch the token number of the current message into A
 
  JSR MESS               \ Call MESS to print the token, which will remove it
                         \ from the screen as printing uses EOR logic
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.mess2
+
+                        \ --- End of added code ------------------------------->
 
  LDA #0                 \ Set the delay in DLY to 0, so any new in-flight
  STA DLY                \ messages will be shown instantly
@@ -32275,9 +32304,19 @@ ENDIF
  DEC DLY                \ Decrement the delay counter in DLY, so any in-flight
                         \ messages get removed once the counter reaches zero
 
- BEQ me2                \ If DLY is now 0, jump to me2 to remove any in-flight
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\BEQ me2                \ If DLY is now 0, jump to me2 to remove any in-flight
                         \ message from the space view, and once done, return to
                         \ me3 below, skipping the following two instructions
+
+                        \ --- And replaced by: -------------------------------->
+
+ BNE P%+5               \ If DLY is now 0, jump to me2 to remove any in-flight
+ JMP me2                \ message from the space view, and once done, return to
+                        \ me3 below, skipping the following two instructions
+
+                        \ --- End of replacement ------------------------------>
 
  BPL me3                \ If DLY is positive, jump to me3 to skip the next
                         \ instruction
@@ -37232,6 +37271,12 @@ ENDIF
  JSR mes9               \ currently on-screen, and call mes9 to print it (which
                         \ will remove it from the screen, as printing is done
                         \ using EOR logic)
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ JSR RemoveViewName     \ If the view name is being shown, remove that too
+
+                        \ --- End of added code ------------------------------->
 
  PLA                    \ Restore the new message token
 
@@ -45316,6 +45361,16 @@ ENDIF
 
  LDA #175               \ Print recursive token 15 ("VIEW ")
  JSR TT27
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ LDA #22                \ Set the delay in DLY to 22, so the view name gets
+ STA DLY                \ removed after 22 loop iterations
+
+ STA showingViewName    \ Set showingViewName to a non-zero number to record
+                        \ that we are showing the view name
+
+                        \ --- End of added code ------------------------------->
 
 .tt66
 
@@ -58221,6 +58276,40 @@ ENDIF
 
                         \ --- End of added code ------------------------------->
 
+\ ******************************************************************************
+\
+\       Name: RemoveViewName
+\       Type: Subroutine
+\   Category: Flight
+\    Summary: Remove the view name from the top of the space view
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.RemoveViewName
+
+ LDA showingViewName    \ If showingViewName is zero then we are not showing the
+ BEQ view1              \ view name, so jump to view1 to return from the
+                        \ subroutine as there is no view name to remove
+
+ LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
+ STA QQ17
+
+ STA DTW2               \ Set bit 7 of DTW2 to indicate we are not currently
+                        \ printing a word
+
+ JSR OLDBOX             \ Print the view name to erase it from the screen
+
+ STZ showingViewName    \ Set showingViewName = 0 to record that the view name
+                        \ is no longer being shown (so we don't try to remove it
+                        \ again)
+
+.view1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
