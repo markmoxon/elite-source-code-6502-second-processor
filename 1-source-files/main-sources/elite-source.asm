@@ -74,10 +74,10 @@
  Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
                         \ plane in the universe screen with each key press (1 0)
 
- MAX_PARALLAX_P = 2     \ The maximum number of pixels that we apply to each eye
+ MAX_PARALLAX_P = 1     \ The maximum number of pixels that we apply to each eye
                         \ for positive parallax (distant objects)
 
- MAX_PARALLAX_N = 3     \ The maximum number of pixels that we apply to each eye
+ MAX_PARALLAX_N = 2     \ The maximum number of pixels that we apply to each eye
                         \ for negative parallax (nearby objects)
 
  PARALLAX_FACTOR = 1    \ Set parallax to z_hi/(2^PARALLAX_FACTOR), so increase
@@ -3593,6 +3593,11 @@ ENDIF
                         \   * 0 = we are not currently showing the view name
                         \
                         \   * Non-zero = we are currently showing the view name
+
+.Pr
+
+ SKIP 2                 \ Storage for the amount of parallax to add in the
+                        \ ApplyParallax routine
 
                         \ --- End of added code ------------------------------->
 
@@ -52315,6 +52320,42 @@ ENDIF
 
  RTS                    \ Return from the subroutine
 
+
+\ ******************************************************************************
+\
+\       Name: RemoveViewName
+\       Type: Subroutine
+\   Category: Flight
+\    Summary: Remove the view name from the top of the space view
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.RemoveViewName
+
+ LDA showingViewName    \ If showingViewName is zero then we are not showing the
+ BEQ view1              \ view name, so jump to view1 to return from the
+                        \ subroutine as there is no view name to remove
+
+ LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
+ STA QQ17
+
+ STA DTW2               \ Set bit 7 of DTW2 to indicate we are not currently
+                        \ printing a word
+
+ JSR OLDBOX             \ Print the view name to erase it from the screen
+
+ STZ showingViewName    \ Set showingViewName = 0 to record that the view name
+                        \ is no longer being shown (so we don't try to remove it
+                        \ again)
+
+.view1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
 \ ******************************************************************************
 \
 \       Name: F%
@@ -56553,6 +56594,40 @@ ENDMACRO
 \ and the value above is negative, and the left (red) eye moves right and the
 \ right (cyan) eye moves left.
 \
+\ The parallax is capped to this range:
+\
+\   -MAX_PARALLAX_N * 2 and MAX_PARALLAX_P * 2
+\
+\ The maxima are doubled because they contain the maximum distance moved by each
+\ eye, and we are calculating the total parallax that gets applied to both eyes.
+\
+\ The parallax is applied to one eye at a time, so for example, parallax
+\ values from -4 to +4 get applied like this"
+\
+\      Parallax         Right eye       Left eye
+\
+\      ...
+\      4 = %00000100    Add 2           Subtract 2
+\      3 = %00000011    Add 2           Subtract 1
+\      2 = %00000010    Add 1           Subtract 1
+\      1 = %00000001    Add 1           Subtract 0
+\
+\      0 = %00000000    Add 0           Subtract 0
+\
+\     -1 = %11111111    Add 0           Subtract -1
+\     -2 = %11111110    Add -1          Subtract -1
+\     -3 = %11111101    Add -1          Subtract -2
+\     -4 = %11111100    Add -2          Subtract -2
+\      ...
+\
+\ This calculation can be implemented as follows:
+\
+\   * Right eye: Add (parallax + 1) >> 1
+\
+\   * Left eye:  Subtract parallax >> 1
+\
+\ so this is the calculation that's performed at the end of the subroutine.
+\
 \ ------------------------------------------------------------------------------
 \
 \ Arguments:
@@ -56638,28 +56713,26 @@ IF PARALLAX_FACTOR > 0
 ENDIF
 
                         \ We now cap the high byte to a value between
-                        \ -MAX_PARALLAX_N and MAX_PARALLAX_P
+                        \ -MAX_PARALLAX_N * 2 and MAX_PARALLAX_P * 2
 
  LDA P+2                \ If P+2 is negative, jump to para2 to cap the value
  BMI para2              \ to a minimum value of -MAX_PARALLAX_N
 
- CMP #MAX_PARALLAX_P    \ Cap P+2 to a maximum value of MAX_PARALLAX_P
+ CMP #MAX_PARALLAX_P*2  \ Cap P+2 to a maximum value of MAX_PARALLAX_P * 2
  BCC para3
- LDA #MAX_PARALLAX_P
+ LDA #MAX_PARALLAX_P*2
  BNE para3
 
 .para2
 
- CMP #256-MAX_PARALLAX_N    \ Cap P+2 to a minimum value of -MAX_PARALLAX_N
- BCS para3
- LDA #256-MAX_PARALLAX_N
+ CMP #256-(MAX_PARALLAX_N*2)    \ Cap P+2 to a minimum value of
+ BCS para3                      \ -MAX_PARALLAX_N * 2
+ LDA #256-(MAX_PARALLAX_N*2)
 
 .para3
 
- STA P+2                \ Store the scaled value in P+2, to use as the number of
-                        \ pixels of parallax to apply
-
-                        \ We now apply P+2 pixels of parallax
+ STA P+2                \ Store the scaled value in P+2, so P(1 2) contains the
+                        \ the signed number of pixels of parallax to apply
 
  PLY                    \ Set Y to the heap index from the stack
 
@@ -56670,20 +56743,53 @@ ENDIF
  PHY                    \ Store the line heap index on the stack so we can
                         \ retrieve it below
 
- LDA XX3-1,Y            \ Subtract P+2 pixels from the left x-coordinate to move
- SEC                    \ the left-eye coordinate by the parallax, using the
- SBC P+2                \ value of P+1 as the high byte, which we already set to
- STA XX3-1,Y            \ 0 or %11111111 according to the polarity of P+2
+                        \ We now apply the number of pixels of parallax in
+                        \ P(1 2), using the following calculation to spread the
+                        \ pixels evenly between each eye, one pixel per eye at
+                        \ a time:
+                        \
+                        \   * Right eye: add (parallax + 1) >> 1
+                        \
+                        \   * Left eye:  subtract parallax >> 1
+
+ CLC                    \ Set Pr(1 0) = P(1 2) + 1
+ ADC #1                 \             = parallax + 1
+ STA Pr
+ LDA P+1
+ ADC #0
+ STA Pr+1
+
+ ASL A                  \ Set the C flag to the sign of Pr(1 0)
+
+ ROR Pr+1               \ Set Pr(1 0) = Pr(1 0) >> 1
+ ROR Pr                 \             = (parallax + 1) >> 1
+                        \
+                        \ making sure to keep the correct sign, so Pr(1 0) now
+                        \ contains the amount to add to the right eye
+
+ LDA P+1                \ Set the C flag to the sign of P(1 2)
+ ASL A
+
+ ROR P+1                \ Set P(1 2) = P(1 2) >> 1
+ ROR P+2                \            = parallax >> 1
+                        \
+                        \ making sure to keep the correct sign, so P(1 2) now
+                        \ contains the amount to subtract from the left eye
+
+ LDA XX3-1,Y            \ Subtract P(1 2) pixels from the left x-coordinate to
+ SEC                    \ move the left-eye coordinate by the parallax
+ SBC P+2
+ STA XX3-1,Y
  LDA XX3,Y
  SBC P+1
  STA XX3,Y
 
- LDA XX3r-1,Y           \ Add P+2 pixels to the right x-coordinate to move the
- CLC                    \ right-eye coordinate by the parallax, using the
- ADC P+2                \ value of P+1 as the high byte, which we already set to
- STA XX3r-1,Y           \ 0 or %11111111 according to the polarity of P+2
+ LDA XX3r-1,Y           \ Add Pr(1 0) pixels to the right x-coordinate to move
+ CLC                    \ the right-eye coordinate by the parallax
+ ADC Pr
+ STA XX3r-1,Y
  LDA XX3r,Y
- ADC P+1
+ ADC Pr+1
  STA XX3r,Y
 
  PLX                    \ Restore the index from the stack into X
@@ -58273,41 +58379,6 @@ ENDIF
  JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
                         \ the sync counter, returning from the subroutine
                         \ using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: RemoveViewName
-\       Type: Subroutine
-\   Category: Flight
-\    Summary: Remove the view name from the top of the space view
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.RemoveViewName
-
- LDA showingViewName    \ If showingViewName is zero then we are not showing the
- BEQ view1              \ view name, so jump to view1 to return from the
-                        \ subroutine as there is no view name to remove
-
- LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
- STA QQ17
-
- STA DTW2               \ Set bit 7 of DTW2 to indicate we are not currently
-                        \ printing a word
-
- JSR OLDBOX             \ Print the view name to erase it from the screen
-
- STZ showingViewName    \ Set showingViewName = 0 to record that the view name
-                        \ is no longer being shown (so we don't try to remove it
-                        \ again)
-
-.view1
-
- RTS                    \ Return from the subroutine
 
                         \ --- End of added code ------------------------------->
 

@@ -46,10 +46,10 @@
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- MAX_PARALLAX_P = 2     \ The maximum number of pixels that we apply for
+ MAX_PARALLAX_P = 1     \ The maximum number of pixels that we apply for
                         \ positive parallax (distant objects)
 
- MAX_PARALLAX_N = 3     \ The maximum number of pixels that we apply to each eye
+ MAX_PARALLAX_N = 2     \ The maximum number of pixels that we apply to each eye
                         \ for negative parallax (nearby objects)
 
                         \ --- End of added code ------------------------------->
