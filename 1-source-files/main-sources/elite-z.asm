@@ -6528,6 +6528,7 @@ ENDIF
 IF MAX_PARALLAX_N < 3
 
  LDA T                      \ Cap T to the range 0 to -MAX_PARALLAX_N
+ BEQ dust2
  CMP #256-MAX_PARALLAX_N
  BCS dust2
  LDA #256-MAX_PARALLAX_N
