@@ -57812,13 +57812,16 @@ ENDIF
 
 .show1
 
- LDX #0                 \ Draw the front view, returning from the subroutine
- STX VIEW               \ using a tail call
+ STZ VIEW               \ Draw the front view in the space view
 
- JSR LOOK1              \ Call LOOK1 to switch to view X
+ LDA #1                 \ Clear the top part of the screen, draw a white border,
+ JSR TT66               \ and set the current view type in QQ11 to 1 (title
+                        \ screen), so this shows a screen without the view name
+                        \ or laser sights
 
- JSR NWSTARS            \ Set up a new stardust field (not sure why LOOK1
-                        \ doesn't draw the stardust - it should)
+ STZ QQ11               \ Set the view to QQ11, to switch to the space view
+
+ JSR NWSTARS            \ Set up a new stardust field
 
  JSR ResetExplosions    \ Reset any explosions so they restart on loading
 
