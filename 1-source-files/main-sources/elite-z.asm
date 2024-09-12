@@ -6657,17 +6657,17 @@ ENDIF
 \LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
 \AND #WHITE             \ X, and AND with #WHITE to make it white (i.e.
 \                       \ cyan/red)
+\
+\EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+\STA (SC),Y             \ remove it later without ruining the background that's
+\                       \ already on-screen
 
                         \ --- And replaced by: -------------------------------->
 
- LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
- AND COL                \ X, and AND with COL to make it anaglyph cyan or red
+ JSR DrawAccurateDash   \ Draw a two-pixel dash, overflowing into the next pixel
+                        \ byte if required
 
                         \ --- End of replacement ------------------------------>
-
- EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
- STA (SC),Y             \ remove it later without ruining the background that's
-                        \ already on-screen
 
  DEY                    \ Reduce Y by 1 to point to the pixel row above the one
  BPL P%+4               \ we just plotted, and if it is still positive, skip the
@@ -6686,25 +6686,20 @@ ENDIF
 \LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
 \AND #WHITE             \ X, and AND with #WHITE to make it white (i.e.
 \                       \ cyan/red)
+\
+\EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+\STA (SC),Y             \ remove it later without ruining the background that's
+\                       \ already on-screen
 
                         \ --- And replaced by: -------------------------------->
 
- LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
- AND COL                \ X, and AND with COL to make it anaglyph cyan or red
-
-                        \ --- End of replacement ------------------------------>
-
- EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
- STA (SC),Y             \ remove it later without ruining the background that's
-                        \ already on-screen
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
- RTS                    \ Return from the subroutine
+ JMP DrawAccurateDash   \ Draw a two-pixel dash, overflowing into the next pixel
+                        \ byte if required, and return from the subroutine using
+                        \ a tail call
 
 .dust6
 
-                        \ --- End of added code ------------------------------->
+                        \ --- End of replacement ------------------------------>
 
  LDY T1                 \ Set Y to the index of this pixel's y-coordinate byte
                         \ in the command block, which we stored in T1 above
@@ -6720,6 +6715,70 @@ ENDIF
                         \ to PXLO to draw the next pixel in the buffer
 
  RTS                    \ Return from the subroutine
+
+\ ******************************************************************************
+\
+\       Name: DrawAccurateDash
+\       Type: Subroutine
+\   Category: Drawing pixels
+\    Summary: Draw a two-pixel dash that can run over into the next pixel byte
+\             if required (unlike normal stardust dashes)
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.DrawAccurateDash
+
+ CPX #3                 \ If the dash does not start in the last pixel of the
+ BNE dash2              \ pixel byte, jump to dash2 to draw a normal dash using
+                        \ TWOS2
+
+                        \ Otherwise we need to plot one pixel in this pixel
+                        \ byte and another in the next byte along, so we start
+                        \ with the 
+
+ LDA #%00010001         \ Fetch a mode 1 1-pixel byte with the last pixel set
+ AND COL                \ and AND with COL to make it anaglyph cyan or red
+
+ EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+ STA (SC),Y             \ remove it later without ruining the background that's
+                        \ already on-screen
+
+ TYA                    \ Store the value of Y on the stack
+ PHA
+
+ CLC                    \ Set Y = Y + 8 to move on to the next byte along,
+ ADC #8                 \ skipping the following if the addition overflows
+ BCS dash1
+ TAY
+
+ LDA #%10001000         \ Fetch a mode 1 1-pixel byte with the first pixel set
+ AND COL                \ and AND with COL to make it anaglyph cyan or red,
+
+ EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+ STA (SC),Y             \ remove it later without ruining the background that's
+                        \ already on-screen
+
+.dash1
+
+ PLA                    \ Restore the value of Y that we stored on the stack
+ TAY
+
+ RTS                    \ Return from the subroutine
+
+.dash2
+
+ LDA TWOS2,X            \ Fetch a mode 1 2-pixel byte with the pixels set as in
+ AND COL                \ X, and AND with COL to make it anaglyph cyan or red
+
+ EOR (SC),Y             \ Draw the pixel on-screen using EOR logic, so we can
+ STA (SC),Y             \ remove it later without ruining the background that's
+                        \ already on-screen
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
