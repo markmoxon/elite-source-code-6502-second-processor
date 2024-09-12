@@ -4797,24 +4797,24 @@ ENDIF
 
 .S%
 
+ CLD                    \ Clear the D flag to make sure we are in binary mode
+
+ SEC                    \ Set the C flag
+
+ LDA #LO(G%)            \ Set (1 0) = SC(1 0) = G%
+ STA 0
+ STA SC
+ LDA #HI(G%)
+ STA 1
+ STA SC+1
+
+ LDA #LO(F%-1)          \ Set (3 2) = F% - 1
+ STA 2
+ LDA #HI(F%-1)
+ STA 3
+
                         \ --- Mod: Code removed for anaglyph 3D: -------------->
 
-\CLD                    \ Clear the D flag to make sure we are in binary mode
-\
-\SEC                    \ Set the C flag
-\
-\LDA #LO(G%)            \ Set (1 0) = SC(1 0) = G%
-\STA 0
-\STA SC
-\LDA #HI(G%)
-\STA 1
-\STA SC+1
-\
-\LDA #LO(F%-1)          \ Set (3 2) = F% - 1
-\STA 2
-\LDA #HI(F%-1)
-\STA 3
-\
 \LDX #LO(prtblock)      \ Set (Y X) to point to the prtblock parameter block
 \LDY #HI(prtblock)
 \
