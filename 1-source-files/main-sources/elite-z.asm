@@ -6070,12 +6070,14 @@ ENDIF
 \   * Draw the dot using the dot's distance to determine both the dot's colour
 \     and size. This draws a 1-pixel dot, 2-pixel dash or 4-pixel square in a
 \     colour that's determined by the distance (as per the colour table in
-\     PXCL). These kinds of dot are sent by the PIXEL3 routine in the parasite.
+\     PXCL). These kinds of dot are sent by the PIXEL3 routine in the parasite,
+\     which is used to draw explosion particles.
 \
 \   * Draw the dot using the dot's distance to determine the dot's size, either
 \     a 2-pixel dash or 4-pixel square. The dot is always drawn in white (which
 \     is actually a cyan/red stripe). These kinds of dot are sent by the PIXEL
-\     routine in the parasite.
+\     routine in the parasite, which is used to draw stardust particles and dots
+\     on the Long-range Chart.
 \
 \ The parameters match those put into the PBUF/pixbl block in the parasite.
 \
@@ -6129,20 +6131,28 @@ ENDIF
 
 \AND #%00000111         \ If ZZ is a multiple of 8 (which will be the case for
 \BEQ PX5                \ pixels sent by the parasite's PIXEL routine), jump to
-\                       \ PX5
+\                       \ PX5 to draw stardust particles and dots on the
+\                       \ Long-range Chart
 
                         \ --- And replaced by: -------------------------------->
 
  AND #%00000111         \ If ZZ is a multiple of 8 (which will be the case for
  BNE P%+5               \ pixels sent by the parasite's PIXEL routine), jump to
- JMP PX5                \ PX5
+ JMP PX5                \ PX5 to draw stardust particles and dots on the
+                        \ Long-range Chart
+
+                        \ The code at PX5 draws stardust particles (when COL is
+                        \ non-zero) and dots on the Long-range Chart (when COL
+                        \ is zero)
+                        \
+                        \ The following code draws explosion particles
 
                         \ --- End of replacement ------------------------------>
 
                         \ Otherwise this pixel was sent by the parasite's PIXEL3
                         \ routine and will have an odd value of ZZ, and we use
                         \ the distance value to determine the dot's colour and
-                        \ size
+                        \ size, as this is an explosion particle
 
                         \ --- Mod: Code removed for anaglyph 3D: -------------->
 
