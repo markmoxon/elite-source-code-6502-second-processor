@@ -55,7 +55,7 @@ elif release == 2:
     # SNG45 variant
     s = 0x106A                  # S%
     g = 0x10D1                  # G%
-    f = 0x819D                  # F%
+    f = 0x8136                  # F%
 elif release == 3:
     # Executive variant
     s = 0x106C                  # S%
@@ -128,25 +128,25 @@ s_checksum = s_checksum % 256
 
 print("S%-1 checksum = ", s_checksum)
 
-if Encrypt:
-    data_block[s - 0x1000 - 1] = s_checksum % 256
+# if Encrypt:
+#    data_block[s - 0x1000 - 1] = s_checksum % 256
 
 # Second part: SC routine, which EORs bytes between &1300 and &9FFF
 
-if Encrypt:
-    for n in range(0x1300, 0xA000):
-        data_block[n - 0x1000] = data_block[n - 0x1000] ^ (n % 256) ^ 0x75
+# if Encrypt:
+#    for n in range(0x1300, 0xA000):
+#        data_block[n - 0x1000] = data_block[n - 0x1000] ^ (n % 256) ^ 0x75
 
 # Third part: V, which reverses the order of bytes between G% and F%-1
 
-if Encrypt:
-    f -= 1
-    while g < f:
-        tmp = data_block[g - 0x1000]
-        data_block[g - 0x1000] = data_block[f - 0x1000]
-        data_block[f - 0x1000] = tmp
-        g += 1
-        f -= 1
+# if Encrypt:
+#    f -= 1
+#    while g < f:
+#        tmp = data_block[g - 0x1000]
+#        data_block[g - 0x1000] = data_block[f - 0x1000]
+#        data_block[f - 0x1000] = tmp
+#        g += 1
+#        f -= 1
 
 # Write output file for P.CODE
 

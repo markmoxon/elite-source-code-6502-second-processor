@@ -4784,87 +4784,112 @@ ENDIF
 \
 \ ******************************************************************************
 
- EQUD 0                 \ These bytes appear to be unused
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- RTS                    \ The checksum byte goes here, at S%-1. In the original
-                        \ source this byte is set by the first call to ZP in the
-                        \ Big Code File, though in the BeebAsm version this is
-                        \ populated by elite-checksum.py
+\EQUD 0                 \ These bytes appear to be unused
+\
+\RTS                    \ The checksum byte goes here, at S%-1. In the original
+\                       \ source this byte is set by the first call to ZP in the
+\                       \ Big Code File, though in the BeebAsm version this is
+\                       \ populated by elite-checksum.py
+
+                        \ --- End of removed code ----------------------------->
 
 .S%
 
- CLD                    \ Clear the D flag to make sure we are in binary mode
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- SEC                    \ Set the C flag
+\CLD                    \ Clear the D flag to make sure we are in binary mode
+\
+\SEC                    \ Set the C flag
+\
+\LDA #LO(G%)            \ Set (1 0) = SC(1 0) = G%
+\STA 0
+\STA SC
+\LDA #HI(G%)
+\STA 1
+\STA SC+1
+\
+\LDA #LO(F%-1)          \ Set (3 2) = F% - 1
+\STA 2
+\LDA #HI(F%-1)
+\STA 3
+\
+\LDX #LO(prtblock)      \ Set (Y X) to point to the prtblock parameter block
+\LDY #HI(prtblock)
+\
+\LDA #249               \ Send an OSWORD 249 command to the I/O processor, which
+\JSR OSWORD             \ copies the code of the do65c02 routine from the I/O
+\                       \ processor to prtblock+2
+\
+\LDX #SC                \ Set X = SC, and because SC is in zero page, this means
+\                       \ that X contains the whole value of SC, so jumping to
+\                       \ (X), for example, would jump to the address in SC(1 0)
+\
+\EQUB &AD               \ This is the opcode for an LDA absolute instruction, so
+\                       \ it converts the two OSWORD size bytes at prtblock into
+\                       \ a harmless LDA &2702 instruction
+\
+\.prtblock
+\
+\EQUB 2                 \ The number of bytes to transmit with this command
+\
+\EQUB &27               \ The number of bytes to receive with this command
+\
+\JMP (SC,X)             \ This block, between here and G%, is overwritten by the
+\PHP                    \ code of the do65c02 routine from the I/O processor, so
+\PHY                    \ this code is never run and is presumably just here to
+\LDA #&34               \ throw the crackers off the scent - it just needs to be
+\PHA                    \ at least as long as the do65c02 routine, which ends
+\LDX #0                 \ with a jump to G% below to start the game
+\RTS
+\
+\BRK
+\EQUS "ELITE - By Ian Bell & David Braben"
+\EQUB 10
+\EQUB 13
+\BRK
+\
+\LDA SC                 \ This section of unused code is particularly useful to
+\ADC 2                  \ hackers, as it contains the value of F% (in the
+\CMP F%-1               \ CMP F%-1 instruction), which we need to undo the
+\BNE P%-2               \ encryption. We also need the value of G%, which is
+\EQUD &7547534          \ easy enough to work out as it's just after this block.
+\EQUD &452365           \ See the elite-decrypt.py script for more details
+\EQUB &8D
 
- LDA #LO(G%)            \ Set (1 0) = SC(1 0) = G%
- STA 0
- STA SC
- LDA #HI(G%)
- STA 1
- STA SC+1
-
- LDA #LO(F%-1)          \ Set (3 2) = F% - 1
- STA 2
- LDA #HI(F%-1)
- STA 3
-
- LDX #LO(prtblock)      \ Set (Y X) to point to the prtblock parameter block
- LDY #HI(prtblock)
-
- LDA #249               \ Send an OSWORD 249 command to the I/O processor, which
- JSR OSWORD             \ copies the code of the do65c02 routine from the I/O
-                        \ processor to prtblock+2
-
- LDX #SC                \ Set X = SC, and because SC is in zero page, this means
-                        \ that X contains the whole value of SC, so jumping to
-                        \ (X), for example, would jump to the address in SC(1 0)
-
- EQUB &AD               \ This is the opcode for an LDA absolute instruction, so
-                        \ it converts the two OSWORD size bytes at prtblock into
-                        \ a harmless LDA &2702 instruction
-
-.prtblock
-
- EQUB 2                 \ The number of bytes to transmit with this command
-
- EQUB &27               \ The number of bytes to receive with this command
-
- JMP (SC,X)             \ This block, between here and G%, is overwritten by the
- PHP                    \ code of the do65c02 routine from the I/O processor, so
- PHY                    \ this code is never run and is presumably just here to
- LDA #&34               \ throw the crackers off the scent - it just needs to be
- PHA                    \ at least as long as the do65c02 routine, which ends
- LDX #0                 \ with a jump to G% below to start the game
- RTS
-
- BRK
- EQUS "ELITE - By Ian Bell & David Braben"
- EQUB 10
- EQUB 13
- BRK
-
- LDA SC                 \ This section of unused code is particularly useful to
- ADC 2                  \ hackers, as it contains the value of F% (in the
- CMP F%-1               \ CMP F%-1 instruction), which we need to undo the
- BNE P%-2               \ encryption. We also need the value of G%, which is
- EQUD &7547534          \ easy enough to work out as it's just after this block.
- EQUD &452365           \ See the elite-decrypt.py script for more details
- EQUB &8D
+                        \ --- End of removed code ----------------------------->
 
 .G%
 
- JSR DEEOR              \ Decrypt the main game code between &1300 and &9FFF
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\JSR DEEOR              \ Decrypt the main game code between &1300 and &9FFF
+
+                        \ --- And replaced by: -------------------------------->
+
+ JSR BRKBK              \ Call BRKBK to set the standard BRKV handler for the
+                        \ game
+
+                        \ --- End of replacement ------------------------------>
 
  JSR COLD               \ Copy the recursive tokens and ship blueprints to their
                         \ correct locations
 
- JSR Checksum           \ Checksum the code from &1000 to &9FFF and check it
-                        \ against S%-1
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\JSR Checksum           \ Checksum the code from &1000 to &9FFF and check it
+\                       \ against S%-1
+
+                        \ --- End of removed code ----------------------------->
 
  JMP BEGIN              \ Jump to BEGIN to start the game
 
- NOP                    \ This instruction is not used
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\NOP                    \ This instruction is not used
+
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \
@@ -4885,42 +4910,46 @@ ENDIF
 \
 \ ******************************************************************************
 
-.DEEOR
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- LDY #0                 \ Set (X Y) = SC(1 0) = &1300
- STY SC
- LDX #&13
+\.DEEOR
+\
+\LDY #0                 \ Set (X Y) = SC(1 0) = &1300
+\STY SC
+\LDX #&13
+\
+\.DEEL
+\
+\STX SC+1               \ Set SC+1 = X, so now SC(1 0) = (X 0)
+\
+\TYA                    \ Set A = contents of (SC(1 0) + Y) EOR Y EOR &75
+\EOR (SC),Y             \       = contents of ((X 0) + Y) EOR Y EOR &75
+\EOR #&75               \       = contents of (X Y) EOR Y EOR &75
+\
+\IF _REMOVE_CHECKSUMS
+\
+\NOP                    \ If we have disabled checksums, then don't update (X Y)
+\NOP                    \ with the result, and just move on to the next byte
+\
+\ELSE
+\
+\STA (SC),Y             \ Store the EOR'd value in SC(1 0) + Y, i.e. (X Y)
+\
+\ENDIF
+\
+\DEY                    \ Decrement the loop counter to process the next byte
+\
+\BNE DEEL               \ Loop back until we have done the whole page
+\
+\INX                    \ Increment the page counter to point to the next page
+\
+\CPX #&A0               \ Loop back to do the next page until X = &A0, when
+\BNE DEEL               \ (X Y) = &A000
+\
+\JMP BRKBK              \ Jump to BRKBK to set the standard BRKV handler for the
+\                       \ game and return from the subroutine using a tail call
 
-.DEEL
-
- STX SC+1               \ Set SC+1 = X, so now SC(1 0) = (X 0)
-
- TYA                    \ Set A = contents of (SC(1 0) + Y) EOR Y EOR &75
- EOR (SC),Y             \       = contents of ((X 0) + Y) EOR Y EOR &75
- EOR #&75               \       = contents of (X Y) EOR Y EOR &75
-
-IF _REMOVE_CHECKSUMS
-
- NOP                    \ If we have disabled checksums, then don't update (X Y)
- NOP                    \ with the result, and just move on to the next byte
-
-ELSE
-
- STA (SC),Y             \ Store the EOR'd value in SC(1 0) + Y, i.e. (X Y)
-
-ENDIF
-
- DEY                    \ Decrement the loop counter to process the next byte
-
- BNE DEEL               \ Loop back until we have done the whole page
-
- INX                    \ Increment the page counter to point to the next page
-
- CPX #&A0               \ Loop back to do the next page until X = &A0, when
- BNE DEEL               \ (X Y) = &A000
-
- JMP BRKBK              \ Jump to BRKBK to set the standard BRKV handler for the
-                        \ game and return from the subroutine using a tail call
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \
@@ -44915,61 +44944,65 @@ ENDIF
 \
 \ ******************************************************************************
 
-.Checksum
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- SEC                    \ Set the C flag, so it gets included in the checksum
+\.Checksum
+\
+\SEC                    \ Set the C flag, so it gets included in the checksum
+\
+\LDY #0                 \ Set Y = 0, to act as a byte counter
+\
+\STY V                  \ Set V = 0
+\
+\LDX #&10               \ Set X = &10, so we start with (X Y) = &1000
+\
+\LDA (SC)               \ This has no effect, as A is overwritten by the next
+\                       \ instruction
+\
+\TXA                    \ Set A = &10
+\
+\.CHKLoop
+\
+\STX V+1                \ Set V(1 0) = (X 0)
+\
+\STY T                  \ Set T = Y
+\
+\ADC (V),Y              \ Set A = A + C + contents of (V(1 0) + Y)
+\                       \       = A + C + contents of ((X 0) + Y)
+\                       \       = A + C + contents of (X Y)
+\
+\EOR T                  \ Set A = A EOR Y
+\
+\SBC V+1                \ Set A = A - (1 - C) - X
+\
+\DEY                    \ Decrement the loop counter to process the next byte
+\
+\BNE CHKLoop            \ Loop back until we have done the whole page
+\
+\INX                    \ Increment the page counter to point to the next page
+\
+\CPX #&A0               \ Loop back to do the next page until X = &A0, when
+\BCC CHKLoop            \ (X Y) = &A000
+\
+\CMP S%-1               \ Compare the calculated checksum in A with the checksum
+\                       \ stored in S%-1
+\
+\IF _REMOVE_CHECKSUMS
+\
+\NOP                    \ If we have disabled checksums, then ignore the result
+\NOP                    \ of the comparison and return from the subroutine
+\
+\ELSE
+\
+\BNE Checksum           \ If the checksum we just calculated does not match
+\                       \ the value in location S%-1, jump to Checksum to enter
+\                       \ an infinite loop, which crashes the game
+\
+\ENDIF
+\
+\RTS                    \ Return from the subroutine
 
- LDY #0                 \ Set Y = 0, to act as a byte counter
-
- STY V                  \ Set V = 0
-
- LDX #&10               \ Set X = &10, so we start with (X Y) = &1000
-
- LDA (SC)               \ This has no effect, as A is overwritten by the next
-                        \ instruction
-
- TXA                    \ Set A = &10
-
-.CHKLoop
-
- STX V+1                \ Set V(1 0) = (X 0)
-
- STY T                  \ Set T = Y
-
- ADC (V),Y              \ Set A = A + C + contents of (V(1 0) + Y)
-                        \       = A + C + contents of ((X 0) + Y)
-                        \       = A + C + contents of (X Y)
-
- EOR T                  \ Set A = A EOR Y
-
- SBC V+1                \ Set A = A - (1 - C) - X
-
- DEY                    \ Decrement the loop counter to process the next byte
-
- BNE CHKLoop            \ Loop back until we have done the whole page
-
- INX                    \ Increment the page counter to point to the next page
-
- CPX #&A0               \ Loop back to do the next page until X = &A0, when
- BCC CHKLoop            \ (X Y) = &A000
-
- CMP S%-1               \ Compare the calculated checksum in A with the checksum
-                        \ stored in S%-1
-
-IF _REMOVE_CHECKSUMS
-
- NOP                    \ If we have disabled checksums, then ignore the result
- NOP                    \ of the comparison and return from the subroutine
-
-ELSE
-
- BNE Checksum           \ If the checksum we just calculated does not match
-                        \ the value in location S%-1, jump to Checksum to enter
-                        \ an infinite loop, which crashes the game
-
-ENDIF
-
- RTS                    \ Return from the subroutine
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \

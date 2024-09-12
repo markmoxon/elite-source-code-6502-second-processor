@@ -51,21 +51,9 @@ ELIF _EXECUTIVE
  PUTFILE "3-assembled-output/I.CODE.bin", "I.CODE", &032400, &032C89
 ENDIF
 
-\ Load address for P.CODE changed for anaglyph 3D
+\ Load and execution addresses for P.CODE changed for anaglyph 3D
 
-IF _REMOVE_CHECKSUMS
- IF _SNG45 OR _SOURCE_DISC
-  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E20, &0010D1
- ELIF _EXECUTIVE
-  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E20, &0010D3
- ENDIF
-ELSE
- IF _SNG45 OR _SOURCE_DISC
-  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E20, &00106A
- ELIF _EXECUTIVE
-  PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E20, &00106C
- ENDIF
-ENDIF
+PUTFILE "3-assembled-output/P.CODE.bin", "P.CODE", &000E20, &001065
 
 IF _SNG45
  PUTFILE "1-source-files/boot-files/$.!BOOT.bin", "!BOOT", &002000, &00202B
