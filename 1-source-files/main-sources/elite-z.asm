@@ -363,6 +363,10 @@
                         \
                         \ * Other value = this is not a two-stage line
 
+.Tr
+
+ SKIP 1                 \ The right-eye parallax value in the pixel routines
+
                         \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
@@ -6525,21 +6529,38 @@ ENDIF
 
  INC T                  \ Increment T to the range 0 to -3
 
-IF MAX_PARALLAX_N < 3
+ LDX T                  \ Cap T to the range 0 to -MAX_PARALLAX_N
+ BNE dust2
 
- LDA T                      \ Cap T to the range 0 to -MAX_PARALLAX_N
- BEQ dust2
- CMP #256-MAX_PARALLAX_N
- BCS dust2
- LDA #256-MAX_PARALLAX_N
+ STX Tr
+
+ BEQ dust4              \ Jump to dust4 to apply the parallax in T
 
 .dust2
 
- STA T                  \ Store the capped value of T, but only if the maximum
+\IF MAX_PARALLAX_N < 3
+
+ CPX #256-MAX_PARALLAX_N
+ BCS dusta
+ LDX #256-MAX_PARALLAX_N
+
+.dusta
+
+ STX T                  \ Store the capped value of T, but only if the maximum
                         \ negative parallax is less than 3 (otherwise we stick
                         \ to the range 0 to -3)
 
-ENDIF
+\ENDIF
+
+ INX                    \ Set Tr = (T + 1) >> 1
+ TXA
+ ASL A
+ TXA
+ ROR A
+ STA Tr
+
+ SEC                    \ Set T = T >> 1
+ ROR T
 
  JMP dust4              \ Jump to dust4 to apply the parallax in T
 
@@ -6555,23 +6576,25 @@ ENDIF
  ASL A                  \ %00000000 to %00000010 (0 to 2)
  ROL T
 
-IF MAX_PARALLAX_P > 2
+\IF MAX_PARALLAX_P > 2
 
- INC T                  \ Increment T to the range 1 to 3, but only if the
-                        \ maximum positive parallax is 3 or more (otherwise
-                        \ we stick to the range 0 to 2)
+ INC T                  \ Increment T to the range 1 to 3
 
-                        \ So by this point T is the amount of parallax to apply
-                        \ in pixels, and it is either in the range -3 to +2 or
-                        \ -3 to +3, depending on the value of MAX_PARALLAX_P
+\ENDIF
 
-ENDIF
+ LDX T                  \ Set Tr = (T + 1) >> 1
+ INX
+ TXA
+ LSR A
+ STA Tr
+
+ LSR T                  \ Set T = T >> 1
 
 .dust4
 
                         \ By the time we get get here, T contains the parallax
                         \ to apply in pixels, so we can simply shift each eye by
-                        \ this amount
+                        \ this amount, and T is in the range -3 to +3
 
                         \ We start by drawing the left-eye dot in red
 
@@ -6593,7 +6616,7 @@ ENDIF
  PLA                    \ Retrieve the x-coordinate from the stack into A
 
  CLC                    \ Apply parallax to the right-eye dot
- ADC T
+ ADC Tr
  TAX
 
  LDA #CYAN_3D           \ Set the right-eye dot colour to cyan
@@ -7995,9 +8018,13 @@ ENDMACRO
 
                         \ --- End of replacement ------------------------------>
 
- EQUW SAFE              \ These addresses are never used and have no effect, as
- EQUW SAFE              \ they are out of range for one-byte OSWORD numbers
- EQUW SAFE
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\EQUW SAFE              \ These addresses are never used and have no effect, as
+\EQUW SAFE              \ they are out of range for one-byte OSWORD numbers
+\EQUW SAFE
+
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \
