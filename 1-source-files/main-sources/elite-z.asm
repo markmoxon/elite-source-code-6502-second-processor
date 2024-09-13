@@ -6451,13 +6451,13 @@ ENDIF
  LDA #WHITE_3D          \ Set the colour to white
  STA COL
 
- JSR dust5              \ Call the pixel-plotting code below, which we have
+ JSR dust6              \ Call the pixel-plotting code below, which we have
                         \ turned into a subroutine, to draw the dot
 
  LDA #0                 \ Reset the colour to 0 for the next dot
  STA COL
 
- JMP dust6              \ Jump down to dust6 draw the next dot
+ JMP dust7              \ Jump down to dust7 draw the next dot
 
 .dust1
 
@@ -6509,8 +6509,8 @@ ENDIF
                         \ We now scale this result into the number of pixels of
                         \ parallax to apply
 
- BCS dust3              \ If the subtraction didn't underflow then the result
-                        \ is positive, so jump to dust3 to scale the positive
+ BCS dust4              \ If the subtraction didn't underflow then the result
+                        \ is positive, so jump to dust4 to scale the positive
                         \ parallax
 
                         \ If we get here then the result is negative and in the
@@ -6529,28 +6529,34 @@ ENDIF
 
  INC T                  \ Increment T to the range 0 to -3
 
- LDX T                  \ Cap T to the range 0 to -MAX_PARALLAX_N
- BNE dust2
+ LDX T                  \ If T is non-zero, jump to dust2 to cap the value to
+ BNE dust2              \ the maximum allowed
 
- STX Tr
+ STX Tr                 \ Otherwise set Tr to zero as well so we don't apply
+                        \ any parallax to the right eye
 
- BEQ dust4              \ Jump to dust4 to apply the parallax in T
+ BEQ dust5              \ Jump to dust5 to apply the parallax in T and Tr (this
+                        \ BEQ is effectively a JMP as X is always zero)
 
 .dust2
 
-\IF MAX_PARALLAX_N < 3
-
- CPX #256-MAX_PARALLAX_N
- BCS dusta
+ CPX #256-MAX_PARALLAX_N    \ Cap T to the range 0 to -MAX_PARALLAX_N
+ BCS dust3
  LDX #256-MAX_PARALLAX_N
 
-.dusta
+.dust3
 
- STX T                  \ Store the capped value of T, but only if the maximum
-                        \ negative parallax is less than 3 (otherwise we stick
-                        \ to the range 0 to -3)
+ STX T                  \ Store the capped value of T
 
-\ENDIF
+                        \ We now calculate the number of pixels of parallax
+                        \ using the following calculation to spread the pixels
+                        \ evenly between each eye, one pixel per eye at a time:
+                        \
+                        \   * Right eye: add (parallax + 1) >> 1
+                        \
+                        \   * Left eye:  subtract parallax >> 1
+                        \
+                        \ We calculate the right eye in Tr and the left eye in T
 
  INX                    \ Set Tr = (T + 1) >> 1
  TXA
@@ -6562,9 +6568,9 @@ ENDIF
  SEC                    \ Set T = T >> 1
  ROR T
 
- JMP dust4              \ Jump to dust4 to apply the parallax in T
+ JMP dust5              \ Jump to dust5 to apply the parallax in T
 
-.dust3
+.dust4
 
                         \ If we get here then the result is positive and in the
                         \ range 0 to 168 (%00000000 to %10101000)
@@ -6576,11 +6582,19 @@ ENDIF
  ASL A                  \ %00000000 to %00000010 (0 to 2)
  ROL T
 
-\IF MAX_PARALLAX_P > 2
-
  INC T                  \ Increment T to the range 1 to 3
 
-\ENDIF
+                        \ We now calculate the number of pixels of parallax
+                        \ using the following calculation to spread the pixels
+                        \ evenly between each eye, one pixel per eye at a time:
+                        \
+                        \   * Right eye: add (parallax + 1) >> 1
+                        \
+                        \   * Left eye:  subtract parallax >> 1
+                        \
+                        \ We calculate the right eye in Tr and the left eye in
+                        \ T, starting with the total amount of parallax T, which
+                        \ is in the range -3 to +3
 
  LDX T                  \ Set Tr = (T + 1) >> 1
  INX
@@ -6590,11 +6604,11 @@ ENDIF
 
  LSR T                  \ Set T = T >> 1
 
-.dust4
+.dust5
 
-                        \ By the time we get get here, T contains the parallax
-                        \ to apply in pixels, so we can simply shift each eye by
-                        \ this amount, and T is in the range -3 to +3
+                        \ By the time we get get here, T and Tr contain the
+                        \ parallax to apply to each eye in pixels, so we can
+                        \ simply shift each eye by this amount
 
                         \ We start by drawing the left-eye dot in red
 
@@ -6608,7 +6622,7 @@ ENDIF
  LDA #RED_3D            \ Set the left-eye dot colour to red
  STA COL
 
- JSR dust5              \ Call the pixel-plotting code below, which we have
+ JSR dust6              \ Call the pixel-plotting code below, which we have
                         \ turned into a subroutine, to draw the left-eye dot
 
                         \ And now we draw the right-eye dot in cyan
@@ -6625,12 +6639,12 @@ ENDIF
  PLA                    \ Retrieve the y-coordinate from the stack into Y
  TAY
 
- JSR dust5              \ Call the pixel-plotting code below, which we have
+ JSR dust6              \ Call the pixel-plotting code below, which we have
                         \ turned into a subroutine, to draw the right-eye dot
 
- JMP dust6              \ Jump down to dust6 draw the next particle
+ JMP dust7              \ Jump down to dust7 draw the next particle
 
-.dust5
+.dust6
 
                         \ --- End of added code ------------------------------->
 
@@ -6720,7 +6734,7 @@ ENDIF
                         \ byte if required, and return from the subroutine using
                         \ a tail call
 
-.dust6
+.dust7
 
                         \ --- End of replacement ------------------------------>
 
