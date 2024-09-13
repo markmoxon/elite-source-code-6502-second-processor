@@ -3565,10 +3565,11 @@ ENDIF
 
 .XX3r
 
- SKIP 40 * 4            \ Add a second calculation heap for the right eye, which
+ SKIP 41 * 4            \ Add a second calculation heap for the right eye, which
                         \ needs to be able to store four bytes for each edge,
-                        \ where the mavimum number of edges required is 39 for
-                        \ for the Cobra Mk III wireframe, plus a laser line
+                        \ where the maximum number of edges required is 39 for
+                        \ for the Cobra Mk III wireframe, plus a laser line and
+                        \ a terminator
 
 .planetLinePtr
 
@@ -41317,7 +41318,7 @@ ENDIF
 
  STA XX3r,X             \ Store the low byte of the result in the fifth byte of
                         \ the coordinate block we are adding to XX3 (as X points
-                        \ to the second byte)
+                        \ to the second coordinate)
 
  INX                    \ Increment the heap pointer in X to point to the next
                         \ byte
@@ -41327,7 +41328,7 @@ ENDIF
 
  STA XX3r,X             \ Store the high byte of the result in the sixth byte of
                         \ the coordinate block we are adding to XX3 (as X points
-                        \ to the second byte)
+                        \ to the second coordinate)
 
 .LL66a
 
