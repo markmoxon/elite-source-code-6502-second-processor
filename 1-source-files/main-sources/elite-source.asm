@@ -18868,8 +18868,8 @@ ENDIF
  LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
  JSR DOCOL              \ switch to colour 3, which is cyan in the space view
 
- LDA #32+MAX_PARALLAX_N     \ Apply negative parallax for the second set of laser
- LDY #224-MAX_PARALLAX_N    \ lines (the narrower pair of lines)
+ LDA #32+MAX_PARALLAX_N     \ Apply negative parallax for the second set of
+ LDY #224-MAX_PARALLAX_N    \ laser lines (the narrower pair of lines)
 
 .lasl1
 

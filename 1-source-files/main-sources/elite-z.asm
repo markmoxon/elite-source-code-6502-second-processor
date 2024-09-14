@@ -373,7 +373,7 @@
                         \
                         \ * Other value = this is not a two-stage line
 
-.Tr
+.rParallax
 
  SKIP 1                 \ The right-eye parallax value in the pixel routines
 
@@ -6209,6 +6209,13 @@ ENDIF
  LSR A
  ROR T
 
+                        \ By the time we get get here, T contains the amount of
+                        \ parallax as a signed integet
+
+ JSR ApplyParallax      \ Split the parallax up between the two eyes, returning
+                        \ the left-eye parallax in T and the right-eye parallax
+                        \ in rParallax
+
  INY                    \ Increment Y to 3
 
  LDA (OSSC),Y           \ Set X to byte #3 from the Y-th pixel block in OSSC,
@@ -6239,8 +6246,8 @@ ENDIF
 
  PLA                    \ Fetch the x-coordinate from the stack
 
- CLC                    \ Set X = A + T to apply the right-eye parallax
- ADC T
+ CLC                    \ Set X = A + rParallax to apply the right-eye parallax
+ ADC rParallax
  TAX
 
  LDA #CYAN_3D           \ Set S to cyan
@@ -6465,13 +6472,13 @@ ENDIF
  LDA #WHITE_3D          \ Set the colour to white
  STA COL
 
- JSR dust6              \ Call the pixel-plotting code below, which we have
+ JSR dust4              \ Call the pixel-plotting code below, which we have
                         \ turned into a subroutine, to draw the dot
 
  LDA #0                 \ Reset the colour to 0 for the next dot
  STA COL
 
- JMP dust7              \ Jump down to dust7 draw the next dot
+ JMP dust5              \ Jump down to dust5 draw the next dot
 
 .dust1
 
@@ -6523,8 +6530,8 @@ ENDIF
                         \ We now scale this result into the number of pixels of
                         \ parallax to apply
 
- BCS dust4              \ If the subtraction didn't underflow then the result
-                        \ is positive, so jump to dust4 to scale the positive
+ BCS dust2              \ If the subtraction didn't underflow then the result
+                        \ is positive, so jump to dust2 to scale the positive
                         \ parallax
 
                         \ If we get here then the result is negative and in the
@@ -6543,48 +6550,9 @@ ENDIF
 
  INC T                  \ Increment T to the range 0 to -3
 
- LDX T                  \ If T is non-zero, jump to dust2 to cap the value to
- BNE dust2              \ the maximum allowed
-
- STX Tr                 \ Otherwise set Tr to zero as well so we don't apply
-                        \ any parallax to the right eye
-
- BEQ dust5              \ Jump to dust5 to apply the parallax in T and Tr (this
-                        \ BEQ is effectively a JMP as X is always zero)
+ JMP dust3              \ Jump to dust3 to apply the parallax in T
 
 .dust2
-
- CPX #256-MAX_PARALLAX_N    \ Cap T to the range 0 to -MAX_PARALLAX_N
- BCS dust3
- LDX #256-MAX_PARALLAX_N
-
-.dust3
-
- STX T                  \ Store the capped value of T
-
-                        \ We now calculate the number of pixels of parallax
-                        \ using the following calculation to spread the pixels
-                        \ evenly between each eye, one pixel per eye at a time:
-                        \
-                        \   * Right eye: add (parallax + 1) >> 1
-                        \
-                        \   * Left eye:  subtract parallax >> 1
-                        \
-                        \ We calculate the right eye in Tr and the left eye in T
-
- INX                    \ Set Tr = (T + 1) >> 1
- TXA
- ASL A
- TXA
- ROR A
- STA Tr
-
- SEC                    \ Set T = T >> 1
- ROR T
-
- JMP dust5              \ Jump to dust5 to apply the parallax in T
-
-.dust4
 
                         \ If we get here then the result is positive and in the
                         \ range 0 to 168 (%00000000 to %10101000)
@@ -6598,31 +6566,14 @@ ENDIF
 
  INC T                  \ Increment T to the range 1 to 3
 
-                        \ We now calculate the number of pixels of parallax
-                        \ using the following calculation to spread the pixels
-                        \ evenly between each eye, one pixel per eye at a time:
-                        \
-                        \   * Right eye: add (parallax + 1) >> 1
-                        \
-                        \   * Left eye:  subtract parallax >> 1
-                        \
-                        \ We calculate the right eye in Tr and the left eye in
-                        \ T, starting with the total amount of parallax T, which
-                        \ is in the range -3 to +3
+.dust3
 
- LDX T                  \ Set Tr = (T + 1) >> 1
- INX
- TXA
- LSR A
- STA Tr
+                        \ By the time we get get here, T contains the amount of
+                        \ parallax in the range -3 to +3
 
- LSR T                  \ Set T = T >> 1
-
-.dust5
-
-                        \ By the time we get get here, T and Tr contain the
-                        \ parallax to apply to each eye in pixels, so we can
-                        \ simply shift each eye by this amount
+ JSR ApplyParallax      \ Split the parallax up between the two eyes, returning
+                        \ the left-eye parallax in T and the right-eye parallax
+                        \ in rParallax
 
                         \ We start by drawing the left-eye dot in red
 
@@ -6636,7 +6587,7 @@ ENDIF
  LDA #RED_3D            \ Set the left-eye dot colour to red
  STA COL
 
- JSR dust6              \ Call the pixel-plotting code below, which we have
+ JSR dust4              \ Call the pixel-plotting code below, which we have
                         \ turned into a subroutine, to draw the left-eye dot
 
                         \ And now we draw the right-eye dot in cyan
@@ -6644,7 +6595,7 @@ ENDIF
  PLA                    \ Retrieve the x-coordinate from the stack into A
 
  CLC                    \ Apply parallax to the right-eye dot
- ADC Tr
+ ADC rParallax
  TAX
 
  LDA #CYAN_3D           \ Set the right-eye dot colour to cyan
@@ -6653,12 +6604,12 @@ ENDIF
  PLA                    \ Retrieve the y-coordinate from the stack into Y
  TAY
 
- JSR dust6              \ Call the pixel-plotting code below, which we have
+ JSR dust4              \ Call the pixel-plotting code below, which we have
                         \ turned into a subroutine, to draw the right-eye dot
 
- JMP dust7              \ Jump down to dust7 draw the next particle
+ JMP dust5              \ Jump down to dust5 draw the next particle
 
-.dust6
+.dust4
 
                         \ --- End of added code ------------------------------->
 
@@ -6748,7 +6699,7 @@ ENDIF
                         \ byte if required, and return from the subroutine using
                         \ a tail call
 
-.dust7
+.dust5
 
                         \ --- End of replacement ------------------------------>
 
@@ -10672,6 +10623,56 @@ ENDMACRO
 
  LDA syncCounter        \ Wait until the syncCounter reaches 0
  BNE SlowDownMainLoop
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ApplyParallax
+\       Type: Subroutine
+\   Category: Drawing pixels
+\    Summary: Split the parallax in T between the two eyes, returning the
+\             left-eye parallax in T and the right-eye parallax in rParallax
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ApplyParallax
+
+ LDX T                  \ If T is non-zero, jump to para1 to apply the parallax
+ BNE para1
+
+ STX rParallax          \ Otherwise set rParallax to zero as well so we don't
+                        \ apply any parallax to the right eye either
+
+ RTS                    \ Return from the subroutine
+
+.para1
+
+                        \ We now calculate the number of pixels of parallax
+                        \ using the following calculation to spread the pixels
+                        \ evenly between each eye, one pixel per eye at a time:
+                        \
+                        \   * Right eye: add (parallax + 1) >> 1
+                        \
+                        \   * Left eye:  subtract parallax >> 1
+                        \
+                        \ We calculate the right eye in rParallax and the left
+                        \ eye in T
+
+ INX                    \ Set rParallax = (T + 1) >> 1
+ TXA                    \
+ ASL A                  \ making sure to retain the sign
+ TXA
+ ROR A
+ STA rParallax
+
+ LDA T                  \ Set T = T >> 1
+ ASL A                  \
+ ROR T                  \ making sure to retain the sign
 
  RTS                    \ Return from the subroutine
 
