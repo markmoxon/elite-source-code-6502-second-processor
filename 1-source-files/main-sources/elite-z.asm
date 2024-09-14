@@ -40,9 +40,19 @@
 \
 \ ******************************************************************************
 
- CODE% = &2400          \ The assembly address of the main I/O processor code
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
 
- LOAD% = &2400          \ The load address of the main I/O processor code
+\CODE% = &2400          \ The assembly address of the main I/O processor code
+\
+\LOAD% = &2400          \ The load address of the main I/O processor code
+
+                        \ --- And replaced by: -------------------------------->
+
+ CODE% = &2300          \ The assembly address of the main I/O processor code
+
+ LOAD% = &2300          \ The load address of the main I/O processor code
+
+                        \ --- End of replacement ------------------------------>
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
@@ -417,7 +427,15 @@
 \
 \ ******************************************************************************
 
- ORG &2300
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\ORG &2300
+
+                        \ --- And replaced by: -------------------------------->
+
+ ORG &2200
+
+                        \ --- End of replacement ------------------------------>
 
 .TABLE
 
@@ -1332,31 +1350,27 @@ ENDIF
 
                         \ --- End of added code ------------------------------->
 
-                        \ --- Mod: Code removed for anaglyph 3D: -------------->
-
-\LDA TINA               \ If the contents of locations TINA to TINA+3 are "TINA"
-\CMP #'T'               \ then keep going, otherwise jump to PUTBACK to point
-\BNE PUTBACK            \ WRCHV to USOSWRCH, and then end the program, as from
-\LDA TINA+1             \ now on the handlers pointed to by the vectors will
-\CMP #'I'               \ handle everything
-\BNE PUTBACK
-\LDA TINA+2
-\CMP #'N'
-\BNE PUTBACK
-\LDA TINA+3
-\CMP #'A'
-\BNE PUTBACK
-\
-\JSR TINA+4             \ TINA to TINA+3 contains the string "TINA", so call the
-\                       \ subroutine at TINA+4
-\                       \
-\                       \ This allows us to add a code hook into the start-up
-\                       \ process by populating the TINW workspace at &0B00 with
-\                       \ "TINA" followed by the code for a subroutine, and it
-\                       \ will be called just before the setup code terminates
-\                       \ on the I/O processor
-
-                        \ --- End of removed code ----------------------------->
+ LDA TINA               \ If the contents of locations TINA to TINA+3 are "TINA"
+ CMP #'T'               \ then keep going, otherwise jump to PUTBACK to point
+ BNE PUTBACK            \ WRCHV to USOSWRCH, and then end the program, as from
+ LDA TINA+1             \ now on the handlers pointed to by the vectors will
+ CMP #'I'               \ handle everything
+ BNE PUTBACK
+ LDA TINA+2
+ CMP #'N'
+ BNE PUTBACK
+ LDA TINA+3
+ CMP #'A'
+ BNE PUTBACK
+ 
+ JSR TINA+4             \ TINA to TINA+3 contains the string "TINA", so call the
+                        \ subroutine at TINA+4
+                        \
+                        \ This allows us to add a code hook into the start-up
+                        \ process by populating the TINW workspace at &0B00 with
+                        \ "TINA" followed by the code for a subroutine, and it
+                        \ will be called just before the setup code terminates
+                        \ on the I/O processor
 
                         \ Fall through into PUTBACK to point WRCHV to USOSWRCH,
                         \ and then end the program, as from now on the handlers

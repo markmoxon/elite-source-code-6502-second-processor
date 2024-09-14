@@ -45,8 +45,10 @@ ENDIF
 
  PUTFILE "3-assembled-output/ELITEa.bin", "I.ELITEa", &FF2000, &FF2000
 
+\ Load and execution addresses for I.CODE changed for anaglyph 3D
+
 IF _SNG45 OR _SOURCE_DISC
- PUTFILE "3-assembled-output/I.CODE.bin", "I.CODE", &FF2400, &FF2C89
+ PUTFILE "3-assembled-output/I.CODE.bin", "I.CODE", &FF2300, &FF2B89
 ELIF _EXECUTIVE
  PUTFILE "3-assembled-output/I.CODE.bin", "I.CODE", &032400, &032C89
 ENDIF
