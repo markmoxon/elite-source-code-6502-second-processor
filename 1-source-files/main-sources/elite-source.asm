@@ -64,9 +64,9 @@
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- HALF_EYE_SPACING = 1   \ Half the default spacing between the eyes in
-                        \ x-coordinates (i.e. the the distance from the nose
-                        \ to each eye)
+ HALF_EYE_SPACING = 1   \ The default spacing between the eyes in x-coordinates
+                        \ (i.e. the the distance from the nose to each eye, so
+                        \ that's half the eye spacing)
 
  Z_PLANE = &800         \ The default z-coordinate of the parallax projection
                         \ plane (8 0)
@@ -74,14 +74,26 @@
  Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
                         \ plane in the universe screen with each key press (1 0)
 
- MAX_PARALLAX_P = 1     \ The maximum number of pixels that we apply to each eye
-                        \ for positive parallax (distant objects)
+ PARALLAX_FACTOR = 1    \ The default scale factor we use to calculate parallax
+                        \ from the z-coordinates of a ship, as follows:
+                        \
+                        \   z_hi / 2^PARALLAX_FACTOR
+                        \
+                        \ So we can increase this value to reduce the amount of
+                        \ parallax (i.e. increase the depth of field)
 
- MAX_PARALLAX_N = 2     \ The maximum number of pixels that we apply to each eye
-                        \ for negative parallax (nearby objects)
+ MAX_PARALLAX_P = 1     \ The maximum number of pixels of positive parallax that
+                        \ we apply to distant ships
 
- PARALLAX_FACTOR = 1    \ Set parallax to z_hi/(2^PARALLAX_FACTOR), so increase
-                        \ this value to reduce the amount of parallax
+ MAX_PARALLAX_N = 2     \ The maximum number of pixels of negative parallax that
+                        \ we apply to nearby ships
+
+ PLANET_PARALLAX_P = 1  \ The number of pixels of positive parallax that we
+                        \ apply to the planet
+
+ LASER_PARALLAX_N = 2   \ The number of pixels of negative parallax that we
+                        \ apply to our laser lines
+
 
                         \ --- End of added code ------------------------------->
 
@@ -3600,6 +3612,15 @@ ENDIF
  SKIP 2                 \ Storage for the amount of parallax to add in the
                         \ ApplyParallax routine
 
+.xRightEye
+
+ SKIP 3                 \ The 3D x-coordinate of the vertex to be shown in the
+                        \ right eye (in cyan)
+
+.zCoord
+
+ SKIP 2                 \ The 3D z-coordinate of the vertex to be processed
+
                         \ --- End of added code ------------------------------->
 
  PRINT "UP workspace from  ", ~UP," to ", ~P%
@@ -4294,6 +4315,24 @@ ENDIF
  EQUB 125               \ Token 37: a random extended token between 125 and 129
 
                         \ --- End of moved code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: defaultFile
+\       Type: Variable
+\   Category: Universe editor
+\    Summary: The default universe file to display in the universe editor
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.defaultFile
+
+ EQUS ":0.U.SPIRAL"
+ EQUB 13
+
+                        \ --- End of added code ------------------------------->
 
  SKIPTO &1000
 
@@ -18868,8 +18907,8 @@ ENDIF
  LDA #CYAN_3D           \ Send a #SETCOL CYAN_3D command to the I/O processor to
  JSR DOCOL              \ switch to colour 3, which is cyan in the space view
 
- LDA #32+MAX_PARALLAX_N     \ Apply negative parallax for the second set of
- LDY #224-MAX_PARALLAX_N    \ laser lines (the narrower pair of lines)
+ LDA #32+LASER_PARALLAX_N   \ Apply negative parallax for the second set of
+ LDY #224-LASER_PARALLAX_N  \ laser lines (the narrower pair of lines)
 
 .lasl1
 
@@ -52392,6 +52431,80 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: speedBuff
+\       Type: Variable
+\   Category: Universe editor
+\    Summary: Buffer for speed OSWORD calls
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.speedBuff
+
+ EQUB 3                 \ The number of bytes to transmit with this command
+
+ EQUB 2                 \ The number of bytes to receive with this command
+
+ EQUB 0                 \ The parameter to send
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: RestartSync
+\       Type: Subroutine
+\   Category: Main loop
+\    Summary: Restart the sync counter
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.RestartSync
+
+ STZ speedBuff+2        \ Set the parameter to zero to restart the sync counter
+
+ LDX #LO(speedBuff)     \ Set (Y X) to point to the speedBuff parameter
+ LDY #HI(speedBuff)     \ block
+
+ LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
+                        \ the sync counter, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: WaitForSync
+\       Type: Subroutine
+\   Category: Main loop
+\    Summary: Pause until the sync counter reaches zero
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.WaitForSync
+
+ LDA #1
+ STA speedBuff+2        \ Set the parameter to zero to restart the sync counter
+
+ LDX #LO(speedBuff)     \ Set (Y X) to point to the speedBuff parameter
+ LDY #HI(speedBuff)     \ block
+
+ LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
+                        \ the sync counter, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
 \       Name: F%
 \       Type: Variable
 \   Category: Utility routines
@@ -56518,36 +56631,18 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\       Name: xRightEye
+\       Name: parallaxFactor
 \       Type: Variable
 \   Category: Drawing lines
-\    Summary: The 3D x-coordinate of the vertex to be shown in the right eye
-\             (in cyan)
+\    Summary: The parallax factor for converting z-coordinates to parallax
 \
 \ ******************************************************************************
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
-.xRightEye
+.parallaxFactor
 
- SKIP 3
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: zCoord
-\       Type: Variable
-\   Category: Drawing lines
-\    Summary: The 3D z-coordinate of the vertex to be processed
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.zCoord
-
- SKIP 2
+ EQUB PARALLAX_FACTOR
 
                         \ --- End of added code ------------------------------->
 
@@ -56692,8 +56787,9 @@ ENDMACRO
 
 .ApplyParallax
 
- LDA doParallax         \ If parallax is disabled, jump to para4 to return from
- BEQ para4              \ the subroutine
+ LDA doParallax         \ If parallax is disabled, jump to para6 to return from
+ BNE P%+5               \ the subroutine
+ JMP para6
 
  PHX                    \ Store the line heap index on the stack so we can use
                         \ it below and restore it at the end of the routine
@@ -56733,37 +56829,44 @@ ENDMACRO
                         \ (we can reuse P+1 as we don't need the low byte any
                         \ more)
 
-                        \ We now scale the parallax in P+2 by PARALLAX_FACTOR
+                        \ We now divide the parallax in P+2 by 2^parallaxFactor
 
-IF PARALLAX_FACTOR > 0
+ LDX parallaxFactor     \ If parallaxFactor is zero then jump to para3 to skip
+ BEQ para3              \ the scaling
 
- FOR I%, 1, PARALLAX_FACTOR
+ CPX #1                 \ If parallaxFactor = 1 jump to para2 to divide P+2 by 2
+ BEQ para2
 
-  LSR A                 \ Set (A P+2) = (A P+2) / (2 ^ PARALLAX_FACTOR)
-  ROR P+2
+                        \ Otherwise parallaxFactor = 2 so divide P+2 by 4
 
- NEXT
+ LSR A                  \ Set (A P+2) = (A P+2) / 2
+ ROR P+2
 
-ENDIF
+.para2
+
+ LSR A                  \ Set (A P+2) = (A P+2) / 2
+ ROR P+2
+
+.para3
 
                         \ We now cap the high byte to a value between
                         \ -MAX_PARALLAX_N * 2 and MAX_PARALLAX_P * 2
 
- LDA P+2                \ If P+2 is negative, jump to para2 to cap the value
- BMI para2              \ to a minimum value of -MAX_PARALLAX_N
+ LDA P+2                \ If P+2 is negative, jump to para4 to cap the value
+ BMI para4              \ to a minimum value of -MAX_PARALLAX_N
 
  CMP #MAX_PARALLAX_P*2  \ Cap P+2 to a maximum value of MAX_PARALLAX_P * 2
- BCC para3
+ BCC para5
  LDA #MAX_PARALLAX_P*2
- BNE para3
+ BNE para5
 
-.para2
+.para4
 
  CMP #256-(MAX_PARALLAX_N*2)    \ Cap P+2 to a minimum value of
- BCS para3                      \ -MAX_PARALLAX_N * 2
+ BCS para5                      \ -MAX_PARALLAX_N * 2
  LDA #256-(MAX_PARALLAX_N*2)
 
-.para3
+.para5
 
  STA P+2                \ Store the scaled value in P+2, so P(1 2) contains the
                         \ the signed number of pixels of parallax to apply
@@ -56771,7 +56874,7 @@ ENDIF
  PLY                    \ Set Y to the heap index from the stack
 
  CPY #&FF               \ If the index is &FF, skip updating the XX3 and XX3r
- BEQ para4              \ heaps, as we are only interested in the result of the
+ BEQ para6              \ heaps, as we are only interested in the result of the
                         \ parallax calculation
 
  PHY                    \ Store the line heap index on the stack so we can
@@ -56828,7 +56931,7 @@ ENDIF
 
  PLX                    \ Restore the index from the stack into X
 
-.para4
+.para6
 
  RTS                    \ Return from the subroutine
 
@@ -57579,24 +57682,6 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: defaultFile
-\       Type: Variable
-\   Category: Universe editor
-\    Summary: The default universe file to display in the universe editor
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.defaultFile
-
- EQUS ":0.U.SPIRAL"
- EQUB 13
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
 \       Name: currentSlot
 \       Type: Variable
 \   Category: Universe editor
@@ -57877,6 +57962,13 @@ ENDIF
  ASL A
  STA DELTA
 
+ LDA parallaxFactor     \ Draw the parallax factor in the altitude indicator
+ CLC
+ ROR A
+ ROR A
+ ROR A
+ STA ALTIT
+
  JSR DIALS              \ Update the dashboard
 
  LDA doParallax         \ Draw the parallax toggle as a missile
@@ -57991,8 +58083,24 @@ ENDIF
 
 .show12
 
- CMP #&40               \ If we didn't press "@", jump to show13
+ CMP #&64               \ If we didn't press "D", jump to show14
+ BNE show14
+
+ INC parallaxFactor     \ Increment the parallax factor
+
+ LDA parallaxFactor     \ Wrap the parallax factor around so it is in the range
+ CMP #3                 \ 0 to 2
  BNE show13
+ STZ parallaxFactor
+
+.show13
+
+ JMP show2              \ Jump to show2 to redraw the scene
+
+.show14
+
+ CMP #&40               \ If we didn't press "@", jump to show15
+ BNE show15
 
  LDA #1                 \ Clear the top part of the screen, draw a white border,
  JSR TT66               \ and set the current view type in QQ11 to 1
@@ -58007,14 +58115,14 @@ ENDIF
 
  JMP show1              \ Jump to show1 to clear the screen and draw the scene
 
-.show13
+.show15
 
- CMP #&1B               \ If we didn't press ESCAPE, jump to show14
- BEQ show14
+ CMP #&1B               \ If we didn't press ESCAPE, jump to show16
+ BEQ show16
 
  JMP show2              \ Jump to show2 to redraw the scene
 
-.show14
+.show16
 
  LDA #'E'               \ Change the directory back to E
  STA S1%+3
@@ -58163,7 +58271,7 @@ ENDIF
 
  LDA XX3r,Y             \ Fetch the x-coordinate, subtract parallax and store in
  SEC                    \ K6(1 0)
- SBC #MAX_PARALLAX_P
+ SBC #PLANET_PARALLAX_P
  STA K6
  INY
  LDA XX3r,Y
@@ -58206,9 +58314,9 @@ ENDIF
 
 .plan3
 
- LDA XX3,Y             \ Fetch the x-coordinate, subtract parallax and store in
+ LDA XX3,Y              \ Fetch the x-coordinate, subtract parallax and store in
  SEC                    \ K6(1 0)
- SBC #MAX_PARALLAX_P
+ SBC #PLANET_PARALLAX_P
  STA K6
  INY
  LDA XX3,Y
@@ -58268,7 +58376,7 @@ ENDIF
 
  LDA XX3r,Y             \ Fetch the x-coordinate, add parallax and store in
  CLC                    \ K6(1 0)
- ADC #MAX_PARALLAX_P
+ ADC #PLANET_PARALLAX_P
  STA K6
  INY
  LDA XX3r,Y
@@ -58313,7 +58421,7 @@ ENDIF
 
  LDA XX3,Y              \ Fetch the x-coordinate, add parallax and store in
  CLC                    \ K6(1 0)
- ADC #MAX_PARALLAX_P
+ ADC #PLANET_PARALLAX_P
  STA K6
  INY
  LDA XX3,Y
@@ -58342,80 +58450,6 @@ ENDIF
  JMP EraseRestOfPlanet  \ We have drawn the new circle, so now we need to erase
                         \ any lines that are left in the ball line heap,
                         \ returning from the subroutine using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: musicBuff
-\       Type: Variable
-\   Category: Universe editor
-\    Summary: Buffer for music OSWORD calls
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for speed control: -------------->
-
-.musicBuff
-
- EQUB 3                 \ The number of bytes to transmit with this command
-
- EQUB 2                 \ The number of bytes to receive with this command
-
- EQUB 0                 \ The parameter to send
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: RestartSync
-\       Type: Subroutine
-\   Category: Main loop
-\    Summary: Restart the sync counter
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for speed control: -------------->
-
-.RestartSync
-
- STZ musicBuff+2        \ Set the parameter to zero to restart the sync counter
-
- LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
- LDY #HI(musicBuff)     \ block
-
- LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
-
- JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
-                        \ the sync counter, returning from the subroutine
-                        \ using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: WaitForSync
-\       Type: Subroutine
-\   Category: Main loop
-\    Summary: Pause until the sync counter reaches zero
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for speed control: -------------->
-
-.WaitForSync
-
- LDA #1
- STA musicBuff+2        \ Set the parameter to zero to restart the sync counter
-
- LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
- LDY #HI(musicBuff)     \ block
-
- LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
-
- JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
-                        \ the sync counter, returning from the subroutine
-                        \ using a tail call
 
                         \ --- End of added code ------------------------------->
 

@@ -52,17 +52,10 @@
 
  LOAD% = &2300          \ The load address of the main I/O processor code
 
+ SUN_PARALLAX_P = 1     \ The number of pixels of positive parallax that we
+                        \ apply to the sun
+
                         \ --- End of replacement ------------------------------>
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
- MAX_PARALLAX_P = 1     \ The maximum number of pixels that we apply for
-                        \ positive parallax (distant objects)
-
- MAX_PARALLAX_N = 2     \ The maximum number of pixels that we apply to each eye
-                        \ for negative parallax (nearby objects)
-
-                        \ --- End of added code ------------------------------->
 
                         \ --- Mod: Code added for speed control: -------------->
 
@@ -2393,50 +2386,43 @@ ENDIF
                         \ on the scanner
                         \
                         \ The centre line of the scanner is at y-coordinate 220,
-                        \ so we can apply 0, 1 or 2 pixels of parallax as
-                        \ follows, depending on the value in A:
+                        \ so we can apply 0 or pixel of parallax as follows, 
+                        \ depending on the value in A:
                         \
-                        \   * ...-210 = 2 pixels of positive parallax
-                        \   * 211-216 = 1 pixel of positive parallax
-                        \   * 217-223 = no parallax
-                        \   * 224-231 = 1 pixel of negative parallax
-                        \   * 232-... = 2 pixels of negative parallax
+                        \   * ...-212 = 1 pixel of positive parallax
+                        \   * 213-227 = no parallax
+                        \   * 228-... = 1 pixel of negative parallax
                         \
-                        \ So we now calculate the amount of parallax
+                        \ Due to the low resolution of the scanner, we can't
+                        \ have any more options, as they will be too spaced out
+                        \ for the eye to resolve (as one pixel in the scanner is
+                        \ equivalent to two pixels in the space view)
+                        \
+                        \ We now calculate the amount of parallax
 
  LDY #0                 \ Set Y = 0 to store the amount of parallax
 
- CMP #224               \ If A >= 224, jump to scan4 to calculate negative
- BCS scan4              \ parallax
+ CMP #228               \ If A >= 28, jump to scan3 to calculate negative
+ BCS scan3              \ parallax
 
- CMP #217               \ If A >= 217 then A is in the range 217 to 223, so jump
- BCS scan6              \ to scan6 as there is no parallax to apply, so we only
+ CMP #213               \ If A >= 213 then A is in the range 217 to 227, so jump
+ BCS scan5              \ to scan5 as there is no parallax to apply, so we only
                         \ draw the ship once on the scanner, in white
 
- INY                    \ If we get here then A < 217, so increment Y to 1
+ INY                    \ If we get here then A < 213, so increment Y to 1
 
- CMP #211               \ If A >= 211, jump to scan5 as we are done (Y = 1)
- BCS scan5
+ BCC scan4              \ Jump to scan4 as we are done (this BCC is effectively
+                        \ a JMP as we just passed through a BCS)
 
- INY                    \ If we get here then A < 211, so increment Y to 2
-
- BCC scan5              \ Jump to scan5 as we are done (Y = 2) (this BCC is
-                        \ effectively a JMP as we just passed through a BCS)
-
-.scan4
+.scan3
 
  DEY                    \ If we get here then A >= 224, so decrement Y to -1
 
- CMP #232               \ If A < 232, jump to scan5 as we are done (Y = -1)
- BCC scan5
-
- DEY                    \ If we get here then A >= 232, so decrement Y to -2
-
-.scan5
+.scan4
 
                         \ If we get here then there is some parallax to apply
 
- STY U                  \ Store the amount of parallax in U
+ STY T                  \ Store the amount of parallax in T
 
  LDY #5                 \ Fetch byte #5 from the parameter block (the screen
  LDA (OSSC),Y           \ x-coordinate) and store it in V
@@ -2445,11 +2431,11 @@ ENDIF
                         \ We now draw the ship twice, once for each eye,
                         \ starting with the left eye in red
 
- SEC                    \ Subtract the parallax from the x-coordinate and store
- SBC U                  \ in X1 (so for positive parallax the left eye goes left
- STA X1                 \ and for negative parallax it goes right)
+ SEC                    \ Apply parallax to the left-eye x-coordinate and store
+ SBC T                  \ in X1
+ STA X1
 
- LDA #RED2_3D           \ Set the colour to red
+ LDA #RED2_3D           \ Set the left-eye dot colour to red
  STA COL
 
  LDY #6                 \ Call scan7+1 to draw the stick (we set Y = 6 so the
@@ -2457,19 +2443,19 @@ ENDIF
 
                         \ And now we do the right eye in cyan
 
- LDA V                  \ Add the parallax to the x-coordinate and store in X1
- CLC                    \ (so for positive parallax the right eye goes right and
- ADC U                  \ for negative parallax it goes left)
+ LDA V                  \ Apply parallax to the right-eye x-coordinate and store
+ CLC                    \ in X1
+ ADC T
  STA X1
 
- LDA #CYAN2_3D          \ Set the colour to cyan
+ LDA #CYAN2_3D          \ Set the right-eye colour to cyan
  STA COL
 
  LDY #6                 \ Call scan7+1 to draw the stick, returning from the
  JMP scan7+1            \ subroutine using a tail call (we set Y = 6 so the code
                         \ at the start of the subroutine fetches byte #6)
 
-.scan6
+.scan5
 
                         \ --- End of added code ------------------------------->
 
@@ -5292,7 +5278,7 @@ ENDIF
 .hori3
 
                         \ If we get here then we need to draw this line in
-                        \ anaglyph 3D, applying MAX_PARALLAX_P parallax
+                        \ anaglyph 3D, applying SUN_PARALLAX_P of parallax
 
  LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
  CMP #255               \ line in a two-stage line so jump to hori4
@@ -5850,7 +5836,7 @@ ENDIF
                         \ We start with the left fringe
 
  LDA xStart             \ If the sun is not up against the left edge, jump to
- CMP #MAX_PARALLAX_P+1  \ frin1 to draw the left fringe
+ CMP #SUN_PARALLAX_P+1  \ frin1 to draw the left fringe
  BCS frin1
 
  STA xCoreStart         \ The sun is up against the left edge, so set the left
@@ -5865,8 +5851,8 @@ ENDIF
 
                         \ Calculate and draw the left fringe
 
- SEC                    \ Set A = xStart - MAX_PARALLAX_P, keeping the result
- SBC #MAX_PARALLAX_P    \ above 0
+ SEC                    \ Set A = xStart - SUN_PARALLAX_P, keeping the result
+ SBC #SUN_PARALLAX_P    \ above 0
  BCS frin2
  LDA #0
 
@@ -5877,9 +5863,9 @@ ENDIF
 
  STA xLeftStart         \ Store the result in xLeftStart
 
- LDA xStart             \ Set X2 = xStart + MAX_PARALLAX_P, keeping the result
+ LDA xStart             \ Set X2 = xStart + SUN_PARALLAX_P, keeping the result
  CLC                    \ below 255
- ADC #MAX_PARALLAX_P
+ ADC #SUN_PARALLAX_P
  BCC frin3
  LDA #254
 
@@ -5915,7 +5901,7 @@ ENDIF
                         \ Now we do the right fringe
 
  LDA xEnd                   \ If the sun is not up against the left edge, jump
- CMP #255-MAX_PARALLAX_P    \ to frin6 to draw the left fringe
+ CMP #255-SUN_PARALLAX_P    \ to frin6 to draw the left fringe
  BCC frin6
 
  STA xCoreEnd           \ The sun is up against the right edge, so set the right
@@ -5930,8 +5916,8 @@ ENDIF
 
                         \ Calculate and draw the right fringe
 
- SEC                    \ Set A = xEnd - MAX_PARALLAX_P, keeping the result
- SBC #MAX_PARALLAX_P    \ above 0
+ SEC                    \ Set A = xEnd - SUN_PARALLAX_P, keeping the result
+ SBC #SUN_PARALLAX_P    \ above 0
  BCS frin7
  LDA #0
 
@@ -5951,9 +5937,9 @@ ENDIF
  STX xCoreEnd           \ Store the x-coordinate in xCoreEnd to use as the end
                         \ of the white line in the middle
 
- LDA xEnd               \ Set A = xEnd + MAX_PARALLAX_P, keeping the result
+ LDA xEnd               \ Set A = xEnd + SUN_PARALLAX_P, keeping the result
  CLC                    \ below 254
- ADC #MAX_PARALLAX_P
+ ADC #SUN_PARALLAX_P
  BCC frin9
  LDA #254
 
@@ -7324,8 +7310,8 @@ ENDIF
                         \ --- And replaced by: -------------------------------->
 
  LDA #%00010001         \ Set A to the pixel pattern for a mode 1 character row
-                        \ byte with the fourth pixel set, so we start drawing the
-                        \ horizontal line from the right edge of the screen
+                        \ byte with the fourth pixel set, so we start drawing
+                        \ the horizontal line from the right edge of the screen
 
                         \ --- End of replacement ------------------------------>
 
@@ -10141,7 +10127,7 @@ ENDMACRO
 
 .TVT3a
 
- EQUB &00, &31          \ 1 = cyan, 2 = red, 3 = white (anaglyph 3D space view)
+ EQUB &00, &31          \ 1 = cyan, 2 = red, 3 = white (anaglyph 3D palette 1)
  EQUB &21, &17          \
  EQUB &71, &61          \ Set with a #SETVDU19 0 command, after which:
  EQUB &57, &47          \
@@ -10150,7 +10136,7 @@ ENDMACRO
  EQUB &F0, &E0          \   #WHITE_3D = white
  EQUB &D6, &C6
 
- EQUB &02, &33          \ 1 = blue, 2 = red, 3 = magenta (anaglyph 3D space view)
+ EQUB &02, &33          \ 1 = blue, 2 = red, 3 = magenta (anaglyph 3D palette 2)
  EQUB &23, &17          \
  EQUB &73, &63          \ Set with a #SETVDU19 0 command, after which:
  EQUB &57, &47          \
@@ -10159,7 +10145,7 @@ ENDMACRO
  EQUB &F2, &E2          \   #WHITE_3D = magenta
  EQUB &D6, &C6
 
- EQUB &04, &36          \ 1 = red, 2 = green, 3 = yellow (anaglyph 3D space view)
+ EQUB &04, &36          \ 1 = red, 2 = green, 3 = yellow (anaglyph 3D palette 3)
  EQUB &26, &17          \
  EQUB &76, &66          \ Set with a #SETVDU19 0 command, after which:
  EQUB &57, &47          \
