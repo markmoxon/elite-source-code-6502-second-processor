@@ -71,8 +71,8 @@
                         \ (i.e. the the distance from the nose to each eye, so
                         \ that's half the eye spacing)
 
- Z_PLANE = &400         \ The default z-coordinate of the parallax projection
-                        \ plane (4 0)
+ Z_PLANE = &800         \ The default z-coordinate of the parallax projection
+                        \ plane (8 0)
 
                         \ The following values are fixed
 
