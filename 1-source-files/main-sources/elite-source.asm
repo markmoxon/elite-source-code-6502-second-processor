@@ -4142,221 +4142,6 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: RUPLA
-\       Type: Variable
-\   Category: Text
-\    Summary: System numbers that have extended description overrides
-\  Deep dive: Extended system descriptions
-\             Extended text tokens
-\             The Constrictor mission
-\
-\ ------------------------------------------------------------------------------
-\
-\ This table contains the extended token numbers to show as the specified
-\ system's extended description, if the criteria in the RUGAL table are met.
-\
-\ The three variables work as follows:
-\
-\   * The RUPLA table contains the system numbers
-\
-\   * The RUGAL table contains the galaxy numbers and mission criteria
-\
-\   * The RUTOK table contains the extended token to display instead of the
-\     normal extended description if the criteria in RUPLA and RUGAL are met
-\
-\ See the PDESC routine for details of how extended system descriptions work.
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.RUPLA
-
- EQUB 211               \ System 211, Galaxy 0                 Teorge = Token  1
- EQUB 150               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
- EQUB 36                \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
- EQUB 28                \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
- EQUB 253               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
- EQUB 79                \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
- EQUB 53                \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
- EQUB 118               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
- EQUB 100               \ System 100, Galaxy 2                 Arredi = Token  9
- EQUB 32                \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
- EQUB 68                \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
- EQUB 164               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
- EQUB 220               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
- EQUB 106               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
- EQUB 16                \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
- EQUB 162               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
- EQUB 3                 \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
- EQUB 107               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
- EQUB 26                \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
- EQUB 192               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
- EQUB 184               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
- EQUB 5                 \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
- EQUB 101               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
- EQUB 193               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
- EQUB 41                \ System  41, Galaxy 2                 Anreer = Token 25
-
-IF _SOURCE_DISC
-
- EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
-
-ELIF _EXECUTIVE
-
- EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
- EQUB 46                \ System  46, Galaxy 0               Riedquat = Token 27
-
-ENDIF
-
-                        \ --- End of moved code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: RUGAL
-\       Type: Variable
-\   Category: Text
-\    Summary: The criteria for systems with extended description overrides
-\  Deep dive: Extended system descriptions
-\             Extended text tokens
-\             The Constrictor mission
-\
-\ ------------------------------------------------------------------------------
-\
-\ This table contains the criteria for printing an extended description override
-\ for a system. The galaxy number is in bits 0-6, while bit 7 determines whether
-\ to show this token during mission 1 only (bit 7 is clear, i.e. a value of &0x
-\ in the table below), or all of the time (bit 7 is set, i.e. a value of &8x in
-\ the table below).
-\
-\ In other words, Teorge, Arredi, Anreer and Lave have extended description
-\ overrides that are always shown, while the rest only appear when mission 1 is
-\ in progress.
-\
-\ The three variables work as follows:
-\
-\   * The RUPLA table contains the system numbers
-\
-\   * The RUGAL table contains the galaxy numbers and mission criteria
-\
-\   * The RUTOK table contains the extended token to display instead of the
-\     normal extended description if the criteria in RUPLA and RUGAL are met
-\
-\ See the PDESC routine for details of how extended system descriptions work.
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.RUGAL
-
- EQUB &80               \ System 211, Galaxy 0                 Teorge = Token  1
- EQUB &00               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
- EQUB &00               \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
- EQUB &00               \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
- EQUB &01               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
- EQUB &01               \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
- EQUB &01               \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
- EQUB &01               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
- EQUB &82               \ System 100, Galaxy 2                 Arredi = Token  9
- EQUB &01               \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
- EQUB &01               \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
- EQUB &01               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
- EQUB &01               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
- EQUB &01               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
- EQUB &01               \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
- EQUB &01               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
- EQUB &01               \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
- EQUB &01               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
- EQUB &01               \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
- EQUB &01               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
- EQUB &01               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
- EQUB &01               \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
- EQUB &02               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
- EQUB &01               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
- EQUB &82               \ System  41, Galaxy 2                 Anreer = Token 25
-
-IF _SOURCE_DISC
-
- EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
-
-ELIF _EXECUTIVE
-
- EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
- EQUB &80               \ System   7, Galaxy 0               Riedquat = Token 27
-
-ENDIF
-
-                        \ --- End of moved code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: MTIN
-\       Type: Variable
-\   Category: Text
-\    Summary: Lookup table for random tokens in the extended token table (0-37)
-\  Deep dive: Extended text tokens
-\
-\ ------------------------------------------------------------------------------
-\
-\ The ERND token type, which is part of the extended token system, takes an
-\ argument between 0 and 37, and returns a randomly chosen token in the range
-\ specified in this table. This is used to generate the extended description of
-\ each system.
-\
-\ For example, the entry at position 13 in this table (counting from 0) is 66,
-\ so ERND 14 will expand into a random token in the range 66-70, i.e. one of
-\ "JUICE", "BRANDY", "WATER", "BREW" and "GARGLE BLASTERS".
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
-
-.MTIN
-
- EQUB 16                \ Token  0: a random extended token between 16 and 20
- EQUB 21                \ Token  1: a random extended token between 21 and 25
- EQUB 26                \ Token  2: a random extended token between 26 and 30
- EQUB 31                \ Token  3: a random extended token between 31 and 35
- EQUB 155               \ Token  4: a random extended token between 155 and 159
- EQUB 160               \ Token  5: a random extended token between 160 and 164
- EQUB 46                \ Token  6: a random extended token between 46 and 50
- EQUB 165               \ Token  7: a random extended token between 165 and 169
- EQUB 36                \ Token  8: a random extended token between 36 and 40
- EQUB 41                \ Token  9: a random extended token between 41 and 45
- EQUB 61                \ Token 10: a random extended token between 61 and 65
- EQUB 51                \ Token 11: a random extended token between 51 and 55
- EQUB 56                \ Token 12: a random extended token between 56 and 60
- EQUB 170               \ Token 13: a random extended token between 170 and 174
- EQUB 66                \ Token 14: a random extended token between 66 and 70
- EQUB 71                \ Token 15: a random extended token between 71 and 75
- EQUB 76                \ Token 16: a random extended token between 76 and 80
- EQUB 81                \ Token 17: a random extended token between 81 and 85
- EQUB 86                \ Token 18: a random extended token between 86 and 90
- EQUB 140               \ Token 19: a random extended token between 140 and 144
- EQUB 96                \ Token 20: a random extended token between 96 and 100
- EQUB 101               \ Token 21: a random extended token between 101 and 105
- EQUB 135               \ Token 22: a random extended token between 135 and 139
- EQUB 130               \ Token 23: a random extended token between 130 and 134
- EQUB 91                \ Token 24: a random extended token between 91 and 95
- EQUB 106               \ Token 25: a random extended token between 106 and 110
- EQUB 180               \ Token 26: a random extended token between 180 and 184
- EQUB 185               \ Token 27: a random extended token between 185 and 189
- EQUB 190               \ Token 28: a random extended token between 190 and 194
- EQUB 225               \ Token 29: a random extended token between 225 and 229
- EQUB 230               \ Token 30: a random extended token between 230 and 234
- EQUB 235               \ Token 31: a random extended token between 235 and 239
- EQUB 240               \ Token 32: a random extended token between 240 and 244
- EQUB 245               \ Token 33: a random extended token between 245 and 249
- EQUB 250               \ Token 34: a random extended token between 250 and 254
- EQUB 115               \ Token 35: a random extended token between 115 and 119
- EQUB 120               \ Token 36: a random extended token between 120 and 124
- EQUB 125               \ Token 37: a random extended token between 125 and 129
-
-                        \ --- End of moved code ------------------------------->
-
-\ ******************************************************************************
-\
 \       Name: defaultFile
 \       Type: Variable
 \   Category: Universe editor
@@ -51383,48 +51168,44 @@ ENDMACRO
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.RUPLA
 
-\.RUPLA
-\
-\EQUB 211               \ System 211, Galaxy 0                 Teorge = Token  1
-\EQUB 150               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
-\EQUB 36                \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
-\EQUB 28                \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
-\EQUB 253               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
-\EQUB 79                \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
-\EQUB 53                \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
-\EQUB 118               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
-\EQUB 100               \ System 100, Galaxy 2                 Arredi = Token  9
-\EQUB 32                \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
-\EQUB 68                \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
-\EQUB 164               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
-\EQUB 220               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
-\EQUB 106               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
-\EQUB 16                \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
-\EQUB 162               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
-\EQUB 3                 \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
-\EQUB 107               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
-\EQUB 26                \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
-\EQUB 192               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
-\EQUB 184               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
-\EQUB 5                 \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
-\EQUB 101               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
-\EQUB 193               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
-\EQUB 41                \ System  41, Galaxy 2                 Anreer = Token 25
-\
-\IF _SOURCE_DISC
-\
-\EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
-\
-\ELIF _EXECUTIVE
-\
-\EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
-\EQUB 46                \ System  46, Galaxy 0               Riedquat = Token 27
-\
-\ENDIF
+ EQUB 211               \ System 211, Galaxy 0                 Teorge = Token  1
+ EQUB 150               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
+ EQUB 36                \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
+ EQUB 28                \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
+ EQUB 253               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
+ EQUB 79                \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
+ EQUB 53                \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
+ EQUB 118               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
+ EQUB 100               \ System 100, Galaxy 2                 Arredi = Token  9
+ EQUB 32                \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
+ EQUB 68                \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
+ EQUB 164               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
+ EQUB 220               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
+ EQUB 106               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
+ EQUB 16                \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
+ EQUB 162               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
+ EQUB 3                 \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
+ EQUB 107               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
+ EQUB 26                \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
+ EQUB 192               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
+ EQUB 184               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
+ EQUB 5                 \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
+ EQUB 101               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
+ EQUB 193               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
+ EQUB 41                \ System  41, Galaxy 2                 Anreer = Token 25
 
-                        \ --- End of moved code ------------------------------->
+IF _SOURCE_DISC
+
+ EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
+
+ELIF _EXECUTIVE
+
+ EQUB 7                 \ System   7, Galaxy 0                   Lave = Token 26
+ EQUB 46                \ System  46, Galaxy 0               Riedquat = Token 27
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -51461,48 +51242,44 @@ ENDMACRO
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.RUGAL
 
-\.RUGAL
-\
-\EQUB &80               \ System 211, Galaxy 0                 Teorge = Token  1
-\EQUB &00               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
-\EQUB &00               \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
-\EQUB &00               \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
-\EQUB &01               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
-\EQUB &01               \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
-\EQUB &01               \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
-\EQUB &01               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
-\EQUB &82               \ System 100, Galaxy 2                 Arredi = Token  9
-\EQUB &01               \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
-\EQUB &01               \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
-\EQUB &01               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
-\EQUB &01               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
-\EQUB &01               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
-\EQUB &01               \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
-\EQUB &01               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
-\EQUB &01               \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
-\EQUB &01               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
-\EQUB &01               \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
-\EQUB &01               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
-\EQUB &01               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
-\EQUB &01               \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
-\EQUB &02               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
-\EQUB &01               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
-\EQUB &82               \ System  41, Galaxy 2                 Anreer = Token 25
-\
-\IF _SOURCE_DISC
-\
-\EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
-\
-\ELIF _EXECUTIVE
-\
-\EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
-\EQUB &80               \ System   7, Galaxy 0               Riedquat = Token 27
-\
-\ENDIF
+ EQUB &80               \ System 211, Galaxy 0                 Teorge = Token  1
+ EQUB &00               \ System 150, Galaxy 0, Mission 1        Xeer = Token  2
+ EQUB &00               \ System  36, Galaxy 0, Mission 1    Reesdice = Token  3
+ EQUB &00               \ System  28, Galaxy 0, Mission 1       Arexe = Token  4
+ EQUB &01               \ System 253, Galaxy 1, Mission 1      Errius = Token  5
+ EQUB &01               \ System  79, Galaxy 1, Mission 1      Inbibe = Token  6
+ EQUB &01               \ System  53, Galaxy 1, Mission 1       Ausar = Token  7
+ EQUB &01               \ System 118, Galaxy 1, Mission 1      Usleri = Token  8
+ EQUB &82               \ System 100, Galaxy 2                 Arredi = Token  9
+ EQUB &01               \ System  32, Galaxy 1, Mission 1      Bebege = Token 10
+ EQUB &01               \ System  68, Galaxy 1, Mission 1      Cearso = Token 11
+ EQUB &01               \ System 164, Galaxy 1, Mission 1      Dicela = Token 12
+ EQUB &01               \ System 220, Galaxy 1, Mission 1      Eringe = Token 13
+ EQUB &01               \ System 106, Galaxy 1, Mission 1      Gexein = Token 14
+ EQUB &01               \ System  16, Galaxy 1, Mission 1      Isarin = Token 15
+ EQUB &01               \ System 162, Galaxy 1, Mission 1    Letibema = Token 16
+ EQUB &01               \ System   3, Galaxy 1, Mission 1      Maisso = Token 17
+ EQUB &01               \ System 107, Galaxy 1, Mission 1        Onen = Token 18
+ EQUB &01               \ System  26, Galaxy 1, Mission 1      Ramaza = Token 19
+ EQUB &01               \ System 192, Galaxy 1, Mission 1      Sosole = Token 20
+ EQUB &01               \ System 184, Galaxy 1, Mission 1      Tivere = Token 21
+ EQUB &01               \ System   5, Galaxy 1, Mission 1      Veriar = Token 22
+ EQUB &02               \ System 101, Galaxy 2, Mission 1      Xeveon = Token 23
+ EQUB &01               \ System 193, Galaxy 1, Mission 1      Orarra = Token 24
+ EQUB &82               \ System  41, Galaxy 2                 Anreer = Token 25
 
-                        \ --- End of moved code ------------------------------->
+IF _SOURCE_DISC
+
+ EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
+
+ELIF _EXECUTIVE
+
+ EQUB &80               \ System   7, Galaxy 0                   Lave = Token 26
+ EQUB &80               \ System   7, Galaxy 0               Riedquat = Token 27
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -52313,50 +52090,46 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ --- Mod: Code moved for anaglyph 3D: ---------------->
+.MTIN
 
-\.MTIN
-\
-\EQUB 16                \ Token  0: a random extended token between 16 and 20
-\EQUB 21                \ Token  1: a random extended token between 21 and 25
-\EQUB 26                \ Token  2: a random extended token between 26 and 30
-\EQUB 31                \ Token  3: a random extended token between 31 and 35
-\EQUB 155               \ Token  4: a random extended token between 155 and 159
-\EQUB 160               \ Token  5: a random extended token between 160 and 164
-\EQUB 46                \ Token  6: a random extended token between 46 and 50
-\EQUB 165               \ Token  7: a random extended token between 165 and 169
-\EQUB 36                \ Token  8: a random extended token between 36 and 40
-\EQUB 41                \ Token  9: a random extended token between 41 and 45
-\EQUB 61                \ Token 10: a random extended token between 61 and 65
-\EQUB 51                \ Token 11: a random extended token between 51 and 55
-\EQUB 56                \ Token 12: a random extended token between 56 and 60
-\EQUB 170               \ Token 13: a random extended token between 170 and 174
-\EQUB 66                \ Token 14: a random extended token between 66 and 70
-\EQUB 71                \ Token 15: a random extended token between 71 and 75
-\EQUB 76                \ Token 16: a random extended token between 76 and 80
-\EQUB 81                \ Token 17: a random extended token between 81 and 85
-\EQUB 86                \ Token 18: a random extended token between 86 and 90
-\EQUB 140               \ Token 19: a random extended token between 140 and 144
-\EQUB 96                \ Token 20: a random extended token between 96 and 100
-\EQUB 101               \ Token 21: a random extended token between 101 and 105
-\EQUB 135               \ Token 22: a random extended token between 135 and 139
-\EQUB 130               \ Token 23: a random extended token between 130 and 134
-\EQUB 91                \ Token 24: a random extended token between 91 and 95
-\EQUB 106               \ Token 25: a random extended token between 106 and 110
-\EQUB 180               \ Token 26: a random extended token between 180 and 184
-\EQUB 185               \ Token 27: a random extended token between 185 and 189
-\EQUB 190               \ Token 28: a random extended token between 190 and 194
-\EQUB 225               \ Token 29: a random extended token between 225 and 229
-\EQUB 230               \ Token 30: a random extended token between 230 and 234
-\EQUB 235               \ Token 31: a random extended token between 235 and 239
-\EQUB 240               \ Token 32: a random extended token between 240 and 244
-\EQUB 245               \ Token 33: a random extended token between 245 and 249
-\EQUB 250               \ Token 34: a random extended token between 250 and 254
-\EQUB 115               \ Token 35: a random extended token between 115 and 119
-\EQUB 120               \ Token 36: a random extended token between 120 and 124
-\EQUB 125               \ Token 37: a random extended token between 125 and 129
-
-                        \ --- End of moved code ------------------------------->
+ EQUB 16                \ Token  0: a random extended token between 16 and 20
+ EQUB 21                \ Token  1: a random extended token between 21 and 25
+ EQUB 26                \ Token  2: a random extended token between 26 and 30
+ EQUB 31                \ Token  3: a random extended token between 31 and 35
+ EQUB 155               \ Token  4: a random extended token between 155 and 159
+ EQUB 160               \ Token  5: a random extended token between 160 and 164
+ EQUB 46                \ Token  6: a random extended token between 46 and 50
+ EQUB 165               \ Token  7: a random extended token between 165 and 169
+ EQUB 36                \ Token  8: a random extended token between 36 and 40
+ EQUB 41                \ Token  9: a random extended token between 41 and 45
+ EQUB 61                \ Token 10: a random extended token between 61 and 65
+ EQUB 51                \ Token 11: a random extended token between 51 and 55
+ EQUB 56                \ Token 12: a random extended token between 56 and 60
+ EQUB 170               \ Token 13: a random extended token between 170 and 174
+ EQUB 66                \ Token 14: a random extended token between 66 and 70
+ EQUB 71                \ Token 15: a random extended token between 71 and 75
+ EQUB 76                \ Token 16: a random extended token between 76 and 80
+ EQUB 81                \ Token 17: a random extended token between 81 and 85
+ EQUB 86                \ Token 18: a random extended token between 86 and 90
+ EQUB 140               \ Token 19: a random extended token between 140 and 144
+ EQUB 96                \ Token 20: a random extended token between 96 and 100
+ EQUB 101               \ Token 21: a random extended token between 101 and 105
+ EQUB 135               \ Token 22: a random extended token between 135 and 139
+ EQUB 130               \ Token 23: a random extended token between 130 and 134
+ EQUB 91                \ Token 24: a random extended token between 91 and 95
+ EQUB 106               \ Token 25: a random extended token between 106 and 110
+ EQUB 180               \ Token 26: a random extended token between 180 and 184
+ EQUB 185               \ Token 27: a random extended token between 185 and 189
+ EQUB 190               \ Token 28: a random extended token between 190 and 194
+ EQUB 225               \ Token 29: a random extended token between 225 and 229
+ EQUB 230               \ Token 30: a random extended token between 230 and 234
+ EQUB 235               \ Token 31: a random extended token between 235 and 239
+ EQUB 240               \ Token 32: a random extended token between 240 and 244
+ EQUB 245               \ Token 33: a random extended token between 245 and 249
+ EQUB 250               \ Token 34: a random extended token between 250 and 254
+ EQUB 115               \ Token 35: a random extended token between 115 and 119
+ EQUB 120               \ Token 36: a random extended token between 120 and 124
+ EQUB 125               \ Token 37: a random extended token between 125 and 129
 
 \ ******************************************************************************
 \

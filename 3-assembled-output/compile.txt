@@ -3374,100 +3374,9 @@ WP workspace from  &D00  to &E20
      0F08   68
      0F09   00
      0F0A   00
-.RUPLA
-     0F0B   D3
-     0F0C   96
-     0F0D   24
-     0F0E   1C
-     0F0F   FD
-     0F10   4F
-     0F11   35
-     0F12   76
-     0F13   64
-     0F14   20
-     0F15   44
-     0F16   A4
-     0F17   DC
-     0F18   6A
-     0F19   10
-     0F1A   A2
-     0F1B   03
-     0F1C   6B
-     0F1D   1A
-     0F1E   C0
-     0F1F   B8
-     0F20   05
-     0F21   65
-     0F22   C1
-     0F23   29
-.RUGAL
-     0F24   80
-     0F25   00
-     0F26   00
-     0F27   00
-     0F28   01
-     0F29   01
-     0F2A   01
-     0F2B   01
-     0F2C   82
-     0F2D   01
-     0F2E   01
-     0F2F   01
-     0F30   01
-     0F31   01
-     0F32   01
-     0F33   01
-     0F34   01
-     0F35   01
-     0F36   01
-     0F37   01
-     0F38   01
-     0F39   01
-     0F3A   02
-     0F3B   01
-     0F3C   82
-.MTIN
-     0F3D   10
-     0F3E   15
-     0F3F   1A
-     0F40   1F
-     0F41   9B
-     0F42   A0
-     0F43   2E
-     0F44   A5
-     0F45   24
-     0F46   29
-     0F47   3D
-     0F48   33
-     0F49   38
-     0F4A   AA
-     0F4B   42
-     0F4C   47
-     0F4D   4C
-     0F4E   51
-     0F4F   56
-     0F50   8C
-     0F51   60
-     0F52   65
-     0F53   87
-     0F54   82
-     0F55   5B
-     0F56   6A
-     0F57   B4
-     0F58   B9
-     0F59   BE
-     0F5A   E1
-     0F5B   E6
-     0F5C   EB
-     0F5D   F0
-     0F5E   F5
-     0F5F   FA
-     0F60   73
-     0F61   78
-     0F62   7D
 .defaultFile
-     0F63   3A 30 2E ...
-     0F6E   0D
+     0F0B   3A 30 2E ...
+     0F16   0D
 Saving file '3-assembled-output/ANAGLYPH.bin'
 .MOS
      1000
@@ -3576,13 +3485,13 @@ Saving file '3-assembled-output/ANAGLYPH.bin'
      106D   A9 10      LDA #&10
      106F   85 01      STA &01
      1071   85 06      STA &06
-     1073   A9 66      LDA #&66
+     1073   A9 BE      LDA #&BE
      1075   85 02      STA &02
      1077   A9 81      LDA #&81
      1079   85 03      STA &03
 .G%
      107B   20 07 11   JSR &1107
-     107E   20 C1 80   JSR &80C1
+     107E   20 19 81   JSR &8119
      1081   4C A8 4F   JMP &4FA8
 .DOENTRY
      1084   20 79 4B   JSR &4B79
@@ -4243,7 +4152,7 @@ Saving file '3-assembled-output/ANAGLYPH.bin'
      158F   48         PHA
      1590   A5 22      LDA &22
      1592   48         PHA
-     1593   A9 74      LDA #&74
+     1593   A9 A6      LDA #&A6
      1595   85 21      STA &21
      1597   A9 7E      LDA #&7E
      1599   D0 10      BNE &15AB
@@ -4381,7 +4290,7 @@ Saving file '3-assembled-output/ANAGLYPH.bin'
      1666   69 00      ADC #&00
      1668   E0 CC      CPX #&CC
      166A   A6 05      LDX &05
-     166C   7D E2 0E   ADC &0EE2,X
+     166C   7D 98 80   ADC &8098,X
      166F   20 9B 15   JSR &159B
      1672   4C 43 16   JMP &1643
 .MT1
@@ -8417,14 +8326,14 @@ Saving file '3-assembled-output/ELTB.bin'
      30C4   10 34      BPL &30FA
      30C6   A0 00      LDY #&00
 .PDL1
-     30C8   B9 0A 0F   LDA &0F0A,Y
+     30C8   B9 73 7E   LDA &7E73,Y
      30CB   C5 87      CMP &87
      30CD   D0 28      BNE &30F7
-     30CF   B9 23 0F   LDA &0F23,Y
+     30CF   B9 8C 7E   LDA &7E8C,Y
      30D2   29 7F      AND #&7F
      30D4   CD B3 08   CMP &08B3
      30D7   D0 1E      BNE &30F7
-     30D9   B9 23 0F   LDA &0F23,Y
+     30D9   B9 8C 7E   LDA &7E8C,Y
      30DC   30 0C      BMI &30EA
      30DE   AD A4 08   LDA &08A4
      30E1   4A         LSR A
@@ -12191,7 +12100,7 @@ Saving file '3-assembled-output/ELTE.bin'
 .me2
      4BFA   AD E4 0A   LDA &0AE4
      4BFD   F0 06      BEQ &4C05
-     4BFF   20 F9 80   JSR &80F9
+     4BFF   20 51 81   JSR &8151
      4C02   4C 0B 4C   JMP &4C0B
 .mess1
      4C05   AD F0 08   LDA &08F0
@@ -12256,9 +12165,9 @@ Saving file '3-assembled-output/ELTE.bin'
      4C6E   F0 03      BEQ &4C73
      4C70   20 88 43   JSR &4388
 .TT100
-     4C73   20 0F 81   JSR &810F
+     4C73   20 67 81   JSR &8167
      4C76   20 14 11   JSR &1114
-     4C79   20 1B 81   JSR &811B
+     4C79   20 73 81   JSR &8173
      4C7C   CE 96 08   DEC &0896
      4C7F   D0 03      BNE &4C84
      4C81   4C FA 4B   JMP &4BFA
@@ -12671,7 +12580,7 @@ Saving file '3-assembled-output/ELTE.bin'
 .spasto
      4FA6   88 88
 .BEGIN
-     4FA8   20 29 81   JSR &8129
+     4FA8   20 81 81   JSR &8181
      4FAB   A2 0A      LDX #&0A
      4FAD   A9 00      LDA #&00
 .BEL1
@@ -13634,7 +13543,7 @@ Saving file '3-assembled-output/ELTE.bin'
      56E6   48         PHA
      56E7   AD F0 08   LDA &08F0
      56EA   20 3E 57   JSR &573E
-     56ED   20 F9 80   JSR &80F9
+     56ED   20 51 81   JSR &8151
      56F0   68         PLA
 .MESS
      56F1   48         PHA
@@ -26116,1819 +26025,1910 @@ Macro ECHR:
 End macro ECHR
      7E72   57
      7E73   57
+.RUPLA
+     7E74   D3
+     7E75   96
+     7E76   24
+     7E77   1C
+     7E78   FD
+     7E79   4F
+     7E7A   35
+     7E7B   76
+     7E7C   64
+     7E7D   20
+     7E7E   44
+     7E7F   A4
+     7E80   DC
+     7E81   6A
+     7E82   10
+     7E83   A2
+     7E84   03
+     7E85   6B
+     7E86   1A
+     7E87   C0
+     7E88   B8
+     7E89   05
+     7E8A   65
+     7E8B   C1
+     7E8C   29
+.RUGAL
+     7E8D   80
+     7E8E   00
+     7E8F   00
+     7E90   00
+     7E91   01
+     7E92   01
+     7E93   01
+     7E94   01
+     7E95   82
+     7E96   01
+     7E97   01
+     7E98   01
+     7E99   01
+     7E9A   01
+     7E9B   01
+     7E9C   01
+     7E9D   01
+     7E9E   01
+     7E9F   01
+     7EA0   01
+     7EA1   01
+     7EA2   01
+     7EA3   02
+     7EA4   01
+     7EA5   82
 .RUTOK
-     7E74   57
+     7EA6   57
 Macro ETOK:
-     7E75   C4
+     7EA7   C4
 End macro ETOK
 Macro ECHR:
-     7E76   14
+     7EA8   14
 End macro ECHR
 Macro ECHR:
-     7E77   18
+     7EA9   18
 End macro ECHR
 Macro ETWO:
-     7E78   B7
+     7EAA   B7
 End macro ETWO
 Macro ECHR:
-     7E79   19
+     7EAB   19
 End macro ECHR
 Macro ECHR:
-     7E7A   1E
+     7EAC   1E
 End macro ECHR
 Macro ETWO:
-     7E7B   89
+     7EAD   89
 End macro ETWO
 Macro ECHR:
-     7E7C   04
+     7EAE   04
 End macro ECHR
 Macro ECHR:
-     7E7D   77
+     7EAF   77
 End macro ECHR
 Macro ECHR:
-     7E7E   1F
+     7EB0   1F
 End macro ECHR
 Macro ECHR:
-     7E7F   12
+     7EB1   12
 End macro ECHR
 Macro ETWO:
-     7E80   A5
+     7EB2   A5
 End macro ETWO
 Macro ECHR:
-     7E81   77
+     7EB3   77
 End macro ECHR
 Macro ECHR:
-     7E82   1F
+     7EB4   1F
 End macro ECHR
 Macro ECHR:
-     7E83   16
+     7EB5   16
 End macro ECHR
 Macro ETWO:
-     7E84   AD
+     7EB6   AD
 End macro ETWO
 Macro ECHR:
-     7E85   77
+     7EB7   77
 End macro ECHR
 Macro ECHR:
-     7E86   01
+     7EB8   01
 End macro ECHR
 Macro ECHR:
-     7E87   1E
+     7EB9   1E
 End macro ECHR
 Macro ECHR:
-     7E88   18
+     7EBA   18
 End macro ECHR
 Macro ECHR:
-     7E89   1B
+     7EBB   1B
 End macro ECHR
 Macro ETWO:
-     7E8A   A2
+     7EBC   A2
 End macro ETWO
 Macro ETWO:
-     7E8B   AB
+     7EBD   AB
 End macro ETWO
 Macro EJMP:
-     7E8C   55
+     7EBE   55
 End macro EJMP
 Macro ECHR:
-     7E8D   77
+     7EBF   77
 End macro ECHR
 Macro ETWO:
-     7E8E   A7
+     7EC0   A7
 End macro ETWO
 Macro ECHR:
-     7E8F   03
+     7EC1   03
 End macro ECHR
 Macro ETWO:
-     7E90   A3
+     7EC2   A3
 End macro ETWO
 Macro ECHR:
-     7E91   10
+     7EC3   10
 End macro ECHR
 Macro ETWO:
-     7E92   B3
+     7EC4   B3
 End macro ETWO
 Macro ECHR:
-     7E93   16
+     7EC5   16
 End macro ECHR
 Macro ECHR:
-     7E94   14
+     7EC6   14
 End macro ECHR
 Macro ETWO:
-     7E95   AC
+     7EC7   AC
 End macro ETWO
 Macro ECHR:
-     7E96   14
-End macro ECHR
-Macro ECHR:
-     7E97   77
-End macro ECHR
-Macro ECHR:
-     7E98   14
-End macro ECHR
-Macro ETWO:
-     7E99   B7
-End macro ETWO
-Macro ECHR:
-     7E9A   19
-End macro ECHR
-Macro ETOK:
-     7E9B   94
-End macro ETOK
-Macro ECHR:
-     7E9C   07
-End macro ECHR
-Macro ECHR:
-     7E9D   05
-End macro ECHR
-Macro ECHR:
-     7E9E   18
-End macro ECHR
-Macro ECHR:
-     7E9F   03
-End macro ECHR
-Macro ECHR:
-     7EA0   18
-End macro ECHR
-Macro ECHR:
-     7EA1   14
-End macro ECHR
-Macro ECHR:
-     7EA2   18
-End macro ECHR
-Macro ECHR:
-     7EA3   1B
-End macro ECHR
-Macro EJMP:
-     7EA4   5A
-End macro EJMP
-Macro ETOK:
-     7EA5   E5
-End macro ETOK
-Macro ECHR:
-     7EA6   04
-End macro ECHR
-Macro ECHR:
-     7EA7   1F
-End macro ECHR
-Macro ETWO:
-     7EA8   8E
-End macro ETWO
-Macro ECHR:
-     7EA9   1B
-End macro ECHR
-Macro ECHR:
-     7EAA   13
-End macro ECHR
-Macro ECHR:
-     7EAB   77
-End macro ECHR
-Macro ETWO:
-     7EAC   A0
-End macro ETWO
-Macro ECHR:
-     7EAD   77
-End macro ECHR
-Macro ECHR:
-     7EAE   16
-End macro ECHR
-Macro ECHR:
-     7EAF   01
-End macro ECHR
-Macro ECHR:
-     7EB0   18
-End macro ECHR
-Macro ECHR:
-     7EB1   1E
-End macro ECHR
-Macro ECHR:
-     7EB2   13
-End macro ECHR
-Macro ETWO:
-     7EB3   AB
-End macro ETWO
-     7EB4   57
-Macro ETOK:
-     7EB5   C4
-End macro ETOK
-Macro ECHR:
-     7EB6   14
-End macro ECHR
-Macro ETWO:
-     7EB7   88
-End macro ETWO
-Macro ETWO:
-     7EB8   89
-End macro ETWO
-Macro ECHR:
-     7EB9   05
-End macro ECHR
-Macro ECHR:
-     7EBA   1E
-End macro ECHR
-Macro ECHR:
-     7EBB   14
-End macro ECHR
-Macro ECHR:
-     7EBC   03
-End macro ECHR
-Macro ETWO:
-     7EBD   AA
-End macro ETWO
-Macro ECHR:
-     7EBE   77
-End macro ECHR
-Macro ETOK:
-     7EBF   9C
-End macro ETOK
-Macro ETWO:
-     7EC0   A5
-End macro ETWO
-Macro ETWO:
-     7EC1   BA
-End macro ETWO
-Macro ETWO:
-     7EC2   A6
-End macro ETWO
-Macro ETWO:
-     7EC3   BE
-End macro ETWO
-Macro ECHR:
-     7EC4   7B
-End macro ECHR
-Macro ECHR:
-     7EC5   77
-End macro ECHR
-Macro ETOK:
-     7EC6   CD
-End macro ETOK
-     7EC7   57
-Macro ECHR:
-     7EC8   16
+     7EC8   14
 End macro ECHR
 Macro ECHR:
      7EC9   77
 End macro ECHR
-Macro ERND:
-     7ECA   25
-End macro ERND
 Macro ECHR:
-     7ECB   77
+     7ECA   14
 End macro ECHR
 Macro ETWO:
-     7ECC   B7
+     7ECB   B7
 End macro ETWO
 Macro ECHR:
-     7ECD   18
-End macro ECHR
-Macro ECHR:
-     7ECE   1C
+     7ECC   19
 End macro ECHR
 Macro ETOK:
-     7ECF   94
+     7ECD   94
 End macro ETOK
+Macro ECHR:
+     7ECE   07
+End macro ECHR
+Macro ECHR:
+     7ECF   05
+End macro ECHR
+Macro ECHR:
+     7ED0   18
+End macro ECHR
+Macro ECHR:
+     7ED1   03
+End macro ECHR
+Macro ECHR:
+     7ED2   18
+End macro ECHR
+Macro ECHR:
+     7ED3   14
+End macro ECHR
+Macro ECHR:
+     7ED4   18
+End macro ECHR
+Macro ECHR:
+     7ED5   1B
+End macro ECHR
+Macro EJMP:
+     7ED6   5A
+End macro EJMP
 Macro ETOK:
-     7ED0   98
+     7ED7   E5
 End macro ETOK
 Macro ECHR:
-     7ED1   77
+     7ED8   04
+End macro ECHR
+Macro ECHR:
+     7ED9   1F
 End macro ECHR
 Macro ETWO:
-     7ED2   B2
+     7EDA   8E
 End macro ETWO
 Macro ECHR:
-     7ED3   11
+     7EDB   1B
 End macro ECHR
 Macro ECHR:
-     7ED4   03
+     7EDC   13
 End macro ECHR
 Macro ECHR:
-     7ED5   77
-End macro ECHR
-Macro ECHR:
-     7ED6   1F
-End macro ECHR
-Macro ECHR:
-     7ED7   12
+     7EDD   77
 End macro ECHR
 Macro ETWO:
-     7ED8   A5
-End macro ETWO
-Macro ETOK:
-     7ED9   87
-End macro ETOK
-Macro ECHR:
-     7EDA   00
-End macro ECHR
-Macro ECHR:
-     7EDB   1F
-End macro ECHR
-Macro ECHR:
-     7EDC   1E
-End macro ECHR
-Macro ETWO:
-     7EDD   B2
+     7EDE   A0
 End macro ETWO
 Macro ECHR:
-     7EDE   77
-End macro ECHR
-Macro ECHR:
-     7EDF   15
+     7EDF   77
 End macro ECHR
 Macro ECHR:
      7EE0   16
 End macro ECHR
 Macro ECHR:
-     7EE1   14
+     7EE1   01
 End macro ECHR
 Macro ECHR:
-     7EE2   1C
+     7EE2   18
 End macro ECHR
 Macro ECHR:
-     7EE3   79
+     7EE3   1E
 End macro ECHR
 Macro ECHR:
-     7EE4   77
+     7EE4   13
 End macro ECHR
-Macro ECHR:
-     7EE5   1B
-End macro ECHR
-Macro ECHR:
-     7EE6   18
-End macro ECHR
-Macro ECHR:
-     7EE7   18
-End macro ECHR
-Macro ECHR:
-     7EE8   1C
-End macro ECHR
+Macro ETWO:
+     7EE5   AB
+End macro ETWO
+     7EE6   57
 Macro ETOK:
-     7EE9   93
+     7EE7   C4
 End macro ETOK
 Macro ECHR:
-     7EEA   15
+     7EE8   14
 End macro ECHR
 Macro ETWO:
-     7EEB   8E
+     7EE9   88
+End macro ETWO
+Macro ETWO:
+     7EEA   89
 End macro ETWO
 Macro ECHR:
-     7EEC   19
+     7EEB   05
 End macro ECHR
 Macro ECHR:
-     7EED   13
+     7EEC   1E
 End macro ECHR
 Macro ECHR:
-     7EEE   77
+     7EED   14
 End macro ECHR
 Macro ECHR:
-     7EEF   11
+     7EEE   03
 End macro ECHR
 Macro ETWO:
-     7EF0   AA
+     7EEF   AA
 End macro ETWO
 Macro ECHR:
-     7EF1   77
-End macro ECHR
-Macro ETWO:
-     7EF2   B9
-End macro ETWO
-Macro ECHR:
-     7EF3   12
-End macro ECHR
-Macro ETWO:
-     7EF4   B1
-End macro ETWO
-     7EF5   57
-Macro ECHR:
-     7EF6   0E
-End macro ECHR
-Macro ECHR:
-     7EF7   12
-End macro ECHR
-Macro ECHR:
-     7EF8   07
-End macro ECHR
-Macro ECHR:
-     7EF9   7B
+     7EF0   77
 End macro ECHR
 Macro ETOK:
-     7EFA   87
+     7EF1   9C
 End macro ETOK
-Macro ERND:
-     7EFB   25
-End macro ERND
-Macro ETOK:
-     7EFC   85
-End macro ETOK
-Macro ETOK:
-     7EFD   98
-End macro ETOK
+Macro ETWO:
+     7EF2   A5
+End macro ETWO
+Macro ETWO:
+     7EF3   BA
+End macro ETWO
+Macro ETWO:
+     7EF4   A6
+End macro ETWO
+Macro ETWO:
+     7EF5   BE
+End macro ETWO
 Macro ECHR:
-     7EFE   77
+     7EF6   7B
 End macro ECHR
 Macro ECHR:
-     7EFF   1F
-End macro ECHR
-Macro ECHR:
-     7F00   16
-End macro ECHR
-Macro ECHR:
-     7F01   13
+     7EF7   77
 End macro ECHR
 Macro ETOK:
-     7F02   87
+     7EF8   CD
 End macro ETOK
+     7EF9   57
 Macro ECHR:
-     7F03   10
-End macro ECHR
-Macro ETWO:
-     7F04   B3
-End macro ETWO
-Macro ECHR:
-     7F05   16
+     7EFA   16
 End macro ECHR
 Macro ECHR:
-     7F06   14
-End macro ECHR
-Macro ETWO:
-     7F07   AC
-End macro ETWO
-Macro ECHR:
-     7F08   14
-End macro ECHR
-Macro ECHR:
-     7F09   77
-End macro ECHR
-Macro ECHR:
-     7F0A   1F
-End macro ECHR
-Macro ECHR:
-     7F0B   0E
-End macro ECHR
-Macro ECHR:
-     7F0C   07
-End macro ECHR
-Macro ETWO:
-     7F0D   A3
-End macro ETWO
-Macro ECHR:
-     7F0E   13
-End macro ECHR
-Macro ECHR:
-     7F0F   05
-End macro ECHR
-Macro ECHR:
-     7F10   1E
-End macro ECHR
-Macro ETWO:
-     7F11   AD
-End macro ETWO
-Macro ECHR:
-     7F12   77
-End macro ECHR
-Macro ECHR:
-     7F13   11
-End macro ECHR
-Macro ETWO:
-     7F14   8C
-End macro ETWO
-Macro ECHR:
-     7F15   03
-End macro ECHR
-Macro ETOK:
-     7F16   93
-End macro ETOK
-Macro ECHR:
-     7F17   1F
-End macro ECHR
-Macro ECHR:
-     7F18   12
-End macro ECHR
-Macro ETWO:
-     7F19   A5
-End macro ETWO
-Macro ECHR:
-     7F1A   79
-End macro ECHR
-Macro ECHR:
-     7F1B   77
-End macro ECHR
-Macro ETWO:
-     7F1C   BB
-End macro ETWO
-Macro ETOK:
-     7F1D   93
-End macro ETOK
-Macro ETWO:
-     7F1E   8C
-End macro ETWO
-Macro ECHR:
-     7F1F   77
-End macro ECHR
-Macro ECHR:
-     7F20   03
-End macro ECHR
-Macro ECHR:
-     7F21   18
-End macro ECHR
-Macro ECHR:
-     7F22   18
-End macro ECHR
-     7F23   57
-Macro ETOK:
-     7F24   C3
-End macro ETOK
-Macro ECHR:
-     7F25   77
+     7EFB   77
 End macro ECHR
 Macro ERND:
-     7F26   25
+     7EFC   25
 End macro ERND
 Macro ECHR:
-     7F27   77
+     7EFD   77
+End macro ECHR
+Macro ETWO:
+     7EFE   B7
+End macro ETWO
+Macro ECHR:
+     7EFF   18
+End macro ECHR
+Macro ECHR:
+     7F00   1C
 End macro ECHR
 Macro ETOK:
-     7F28   98
+     7F01   94
 End macro ETOK
-Macro ECHR:
-     7F29   77
-End macro ECHR
-Macro ECHR:
-     7F2A   13
-End macro ECHR
-Macro ECHR:
-     7F2B   12
-End macro ECHR
-Macro ECHR:
-     7F2C   1F
-End macro ECHR
-Macro ECHR:
-     7F2D   0E
-End macro ECHR
-Macro ECHR:
-     7F2E   07
-End macro ECHR
 Macro ETOK:
-     7F2F   93
+     7F02   98
 End macro ETOK
 Macro ECHR:
-     7F30   1F
-End macro ECHR
-Macro ECHR:
-     7F31   12
+     7F03   77
 End macro ECHR
 Macro ETWO:
-     7F32   A5
+     7F04   B2
 End macro ETWO
 Macro ECHR:
-     7F33   77
+     7F05   11
 End macro ECHR
 Macro ECHR:
-     7F34   11
+     7F06   03
 End macro ECHR
 Macro ECHR:
-     7F35   05
+     7F07   77
 End macro ECHR
 Macro ECHR:
-     7F36   18
+     7F08   1F
 End macro ECHR
 Macro ECHR:
-     7F37   1A
-End macro ECHR
-Macro ECHR:
-     7F38   77
+     7F09   12
 End macro ECHR
 Macro ETWO:
-     7F39   B4
-End macro ETWO
-Macro ECHR:
-     7F3A   00
-End macro ECHR
-Macro ECHR:
-     7F3B   1F
-End macro ECHR
-Macro ECHR:
-     7F3C   12
-End macro ECHR
-Macro ETWO:
-     7F3D   A5
-End macro ETWO
-Macro ECHR:
-     7F3E   7B
-End macro ECHR
-Macro ECHR:
-     7F3F   77
-End macro ECHR
-Macro ECHR:
-     7F40   04
-End macro ECHR
-Macro ECHR:
-     7F41   02
-End macro ECHR
-Macro ECHR:
-     7F42   19
-End macro ECHR
-Macro ECHR:
-     7F43   77
-End macro ECHR
-Macro ECHR:
-     7F44   04
-End macro ECHR
-Macro ECHR:
-     7F45   1C
-End macro ECHR
-Macro ECHR:
-     7F46   1E
-End macro ECHR
-Macro ECHR:
-     7F47   1A
-End macro ECHR
-Macro ECHR:
-     7F48   1A
-End macro ECHR
-Macro ETWO:
-     7F49   AB
+     7F0A   A5
 End macro ETWO
 Macro ETOK:
-     7F4A   E5
+     7F0B   87
 End macro ETOK
 Macro ECHR:
-     7F4B   1D
+     7F0C   00
 End macro ECHR
 Macro ECHR:
-     7F4C   02
+     7F0D   1F
 End macro ECHR
 Macro ECHR:
-     7F4D   1A
-End macro ECHR
-Macro ECHR:
-     7F4E   07
+     7F0E   1E
 End macro ECHR
 Macro ETWO:
-     7F4F   AB
+     7F0F   B2
 End macro ETWO
 Macro ECHR:
-     7F50   79
+     7F10   77
 End macro ECHR
+Macro ECHR:
+     7F11   15
+End macro ECHR
+Macro ECHR:
+     7F12   16
+End macro ECHR
+Macro ECHR:
+     7F13   14
+End macro ECHR
+Macro ECHR:
+     7F14   1C
+End macro ECHR
+Macro ECHR:
+     7F15   79
+End macro ECHR
+Macro ECHR:
+     7F16   77
+End macro ECHR
+Macro ECHR:
+     7F17   1B
+End macro ECHR
+Macro ECHR:
+     7F18   18
+End macro ECHR
+Macro ECHR:
+     7F19   18
+End macro ECHR
+Macro ECHR:
+     7F1A   1C
+End macro ECHR
+Macro ETOK:
+     7F1B   93
+End macro ETOK
+Macro ECHR:
+     7F1C   15
+End macro ECHR
+Macro ETWO:
+     7F1D   8E
+End macro ETWO
+Macro ECHR:
+     7F1E   19
+End macro ECHR
+Macro ECHR:
+     7F1F   13
+End macro ECHR
+Macro ECHR:
+     7F20   77
+End macro ECHR
+Macro ECHR:
+     7F21   11
+End macro ECHR
+Macro ETWO:
+     7F22   AA
+End macro ETWO
+Macro ECHR:
+     7F23   77
+End macro ECHR
+Macro ETWO:
+     7F24   B9
+End macro ETWO
+Macro ECHR:
+     7F25   12
+End macro ECHR
+Macro ETWO:
+     7F26   B1
+End macro ETWO
+     7F27   57
+Macro ECHR:
+     7F28   0E
+End macro ECHR
+Macro ECHR:
+     7F29   12
+End macro ECHR
+Macro ECHR:
+     7F2A   07
+End macro ECHR
+Macro ECHR:
+     7F2B   7B
+End macro ECHR
+Macro ETOK:
+     7F2C   87
+End macro ETOK
+Macro ERND:
+     7F2D   25
+End macro ERND
+Macro ETOK:
+     7F2E   85
+End macro ETOK
+Macro ETOK:
+     7F2F   98
+End macro ETOK
+Macro ECHR:
+     7F30   77
+End macro ECHR
+Macro ECHR:
+     7F31   1F
+End macro ECHR
+Macro ECHR:
+     7F32   16
+End macro ECHR
+Macro ECHR:
+     7F33   13
+End macro ECHR
+Macro ETOK:
+     7F34   87
+End macro ETOK
+Macro ECHR:
+     7F35   10
+End macro ECHR
+Macro ETWO:
+     7F36   B3
+End macro ETWO
+Macro ECHR:
+     7F37   16
+End macro ECHR
+Macro ECHR:
+     7F38   14
+End macro ECHR
+Macro ETWO:
+     7F39   AC
+End macro ETWO
+Macro ECHR:
+     7F3A   14
+End macro ECHR
+Macro ECHR:
+     7F3B   77
+End macro ECHR
+Macro ECHR:
+     7F3C   1F
+End macro ECHR
+Macro ECHR:
+     7F3D   0E
+End macro ECHR
+Macro ECHR:
+     7F3E   07
+End macro ECHR
+Macro ETWO:
+     7F3F   A3
+End macro ETWO
+Macro ECHR:
+     7F40   13
+End macro ECHR
+Macro ECHR:
+     7F41   05
+End macro ECHR
+Macro ECHR:
+     7F42   1E
+End macro ECHR
+Macro ETWO:
+     7F43   AD
+End macro ETWO
+Macro ECHR:
+     7F44   77
+End macro ECHR
+Macro ECHR:
+     7F45   11
+End macro ECHR
+Macro ETWO:
+     7F46   8C
+End macro ETWO
+Macro ECHR:
+     7F47   03
+End macro ECHR
+Macro ETOK:
+     7F48   93
+End macro ETOK
+Macro ECHR:
+     7F49   1F
+End macro ECHR
+Macro ECHR:
+     7F4A   12
+End macro ECHR
+Macro ETWO:
+     7F4B   A5
+End macro ETWO
+Macro ECHR:
+     7F4C   79
+End macro ECHR
+Macro ECHR:
+     7F4D   77
+End macro ECHR
+Macro ETWO:
+     7F4E   BB
+End macro ETWO
+Macro ETOK:
+     7F4F   93
+End macro ETOK
+Macro ETWO:
+     7F50   8C
+End macro ETWO
 Macro ECHR:
      7F51   77
 End macro ECHR
 Macro ECHR:
-     7F52   1E
+     7F52   03
 End macro ECHR
 Macro ECHR:
-     7F53   77
+     7F53   18
 End macro ECHR
 Macro ECHR:
-     7F54   1F
+     7F54   18
 End macro ECHR
-Macro ECHR:
-     7F55   12
-End macro ECHR
-Macro ETWO:
-     7F56   B9
-End macro ETWO
+     7F55   57
+Macro ETOK:
+     7F56   C3
+End macro ETOK
 Macro ECHR:
      7F57   77
 End macro ECHR
-Macro ETWO:
-     7F58   8C
-End macro ETWO
+Macro ERND:
+     7F58   25
+End macro ERND
 Macro ECHR:
      7F59   77
 End macro ECHR
+Macro ETOK:
+     7F5A   98
+End macro ETOK
 Macro ECHR:
-     7F5A   00
+     7F5B   77
 End macro ECHR
-Macro ETWO:
-     7F5B   A1
-End macro ETWO
 Macro ECHR:
-     7F5C   03
+     7F5C   13
+End macro ECHR
+Macro ECHR:
+     7F5D   12
+End macro ECHR
+Macro ECHR:
+     7F5E   1F
+End macro ECHR
+Macro ECHR:
+     7F5F   0E
+End macro ECHR
+Macro ECHR:
+     7F60   07
 End macro ECHR
 Macro ETOK:
-     7F5D   9E
+     7F61   93
 End macro ETOK
-Macro ETWO:
-     7F5E   A7
-End macro ETWO
-Macro ETWO:
-     7F5F   BD
-End macro ETWO
-Macro ETWO:
-     7F60   A0
-End macro ETWO
-     7F61   57
-Macro ERND:
-     7F62   24
-End macro ERND
 Macro ECHR:
-     7F63   77
+     7F62   1F
 End macro ECHR
-Macro ETOK:
-     7F64   98
-End macro ETOK
+Macro ECHR:
+     7F63   12
+End macro ECHR
+Macro ETWO:
+     7F64   A5
+End macro ETWO
 Macro ECHR:
      7F65   77
 End macro ECHR
 Macro ECHR:
-     7F66   00
+     7F66   11
+End macro ECHR
+Macro ECHR:
+     7F67   05
+End macro ECHR
+Macro ECHR:
+     7F68   18
+End macro ECHR
+Macro ECHR:
+     7F69   1A
+End macro ECHR
+Macro ECHR:
+     7F6A   77
 End macro ECHR
 Macro ETWO:
-     7F67   A1
+     7F6B   B4
 End macro ETWO
 Macro ECHR:
-     7F68   03
+     7F6C   00
 End macro ECHR
 Macro ECHR:
-     7F69   77
-End macro ECHR
-Macro ECHR:
-     7F6A   11
-End macro ECHR
-Macro ETWO:
-     7F6B   AA
-End macro ETWO
-Macro ECHR:
-     7F6C   77
-End macro ECHR
-Macro ECHR:
-     7F6D   1A
+     7F6D   1F
 End macro ECHR
 Macro ECHR:
      7F6E   12
 End macro ECHR
-Macro ECHR:
-     7F6F   77
-End macro ECHR
 Macro ETWO:
-     7F70   A2
+     7F6F   A5
 End macro ETWO
+Macro ECHR:
+     7F70   7B
+End macro ECHR
 Macro ECHR:
      7F71   77
 End macro ECHR
 Macro ECHR:
-     7F72   16
+     7F72   04
+End macro ECHR
+Macro ECHR:
+     7F73   02
+End macro ECHR
+Macro ECHR:
+     7F74   19
+End macro ECHR
+Macro ECHR:
+     7F75   77
+End macro ECHR
+Macro ECHR:
+     7F76   04
+End macro ECHR
+Macro ECHR:
+     7F77   1C
+End macro ECHR
+Macro ECHR:
+     7F78   1E
+End macro ECHR
+Macro ECHR:
+     7F79   1A
+End macro ECHR
+Macro ECHR:
+     7F7A   1A
 End macro ECHR
 Macro ETWO:
-     7F73   BB
+     7F7B   AB
 End macro ETWO
-Macro ETWO:
-     7F74   B9
-End macro ETWO
+Macro ETOK:
+     7F7C   E5
+End macro ETOK
 Macro ECHR:
-     7F75   79
+     7F7D   1D
 End macro ECHR
 Macro ECHR:
-     7F76   77
+     7F7E   02
 End macro ECHR
 Macro ECHR:
-     7F77   1A
+     7F7F   1A
 End macro ECHR
 Macro ECHR:
-     7F78   0E
-End macro ECHR
-Macro ECHR:
-     7F79   77
+     7F80   07
 End macro ECHR
 Macro ETWO:
-     7F7A   AE
+     7F81   AB
 End macro ETWO
 Macro ECHR:
-     7F7B   04
-End macro ECHR
-Macro ETWO:
-     7F7C   A3
-End macro ETWO
-Macro ECHR:
-     7F7D   04
+     7F82   79
 End macro ECHR
 Macro ECHR:
-     7F7E   77
+     7F83   77
 End macro ECHR
 Macro ECHR:
-     7F7F   13
-End macro ECHR
-Macro ECHR:
-     7F80   1E
-End macro ECHR
-Macro ECHR:
-     7F81   13
-End macro ECHR
-Macro ECHR:
-     7F82   19
-End macro ECHR
-Macro ECHR:
-     7F83   70
-End macro ECHR
-Macro ECHR:
-     7F84   03
+     7F84   1E
 End macro ECHR
 Macro ECHR:
      7F85   77
 End macro ECHR
 Macro ECHR:
-     7F86   12
+     7F86   1F
 End macro ECHR
 Macro ECHR:
-     7F87   01
+     7F87   12
 End macro ECHR
 Macro ETWO:
-     7F88   A1
+     7F88   B9
 End macro ETWO
 Macro ECHR:
      7F89   77
 End macro ECHR
-Macro ECHR:
-     7F8A   04
-End macro ECHR
-Macro ECHR:
-     7F8B   14
-End macro ECHR
 Macro ETWO:
-     7F8C   AF
+     7F8A   8C
 End macro ETWO
 Macro ECHR:
-     7F8D   03
+     7F8B   77
 End macro ECHR
 Macro ECHR:
-     7F8E   14
+     7F8C   00
 End macro ECHR
+Macro ETWO:
+     7F8D   A1
+End macro ETWO
 Macro ECHR:
-     7F8F   1F
-End macro ECHR
-Macro ECHR:
-     7F90   77
+     7F8E   03
 End macro ECHR
 Macro ETOK:
-     7F91   C4
+     7F8F   9E
 End macro ETOK
-Macro ERND:
-     7F92   24
-End macro ERND
+Macro ETWO:
+     7F90   A7
+End macro ETWO
+Macro ETWO:
+     7F91   BD
+End macro ETWO
+Macro ETWO:
+     7F92   A0
+End macro ETWO
      7F93   57
+Macro ERND:
+     7F94   24
+End macro ERND
 Macro ECHR:
-     7F94   18
-End macro ECHR
-Macro ECHR:
-     7F95   1F
-End macro ECHR
-Macro ECHR:
-     7F96   77
-End macro ECHR
-Macro ECHR:
-     7F97   13
-End macro ECHR
-Macro ECHR:
-     7F98   12
-End macro ECHR
-Macro ETWO:
-     7F99   B9
-End macro ETWO
-Macro ECHR:
-     7F9A   77
-End macro ECHR
-Macro ECHR:
-     7F9B   1A
-End macro ECHR
-Macro ECHR:
-     7F9C   12
-End macro ECHR
-Macro ECHR:
-     7F9D   77
-End macro ECHR
-Macro ECHR:
-     7F9E   0E
-End macro ECHR
-Macro ETWO:
-     7F9F   BA
-End macro ETWO
-Macro ECHR:
-     7FA0   79
+     7F95   77
 End macro ECHR
 Macro ETOK:
-     7FA1   87
+     7F96   98
 End macro ETOK
 Macro ECHR:
-     7FA2   11
+     7F97   77
 End macro ECHR
 Macro ECHR:
-     7FA3   05
+     7F98   00
+End macro ECHR
+Macro ETWO:
+     7F99   A1
+End macro ETWO
+Macro ECHR:
+     7F9A   03
 End macro ECHR
 Macro ECHR:
-     7FA4   1E
+     7F9B   77
 End macro ECHR
 Macro ECHR:
-     7FA5   10
+     7F9C   11
+End macro ECHR
+Macro ETWO:
+     7F9D   AA
+End macro ETWO
+Macro ECHR:
+     7F9E   77
 End macro ECHR
 Macro ECHR:
-     7FA6   1F
+     7F9F   1A
 End macro ECHR
 Macro ECHR:
-     7FA7   03
+     7FA0   12
 End macro ECHR
 Macro ECHR:
-     7FA8   11
+     7FA1   77
+End macro ECHR
+Macro ETWO:
+     7FA2   A2
+End macro ETWO
+Macro ECHR:
+     7FA3   77
 End macro ECHR
 Macro ECHR:
-     7FA9   02
+     7FA4   16
+End macro ECHR
+Macro ETWO:
+     7FA5   BB
+End macro ETWO
+Macro ETWO:
+     7FA6   B9
+End macro ETWO
+Macro ECHR:
+     7FA7   79
 End macro ECHR
 Macro ECHR:
-     7FAA   1B
+     7FA8   77
+End macro ECHR
+Macro ECHR:
+     7FA9   1A
+End macro ECHR
+Macro ECHR:
+     7FAA   0E
 End macro ECHR
 Macro ECHR:
      7FAB   77
 End macro ECHR
-Macro ECHR:
-     7FAC   05
-End macro ECHR
-Macro ECHR:
-     7FAD   18
-End macro ECHR
-Macro ECHR:
-     7FAE   10
-End macro ECHR
-Macro ECHR:
-     7FAF   02
-End macro ECHR
-Macro ECHR:
-     7FB0   12
-End macro ECHR
-Macro ECHR:
-     7FB1   77
-End macro ECHR
-Macro ECHR:
-     7FB2   00
-End macro ECHR
-Macro ECHR:
-     7FB3   1E
-End macro ECHR
 Macro ETWO:
-     7FB4   B5
+     7FAC   AE
 End macro ETWO
 Macro ECHR:
-     7FB5   77
-End macro ECHR
-Macro ECHR:
-     7FB6   00
-End macro ECHR
-Macro ECHR:
-     7FB7   1F
+     7FAD   04
 End macro ECHR
 Macro ETWO:
-     7FB8   A2
+     7FAE   A3
 End macro ETWO
 Macro ECHR:
-     7FB9   77
+     7FAF   04
 End macro ECHR
 Macro ECHR:
-     7FBA   1E
+     7FB0   77
 End macro ECHR
+Macro ECHR:
+     7FB1   13
+End macro ECHR
+Macro ECHR:
+     7FB2   1E
+End macro ECHR
+Macro ECHR:
+     7FB3   13
+End macro ECHR
+Macro ECHR:
+     7FB4   19
+End macro ECHR
+Macro ECHR:
+     7FB5   70
+End macro ECHR
+Macro ECHR:
+     7FB6   03
+End macro ECHR
+Macro ECHR:
+     7FB7   77
+End macro ECHR
+Macro ECHR:
+     7FB8   12
+End macro ECHR
+Macro ECHR:
+     7FB9   01
+End macro ECHR
+Macro ETWO:
+     7FBA   A1
+End macro ETWO
 Macro ECHR:
      7FBB   77
 End macro ECHR
-Macro ETWO:
-     7FBC   A0
-End macro ETWO
 Macro ECHR:
-     7FBD   1B
+     7FBC   04
 End macro ECHR
 Macro ECHR:
-     7FBE   1E
-End macro ECHR
-Macro ECHR:
-     7FBF   12
+     7FBD   14
 End macro ECHR
 Macro ETWO:
-     7FC0   AD
+     7FBE   AF
 End macro ETWO
 Macro ECHR:
-     7FC1   77
+     7FBF   03
+End macro ECHR
+Macro ECHR:
+     7FC0   14
+End macro ECHR
+Macro ECHR:
+     7FC1   1F
+End macro ECHR
+Macro ECHR:
+     7FC2   77
 End macro ECHR
 Macro ETOK:
-     7FC2   E4
+     7FC3   C4
 End macro ETOK
-Macro ECHR:
-     7FC3   77
-End macro ECHR
-Macro ECHR:
-     7FC4   07
-End macro ECHR
-Macro ECHR:
-     7FC5   12
-End macro ECHR
+Macro ERND:
+     7FC4   24
+End macro ERND
+     7FC5   57
 Macro ECHR:
      7FC6   18
 End macro ECHR
 Macro ECHR:
-     7FC7   07
+     7FC7   1F
+End macro ECHR
+Macro ECHR:
+     7FC8   77
+End macro ECHR
+Macro ECHR:
+     7FC9   13
+End macro ECHR
+Macro ECHR:
+     7FCA   12
 End macro ECHR
 Macro ETWO:
-     7FC8   B2
+     7FCB   B9
 End macro ETWO
 Macro ECHR:
-     7FC9   77
+     7FCC   77
 End macro ECHR
 Macro ECHR:
-     7FCA   14
+     7FCD   1A
+End macro ECHR
+Macro ECHR:
+     7FCE   12
+End macro ECHR
+Macro ECHR:
+     7FCF   77
+End macro ECHR
+Macro ECHR:
+     7FD0   0E
 End macro ECHR
 Macro ETWO:
-     7FCB   B3
+     7FD1   BA
 End macro ETWO
 Macro ECHR:
-     7FCC   1B
+     7FD2   79
 End macro ECHR
 Macro ETOK:
-     7FCD   87
+     7FD3   87
 End macro ETOK
-Macro ETWO:
-     7FCE   B2
-End macro ETWO
 Macro ECHR:
-     7FCF   16
+     7FD4   11
 End macro ECHR
 Macro ECHR:
-     7FD0   13
+     7FD5   05
 End macro ECHR
-Macro ECHR:
-     7FD1   77
-End macro ECHR
-Macro ECHR:
-     7FD2   07
-End macro ECHR
-Macro ECHR:
-     7FD3   18
-End macro ECHR
-Macro ETWO:
-     7FD4   89
-End macro ETWO
-Macro ETWO:
-     7FD5   A3
-End macro ETWO
 Macro ECHR:
      7FD6   1E
 End macro ECHR
-Macro ETWO:
-     7FD7   AA
-End macro ETWO
 Macro ECHR:
-     7FD8   77
+     7FD7   10
 End macro ECHR
 Macro ECHR:
-     7FD9   04
+     7FD8   1F
 End macro ECHR
 Macro ECHR:
-     7FDA   1F
+     7FD9   03
 End macro ECHR
 Macro ECHR:
-     7FDB   18
+     7FDA   11
 End macro ECHR
 Macro ECHR:
-     7FDC   03
+     7FDB   02
+End macro ECHR
+Macro ECHR:
+     7FDC   1B
 End macro ECHR
 Macro ECHR:
      7FDD   77
 End macro ECHR
 Macro ECHR:
-     7FDE   02
+     7FDE   05
 End macro ECHR
 Macro ECHR:
-     7FDF   07
+     7FDF   18
 End macro ECHR
 Macro ECHR:
-     7FE0   77
+     7FE0   10
+End macro ECHR
+Macro ECHR:
+     7FE1   02
+End macro ECHR
+Macro ECHR:
+     7FE2   12
+End macro ECHR
+Macro ECHR:
+     7FE3   77
+End macro ECHR
+Macro ECHR:
+     7FE4   00
+End macro ECHR
+Macro ECHR:
+     7FE5   1E
 End macro ECHR
 Macro ETWO:
-     7FE1   B7
+     7FE6   B5
 End macro ETWO
-Macro ECHR:
-     7FE2   03
-End macro ECHR
-Macro ECHR:
-     7FE3   04
-End macro ECHR
-Macro ECHR:
-     7FE4   77
-End macro ECHR
-Macro ECHR:
-     7FE5   18
-End macro ECHR
-Macro ECHR:
-     7FE6   11
-End macro ECHR
 Macro ECHR:
      7FE7   77
 End macro ECHR
-Macro ETWO:
-     7FE8   B5
-End macro ETWO
 Macro ECHR:
-     7FE9   18
+     7FE8   00
+End macro ECHR
+Macro ECHR:
+     7FE9   1F
 End macro ECHR
 Macro ETWO:
-     7FEA   8D
+     7FEA   A2
 End macro ETWO
 Macro ECHR:
      7FEB   77
 End macro ECHR
-Macro ETWO:
-     7FEC   A0
-End macro ETWO
 Macro ECHR:
-     7FED   16
+     7FEC   1E
+End macro ECHR
+Macro ECHR:
+     7FED   77
 End macro ECHR
 Macro ETWO:
-     7FEE   89
+     7FEE   A0
 End macro ETWO
 Macro ECHR:
      7FEF   1B
 End macro ECHR
 Macro ECHR:
-     7FF0   0E
+     7FF0   1E
 End macro ECHR
 Macro ECHR:
-     7FF1   77
-End macro ECHR
-Macro ECHR:
-     7FF2   07
-End macro ECHR
-Macro ECHR:
-     7FF3   1E
+     7FF1   12
 End macro ECHR
 Macro ETWO:
-     7FF4   AF
+     7FF2   AD
 End macro ETWO
 Macro ECHR:
-     7FF5   03
-End macro ECHR
-Macro ETWO:
-     7FF6   BA
-End macro ETWO
-Macro ETOK:
-     7FF7   E5
-End macro ETOK
-Macro ECHR:
-     7FF8   00
-End macro ECHR
-Macro ETWO:
-     7FF9   A1
-End macro ETWO
-Macro ECHR:
-     7FFA   03
+     7FF3   77
 End macro ECHR
 Macro ETOK:
-     7FFB   9E
-End macro ETOK
-Macro ETWO:
-     7FFC   BB
-End macro ETWO
-Macro ETWO:
-     7FFD   B2
-End macro ETWO
-Macro ECHR:
-     7FFE   05
-End macro ECHR
-Macro ECHR:
-     7FFF   1E
-End macro ECHR
-     8000   57
-Macro ETOK:
-     8001   E4
+     7FF4   E4
 End macro ETOK
 Macro ECHR:
-     8002   77
+     7FF5   77
 End macro ECHR
 Macro ECHR:
-     8003   14
-End macro ECHR
-Macro ETWO:
-     8004   A8
-End macro ETWO
-Macro ECHR:
-     8005   77
+     7FF6   07
 End macro ECHR
 Macro ECHR:
-     8006   03
+     7FF7   12
 End macro ECHR
 Macro ECHR:
-     8007   16
+     7FF8   18
 End macro ECHR
 Macro ECHR:
-     8008   14
-End macro ECHR
-Macro ECHR:
-     8009   1C
+     7FF9   07
 End macro ECHR
 Macro ETWO:
-     800A   B2
+     7FFA   B2
 End macro ETWO
 Macro ECHR:
-     800B   77
+     7FFB   77
+End macro ECHR
+Macro ECHR:
+     7FFC   14
+End macro ECHR
+Macro ETWO:
+     7FFD   B3
+End macro ETWO
+Macro ECHR:
+     7FFE   1B
 End macro ECHR
 Macro ETOK:
-     800C   C4
+     7FFF   87
 End macro ETOK
-Macro ERND:
-     800D   3F
-End macro ERND
+Macro ETWO:
+     8000   B2
+End macro ETWO
 Macro ECHR:
-     800E   77
-End macro ECHR
-Macro ERND:
-     800F   24
-End macro ERND
-Macro ECHR:
-     8010   77
+     8001   16
 End macro ECHR
 Macro ECHR:
-     8011   1E
+     8002   13
 End macro ECHR
 Macro ECHR:
-     8012   11
+     8003   77
 End macro ECHR
 Macro ECHR:
-     8013   77
+     8004   07
+End macro ECHR
+Macro ECHR:
+     8005   18
+End macro ECHR
+Macro ETWO:
+     8006   89
+End macro ETWO
+Macro ETWO:
+     8007   A3
+End macro ETWO
+Macro ECHR:
+     8008   1E
+End macro ECHR
+Macro ETWO:
+     8009   AA
+End macro ETWO
+Macro ECHR:
+     800A   77
+End macro ECHR
+Macro ECHR:
+     800B   04
+End macro ECHR
+Macro ECHR:
+     800C   1F
+End macro ECHR
+Macro ECHR:
+     800D   18
+End macro ECHR
+Macro ECHR:
+     800E   03
+End macro ECHR
+Macro ECHR:
+     800F   77
+End macro ECHR
+Macro ECHR:
+     8010   02
+End macro ECHR
+Macro ECHR:
+     8011   07
+End macro ECHR
+Macro ECHR:
+     8012   77
+End macro ECHR
+Macro ETWO:
+     8013   B7
+End macro ETWO
+Macro ECHR:
+     8014   03
+End macro ECHR
+Macro ECHR:
+     8015   04
+End macro ECHR
+Macro ECHR:
+     8016   77
+End macro ECHR
+Macro ECHR:
+     8017   18
+End macro ECHR
+Macro ECHR:
+     8018   11
+End macro ECHR
+Macro ECHR:
+     8019   77
+End macro ECHR
+Macro ETWO:
+     801A   B5
+End macro ETWO
+Macro ECHR:
+     801B   18
+End macro ECHR
+Macro ETWO:
+     801C   8D
+End macro ETWO
+Macro ECHR:
+     801D   77
+End macro ECHR
+Macro ETWO:
+     801E   A0
+End macro ETWO
+Macro ECHR:
+     801F   16
+End macro ECHR
+Macro ETWO:
+     8020   89
+End macro ETWO
+Macro ECHR:
+     8021   1B
+End macro ECHR
+Macro ECHR:
+     8022   0E
+End macro ECHR
+Macro ECHR:
+     8023   77
+End macro ECHR
+Macro ECHR:
+     8024   07
+End macro ECHR
+Macro ECHR:
+     8025   1E
+End macro ECHR
+Macro ETWO:
+     8026   AF
+End macro ETWO
+Macro ECHR:
+     8027   03
+End macro ECHR
+Macro ETWO:
+     8028   BA
+End macro ETWO
+Macro ETOK:
+     8029   E5
+End macro ETOK
+Macro ECHR:
+     802A   00
+End macro ECHR
+Macro ETWO:
+     802B   A1
+End macro ETWO
+Macro ECHR:
+     802C   03
 End macro ECHR
 Macro ETOK:
-     8014   E4
+     802D   9E
 End macro ETOK
-Macro ECHR:
-     8015   77
-End macro ECHR
-Macro ECHR:
-     8016   1B
-End macro ECHR
-Macro ECHR:
-     8017   1E
-End macro ECHR
-Macro ECHR:
-     8018   1C
-End macro ECHR
-Macro ECHR:
-     8019   12
-End macro ECHR
-Macro ECHR:
-     801A   79
-End macro ECHR
-Macro ECHR:
-     801B   77
-End macro ECHR
-Macro ECHR:
-     801C   1F
-End macro ECHR
-Macro ECHR:
-     801D   12
-End macro ECHR
-Macro ECHR:
-     801E   70
-End macro ECHR
-Macro ECHR:
-     801F   04
-End macro ECHR
-Macro ECHR:
-     8020   77
-End macro ECHR
 Macro ETWO:
-     8021   A2
-End macro ETWO
-Macro ECHR:
-     8022   77
-End macro ECHR
-Macro ETWO:
-     8023   AA
+     802E   BB
 End macro ETWO
 Macro ETWO:
-     8024   B9
+     802F   B2
 End macro ETWO
-Macro ETWO:
-     8025   AF
-End macro ETWO
-     8026   57
-Macro EJMP:
-     8027   56
-End macro EJMP
 Macro ECHR:
-     8028   14
+     8030   05
 End macro ECHR
 Macro ECHR:
-     8029   18
+     8031   1E
 End macro ECHR
-Macro ECHR:
-     802A   1A
-End macro ECHR
+     8032   57
 Macro ETOK:
-     802B   94
+     8033   E4
 End macro ETOK
-Macro ETWO:
-     802C   BC
-End macro ETWO
-Macro ETWO:
-     802D   88
-End macro ETWO
-Macro ECHR:
-     802E   6D
-End macro ECHR
-Macro ECHR:
-     802F   77
-End macro ECHR
-Macro ECHR:
-     8030   12
-End macro ECHR
-Macro ECHR:
-     8031   1B
-End macro ECHR
-Macro ETWO:
-     8032   8C
-End macro ETWO
-Macro ECHR:
-     8033   12
-End macro ECHR
 Macro ECHR:
      8034   77
 End macro ECHR
 Macro ECHR:
-     8035   1E
-End macro ECHR
-Macro ECHR:
-     8036   1E
-End macro ECHR
-     8037   57
-Macro ERND:
-     8038   23
-End macro ERND
-     8039   57
-Macro ERND:
-     803A   23
-End macro ERND
-     803B   57
-Macro ERND:
-     803C   23
-End macro ERND
-     803D   57
-Macro ERND:
-     803E   23
-End macro ERND
-     803F   57
-Macro ERND:
-     8040   23
-End macro ERND
-     8041   57
-Macro ERND:
-     8042   23
-End macro ERND
-     8043   57
-Macro ERND:
-     8044   23
-End macro ERND
-     8045   57
-Macro ERND:
-     8046   23
-End macro ERND
-     8047   57
-Macro ERND:
-     8048   23
-End macro ERND
-     8049   57
-Macro ERND:
-     804A   23
-End macro ERND
-     804B   57
-Macro ERND:
-     804C   23
-End macro ERND
-     804D   57
-Macro ERND:
-     804E   23
-End macro ERND
-     804F   57
-Macro ERND:
-     8050   23
-End macro ERND
-     8051   57
-Macro ECHR:
-     8052   15
-End macro ECHR
-Macro ECHR:
-     8053   18
-End macro ECHR
-Macro ECHR:
-     8054   0E
-End macro ECHR
-Macro ECHR:
-     8055   77
-End macro ECHR
-Macro ECHR:
-     8056   16
+     8035   14
 End macro ECHR
 Macro ETWO:
-     8057   A5
+     8036   A8
 End macro ETWO
 Macro ECHR:
-     8058   77
+     8037   77
+End macro ECHR
+Macro ECHR:
+     8038   03
+End macro ECHR
+Macro ECHR:
+     8039   16
+End macro ECHR
+Macro ECHR:
+     803A   14
+End macro ECHR
+Macro ECHR:
+     803B   1C
+End macro ECHR
+Macro ETWO:
+     803C   B2
+End macro ETWO
+Macro ECHR:
+     803D   77
 End macro ECHR
 Macro ETOK:
-     8059   E4
+     803E   C4
 End macro ETOK
+Macro ERND:
+     803F   3F
+End macro ERND
 Macro ECHR:
-     805A   77
+     8040   77
 End macro ECHR
-Macro ETWO:
-     805B   A7
-End macro ETWO
+Macro ERND:
+     8041   24
+End macro ERND
 Macro ECHR:
-     805C   77
+     8042   77
+End macro ECHR
+Macro ECHR:
+     8043   1E
+End macro ECHR
+Macro ECHR:
+     8044   11
+End macro ECHR
+Macro ECHR:
+     8045   77
 End macro ECHR
 Macro ETOK:
-     805D   C4
+     8046   E4
 End macro ETOK
 Macro ECHR:
-     805E   00
+     8047   77
 End macro ECHR
 Macro ECHR:
-     805F   05
+     8048   1B
+End macro ECHR
+Macro ECHR:
+     8049   1E
+End macro ECHR
+Macro ECHR:
+     804A   1C
+End macro ECHR
+Macro ECHR:
+     804B   12
+End macro ECHR
+Macro ECHR:
+     804C   79
+End macro ECHR
+Macro ECHR:
+     804D   77
+End macro ECHR
+Macro ECHR:
+     804E   1F
+End macro ECHR
+Macro ECHR:
+     804F   12
+End macro ECHR
+Macro ECHR:
+     8050   70
+End macro ECHR
+Macro ECHR:
+     8051   04
+End macro ECHR
+Macro ECHR:
+     8052   77
 End macro ECHR
 Macro ETWO:
-     8060   88
+     8053   A2
 End macro ETWO
 Macro ECHR:
-     8061   10
-End macro ECHR
-Macro ECHR:
-     8062   77
-End macro ECHR
-Macro ECHR:
-     8063   10
+     8054   77
 End macro ECHR
 Macro ETWO:
-     8064   B3
+     8055   AA
+End macro ETWO
+Macro ETWO:
+     8056   B9
+End macro ETWO
+Macro ETWO:
+     8057   AF
+End macro ETWO
+     8058   57
+Macro EJMP:
+     8059   56
+End macro EJMP
+Macro ECHR:
+     805A   14
+End macro ECHR
+Macro ECHR:
+     805B   18
+End macro ECHR
+Macro ECHR:
+     805C   1A
+End macro ECHR
+Macro ETOK:
+     805D   94
+End macro ETOK
+Macro ETWO:
+     805E   BC
+End macro ETWO
+Macro ETWO:
+     805F   88
 End macro ETWO
 Macro ECHR:
-     8065   16
+     8060   6D
 End macro ECHR
 Macro ECHR:
-     8066   0F
+     8061   77
 End macro ECHR
 Macro ECHR:
-     8067   0E
+     8062   12
 End macro ECHR
 Macro ECHR:
-     8068   76
+     8063   1B
+End macro ECHR
+Macro ETWO:
+     8064   8C
+End macro ETWO
+Macro ECHR:
+     8065   12
+End macro ECHR
+Macro ECHR:
+     8066   77
+End macro ECHR
+Macro ECHR:
+     8067   1E
+End macro ECHR
+Macro ECHR:
+     8068   1E
 End macro ECHR
      8069   57
-Macro ETWO:
-     806A   B5
-End macro ETWO
-Macro ETWO:
-     806B   A3
-End macro ETWO
-Macro ECHR:
-     806C   12
-End macro ECHR
-Macro ECHR:
-     806D   70
-End macro ECHR
-Macro ECHR:
-     806E   04
-End macro ECHR
-Macro ETOK:
-     806F   87
-End macro ETOK
-Macro ETWO:
-     8070   A5
-End macro ETWO
-Macro ETWO:
-     8071   B3
-End macro ETWO
-Macro ECHR:
-     8072   77
-End macro ECHR
 Macro ERND:
-     8073   24
+     806A   23
 End macro ERND
-Macro ECHR:
-     8074   77
-End macro ECHR
-Macro ECHR:
-     8075   07
-End macro ECHR
-Macro ECHR:
-     8076   1E
-End macro ECHR
-Macro ETWO:
-     8077   AF
-End macro ETWO
-Macro ECHR:
-     8078   03
-End macro ECHR
-Macro ECHR:
-     8079   12
-End macro ECHR
-Macro ECHR:
-     807A   77
-End macro ECHR
-Macro ETWO:
-     807B   8E
-End macro ETWO
-Macro ECHR:
-     807C   03
-End macro ECHR
-Macro ECHR:
-     807D   77
-End macro ECHR
-Macro ETWO:
-     807E   B5
-End macro ETWO
-Macro ETWO:
-     807F   A3
-End macro ETWO
-Macro ECHR:
-     8080   12
-End macro ECHR
+     806B   57
+Macro ERND:
+     806C   23
+End macro ERND
+     806D   57
+Macro ERND:
+     806E   23
+End macro ERND
+     806F   57
+Macro ERND:
+     8070   23
+End macro ERND
+     8071   57
+Macro ERND:
+     8072   23
+End macro ERND
+     8073   57
+Macro ERND:
+     8074   23
+End macro ERND
+     8075   57
+Macro ERND:
+     8076   23
+End macro ERND
+     8077   57
+Macro ERND:
+     8078   23
+End macro ERND
+     8079   57
+Macro ERND:
+     807A   23
+End macro ERND
+     807B   57
+Macro ERND:
+     807C   23
+End macro ERND
+     807D   57
+Macro ERND:
+     807E   23
+End macro ERND
+     807F   57
+Macro ERND:
+     8080   23
+End macro ERND
      8081   57
-Macro ETOK:
-     8082   C4
-End macro ETOK
-Macro ETOK:
-     8083   96
-End macro ETOK
-Macro ECHR:
-     8084   04
-End macro ECHR
-Macro ECHR:
-     8085   77
-End macro ECHR
-Macro ECHR:
-     8086   18
-End macro ECHR
-Macro ECHR:
-     8087   11
-End macro ECHR
-Macro ECHR:
-     8088   77
-End macro ECHR
 Macro ERND:
-     8089   3A
+     8082   23
 End macro ERND
+     8083   57
+Macro ECHR:
+     8084   15
+End macro ECHR
+Macro ECHR:
+     8085   18
+End macro ECHR
+Macro ECHR:
+     8086   0E
+End macro ECHR
+Macro ECHR:
+     8087   77
+End macro ECHR
+Macro ECHR:
+     8088   16
+End macro ECHR
+Macro ETWO:
+     8089   A5
+End macro ETWO
 Macro ECHR:
      808A   77
 End macro ECHR
+Macro ETOK:
+     808B   E4
+End macro ETOK
 Macro ECHR:
-     808B   16
+     808C   77
 End macro ECHR
 Macro ETWO:
-     808C   A5
+     808D   A7
 End macro ETWO
 Macro ECHR:
-     808D   77
+     808E   77
+End macro ECHR
+Macro ETOK:
+     808F   C4
+End macro ETOK
+Macro ECHR:
+     8090   00
+End macro ECHR
+Macro ECHR:
+     8091   05
 End macro ECHR
 Macro ETWO:
-     808E   BC
+     8092   88
 End macro ETWO
 Macro ECHR:
-     808F   77
+     8093   10
 End macro ECHR
 Macro ECHR:
-     8090   16
+     8094   77
+End macro ECHR
+Macro ECHR:
+     8095   10
 End macro ECHR
 Macro ETWO:
-     8091   B8
+     8096   B3
 End macro ETWO
 Macro ECHR:
-     8092   0D
+     8097   16
 End macro ECHR
+Macro ECHR:
+     8098   0F
+End macro ECHR
+Macro ECHR:
+     8099   0E
+End macro ECHR
+Macro ECHR:
+     809A   76
+End macro ECHR
+     809B   57
 Macro ETWO:
-     8093   A7
-End macro ETWO
-Macro ECHR:
-     8094   10
-End macro ECHR
-Macro ECHR:
-     8095   1B
-End macro ECHR
-Macro ECHR:
-     8096   0E
-End macro ECHR
-Macro ECHR:
-     8097   77
-End macro ECHR
-Macro ECHR:
-     8098   07
-End macro ECHR
-Macro ECHR:
-     8099   05
-End macro ECHR
-Macro ECHR:
-     809A   1E
-End macro ECHR
-Macro ECHR:
-     809B   1A
-End macro ECHR
-Macro ECHR:
-     809C   1E
-End macro ECHR
-Macro ETWO:
-     809D   AC
+     809C   B5
 End macro ETWO
 Macro ETWO:
-     809E   AD
+     809D   A3
 End macro ETWO
 Macro ECHR:
-     809F   77
+     809E   12
 End macro ECHR
+Macro ECHR:
+     809F   70
+End macro ECHR
+Macro ECHR:
+     80A0   04
+End macro ECHR
+Macro ETOK:
+     80A1   87
+End macro ETOK
 Macro ETWO:
-     80A0   B5
+     80A2   A5
 End macro ETWO
 Macro ETWO:
-     80A1   A2
+     80A3   B3
 End macro ETWO
 Macro ECHR:
-     80A2   77
+     80A4   77
 End macro ECHR
-Macro ETWO:
-     80A3   B5
-End macro ETWO
-Macro ECHR:
-     80A4   12
-End macro ECHR
-Macro ECHR:
-     80A5   0E
-End macro ECHR
+Macro ERND:
+     80A5   24
+End macro ERND
 Macro ECHR:
      80A6   77
 End macro ECHR
-Macro ETWO:
-     80A7   89
-End macro ETWO
-Macro ETWO:
-     80A8   8B
-End macro ETWO
 Macro ECHR:
-     80A9   1B
+     80A7   07
 End macro ECHR
 Macro ECHR:
-     80AA   77
+     80A8   1E
 End macro ECHR
 Macro ETWO:
-     80AB   B5
+     80A9   AF
+End macro ETWO
+Macro ECHR:
+     80AA   03
+End macro ECHR
+Macro ECHR:
+     80AB   12
+End macro ECHR
+Macro ECHR:
+     80AC   77
+End macro ECHR
+Macro ETWO:
+     80AD   8E
+End macro ETWO
+Macro ECHR:
+     80AE   03
+End macro ECHR
+Macro ECHR:
+     80AF   77
+End macro ECHR
+Macro ETWO:
+     80B0   B5
 End macro ETWO
 Macro ETWO:
-     80AC   A7
+     80B1   A3
 End macro ETWO
 Macro ECHR:
-     80AD   1C
+     80B2   12
 End macro ECHR
-Macro ECHR:
-     80AE   77
-End macro ECHR
-Macro EJMP:
-     80AF   44
-End macro EJMP
-Macro ECHR:
-     80B0   7D
-End macro ECHR
-Macro ECHR:
-     80B1   7D
-End macro ECHR
-Macro ECHR:
-     80B2   7D
-End macro ECHR
-Macro ECHR:
-     80B3   7D
-End macro ECHR
-Macro ECHR:
-     80B4   7D
-End macro ECHR
-Macro ECHR:
-     80B5   77
-End macro ECHR
-Macro ECHR:
-     80B6   7D
-End macro ECHR
-Macro ECHR:
-     80B7   7D
-End macro ECHR
-Macro ECHR:
-     80B8   7D
-End macro ECHR
-Macro ECHR:
-     80B9   7D
-End macro ECHR
-Macro ECHR:
-     80BA   7D
-End macro ECHR
-Macro ECHR:
-     80BB   7D
-End macro ECHR
+     80B3   57
 Macro ETOK:
-     80BC   9D
+     80B4   C4
+End macro ETOK
+Macro ETOK:
+     80B5   96
 End macro ETOK
 Macro ECHR:
-     80BD   77
+     80B6   04
 End macro ECHR
 Macro ECHR:
-     80BE   64
+     80B7   77
 End macro ECHR
 Macro ECHR:
-     80BF   13
+     80B8   18
 End macro ECHR
-     80C0   57
+Macro ECHR:
+     80B9   11
+End macro ECHR
+Macro ECHR:
+     80BA   77
+End macro ECHR
+Macro ERND:
+     80BB   3A
+End macro ERND
+Macro ECHR:
+     80BC   77
+End macro ECHR
+Macro ECHR:
+     80BD   16
+End macro ECHR
+Macro ETWO:
+     80BE   A5
+End macro ETWO
+Macro ECHR:
+     80BF   77
+End macro ECHR
+Macro ETWO:
+     80C0   BC
+End macro ETWO
+Macro ECHR:
+     80C1   77
+End macro ECHR
+Macro ECHR:
+     80C2   16
+End macro ECHR
+Macro ETWO:
+     80C3   B8
+End macro ETWO
+Macro ECHR:
+     80C4   0D
+End macro ECHR
+Macro ETWO:
+     80C5   A7
+End macro ETWO
+Macro ECHR:
+     80C6   10
+End macro ECHR
+Macro ECHR:
+     80C7   1B
+End macro ECHR
+Macro ECHR:
+     80C8   0E
+End macro ECHR
+Macro ECHR:
+     80C9   77
+End macro ECHR
+Macro ECHR:
+     80CA   07
+End macro ECHR
+Macro ECHR:
+     80CB   05
+End macro ECHR
+Macro ECHR:
+     80CC   1E
+End macro ECHR
+Macro ECHR:
+     80CD   1A
+End macro ECHR
+Macro ECHR:
+     80CE   1E
+End macro ECHR
+Macro ETWO:
+     80CF   AC
+End macro ETWO
+Macro ETWO:
+     80D0   AD
+End macro ETWO
+Macro ECHR:
+     80D1   77
+End macro ECHR
+Macro ETWO:
+     80D2   B5
+End macro ETWO
+Macro ETWO:
+     80D3   A2
+End macro ETWO
+Macro ECHR:
+     80D4   77
+End macro ECHR
+Macro ETWO:
+     80D5   B5
+End macro ETWO
+Macro ECHR:
+     80D6   12
+End macro ECHR
+Macro ECHR:
+     80D7   0E
+End macro ECHR
+Macro ECHR:
+     80D8   77
+End macro ECHR
+Macro ETWO:
+     80D9   89
+End macro ETWO
+Macro ETWO:
+     80DA   8B
+End macro ETWO
+Macro ECHR:
+     80DB   1B
+End macro ECHR
+Macro ECHR:
+     80DC   77
+End macro ECHR
+Macro ETWO:
+     80DD   B5
+End macro ETWO
+Macro ETWO:
+     80DE   A7
+End macro ETWO
+Macro ECHR:
+     80DF   1C
+End macro ECHR
+Macro ECHR:
+     80E0   77
+End macro ECHR
+Macro EJMP:
+     80E1   44
+End macro EJMP
+Macro ECHR:
+     80E2   7D
+End macro ECHR
+Macro ECHR:
+     80E3   7D
+End macro ECHR
+Macro ECHR:
+     80E4   7D
+End macro ECHR
+Macro ECHR:
+     80E5   7D
+End macro ECHR
+Macro ECHR:
+     80E6   7D
+End macro ECHR
+Macro ECHR:
+     80E7   77
+End macro ECHR
+Macro ECHR:
+     80E8   7D
+End macro ECHR
+Macro ECHR:
+     80E9   7D
+End macro ECHR
+Macro ECHR:
+     80EA   7D
+End macro ECHR
+Macro ECHR:
+     80EB   7D
+End macro ECHR
+Macro ECHR:
+     80EC   7D
+End macro ECHR
+Macro ECHR:
+     80ED   7D
+End macro ECHR
+Macro ETOK:
+     80EE   9D
+End macro ETOK
+Macro ECHR:
+     80EF   77
+End macro ECHR
+Macro ECHR:
+     80F0   64
+End macro ECHR
+Macro ECHR:
+     80F1   13
+End macro ECHR
+     80F2   57
+.MTIN
+     80F3   10
+     80F4   15
+     80F5   1A
+     80F6   1F
+     80F7   9B
+     80F8   A0
+     80F9   2E
+     80FA   A5
+     80FB   24
+     80FC   29
+     80FD   3D
+     80FE   33
+     80FF   38
+     8100   AA
+     8101   42
+     8102   47
+     8103   4C
+     8104   51
+     8105   56
+     8106   8C
+     8107   60
+     8108   65
+     8109   87
+     810A   82
+     810B   5B
+     810C   6A
+     810D   B4
+     810E   B9
+     810F   BE
+     8110   E1
+     8111   E6
+     8112   EB
+     8113   F0
+     8114   F5
+     8115   FA
+     8116   73
+     8117   78
+     8118   7D
 .COLD
-     80C1   A9 67      LDA #&67
-     80C3   85 21      STA &21
-     80C5   A9 81      LDA #&81
-     80C7   85 22      STA &22
-     80C9   A9 00      LDA #&00
-     80CB   85 05      STA &05
-     80CD   A9 04      LDA #&04
-     80CF   85 06      STA &06
-     80D1   A2 04      LDX #&04
-     80D3   20 E8 80   JSR &80E8
-     80D6   A9 67      LDA #&67
-     80D8   85 21      STA &21
-     80DA   A9 85      LDA #&85
-     80DC   85 22      STA &22
-     80DE   A9 00      LDA #&00
-     80E0   85 05      STA &05
-     80E2   A9 D0      LDA #&D0
-     80E4   85 06      STA &06
-     80E6   A2 28      LDX #&28
+     8119   A9 BF      LDA #&BF
+     811B   85 21      STA &21
+     811D   A9 81      LDA #&81
+     811F   85 22      STA &22
+     8121   A9 00      LDA #&00
+     8123   85 05      STA &05
+     8125   A9 04      LDA #&04
+     8127   85 06      STA &06
+     8129   A2 04      LDX #&04
+     812B   20 40 81   JSR &8140
+     812E   A9 BF      LDA #&BF
+     8130   85 21      STA &21
+     8132   A9 85      LDA #&85
+     8134   85 22      STA &22
+     8136   A9 00      LDA #&00
+     8138   85 05      STA &05
+     813A   A9 D0      LDA #&D0
+     813C   85 06      STA &06
+     813E   A2 28      LDX #&28
 .mvblock
-     80E8   A0 00      LDY #&00
+     8140   A0 00      LDY #&00
 .mvbllop
-     80EA   B1 21      LDA (&21),Y
-     80EC   91 05      STA (&05),Y
-     80EE   C8         INY
-     80EF   D0 F9      BNE &80EA
-     80F1   E6 22      INC &22
-     80F3   E6 06      INC &06
-     80F5   CA         DEX
-     80F6   D0 F2      BNE &80EA
-     80F8   60         RTS
+     8142   B1 21      LDA (&21),Y
+     8144   91 05      STA (&05),Y
+     8146   C8         INY
+     8147   D0 F9      BNE &8142
+     8149   E6 22      INC &22
+     814B   E6 06      INC &06
+     814D   CA         DEX
+     814E   D0 F2      BNE &8142
+     8150   60         RTS
 .RemoveViewName
-     80F9   AD E4 0A   LDA &0AE4
-     80FC   F0 0D      BEQ &810B
-     80FE   A9 80      LDA #&80
-     8100   85 71      STA &71
-     8102   8D 0A 23   STA &230A
-     8105   20 CB 6C   JSR &6CCB
-     8108   9C E4 0A   STZ &0AE4
+     8151   AD E4 0A   LDA &0AE4
+     8154   F0 0D      BEQ &8163
+     8156   A9 80      LDA #&80
+     8158   85 71      STA &71
+     815A   8D 0A 23   STA &230A
+     815D   20 CB 6C   JSR &6CCB
+     8160   9C E4 0A   STZ &0AE4
 .view1
-     810B   60         RTS
+     8163   60         RTS
 .speedBuff
-     810C   03
-     810D   02
-     810E   00
+     8164   03
+     8165   02
+     8166   00
 .RestartSync
-     810F   9C 0E 81   STZ &810E
-     8112   A2 0C      LDX #&0C
-     8114   A0 81      LDY #&81
-     8116   A9 FF      LDA #&FF
-     8118   4C F1 FF   JMP &FFF1
+     8167   9C 66 81   STZ &8166
+     816A   A2 64      LDX #&64
+     816C   A0 81      LDY #&81
+     816E   A9 FF      LDA #&FF
+     8170   4C F1 FF   JMP &FFF1
 .WaitForSync
-     811B   A9 01      LDA #&01
-     811D   8D 0E 81   STA &810E
-     8120   A2 0C      LDX #&0C
-     8122   A0 81      LDY #&81
-     8124   A9 FF      LDA #&FF
-     8126   4C F1 FF   JMP &FFF1
+     8173   A9 01      LDA #&01
+     8175   8D 66 81   STA &8166
+     8178   A2 64      LDX #&64
+     817A   A0 81      LDY #&81
+     817C   A9 FF      LDA #&FF
+     817E   4C F1 FF   JMP &FFF1
 .ResetAnaglyph
-     8129   A9 01      LDA #&01
-     812B   8D EC 0A   STA &0AEC
-     812E   A9 08      LDA #&08
-     8130   8D EE 0A   STA &0AEE
-     8133   A9 00      LDA #&00
-     8135   9C ED 0A   STZ &0AED
-     8138   A9 01      LDA #&01
-     813A   8D F0 0A   STA &0AF0
+     8181   A9 01      LDA #&01
+     8183   8D EC 0A   STA &0AEC
+     8186   A9 08      LDA #&08
+     8188   8D EE 0A   STA &0AEE
+     818B   A9 00      LDA #&00
+     818D   9C ED 0A   STZ &0AED
+     8190   A9 01      LDA #&01
+     8192   8D F0 0A   STA &0AF0
 .SetMediumParallax
-     813D   A9 01      LDA #&01
-     813F   8D EF 0A   STA &0AEF
-     8142   A9 01      LDA #&01
-     8144   8D F1 0A   STA &0AF1
-     8147   A9 02      LDA #&02
-     8149   8D F2 0A   STA &0AF2
-     814C   A9 FC      LDA #&FC
-     814E   8D F3 0A   STA &0AF3
-     8151   60         RTS
+     8195   A9 01      LDA #&01
+     8197   8D EF 0A   STA &0AEF
+     819A   A9 01      LDA #&01
+     819C   8D F1 0A   STA &0AF1
+     819F   A9 02      LDA #&02
+     81A1   8D F2 0A   STA &0AF2
+     81A4   A9 FC      LDA #&FC
+     81A6   8D F3 0A   STA &0AF3
+     81A9   60         RTS
 .SetHighParallax
-     8152   A9 00      LDA #&00
-     8154   8D EF 0A   STA &0AEF
-     8157   A9 02      LDA #&02
-     8159   8D F1 0A   STA &0AF1
-     815C   A9 04      LDA #&04
-     815E   8D F2 0A   STA &0AF2
-     8161   A9 F8      LDA #&F8
-     8163   8D F3 0A   STA &0AF3
-     8166   60         RTS
+     81AA   A9 00      LDA #&00
+     81AC   8D EF 0A   STA &0AEF
+     81AF   A9 02      LDA #&02
+     81B1   8D F1 0A   STA &0AF1
+     81B4   A9 04      LDA #&04
+     81B6   8D F2 0A   STA &0AF2
+     81B9   A9 F8      LDA #&F8
+     81BB   8D F3 0A   STA &0AF3
+     81BE   60         RTS
 .F%
-     8167
+     81BF
 ELITE J
 Assembled at &734F 
-Ends at &8167 
-Code size is &E18 
+Ends at &81BF 
+Code size is &E70 
 Execute at &1000 
 Reload at &734F 
-S.ELTJ &734F  &8167  &1000  &734F 
+S.ELTJ &734F  &81BF  &1000  &734F 
 Saving file '3-assembled-output/ELTJ.bin'
 .XX21
      D000   66 D0
@@ -40286,7 +40286,7 @@ End macro FACE
      F52D   20 95 6C   JSR &6C95
      F530   A2 0C      LDX #&0C
 .file1
-     F532   BD 63 0F   LDA &0F63,X
+     F532   BD 0B 0F   LDA &0F0B,X
      F535   95 45      STA &45,X
      F537   CA         DEX
      F538   10 F8      BPL &F532
@@ -40395,7 +40395,7 @@ End macro FACE
 .show8
      F61C   C9 72      CMP #&72
      F61E   D0 06      BNE &F626
-     F620   20 29 81   JSR &8129
+     F620   20 81 81   JSR &8181
      F623   4C 9C F5   JMP &F59C
 .show9
      F626   C9 70      CMP #&70
@@ -40422,10 +40422,10 @@ End macro FACE
 .show12
      F652   C9 02      CMP #&02
      F654   F0 06      BEQ &F65C
-     F656   20 3D 81   JSR &813D
+     F656   20 95 81   JSR &8195
      F659   4C 9C F5   JMP &F59C
 .show13
-     F65C   20 52 81   JSR &8152
+     F65C   20 AA 81   JSR &81AA
      F65F   4C 9C F5   JMP &F59C
 .show14
      F662   C9 40      CMP #&40
@@ -40641,13 +40641,13 @@ Execute at &D000
 Reload at &D000 
 S.SHIPS &D000  &F7F0  &D000  &D000 
 Saving file '3-assembled-output/SHIPS.bin'
-ELITE game code &99  bytes free
-F% = &8167 
+ELITE game code &41  bytes free
+F% = &81BF 
 Ends at &F7F0 
 Addresses for the scramble routines in elite-checksum.py
 S% = &1065 
 G% = &107B 
-F% = &8167 
+F% = &81BF 
      1000   2E
      1001   20
      1002   3C
@@ -40680,15 +40680,15 @@ eliteh = &6860
 elitei = &6DAD 
 .elitej
 elitej = &734F 
-F% = &8167 
-P% = &8167 
+F% = &81BF 
+P% = &81BF 
 .words
-words = &8167 
+words = &81BF 
 .ships
-ships = &8567 
+ships = &85BF 
 .end
-P% = &AD57 
-S.P.CODE &1000 &AD57  &1000 &1000 
+P% = &ADAF 
+S.P.CODE &1000 &ADAF  &1000 &1000 
 Saving file '3-assembled-output/P.CODE.unprot.bin'
 .ZP
      0080
