@@ -3844,7 +3844,7 @@ ENDIF
 \
 \       Name: K%
 \       Type: Workspace
-\    Address: &8200 to &85FF (&8500 to &88FF in the Executive version)
+\    Address: &8200 to &84E3 (&8500 to &87E3 in the Executive version)
 \   Category: Workspaces
 \    Summary: Ship data blocks
 \  Deep dive: Ship data blocks
@@ -19807,18 +19807,18 @@ ENDIF
 \
 \ Arguments:
 \
-\   A                   The colour number to define
+\   A                   The offset of the palette to set
 \
 \ ******************************************************************************
 
 .DOVDU19
 
- PHA                    \ Store A, the colour number, on the stack
+ PHA                    \ Store A, the palette offset, on the stack
 
  LDA #SETVDU19          \ Set A to #SETVDU19, ready to write to the I/O
                         \ processor
 
- BNE label              \ Jump to label to write #SETVDU19 <colour> to the I/O
+ BNE label              \ Jump to label to write #SETVDU19 <offset> to the I/O
                         \ processor, returning from the subroutine using a tail
                         \ call (this BNE is effectively a JMP as A is never
                         \ zero)
@@ -28664,8 +28664,9 @@ ENDIF
  LDX #0                 \ Set CNT = 0
  STX CNT
 
- DEX                    \ Set FLAG = &FF to reset the ball line heap in the call
- STX FLAG               \ to the BLINE routine below
+ DEX                    \ Set FLAG = &FF to start a new line in the ball line
+ STX FLAG               \ heap when calling BLIN below, so the crater or
+                        \ meridian is separate from any previous ellipses
 
 .PLL4
 
@@ -43029,10 +43030,10 @@ ENDIF
 .LL146
 
                         \ If we get here then we have clipped our line to the
-                        \ (if we had to clip it at all), so we move the low
-                        \ bytes from (x1, y1) and (x2, y2) into (X1, Y1) and
-                        \ (X2, Y2), remembering that they share locations with
-                        \ XX15:
+                        \ screen edge (if we had to clip it at all), so we move
+                        \ the low bytes from (x1, y1) and (x2, y2) into (X1, Y1)
+                        \ and (X2, Y2), remembering that they share locations
+                        \ with XX15:
                         \
                         \   X1 = XX15
                         \   Y1 = XX15+1

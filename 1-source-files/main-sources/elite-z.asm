@@ -2925,6 +2925,9 @@ ENDIF
 \
 \   COL                 The line colour
 \
+\   Y                   The offset of the coordinates within the line buffer of
+\                       the line to draw
+\
 \ ******************************************************************************
 
 .HLOIN2
@@ -2932,6 +2935,7 @@ ENDIF
  LDX X1                 \ Set X = X1
 
  STY Y2                 \ Set Y2 = Y, the offset within the line buffer of the
+                        \ line we are currently drawing
 
  INY                    \ Set Q = Y + 1, so the call to HLOIN3 only draws one
  STY Q                  \ line
@@ -6439,7 +6443,7 @@ ENDIF
  INY                    \ Increment Y to 3
 
  LDA (OSSC),Y           \ Set X to byte #3 from the Y-th pixel block in OSSC,
- TAX                    \ contains the pixel's x-coordinate
+ TAX                    \ which contains the pixel's x-coordinate
 
  INY                    \ Increment Y to 4
 
@@ -6634,7 +6638,7 @@ ENDIF
  AND #%00000011         \ which will now be in the range 0-3, and will contain
  TAX                    \ the two pixels to show in the character row
 
- LDA P                  \ Fetch the pixel's distance into P
+ LDA P                  \ Fetch the pixel's distance from P
 
  CMP #80                \ If the pixel's ZZ distance is >= 80, then the dot is
  BCS PX6                \ a medium distance away, so jump to PX6 to draw a
