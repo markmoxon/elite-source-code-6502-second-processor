@@ -74,20 +74,6 @@
  Z_PLANE = &800         \ The default z-coordinate of the parallax projection
                         \ plane (8 0)
 
- PARALLAX_FACTOR = 1    \ The default scale factor we use to calculate parallax
-                        \ from the z-coordinates of a ship, as follows:
-                        \
-                        \   z_hi / 2^PARALLAX_FACTOR
-                        \
-                        \ So we can increase this value to reduce the amount of
-                        \ parallax (i.e. increase the depth of field)
-
- MAX_PARALLAX_P = 1     \ The default maximum number of pixels of positive
-                        \ parallax that we apply to distant ships
-
- MAX_PARALLAX_N = 2     \ The default maximum number of pixels of negative
-                        \ parallax that we apply to nearby ships
-
                         \ The following values are fixed
 
  Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
@@ -52345,11 +52331,11 @@ ENDIF
  LDA #LO(Z_PLANE)
  STZ zPlane
 
- LDA #1                 \ Set the default level of parallax (medium)
+ LDA #2                 \ Set the default level of parallax (medium)
  STA parallaxLevel
 
                         \ Fall through into SetMediumParallax to set a medium
-                        \ level of parallax
+                        \ level of parallax as the default
 
                         \ --- End of added code ------------------------------->
 
@@ -52366,18 +52352,46 @@ ENDIF
 
 .SetMediumParallax
 
- LDA #PARALLAX_FACTOR   \ Set the parallax factor to PARALLAX_FACTOR, so we
- STA parallaxFactor     \ divide z-coordinates by 2^PARALLAX_FACTOR to get the
-                        \ parallax
+ LDA #1                 \ Set the parallax factor to 1, so we divide
+ STA parallaxFactor     \ z-coordinates by 2^1 = 2 to get the parallax
 
- LDA #MAX_PARALLAX_P    \ Set the maximum amount of positive parallax to
- STA maxParallaxP       \ MAX_PARALLAX_P
+ LDA #2                 \ Set the maximum amount of positive parallax for each
+ STA maxParallaxP       \ individual eye to 2
 
- LDA #MAX_PARALLAX_P*2  \ Set double the maximum amount of positive parallax to
- STA maxParallaxP2      \ MAX_PARALLAX_P * 2
+ LDA #4                 \ Set the maximum amount of positive parallax, split
+ STA maxParallaxP2      \ between each eye, to 4
 
- LDA #256-(MAX_PARALLAX_N*2)    \ Set double the maximum amount of negative
- STA maxParallaxN2              \ parallax to -MAX_PARALLAX_N * 2
+ LDA #256-6             \ Set the maximum amount negative parallax, split
+ STA maxParallaxN2      \ between each eye, to -6
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetLowParallax
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Set the parallax level to low
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.SetLowParallax
+
+ LDA #2                 \ Set the parallax factor to 1, so we divide
+ STA parallaxFactor     \ z-coordinates by 2^1 = 2 to get the parallax
+
+ LDA #1                 \ Set the maximum amount of positive parallax for each
+ STA maxParallaxP       \ individual eye to 1
+
+ LDA #2                 \ Set the maximum amount of positive parallax, split
+ STA maxParallaxP2      \ between each eye, to 2
+
+ LDA #256-4             \ Set the maximum amount negative parallax, split
+ STA maxParallaxN2      \ between each eye, to -4
 
  RTS                    \ Return from the subroutine
 
@@ -52396,18 +52410,17 @@ ENDIF
 
 .SetHighParallax
 
- LDA #PARALLAX_FACTOR-1 \ Set the parallax factor to PARALLAX_FACTOR-1, so we
- STA parallaxFactor     \ divide z-coordinates by 2^PARALLAX_FACTOR-1 to get the
-                        \ parallax
+ LDA #0                 \ Set the parallax factor to 0, so we divide
+ STA parallaxFactor     \ z-coordinates by 2^0 = 1 to get the parallax
 
- LDA #MAX_PARALLAX_P*2  \ Set the maximum amount of positive parallax to
- STA maxParallaxP       \ MAX_PARALLAX_P * 2
+ LDA #3                 \ Set the maximum amount of positive parallax for each
+ STA maxParallaxP       \ individual eye to 3
 
- LDA #MAX_PARALLAX_P*4  \ Set double the maximum amount of positive parallax to
- STA maxParallaxP2      \ MAX_PARALLAX_P * 2
+ LDA #5                 \ Set the maximum amount of positive parallax, split
+ STA maxParallaxP2      \ between each eye, to 5
 
- LDA #256-(MAX_PARALLAX_N*4)    \ Set double the maximum amount of negative
- STA maxParallaxN2              \ parallax to -MAX_PARALLAX_N * 4
+ LDA #256-7             \ Set the maximum amount negative parallax, split
+ STA maxParallaxN2      \ between each eye, to -7
 
  RTS                    \ Return from the subroutine
 
@@ -57914,40 +57927,51 @@ ENDMACRO
 
 .show11
 
- CMP #&64               \ If we didn't press "D", jump to show14
- BNE show14
+ CMP #&64               \ If we didn't press "D", jump to show15
+ BNE show15
 
  INC parallaxLevel      \ Increment the parallax level
 
  LDA parallaxLevel      \ Wrap the parallax level around so it is in the range
- CMP #3                 \ 0 to 2
- BNE show12
+ CMP #4                 \ 0 to 3
+ BCC show12
  STZ parallaxLevel
 
 .show12
 
- CMP #2                 \ If the new level is 2, jump to show13
- BEQ show13
+ LDA parallaxLevel      \ If the new level is 3, jump to show14 to set a high
+ CMP #3                 \ level of parallax
+ BEQ show14
 
- JSR SetMediumParallax  \ The new level is 0 or 1, so set medium parallax
+ CMP #2                 \ If the new level is 2, jump to show13 to set a medium
+ BEQ show13             \ level of parallax
+
+ JSR SetLowParallax     \ The new level is 0 or 1, so set a low level of
+                        \ parallax
                         \
-                        \ We do this for level 0 because even though level 0
-                        \ disables the addition of parallax, we still need to
-                        \ set the default levels as they are used when drawing
-                        \ ships as dots)
+                        \ We do this for both level 1 and 0 because even though
+                        \ level 0 disables the addition of parallax, we still
+                        \ need to set the parallax levels as they are used when
+                        \ drawing ships as dots
 
  JMP show2              \ Jump to show2 to redraw the scene
 
 .show13
 
- JSR SetHighParallax    \ The new level is 2, so set high parallax
+ JSR SetMediumParallax  \ The new level is 2, so set medium parallax
 
  JMP show2              \ Jump to show2 to redraw the scene
 
 .show14
 
- CMP #&40               \ If we didn't press "@", jump to show15
- BNE show15
+ JSR SetHighParallax    \ The new level is 2, so set high parallax
+
+ JMP show2              \ Jump to show2 to redraw the scene
+
+.show15
+
+ CMP #&40               \ If we didn't press "@", jump to show16
+ BNE show16
 
  LDA #1                 \ Clear the top part of the screen, draw a white border,
  JSR TT66               \ and set the current view type in QQ11 to 1
@@ -57962,14 +57986,14 @@ ENDMACRO
 
  JMP show1              \ Jump to show1 to clear the screen and draw the scene
 
-.show15
+.show16
 
- CMP #&1B               \ If we didn't press ESCAPE, jump to show16
- BEQ show16
+ CMP #&1B               \ If we didn't press ESCAPE, jump to show17
+ BEQ show17
 
  JMP show2              \ Jump to show2 to redraw the scene
 
-.show16
+.show17
 
  LDA #'E'               \ Change the directory back to E
  STA S1%+3
