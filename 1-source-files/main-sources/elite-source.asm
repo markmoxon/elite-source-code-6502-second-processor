@@ -35844,9 +35844,34 @@ ENDIF
  LSR A                  \ Set EV, the extra vessels spawning counter, to 0
  STA EV                 \ (the LSR produces a 0 as A was previously 1)
 
- LDX VIEW               \ Set X to the current view (front, rear, left or right)
- JMP LOOK1              \ and jump to LOOK1 to initialise that view, returning
-                        \ from the subroutine using a tail call
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\LDX VIEW               \ Set X to the current view (front, rear, left or right)
+\JMP LOOK1              \ and jump to LOOK1 to initialise that view, returning
+\                       \ from the subroutine using a tail call
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #0                 \ Send a #SETVDU19 0 command to the I/O processor to
+ JSR DOVDU19            \ switch to the mode 1 palette for the space view,
+                        \ which is yellow (colour 1), red (colour 2) and cyan
+                        \ (colour 3)
+
+ LDA #1                 \ Set A = 1, so we do not show the view name in the
+                        \ following call to TT66 (as constantly showing the same
+                        \ view name while jumping is distracting)
+
+ JSR TT66               \ Clear the top part of the screen, draw a white border,
+                        \ and set the current view type in QQ11 to 1
+
+ STZ QQ11               \ Set the current view type in QQ11 to the space view
+
+ JSR SIGHT              \ Draw the laser crosshairs
+
+ JMP NWSTARS            \ Set up a new stardust field and return from the
+                        \ subroutine using a tail call
+
+                        \ --- End of replacement ------------------------------>
 
 .WA1
 
