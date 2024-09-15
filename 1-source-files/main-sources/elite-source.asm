@@ -64,15 +64,15 @@
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
+                        \ The following values can be changed in the in-game
+                        \ configuration tool
+
  HALF_EYE_SPACING = 1   \ The default spacing between the eyes in x-coordinates
                         \ (i.e. the the distance from the nose to each eye, so
                         \ that's half the eye spacing)
 
  Z_PLANE = &800         \ The default z-coordinate of the parallax projection
                         \ plane (8 0)
-
- Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
-                        \ plane in the universe screen with each key press (1 0)
 
  PARALLAX_FACTOR = 1    \ The default scale factor we use to calculate parallax
                         \ from the z-coordinates of a ship, as follows:
@@ -82,18 +82,22 @@
                         \ So we can increase this value to reduce the amount of
                         \ parallax (i.e. increase the depth of field)
 
- MAX_PARALLAX_P = 1     \ The maximum number of pixels of positive parallax that
-                        \ we apply to distant ships
+ MAX_PARALLAX_P = 1     \ The default maximum number of pixels of positive
+                        \ parallax that we apply to distant ships
 
- MAX_PARALLAX_N = 2     \ The maximum number of pixels of negative parallax that
-                        \ we apply to nearby ships
+ MAX_PARALLAX_N = 2     \ The default maximum number of pixels of negative
+                        \ parallax that we apply to nearby ships
+
+                        \ The following values are fixed
+
+ Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
+                        \ plane in the universe screen with each key press (1 0)
 
  PLANET_PARALLAX_P = 1  \ The number of pixels of positive parallax that we
                         \ apply to the planet
 
  LASER_PARALLAX_N = 2   \ The number of pixels of negative parallax that we
                         \ apply to our laser lines
-
 
                         \ --- End of added code ------------------------------->
 
@@ -3620,6 +3624,41 @@ ENDIF
 .zCoord
 
  SKIP 2                 \ The 3D z-coordinate of the vertex to be processed
+
+.halfEyeSpacing
+
+ SKIP 1                 \ Half of the distance between the eyes
+
+.zPlane
+
+ SKIP 2                 \ The z-coordinate of the parallax projection plane
+
+.parallaxFactor
+
+ SKIP 1                 \ The parallax factor for converting z-coordinates to
+                        \ parallax
+
+.parallaxLevel
+
+ EQUB 1                 \ The level of parallax to apply:
+                        \
+                        \   * 0 = disable parallax
+                        \
+                        \   * 1 = apply medium parallax
+                        \
+                        \   * 2 = apply high parallax
+
+.maxParallaxP
+
+ SKIP 1                 \ The maximum amount of positive parallax to apply
+
+.maxParallaxP2
+
+ SKIP 1                 \ The maximum amount of positive parallax to apply x 2
+
+.maxParallaxN2
+
+ SKIP 1                 \ The maximum amount of negative parallax to apply x 2
 
                         \ --- End of added code ------------------------------->
 
@@ -33712,6 +33751,13 @@ ENDIF
 \JSR BRKBK              \ This instruction is commented out in the original
                         \ source
 
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ JSR ResetAnaglyph      \ Initialise the configuration variables for the anaglyph
+                        \ 3D effect
+
+                        \ --- End of added code ------------------------------->
+
  LDX #(CATF-COMC)       \ We start by zeroing all the configuration variables
                         \ between COMC and CATF, to set them to their default
                         \ values, so set a counter in X for CATF - COMC bytes
@@ -38943,21 +38989,21 @@ ENDIF
                         \ As the ship is very distant, we will apply maximum
                         \ positive parallax, so the left eye moves left and the
                         \ right eye moves right, with both of them moving by
-                        \ MAX_PARALLAX_P pixels, like this:
+                        \ maxParallaxP pixels, like this:
                         \
-                        \ Set rHeap to a line from X2 = K3 + MAX_PARALLAX_P to
-                        \ X1 = K3 + MAX_PARALLAX_P + 3
+                        \ Set rHeap to a line from X2 = K3 + maxParallaxP to
+                        \ X1 = K3 + maxParallaxP + 3
                         \
-                        \ Set XX19 to a line from X2 = K3 - MAX_PARALLAX_P to
-                        \ X1 = K3 - MAX_PARALLAX_P + 3
+                        \ Set XX19 to a line from X2 = K3 - maxParallaxP to
+                        \ X1 = K3 - maxParallaxP + 3
 
                         \ We start with the left eye
 
  LDA K3                 \ Set A = screen x-coordinate of the right end of the
- CLC                    \ ship dot for the left eye = K3 - MAX_PARALLAX_P + 3
+ CLC                    \ ship dot for the left eye = K3 - maxParallaxP + 3
  ADC #3
  SEC
- SBC #MAX_PARALLAX_P
+ SBC maxParallaxP
 
  BCS shpt1              \ If the left-eye dot fits on-screen, jump to shpt1 to
                         \ draw the dot
@@ -38991,7 +39037,7 @@ ENDIF
  STA Y2
 
  LDA K3                 \ Set A = screen x-coordinate of the left end of the
- ADC #MAX_PARALLAX_P    \ ship dot for the right eye = K3 + MAX_PARALLAX_P
+ ADC maxParallaxP       \ ship dot for the right eye = K3 + maxParallaxP
                         \
                         \ The addition works as we only call the Shpt routine
                         \ with the C flag clear and we know the first addition
@@ -52505,6 +52551,96 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: ResetAnaglyph
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Initialise the configuration variables used by the anaglyph 3D
+\             code
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ResetAnaglyph
+
+ LDA #HALF_EYE_SPACING  \ Set the half eye spacing to the default value
+ STA halfEyeSpacing
+
+ LDA #HI(Z_PLANE)       \ Set the projection plane to the default value
+ STA zPlane+1
+ LDA #LO(Z_PLANE)
+ STZ zPlane
+
+ LDA #1                 \ Set the default level of parallax (medium)
+ STA parallaxLevel
+
+                        \ Fall through into SetMediumParallax to set a medium
+                        \ level of parallax
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetMediumParallax
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Set the parallax level to medium
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.SetMediumParallax
+
+ LDA #PARALLAX_FACTOR   \ Set the parallax factor to PARALLAX_FACTOR, so we
+ STA parallaxFactor     \ divide z-coordinates by 2^PARALLAX_FACTOR to get the
+                        \ parallax
+
+ LDA #MAX_PARALLAX_P    \ Set the maximum amount of positive parallax to
+ STA maxParallaxP       \ MAX_PARALLAX_P
+
+ LDA #MAX_PARALLAX_P*2  \ Set double the maximum amount of positive parallax to
+ STA maxParallaxP2      \ MAX_PARALLAX_P * 2
+
+ LDA #256-(MAX_PARALLAX_N*2)    \ Set double the maximum amount of negative
+ STA maxParallaxN2              \ parallax to -MAX_PARALLAX_N * 2
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetHighParallax
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Set the parallax level to high
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.SetHighParallax
+
+ LDA #PARALLAX_FACTOR-1 \ Set the parallax factor to PARALLAX_FACTOR-1, so we
+ STA parallaxFactor     \ divide z-coordinates by 2^PARALLAX_FACTOR-1 to get the
+                        \ parallax
+
+ LDA #MAX_PARALLAX_P*2  \ Set the maximum amount of positive parallax to
+ STA maxParallaxP       \ MAX_PARALLAX_P * 2
+
+ LDA #MAX_PARALLAX_P*4  \ Set double the maximum amount of positive parallax to
+ STA maxParallaxP2      \ MAX_PARALLAX_P * 2
+
+ LDA #256-(MAX_PARALLAX_N*4)    \ Set double the maximum amount of negative
+ STA maxParallaxN2              \ parallax to -MAX_PARALLAX_N * 4
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
 \       Name: F%
 \       Type: Variable
 \   Category: Utility routines
@@ -56631,74 +56767,6 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\       Name: parallaxFactor
-\       Type: Variable
-\   Category: Drawing lines
-\    Summary: The parallax factor for converting z-coordinates to parallax
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.parallaxFactor
-
- EQUB PARALLAX_FACTOR
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: halfEyeSpacing
-\       Type: Variable
-\   Category: Drawing lines
-\    Summary: Half of the distance between the eyes
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.halfEyeSpacing
-
- EQUB HALF_EYE_SPACING
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: zPlane
-\       Type: Variable
-\   Category: Drawing lines
-\    Summary: The default z-coordinate of the parallax projection plane
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.zPlane
-
- EQUW Z_PLANE
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: doParallax
-\       Type: Variable
-\   Category: Drawing lines
-\    Summary: A flag that controls whether we apply parallax
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.doParallax
-
- EQUB 1                 \ Apply parallax by default (1 = on, 0 = off)
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
 \       Name: ApplyParallax
 \       Type: Subroutine
 \   Category: Drawing lines
@@ -56725,7 +56793,7 @@ ENDMACRO
 \
 \ The parallax is capped to this range:
 \
-\   -MAX_PARALLAX_N * 2 and MAX_PARALLAX_P * 2
+\   -maxParallaxN * 2 and maxParallaxP * 2
 \
 \ The maxima are doubled because they contain the maximum distance moved by each
 \ eye, and we are calculating the total parallax that gets applied to both eyes.
@@ -56787,9 +56855,14 @@ ENDMACRO
 
 .ApplyParallax
 
- LDA doParallax         \ If parallax is disabled, jump to para6 to return from
- BNE P%+5               \ the subroutine
- JMP para6
+ LDA parallaxLevel      \ If parallax is enabled, jump to para1 to calculate it
+ BNE para1
+
+ STA P+2                \ Set the amount of parallax to zero
+
+ RTS                    \ Return from the subroutine
+
+.para1
 
  PHX                    \ Store the line heap index on the stack so we can use
                         \ it below and restore it at the end of the routine
@@ -56816,10 +56889,10 @@ ENDMACRO
                         \ pixels, we can ignore the low byte and just scale the
                         \ high byte in P+2
 
- BPL para1              \ If P+2 is negative, set X = %11111111 to use as a
+ BPL para2              \ If P+2 is negative, set X = %11111111 to use as a
  LDX #%11111111         \ source of set bit 7s when scaling negative parallax
 
-.para1
+.para2
 
  TXA                    \ Set A to the appropriate type of bit 7s to use when
                         \ scaling the parallax in P+2
@@ -56831,42 +56904,42 @@ ENDMACRO
 
                         \ We now divide the parallax in P+2 by 2^parallaxFactor
 
- LDX parallaxFactor     \ If parallaxFactor is zero then jump to para3 to skip
- BEQ para3              \ the scaling
+ LDX parallaxFactor     \ If parallaxFactor is zero then jump to para4 to skip
+ BEQ para4              \ the scaling
 
- CPX #1                 \ If parallaxFactor = 1 jump to para2 to divide P+2 by 2
- BEQ para2
+ CPX #1                 \ If parallaxFactor = 1 jump to para3 to divide P+2 by 2
+ BEQ para3
 
                         \ Otherwise parallaxFactor = 2 so divide P+2 by 4
 
  LSR A                  \ Set (A P+2) = (A P+2) / 2
  ROR P+2
 
-.para2
+.para3
 
  LSR A                  \ Set (A P+2) = (A P+2) / 2
  ROR P+2
 
-.para3
-
-                        \ We now cap the high byte to a value between
-                        \ -MAX_PARALLAX_N * 2 and MAX_PARALLAX_P * 2
-
- LDA P+2                \ If P+2 is negative, jump to para4 to cap the value
- BMI para4              \ to a minimum value of -MAX_PARALLAX_N
-
- CMP #MAX_PARALLAX_P*2  \ Cap P+2 to a maximum value of MAX_PARALLAX_P * 2
- BCC para5
- LDA #MAX_PARALLAX_P*2
- BNE para5
-
 .para4
 
- CMP #256-(MAX_PARALLAX_N*2)    \ Cap P+2 to a minimum value of
- BCS para5                      \ -MAX_PARALLAX_N * 2
- LDA #256-(MAX_PARALLAX_N*2)
+                        \ We now cap the high byte to a value between
+                        \ -maxParallaxN * 2 and maxParallaxP2 * 2
+
+ LDA P+2                \ If P+2 is negative, jump to para5 to cap the value
+ BMI para5              \ to a minimum value of -maxParallaxN
+
+ CMP maxParallaxP2      \ Cap P+2 to a maximum value of maxParallaxP2 * 2
+ BCC para6
+ LDA maxParallaxP2
+ BNE para6
 
 .para5
+
+ CMP maxParallaxN2      \ Cap P+2 to a minimum value of -maxParallaxN * 2
+ BCS para6
+ LDA maxParallaxN2
+
+.para6
 
  STA P+2                \ Store the scaled value in P+2, so P(1 2) contains the
                         \ the signed number of pixels of parallax to apply
@@ -56874,7 +56947,7 @@ ENDMACRO
  PLY                    \ Set Y to the heap index from the stack
 
  CPY #&FF               \ If the index is &FF, skip updating the XX3 and XX3r
- BEQ para6              \ heaps, as we are only interested in the result of the
+ BEQ para7              \ heaps, as we are only interested in the result of the
                         \ parallax calculation
 
  PHY                    \ Store the line heap index on the stack so we can
@@ -56931,7 +57004,7 @@ ENDMACRO
 
  PLX                    \ Restore the index from the stack into X
 
-.para6
+.para7
 
  RTS                    \ Return from the subroutine
 
@@ -57962,16 +58035,9 @@ ENDMACRO
  ASL A
  STA DELTA
 
- LDA parallaxFactor     \ Draw the parallax factor in the altitude indicator
- CLC
- ROR A
- ROR A
- ROR A
- STA ALTIT
-
  JSR DIALS              \ Update the dashboard
 
- LDA doParallax         \ Draw the parallax toggle as a missile
+ LDA parallaxLevel      \ Draw the parallax level as a number of missiles
  STA NOMSL
 
  JSR msblob             \ Update the missiles
@@ -58042,36 +58108,27 @@ ENDMACRO
 
 .show8
 
- CMP #&6F               \ If we didn't press "O", jump to show9
+ CMP #&72               \ If we didn't press "R", jump to show9
  BNE show9
 
- STZ doParallax         \ Disable parallax
+ JSR ResetAnaglyph      \ Reset the configuration variables for the anaglyph 3D
+                        \ effect
 
  JMP show2              \ Jump to show2 to redraw the scene
 
 .show9
 
- CMP #&70               \ If we didn't press "P", jump to show10
- BNE show10
-
- LDA #1                 \ Enable parallax
- STA doParallax
-
- JMP show2              \ Jump to show2 to redraw the scene
-
-.show10
-
- CMP #&61               \ If we didn't press "A", jump to show12
- BNE show12
+ CMP #&70               \ If we didn't press "P", jump to show11
+ BNE show11
 
  LDA CATF               \ Cycle the palette in CATF through 0, 16 and 32
  CLC
  ADC #16
  CMP #48
- BNE show11
+ BNE show10
  LDA #0
 
-.show11
+.show10
 
  STA CATF               \ Update CATF with the new palette choice
 
@@ -58081,19 +58138,35 @@ ENDMACRO
 
  JMP show2              \ Jump to show2 to redraw the scene
 
-.show12
+.show11
 
  CMP #&64               \ If we didn't press "D", jump to show14
  BNE show14
 
- INC parallaxFactor     \ Increment the parallax factor
+ INC parallaxLevel      \ Increment the parallax level
 
- LDA parallaxFactor     \ Wrap the parallax factor around so it is in the range
+ LDA parallaxLevel      \ Wrap the parallax level around so it is in the range
  CMP #3                 \ 0 to 2
- BNE show13
- STZ parallaxFactor
+ BNE show12
+ STZ parallaxLevel
+
+.show12
+
+ CMP #2                 \ If the new level is 2, jump to show13
+ BEQ show13
+
+ JSR SetMediumParallax  \ The new level is 0 or 1, so set medium parallax
+                        \
+                        \ We do this for level 0 because even though level 0
+                        \ disables the addition of parallax, we still need to
+                        \ set the default levels as they are used when drawing
+                        \ ships as dots)
+
+ JMP show2              \ Jump to show2 to redraw the scene
 
 .show13
+
+ JSR SetHighParallax    \ The new level is 2, so set high parallax
 
  JMP show2              \ Jump to show2 to redraw the scene
 
