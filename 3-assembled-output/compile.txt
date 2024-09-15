@@ -27899,7 +27899,7 @@ End macro ECHR
 .ResetAnaglyph
      818D   A9 01      LDA #&01
      818F   8D EC 0A   STA &0AEC
-     8192   A9 08      LDA #&08
+     8192   A9 04      LDA #&04
      8194   8D EE 0A   STA &0AEE
      8197   A9 00      LDA #&00
      8199   9C ED 0A   STZ &0AED
