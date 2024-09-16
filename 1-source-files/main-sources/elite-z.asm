@@ -10089,6 +10089,14 @@ ENDMACRO
 
 .TVT1a
 
+                        \ In the following palettes:
+                        \
+                        \   * Colour 1 is the right eye
+                        \
+                        \   * Colour 2 is the left eye
+                        \
+                        \   * Colour 3 is common
+
  EQUB &30, &40          \ Set all colours to white except 1 (cyan) and 2 (red)
  EQUB &26, &11          \ to set the dashboard to white
  EQUB &80, &70
@@ -10107,6 +10115,15 @@ ENDMACRO
  EQUB &07, &F2
  EQUB &E2, &D2
 
+ EQUB &34, &44          \ Set all colours to yellow except 1 (green) and 2 (red)
+ EQUB &26, &15          \ to set the dashboard to yellow
+ EQUB &84, &74
+ EQUB &64, &54
+ EQUB &C4, &B4
+ EQUB &A4, &94
+ EQUB &07, &F4
+ EQUB &E4, &D4
+
  EQUB &34, &44          \ Set all colours to yellow except 1 (red) and 2 (green)
  EQUB &25, &16          \ to set the dashboard to yellow
  EQUB &84, &74
@@ -10115,6 +10132,15 @@ ENDMACRO
  EQUB &A4, &94
  EQUB &07, &F4
  EQUB &E4, &D4
+
+ EQUB &30, &40          \ Set all colours to yellow except 1 (magenta) and 2
+ EQUB &21, &12          \ (green) to set the dashboard to white
+ EQUB &80, &70
+ EQUB &60, &50
+ EQUB &C0, &B0
+ EQUB &A0, &90
+ EQUB &07, &F0
+ EQUB &E0, &D0
 
                         \ --- End of added code ------------------------------->
 
@@ -10131,31 +10157,57 @@ ENDMACRO
 
 .TVT3a
 
- EQUB &00, &31          \ 1 = cyan, 2 = red, 3 = white (anaglyph 3D palette 1)
+                        \ In the following palettes:
+                        \
+                        \   * Colour 1 is the right eye
+                        \
+                        \   * Colour 2 is the left eye
+                        \
+                        \   * Colour 3 is common
+
+ EQUB &00, &31          \ 1 = cyan, 2 = red, 3 = white
  EQUB &21, &17          \
- EQUB &71, &61          \ Set with a #SETVDU19 0 command, after which:
+ EQUB &71, &61          \ Set with a #SETVDU19 128+0 command, after which:
  EQUB &57, &47          \
  EQUB &B0, &A0          \   #CYAN_3D  = cyan
  EQUB &96, &86          \   #RED_3D   = red
  EQUB &F0, &E0          \   #WHITE_3D = white
  EQUB &D6, &C6
 
- EQUB &02, &33          \ 1 = blue, 2 = red, 3 = magenta (anaglyph 3D palette 2)
+ EQUB &02, &33          \ 1 = blue, 2 = red, 3 = magenta
  EQUB &23, &17          \
- EQUB &73, &63          \ Set with a #SETVDU19 0 command, after which:
+ EQUB &73, &63          \ Set with a #SETVDU19 128+16 command, after which:
  EQUB &57, &47          \
  EQUB &B2, &A2          \   #CYAN_3D  = blue
  EQUB &96, &86          \   #RED_3D   = red
  EQUB &F2, &E2          \   #WHITE_3D = magenta
  EQUB &D6, &C6
 
- EQUB &04, &36          \ 1 = red, 2 = green, 3 = yellow (anaglyph 3D palette 3)
+ EQUB &04, &35          \ 1 = green, 2 = red, 3 = yellow
+ EQUB &25, &17          \
+ EQUB &75, &65          \ Set with a #SETVDU19 128+32 command, after which:
+ EQUB &57, &47          \
+ EQUB &B4, &A4          \   #CYAN_3D  = green
+ EQUB &96, &86          \   #RED_3D   = red
+ EQUB &F4, &E4          \   #WHITE_3D = yellow
+ EQUB &D6, &C6
+
+ EQUB &04, &36          \ 1 = red, 2 = green, 3 = yellow
  EQUB &26, &17          \
- EQUB &76, &66          \ Set with a #SETVDU19 0 command, after which:
+ EQUB &76, &66          \ Set with a #SETVDU19 128+48 command, after which:
  EQUB &57, &47          \
  EQUB &B4, &A4          \   #CYAN_3D  = red
  EQUB &95, &85          \   #RED_3D   = green
  EQUB &F4, &E4          \   #WHITE_3D = yellow
+ EQUB &D5, &C5
+
+ EQUB &00, &32          \ 1 = magenta, 2 = green, 3 = white
+ EQUB &22, &17          \
+ EQUB &72, &62          \ Set with a #SETVDU19 128+64 command, after which:
+ EQUB &57, &47          \
+ EQUB &B0, &A0          \   #CYAN_3D  = magenta
+ EQUB &95, &85          \   #RED_3D   = green
+ EQUB &F0, &E0          \   #WHITE_3D = white
  EQUB &D5, &C5
 
                         \ --- End of added code ------------------------------->

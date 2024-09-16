@@ -57932,10 +57932,10 @@ ENDMACRO
  CMP #&70               \ If we didn't press "P", jump to show11
  BNE show11
 
- LDA CATF               \ Cycle the palette in CATF through 0, 16 and 32
+ LDA CATF               \ Cycle the palette in CATF through 0, 16, 32, 48 and 64
  CLC
  ADC #16
- CMP #48
+ CMP #80
  BNE show10
  LDA #0
 
