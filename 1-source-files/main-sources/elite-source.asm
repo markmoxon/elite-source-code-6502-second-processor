@@ -4144,6 +4144,178 @@ ENDIF
 
                         \ --- End of added code ------------------------------->
 
+\ ******************************************************************************
+\
+\       Name: speedBuff
+\       Type: Variable
+\   Category: Universe editor
+\    Summary: Buffer for speed OSWORD calls
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.speedBuff
+
+ EQUB 3                 \ The number of bytes to transmit with this command
+
+ EQUB 2                 \ The number of bytes to receive with this command
+
+ EQUB 0                 \ The parameter to send
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: RestartSync
+\       Type: Subroutine
+\   Category: Main loop
+\    Summary: Restart the sync counter
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.RestartSync
+
+ STZ speedBuff+2        \ Set the parameter to zero to restart the sync counter
+
+ LDX #LO(speedBuff)     \ Set (Y X) to point to the speedBuff parameter
+ LDY #HI(speedBuff)     \ block
+
+ LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
+                        \ the sync counter, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: WaitForSync
+\       Type: Subroutine
+\   Category: Main loop
+\    Summary: Pause until the sync counter reaches zero
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.WaitForSync
+
+ LDA #1
+ STA speedBuff+2        \ Set the parameter to zero to restart the sync counter
+
+ LDX #LO(speedBuff)     \ Set (Y X) to point to the speedBuff parameter
+ LDY #HI(speedBuff)     \ block
+
+ LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
+                        \ the sync counter, returning from the subroutine
+                        \ using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: CopyBlock
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Copy a small block of memory
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   Y                   Number of bytes to copy - 1
+\
+\   P(1 0)              From address
+\
+\   Q(1 0)              To address
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.CopyBlock
+
+ LDA (P),Y              \ Copy byte X from P(1 0) to Q(1 0)
+ STA (Q),Y
+
+ DEY                    \ Decrement the counter
+
+ BPL CopyBlock          \ Loop back until all X bytes are copied
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: UseRightBallLine
+\       Type: Subroutine
+\   Category: Drawing circles
+\    Summary: Set the pointers to use the right-eye ball line
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.UseRightBallLine
+
+ LDA #LO(LSX2r)         \ Set LSX2S to the address of LSX2r, so CIRCLE and BLINE
+ STA LSX2S              \ store the right-eye line y-coordinates in LSX2r
+ LDA #HI(LSX2r)
+ STA LSX2S+1
+
+ LDA #LO(LSY2r)         \ Set LSY2S to the address of LSY2r, so CIRCLE and BLINE
+ STA LSY2S              \ store the right-eye line y-coordinates in LSY2r
+ LDA #HI(LSY2r)
+ STA LSY2S+1
+
+ LDA #LO(LSPr)          \ Set LSPS to the address of LSPr, so CIRCLE and BLINE
+ STA LSPS               \ store the right-eye ball line heap pointer in LSPr
+ LDA #HI(LSPr)
+ STA LSPS+1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: UseLeftBallLine
+\       Type: Subroutine
+\   Category: Drawing circles
+\    Summary: Set the pointers to use the left-eye ball line
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.UseLeftBallLine
+
+ LDA #LO(LSX2)          \ Set LSX2S to the address of LSX2, so CIRCLE and BLINE
+ STA LSX2S              \ store the left-eye line y-coordinates in LSX2
+ LDA #HI(LSX2)
+ STA LSX2S+1
+
+ LDA #LO(LSY2)          \ Set LSY2S to the address of LSY2, so CIRCLE and BLINE
+ STA LSY2S              \ store the left-eye line y-coordinates in LSY2
+ LDA #HI(LSY2)
+ STA LSY2S+1
+
+ LDA #LO(LSP)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
+ STA LSPS               \ store the left-eye ball line heap pointer in LSP
+ LDA #HI(LSP)
+ STA LSPS+1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
  SKIPTO &1000
 
  SAVE "3-assembled-output/ANAGLYPH.bin", &0E20, &1000, &0E20
@@ -27909,7 +28081,7 @@ ENDIF
 
  JSR PLS6               \ Call PLS6 to calculate:
                         \
-                        \   (X K) = (A P) / (z_sign z_hi z_lo)
+                        \   (X K) = (A P+1 P) / (z_sign z_hi z_lo)
                         \         = (x_sign x_hi x_lo) / (z_sign z_hi z_lo)
                         \         = x / z
 
@@ -27937,7 +28109,7 @@ ENDIF
 
  JSR PLS6               \ Call PLS6 to calculate:
                         \
-                        \   (X K) = (A P) / (z_sign z_hi z_lo)
+                        \   (X K) = (A P+1 P) / (z_sign z_hi z_lo)
                         \         = -(y_sign y_hi y_lo) / (z_sign z_hi z_lo)
                         \         = -y / z
 
@@ -30675,13 +30847,13 @@ ENDIF
 \       Name: PLS6
 \       Type: Subroutine
 \   Category: Drawing planets
-\    Summary: Calculate (X K) = (A P) / (z_sign z_hi z_lo)
+\    Summary: Calculate (X K) = (A P+1 P) / (z_sign z_hi z_lo)
 \
 \ ------------------------------------------------------------------------------
 \
 \ Calculate the following:
 \
-\   (X K) = (A P) / (z_sign z_hi z_lo)
+\   (X K) = (A P+1 P) / (z_sign z_hi z_lo)
 \
 \ returning an overflow in the C flag if the result is >= 1024.
 \
@@ -52261,80 +52433,6 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: speedBuff
-\       Type: Variable
-\   Category: Universe editor
-\    Summary: Buffer for speed OSWORD calls
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for speed control: -------------->
-
-.speedBuff
-
- EQUB 3                 \ The number of bytes to transmit with this command
-
- EQUB 2                 \ The number of bytes to receive with this command
-
- EQUB 0                 \ The parameter to send
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: RestartSync
-\       Type: Subroutine
-\   Category: Main loop
-\    Summary: Restart the sync counter
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for speed control: -------------->
-
-.RestartSync
-
- STZ speedBuff+2        \ Set the parameter to zero to restart the sync counter
-
- LDX #LO(speedBuff)     \ Set (Y X) to point to the speedBuff parameter
- LDY #HI(speedBuff)     \ block
-
- LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
-
- JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
-                        \ the sync counter, returning from the subroutine
-                        \ using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: WaitForSync
-\       Type: Subroutine
-\   Category: Main loop
-\    Summary: Pause until the sync counter reaches zero
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for speed control: -------------->
-
-.WaitForSync
-
- LDA #1
- STA speedBuff+2        \ Set the parameter to zero to restart the sync counter
-
- LDX #LO(speedBuff)     \ Set (Y X) to point to the speedBuff parameter
- LDY #HI(speedBuff)     \ block
-
- LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
-
- JMP OSWORD             \ Send an OSWORD command to the I/O processor to reset
-                        \ the sync counter, returning from the subroutine
-                        \ using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
 \       Name: ResetAnaglyph
 \       Type: Subroutine
 \   Category: Universe editor
@@ -52434,8 +52532,8 @@ ENDIF
 
 .SetHighParallax
 
- LDA #0                 \ Set the parallax factor to 0, so we divide
- STA parallaxFactor     \ z-coordinates by 2^0 = 1 to get the parallax
+ STZ parallaxFactor     \ Set the parallax factor to 0, so we divide
+                        \ z-coordinates by 2^0 = 1 to get the parallax
 
  LDA #3                 \ Set the maximum amount of positive parallax for each
  STA maxParallaxP       \ individual eye to 3
@@ -56343,70 +56441,6 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\       Name: UseRightBallLine
-\       Type: Subroutine
-\   Category: Drawing circles
-\    Summary: Set the pointers to use the right-eye ball line
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.UseRightBallLine
-
- LDA #LO(LSX2r)         \ Set LSX2S to the address of LSX2r, so CIRCLE and BLINE
- STA LSX2S              \ store the right-eye line y-coordinates in LSX2r
- LDA #HI(LSX2r)
- STA LSX2S+1
-
- LDA #LO(LSY2r)         \ Set LSY2S to the address of LSY2r, so CIRCLE and BLINE
- STA LSY2S              \ store the right-eye line y-coordinates in LSY2r
- LDA #HI(LSY2r)
- STA LSY2S+1
-
- LDA #LO(LSPr)          \ Set LSPS to the address of LSPr, so CIRCLE and BLINE
- STA LSPS               \ store the right-eye ball line heap pointer in LSPr
- LDA #HI(LSPr)
- STA LSPS+1
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: UseLeftBallLine
-\       Type: Subroutine
-\   Category: Drawing circles
-\    Summary: Set the pointers to use the left-eye ball line
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.UseLeftBallLine
-
- LDA #LO(LSX2)          \ Set LSX2S to the address of LSX2, so CIRCLE and BLINE
- STA LSX2S              \ store the left-eye line y-coordinates in LSX2
- LDA #HI(LSX2)
- STA LSX2S+1
-
- LDA #LO(LSY2)          \ Set LSY2S to the address of LSY2, so CIRCLE and BLINE
- STA LSY2S              \ store the left-eye line y-coordinates in LSY2
- LDA #HI(LSY2)
- STA LSY2S+1
-
- LDA #LO(LSP)           \ Set LSPS to the address of LSP, so CIRCLE and BLINE
- STA LSPS               \ store the left-eye ball line heap pointer in LSP
- LDA #HI(LSP)
- STA LSPS+1
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
 \       Name: ApplyEyeSpacing
 \       Type: Subroutine
 \   Category: Drawing lines
@@ -57184,40 +57218,6 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\       Name: CopyBlock
-\       Type: Subroutine
-\   Category: Universe editor
-\    Summary: Copy a small block of memory
-\
-\ ------------------------------------------------------------------------------
-\
-\ Arguments:
-\
-\   Y                   Number of bytes to copy - 1
-\
-\   P(1 0)              From address
-\
-\   Q(1 0)              To address
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.CopyBlock
-
- LDA (P),Y              \ Copy byte X from P(1 0) to Q(1 0)
- STA (Q),Y
-
- DEY                    \ Decrement the counter
-
- BPL CopyBlock          \ Loop back until all X bytes are copied
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
 \       Name: SetSpaceView
 \       Type: Subroutine
 \   Category: Universe editor
@@ -57914,7 +57914,8 @@ ENDMACRO
 
 .show7
 
- JSR BEEP
+ JSR BEEP               \ Make a beep as we can't decrement zPlane(1 0) any more
+
  JMP show2              \ Jump to show2 to redraw the scene
 
 .show8
