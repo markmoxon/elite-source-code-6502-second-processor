@@ -3597,10 +3597,10 @@ ENDIF
                         \
                         \   * Non-zero = we are currently showing the view name
 
-.Pr
+.rParallax
 
- SKIP 2                 \ Storage for the amount of parallax to add in the
-                        \ ApplyParallax routine
+ SKIP 2                 \ Storage for the amount of parallax to add to the right
+                        \ eye in the ApplyParallax routine
 
 .xRightEye
 
@@ -3636,15 +3636,13 @@ ENDIF
 
 .maxParallaxP
 
- SKIP 1                 \ The maximum amount of positive parallax to apply
+ SKIP 1                 \ The maximum amount of positive parallax to apply,
+                        \ which gets split between each eye
 
-.maxParallaxP2
+.maxParallaxN
 
- SKIP 1                 \ The maximum amount of positive parallax to apply x 2
-
-.maxParallaxN2
-
- SKIP 1                 \ The maximum amount of negative parallax to apply x 2
+ SKIP 1                 \ The maximum amount of negative parallax to apply,
+                        \ which gets split between each eye
 
 .parallaxSkew
 
@@ -4316,6 +4314,56 @@ ENDIF
  STA LSPS               \ store the left-eye ball line heap pointer in LSP
  LDA #HI(LSP)
  STA LSPS+1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ApplyMaxParallax
+\       Type: Subroutine
+\   Category: Drawing pixels
+\    Summary: Split the maximum parallax in T between the two eyes, returning
+\             the left-eye parallax in T and the right-eye parallax in rParallax
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ApplyMaxParallax
+
+ LDX T                  \ If T is non-zero, jump to para1 to apply the parallax
+ BNE pmax1
+
+ STX rParallax          \ Otherwise set rParallax to zero as well so we don't
+                        \ apply any parallax to the right eye either
+
+ RTS                    \ Return from the subroutine
+
+.pmax1
+
+                        \ We now calculate the number of pixels of parallax
+                        \ using the following calculation to spread the pixels
+                        \ evenly between each eye, one pixel per eye at a time:
+                        \
+                        \   * Right eye: add (parallax + 1) >> 1
+                        \
+                        \   * Left eye:  subtract parallax >> 1
+                        \
+                        \ We calculate the right eye in rParallax and the left
+                        \ eye in T
+
+ INX                    \ Set rParallax = (T + 1) >> 1
+ TXA                    \
+ ASL A                  \ making sure to retain the sign
+ TXA
+ ROR A
+ STA rParallax
+
+ LDA T                  \ Set T = T >> 1
+ ASL A                  \
+ ROR T                  \ making sure to retain the sign
 
  RTS                    \ Return from the subroutine
 
@@ -38961,22 +39009,32 @@ ENDIF
                         \
                         \ As the ship is very distant, we will apply maximum
                         \ positive parallax, so the left eye moves left and the
-                        \ right eye moves right, with both of them moving by
-                        \ maxParallaxP pixels, like this:
+                        \ right eye moves right, like this:
                         \
-                        \ Set rHeap to a line from X2 = K3 + maxParallaxP to
-                        \ X1 = K3 + maxParallaxP + 3
+                        \ Set rHeap to a line from X2 = K3 + parallax to
+                        \ X1 = K3 + parallax + 3
                         \
-                        \ Set XX19 to a line from X2 = K3 - maxParallaxP to
-                        \ X1 = K3 - maxParallaxP + 3
+                        \ Set XX19 to a line from X2 = K3 - parallax to
+                        \ X1 = K3 - parallax + 3
+
+                        \ We start by calculating the amount of parallax to
+                        \ apply to each eye, splitting maxParallaxP between the
+                        \ two eyes into 
+
+ LDA maxParallaxP       \ Set T to the maximum configured positive parallax,
+ STA T                  \ which we want to apply to the ship dot
+
+ JSR ApplyMaxParallax   \ Split the parallax up between the two eyes, returning
+                        \ the left-eye parallax in T and the right-eye parallax
+                        \ in rParallax
 
                         \ We start with the left eye
 
  LDA K3                 \ Set A = screen x-coordinate of the right end of the
- CLC                    \ ship dot for the left eye = K3 - maxParallaxP + 3
+ CLC                    \ ship dot for the left eye = K3 - T + 3
  ADC #3
  SEC
- SBC maxParallaxP
+ SBC T
 
  BCS shpt1              \ If the left-eye dot fits on-screen, jump to shpt1 to
                         \ draw the dot
@@ -39010,7 +39068,7 @@ ENDIF
  STA Y2
 
  LDA K3                 \ Set A = screen x-coordinate of the left end of the
- ADC maxParallaxP       \ ship dot for the right eye = K3 + maxParallaxP
+ ADC rParallax          \ ship dot for the right eye = K3 + rParallax
                         \
                         \ The addition works as we only call the Shpt routine
                         \ with the C flag clear and we know the first addition
@@ -52465,14 +52523,14 @@ ENDIF
 
  JSR SetParallaxSkew    \ Calculate the amount of skew to apply to each eye
 
-                        \ Fall through into SetMediumParallax to set a medium
+                        \ Fall through into SetParallaxMedium to set a medium
                         \ level of parallax as the default
 
                         \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
-\       Name: SetMediumParallax
+\       Name: SetParallaxMedium
 \       Type: Subroutine
 \   Category: Universe editor
 \    Summary: Set the parallax level to medium
@@ -52481,19 +52539,16 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
-.SetMediumParallax
+.SetParallaxMedium
 
  LDA #1                 \ Set the parallax factor to 1, so we divide
  STA parallaxFactor     \ z-coordinates by 2^1 = 2 to get the parallax
 
- LDA #2                 \ Set the maximum amount of positive parallax for each
- STA maxParallaxP       \ individual eye to 2
+ LDA #3                 \ Set the maximum amount of positive parallax, split
+ STA maxParallaxP       \ between each eye, to 3
 
- LDA #4                 \ Set the maximum amount of positive parallax, split
- STA maxParallaxP2      \ between each eye, to 4
-
- LDA #256-6             \ Set the maximum amount negative parallax, split
- STA maxParallaxN2      \ between each eye, to -6
+ LDA #256-4             \ Set the maximum amount negative parallax, split
+ STA maxParallaxN       \ between each eye, to -4
 
  RTS                    \ Return from the subroutine
 
@@ -52501,7 +52556,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: SetLowParallax
+\       Name: SetParallaxLow
 \       Type: Subroutine
 \   Category: Universe editor
 \    Summary: Set the parallax level to low
@@ -52510,19 +52565,16 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
-.SetLowParallax
+.SetParallaxLow
 
  LDA #2                 \ Set the parallax factor to 1, so we divide
- STA parallaxFactor     \ z-coordinates by 2^1 = 2 to get the parallax
-
- LDA #1                 \ Set the maximum amount of positive parallax for each
- STA maxParallaxP       \ individual eye to 1
+ STA parallaxFactor     \ z-coordinates by 2^2 = 4 to get the parallax
 
  LDA #2                 \ Set the maximum amount of positive parallax, split
- STA maxParallaxP2      \ between each eye, to 2
+ STA maxParallaxP       \ between each eye, to 2
 
- LDA #256-4             \ Set the maximum amount negative parallax, split
- STA maxParallaxN2      \ between each eye, to -4
+ LDA #256-3             \ Set the maximum amount negative parallax, split
+ STA maxParallaxN       \ between each eye, to -3
 
  RTS                    \ Return from the subroutine
 
@@ -52530,7 +52582,7 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: SetHighParallax
+\       Name: SetParallaxHigh
 \       Type: Subroutine
 \   Category: Universe editor
 \    Summary: Set the parallax level to high
@@ -52539,19 +52591,16 @@ ENDIF
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
-.SetHighParallax
+.SetParallaxHigh
 
  STZ parallaxFactor     \ Set the parallax factor to 0, so we divide
                         \ z-coordinates by 2^0 = 1 to get the parallax
 
- LDA #3                 \ Set the maximum amount of positive parallax for each
- STA maxParallaxP       \ individual eye to 3
-
  LDA #5                 \ Set the maximum amount of positive parallax, split
- STA maxParallaxP2      \ between each eye, to 5
+ STA maxParallaxP       \ between each eye, to 4
 
- LDA #256-7             \ Set the maximum amount negative parallax, split
- STA maxParallaxN2      \ between each eye, to -7
+ LDA #256-5             \ Set the maximum amount negative parallax, split
+ STA maxParallaxN       \ between each eye, to -6
 
  RTS                    \ Return from the subroutine
 
@@ -56749,16 +56798,16 @@ ENDMACRO
                         \ I can't tell you how much time I spent trying to track
                         \ this one down...
 
- LDA XX3-1,Y            \ Subtract P(1 2) pixels from the left x-coordinate to
- SEC                    \ move the left-eye coordinate by the parallax
+ LDA XX3-1,Y            \ Subtract parallaxSkew from the left x-coordinate to
+ SEC                    \ move the left-eye coordinate by the skew
  SBC parallaxSkew
  STA XX3-1,Y
  LDA XX3,Y
  SBC #0
  STA XX3,Y
 
- LDA XX3r-1,Y           \ Add Pr(1 0) pixels to the right x-coordinate to move
- CLC                    \ the right-eye coordinate by the parallax
+ LDA XX3r-1,Y           \ Add parallaxSkew to the right x-coordinate to move
+ CLC                    \ the right-eye coordinate by the skew
  ADC parallaxSkew
  STA XX3r-1,Y
  LDA XX3r,Y
@@ -56925,21 +56974,21 @@ ENDMACRO
 .para4
 
                         \ We now cap the high byte to a value between
-                        \ -maxParallaxN * 2 and maxParallaxP2 * 2
+                        \ -maxParallaxN * 2 and maxParallaxP * 2
 
  LDA P+2                \ If P+2 is negative, jump to para5 to cap the value
  BMI para5              \ to a minimum value of -maxParallaxN
 
- CMP maxParallaxP2      \ Cap P+2 to a maximum value of maxParallaxP2 * 2
+ CMP maxParallaxP       \ Cap P+2 to a maximum value of maxParallaxP * 2
  BCC para6
- LDA maxParallaxP2
+ LDA maxParallaxP
  BNE para6
 
 .para5
 
- CMP maxParallaxN2      \ Cap P+2 to a minimum value of -maxParallaxN * 2
+ CMP maxParallaxN       \ Cap P+2 to a minimum value of -maxParallaxN * 2
  BCS para6
- LDA maxParallaxN2
+ LDA maxParallaxN
 
 .para6
 
@@ -56964,20 +57013,21 @@ ENDMACRO
                         \
                         \   * Left eye:  subtract parallax >> 1
 
- CLC                    \ Set Pr(1 0) = P(1 2) + 1
- ADC #1                 \             = parallax + 1
- STA Pr
+ CLC                    \ Set rParallax(1 0) = P(1 2) + 1
+ ADC #1                 \                    = parallax + 1
+ STA rParallax
  LDA P+1
  ADC #0
- STA Pr+1
+ STA rParallax+1
 
- ASL A                  \ Set the C flag to the sign of Pr(1 0)
+ ASL A                  \ Set the C flag to the sign of rParallax(1 0)
 
- ROR Pr+1               \ Set Pr(1 0) = Pr(1 0) >> 1
- ROR Pr                 \             = (parallax + 1) >> 1
+ ROR rParallax+1        \ Set rParallax(1 0) = rParallax(1 0) >> 1
+ ROR rParallax          \                    = (parallax + 1) >> 1
                         \
-                        \ making sure to keep the correct sign, so Pr(1 0) now
-                        \ contains the amount to add to the right eye
+                        \ making sure to keep the correct sign, so
+                        \ rParallax(1 0) now contains the amount to add to the
+                        \ right eye
 
  LDA P+1                \ Set the C flag to the sign of P(1 2)
  ASL A
@@ -56996,12 +57046,12 @@ ENDMACRO
  SBC P+1
  STA XX3,Y
 
- LDA XX3r-1,Y           \ Add Pr(1 0) pixels to the right x-coordinate to move
- CLC                    \ the right-eye coordinate by the parallax
- ADC Pr
+ LDA XX3r-1,Y           \ Add rParallax(1 0) pixels to the right x-coordinate to
+ CLC                    \ move the right-eye coordinate by the parallax
+ ADC rParallax
  STA XX3r-1,Y
  LDA XX3r,Y
- ADC Pr+1
+ ADC rParallax+1
  STA XX3r,Y
 
  PLX                    \ Restore the index from the stack into X
@@ -58130,7 +58180,7 @@ ENDMACRO
  CMP #2                 \ If the new level is 2, jump to show13 to set a medium
  BEQ show13             \ level of parallax
 
- JSR SetLowParallax     \ The new level is 0 or 1, so set a low level of
+ JSR SetParallaxLow     \ The new level is 0 or 1, so set a low level of
                         \ parallax
                         \
                         \ We do this for both level 1 and 0 because even though
@@ -58142,13 +58192,13 @@ ENDMACRO
 
 .show13
 
- JSR SetMediumParallax  \ The new level is 2, so set medium parallax
+ JSR SetParallaxMedium  \ The new level is 2, so set medium parallax
 
  JMP show2              \ Jump to show2 to redraw the scene
 
 .show14
 
- JSR SetHighParallax    \ The new level is 2, so set high parallax
+ JSR SetParallaxHigh    \ The new level is 2, so set high parallax
 
  JMP show2              \ Jump to show2 to redraw the scene
 

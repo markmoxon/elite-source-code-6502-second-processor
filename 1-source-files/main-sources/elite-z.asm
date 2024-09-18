@@ -368,7 +368,8 @@
 
 .rParallax
 
- SKIP 1                 \ The right-eye parallax value in the pixel routines
+ SKIP 1                 \ Storage for the amount of parallax to add to the right
+                        \ eye in the ApplyParallax and pixel routines
 
                         \ --- End of added code ------------------------------->
 
