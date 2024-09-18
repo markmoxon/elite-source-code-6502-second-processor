@@ -71,8 +71,8 @@
                         \ (i.e. the the distance from the nose to each eye, so
                         \ that's half the eye spacing)
 
- Z_PLANE = &800         \ The default z-coordinate of the parallax projection
-                        \ plane (8 0)
+ Z_PLANE = &400         \ The default z-coordinate of the parallax projection
+                        \ plane (4 0)
 
                         \ The following values are fixed
 
@@ -3645,6 +3645,11 @@ ENDIF
 .maxParallaxN2
 
  SKIP 1                 \ The maximum amount of negative parallax to apply x 2
+
+.parallaxSkew
+
+ SKIP 1                 \ The skew we need to apply to make the focal point of
+                        \ the image merge both eyes on the projection plane
 
                         \ --- End of added code ------------------------------->
 
@@ -41385,6 +41390,8 @@ ENDIF
 
 .LL66a
 
+ JSR ApplySkew          \ Apply skew to the x-coordinates for both eyes
+
  JSR ApplyParallax      \ Apply parallax to the x-coordinates for both eyes
 
                         \ --- End of added code ------------------------------->
@@ -52456,6 +52463,8 @@ ENDIF
  LDA #2                 \ Set the default level of parallax (medium)
  STA parallaxLevel
 
+ JSR SetParallaxSkew    \ Calculate the amount of skew to apply to each eye
+
                         \ Fall through into SetMediumParallax to set a medium
                         \ level of parallax as the default
 
@@ -52543,6 +52552,84 @@ ENDIF
 
  LDA #256-7             \ Set the maximum amount negative parallax, split
  STA maxParallaxN2      \ between each eye, to -7
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetParallaxSkew
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Set the amount of skew to apply to each eye
+\
+\ ------------------------------------------------------------------------------
+\
+\ To provide a focal point for the image that lies on the projection plane, we
+\ add a skew to both eyes. We do this by moving each eye sideways until the
+\ parts of the left and right eye images that are on the projection plane merge
+\ into one cohesive image (and therefore turn white).
+\
+\ Without adding skew, the effect of projecting from the left and right eyes
+\ will produce an image where everything appears to be in front of the screen,
+\ as the projection moves the left eye image to the right, and the right eye
+\ image to the left (if you close your eyes one at a time and look at an object
+\ close to you, you can see this effect). The focal point is at infinity, as
+\ only very distant objects will have a coincident left and right image.
+\
+\ Applying skew effectively moves the focal point of the image towards us, by
+\ shifting the left image to the left and the right image to the right until
+\ they overlap for objects that are on the projection plane. So objects behind
+\ the projection plane go into the screen, while objects on the projection plane
+\ merge into white, and objects closer than the projection plane remain in front
+\ of the screen, but with a smaller eye separation.
+\
+\ Combined with the parallax effect in ApplyParallax, this produces a depth of
+\ field in our anaglyph 3D image with a focus on the projection plane.
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.SetParallaxSkew
+
+ LDA zPlane             \ If zPlane(1 0) = 0 then jump to skew2 to return a skew
+ ORA zPlane+1           \ of zero
+ BEQ skew2
+
+ LDA zPlane             \ Set (z_sign z_hi z_lo) = zPlane(1 0)
+ STA INWK+6
+ LDA zPlane+1
+ STA INWK+7
+ STZ INWK+8
+
+ LDA halfEyeSpacing     \ Set (A P+1 P) = 256 * halfEyeSpacing
+ STA P+1
+ STZ P
+ LDA #0
+
+ JSR PLS6               \ Call PLS6 to calculate:
+                        \
+                        \   (X K) = (A P+1 P) / (z_sign z_hi z_lo)
+                        \         = 256 * halfEyeSpacing / zPlane
+
+ LDA K                  \ Set X = (X K) / 256
+ BPL skew1              \
+ INX                    \ rounded to the nearest integer
+
+.skew1
+
+ STX parallaxSkew       \ Store the amount of skew in parallaxSkew
+
+                        \ Attempt 3: scale down result to try to get a pixel
+                        \ amount
+
+ RTS                    \ Return from the subroutine
+
+.skew2
+
+ STZ parallaxSkew       \ Return a skew of zero
 
  RTS                    \ Return from the subroutine
 
@@ -56451,7 +56538,7 @@ ENDMACRO
 \ Given the 3D x-coordinate of a point in space, calculate the x-coordinate
 \ relative to each eye.
 \
-\ The calculation simply subtracts or adds half the eye separation to get the
+\ The calculation simply adds or subtracts half the eye separation to get the
 \ left or right x-coordinate.
 \
 \ ------------------------------------------------------------------------------
@@ -56489,8 +56576,9 @@ ENDMACRO
  LDA XX15+2
  STA XX18+2
 
- STZ K+3                \ Set K(3 2 1) = x-offset of right eye (cyan)
- STZ K+2                \              = halfEyeSpacing
+ LDA #%10000000         \ Set K(3 2 1) = x-offset of right eye (cyan)
+ STA K+3                \              = -halfEyeSpacing
+ STZ K+2
  LDA halfEyeSpacing
  STA K+1
 
@@ -56504,9 +56592,8 @@ ENDMACRO
  LDA K+3
  STA xRightEye+2
 
- LDA #%10000000         \ Set K(3 2 1) = x-offset of left eye (red)
- STA K+3                \              = -halfEyeSpacing
- STZ K+2
+ STZ K+3                \ Set K(3 2 1) = x-offset of left eye (red)
+ STZ K+2                \              = halfEyeSpacing
  LDA halfEyeSpacing
  STA K+1
 
@@ -56609,6 +56696,76 @@ ENDMACRO
  RTS                    \ Return from the subroutine
 
                         \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ApplySkew
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Apply skew to a 3D coordinate
+\
+\ ------------------------------------------------------------------------------
+\
+\ Arguments:
+\
+\   X                   The index into the XX3 and XX3r line heaps, pointing to
+\                       the second byte of the x-coordinate we just added, which
+\                       gets updated with the new x-coordinates in both eyes
+\
+\                       If X = &FF then the heaps are not updated
+\
+\ ------------------------------------------------------------------------------
+\
+\ Returns:
+\
+\   X                   X is preserved
+\
+\ ******************************************************************************
+
+.ApplySkew
+
+ TXA                    \ Copy the index from X into Y, so we can use it as the
+ TAY                    \ index register in the following code
+                        \
+                        \ We have to use Y as the index in the following code
+                        \ rather than X because XX3 is &100, so XX3 is-1 is &FF
+                        \
+                        \ LDA xxx,X supports two modes: zero page and absolute
+                        \ addressing, so BeebAsm interprets LDA XX3-1,X as a
+                        \ zero page address, as the instruction is effectively
+                        \ LDA &FF,X, which means it inserts the two-byte
+                        \ instruction rather than the three-byte version
+                        \
+                        \ Zero-mode indexing will not work here, though, as the
+                        \ two-byte instruction restricts its memory access to
+                        \ zero page, so LDA &FF,X can never access values in
+                        \ page 1 (&01xx), which is where the XX3 stack lives
+                        \
+                        \ The LDA xxx,Y instruction, on the other hand, only
+                        \ supports absolute addressing, so LDA XX3-1,Y will
+                        \ always get assembled as LDA &00FF,Y and will therefore
+                        \ be able to access page 1 for non-zero values of Y
+                        \
+                        \ I can't tell you how much time I spent trying to track
+                        \ this one down...
+
+ LDA XX3-1,Y            \ Subtract P(1 2) pixels from the left x-coordinate to
+ SEC                    \ move the left-eye coordinate by the parallax
+ SBC parallaxSkew
+ STA XX3-1,Y
+ LDA XX3,Y
+ SBC #0
+ STA XX3,Y
+
+ LDA XX3r-1,Y           \ Add Pr(1 0) pixels to the right x-coordinate to move
+ CLC                    \ the right-eye coordinate by the parallax
+ ADC parallaxSkew
+ STA XX3r-1,Y
+ LDA XX3r,Y
+ ADC #0
+ STA XX3r,Y
+
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -57829,6 +57986,8 @@ ENDMACRO
  JSR ResetExplosions    \ Reset any explosions so they restart on loading
 
 .show2
+
+ JSR SetParallaxSkew    \ Calculate the amount of skew to apply to each eye
 
  JSR DrawShips          \ Draw all ships, returning from the subroutine using a
                         \ tail call
