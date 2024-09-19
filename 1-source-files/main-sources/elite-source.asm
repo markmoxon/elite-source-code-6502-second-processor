@@ -67,9 +67,7 @@
                         \ The following values can be changed in the in-game
                         \ configuration tool
 
- HALF_EYE_SPACING = 1   \ The default spacing between the eyes in x-coordinates
-                        \ (i.e. the the distance from the nose to each eye, so
-                        \ that's half the eye spacing)
+ EYE_SPACING = 2        \ The default spacing between the eyes in x-coordinates
 
  Z_PLANE = &400         \ The default z-coordinate of the parallax projection
                         \ plane (4 0)
@@ -3611,9 +3609,10 @@ ENDIF
 
  SKIP 2                 \ The 3D z-coordinate of the vertex to be processed
 
-.halfEyeSpacing
+.eyeSpacing
 
- SKIP 1                 \ Half of the distance between the eyes
+ SKIP 1                 \ The spacing between the eyes, which gets split between
+                        \ each eye
 
 .zPlane
 
@@ -52510,8 +52509,8 @@ ENDIF
 
 .ResetAnaglyph
 
- LDA #HALF_EYE_SPACING  \ Set the half eye spacing to the default value
- STA halfEyeSpacing
+ LDA #EYE_SPACING       \ Set the eye spacing to the default value
+ STA eyeSpacing
 
  LDA #HI(Z_PLANE)       \ Set the projection plane to the default value
  STA zPlane+1
@@ -52653,7 +52652,8 @@ ENDIF
  STA INWK+7
  STZ INWK+8
 
- LDA halfEyeSpacing     \ Set (A P+1 P) = 256 * halfEyeSpacing
+ LDA eyeSpacing         \ Set (A P+1 P) = 256 * (eyeSpacing / 2)
+ LSR A
  STA P+1
  STZ P
  LDA #0
@@ -52661,7 +52661,7 @@ ENDIF
  JSR PLS6               \ Call PLS6 to calculate:
                         \
                         \   (X K) = (A P+1 P) / (z_sign z_hi z_lo)
-                        \         = 256 * halfEyeSpacing / zPlane
+                        \         = 256 * (eyeSpacing / 2) / zPlane
 
  LDA K                  \ Set X = (X K) / 256
  BPL skew1              \
@@ -56626,10 +56626,15 @@ ENDMACRO
  STA XX18+2
 
  LDA #%10000000         \ Set K(3 2 1) = x-offset of right eye (cyan)
- STA K+3                \              = -halfEyeSpacing
- STZ K+2
- LDA halfEyeSpacing
- STA K+1
+ STA K+3                \              = -eyeSpacing / 2
+ STZ K+2                \
+ LDA eyeSpacing         \ If eyeSpacing is odd, then we increment K(3 2 1), so
+ LSR A                  \ the eye spacing gets shared out between the eyes one
+ STA K+1                \ pixel at a time, with the right eye moving first
+ BCC eyes1
+ INC K+1
+
+.eyes1
 
  LDX #XX18-INWK         \ Set K(3 2 1) = K(3 2 1) + XX18(2 1 0)
  JSR MVT3
@@ -56642,8 +56647,9 @@ ENDMACRO
  STA xRightEye+2
 
  STZ K+3                \ Set K(3 2 1) = x-offset of left eye (red)
- STZ K+2                \              = halfEyeSpacing
- LDA halfEyeSpacing
+ STZ K+2                \              = eyeSpacing / 2
+ LDA eyeSpacing
+ LSR A
  STA K+1
 
  LDX #XX18-INWK         \ Set K(3 2 1) = K(3 2 1) + XX18(2 1 0)
@@ -56711,10 +56717,16 @@ ENDMACRO
  LDA INWK+2
  STA XX18+2
 
- STZ K+3                \ Set K(3 2 1) = x-offset of right eye (cyan)
- STZ K+2                \              = halfEyeSpacing
- LDA halfEyeSpacing
- STA K+1
+ LDA #%10000000         \ Set K(3 2 1) = x-offset of right eye (cyan)
+ STA K+3                \              = -eyeSpacing / 2
+ STZ K+2                \
+ LDA eyeSpacing         \ If eyeSpacing is odd, then we increment K(3 2 1), so
+ LSR A                  \ the eye spacing gets shared out between the eyes one
+ STA K+1                \ pixel at a time, with the right eye moving first
+ BCC eyex1
+ INC K+1
+
+.eyex1
 
  LDX #0                 \ Set K(3 2 1) = K(3 2 1) + XX18(2 1 0)
  JSR MVT3
@@ -56726,10 +56738,10 @@ ENDMACRO
  LDA K+3
  STA xRightEye+2
 
- LDA #%10000000         \ Set K(3 2 1) = x-offset of left eye (red)
- STA K+3                \              = -halfEyeSpacing
- STZ K+2
- LDA halfEyeSpacing
+ STZ K+3                \ Set K(3 2 1) = x-offset of left eye (red)
+ STZ K+2                \              = eyeSpacing / 2
+ LDA eyeSpacing
+ LSR A
  STA K+1
 
  LDX #0                 \ Set K(3 2 1) = K(3 2 1) + XX18(2 1 0)
@@ -58051,7 +58063,7 @@ ENDMACRO
  ROL A
  STA ENERGY
 
- LDA halfEyeSpacing     \ Draw the eye spacing in the speed indicator
+ LDA eyeSpacing         \ Draw the eye spacing in the speed indicator
  ASL A
  STA DELTA
 
@@ -58072,7 +58084,7 @@ ENDMACRO
  CMP #&8D               \ If we didn't press the right arrow, jump to show3
  BNE show3
 
- INC halfEyeSpacing     \ Increment the eye spacing
+ INC eyeSpacing         \ Increment the eye spacing
 
  JMP show2              \ Jump to show2 to redraw the scene
 
@@ -58081,9 +58093,9 @@ ENDMACRO
  CMP #&8C               \ If we didn't press the left arrow, jump to show5
  BNE show5
 
- DEC halfEyeSpacing     \ Decrement the eye spacing, keeping it positive
+ DEC eyeSpacing         \ Decrement the eye spacing, keeping it positive
  BPL show4
- STZ halfEyeSpacing
+ STZ eyeSpacing
 
 .show4
 
