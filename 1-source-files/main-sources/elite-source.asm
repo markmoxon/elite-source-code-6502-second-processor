@@ -77,9 +77,6 @@
  Z_PLANE_DELTA = &100   \ The amount to move the z-coordinate of the projection
                         \ plane in the universe screen with each key press (1 0)
 
- PLANET_PARALLAX_P = 1  \ The number of pixels of positive parallax that we
-                        \ apply to the planet
-
  LASER_PARALLAX_N = 2   \ The number of pixels of negative parallax that we
                         \ apply to our laser lines
 
@@ -3597,8 +3594,14 @@ ENDIF
 
 .rParallax
 
- SKIP 2                 \ Storage for the amount of parallax to add to the right
-                        \ eye in the ApplyParallax routine
+ SKIP 2                 \ Storage for the amount of parallax to apply to the
+                        \ right eye in the ApplyParallax and DrawAnaglyphPlanet
+                        \ routines
+
+.lParallax
+
+ SKIP 1                 \ Storage for the amount of parallax to apply to the
+                        \ left eye in the DrawAnaglyphPlanet routine
 
 .xRightEye
 
@@ -3647,6 +3650,11 @@ ENDIF
 
  SKIP 1                 \ The skew we need to apply to make the focal point of
                         \ the image merge both eyes on the projection plane
+
+.planetParallax
+
+ SKIP 1                 \ The amount of positive parallax to apply to the
+                        \ planet, which gets split between each eye
 
                         \ --- End of added code ------------------------------->
 
@@ -4363,6 +4371,54 @@ ENDIF
  LDA T                  \ Set T = T >> 1
  ASL A                  \
  ROR T                  \ making sure to retain the sign
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: ApplyExplosionMod
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Apply mods for explosions
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.ApplyExplosionMod
+
+ LDA #&4C               \ Modify DOEXP so that it jumps to DrawExplosion instead
+ STA DOEXP              \ to draw the cloud but without progressing it
+ LDA #LO(DrawExplosion)
+ STA DOEXP+1
+ LDA #Hi(DrawExplosion)
+ STA DOEXP+2
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: RevertExplosionMod
+\       Type: Subroutine
+\   Category: Universe editor
+\    Summary: Reverse mods for explosions
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.RevertExplosionMod
+
+ LDA #&A5               \ Revert DOEXP to its default behaviour of drawing the
+ STA DOEXP              \ cloud
+ LDA #&64
+ STA DOEXP+1
+ LDA #&29
+ STA DOEXP+2
 
  RTS                    \ Return from the subroutine
 
@@ -52546,8 +52602,12 @@ ENDIF
  LDA #3                 \ Set the maximum amount of positive parallax, split
  STA maxParallaxP       \ between each eye, to 3
 
- LDA #256-4             \ Set the maximum amount negative parallax, split
+ STA planetParallax     \ Set the amount of positive parallax to apply to the
+                        \ platen, split between each eye, to 3
+
+ LDA #256-4             \ Set the maximum amount of negative parallax, split
  STA maxParallaxN       \ between each eye, to -4
+
 
  RTS                    \ Return from the subroutine
 
@@ -52572,7 +52632,10 @@ ENDIF
  LDA #2                 \ Set the maximum amount of positive parallax, split
  STA maxParallaxP       \ between each eye, to 2
 
- LDA #256-3             \ Set the maximum amount negative parallax, split
+ STA planetParallax     \ Set the amount of positive parallax to apply to the
+                        \ platen, split between each eye, to 2
+
+ LDA #256-3             \ Set the maximum amount of negative parallax, split
  STA maxParallaxN       \ between each eye, to -3
 
  RTS                    \ Return from the subroutine
@@ -52595,11 +52658,14 @@ ENDIF
  STZ parallaxFactor     \ Set the parallax factor to 0, so we divide
                         \ z-coordinates by 2^0 = 1 to get the parallax
 
- LDA #5                 \ Set the maximum amount of positive parallax, split
+ LDA #4                 \ Set the maximum amount of positive parallax, split
  STA maxParallaxP       \ between each eye, to 4
 
- LDA #256-5             \ Set the maximum amount negative parallax, split
- STA maxParallaxN       \ between each eye, to -6
+ STA planetParallax     \ Set the amount of positive parallax to apply to the
+                        \ platen, split between each eye, to 4
+
+ LDA #256-5             \ Set the maximum amount of negative parallax, split
+ STA maxParallaxN       \ between each eye, to -5
 
  RTS                    \ Return from the subroutine
 
@@ -57887,54 +57953,6 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\       Name: ApplyExplosionMod
-\       Type: Subroutine
-\   Category: Universe editor
-\    Summary: Apply mods for explosions
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.ApplyExplosionMod
-
- LDA #&4C               \ Modify DOEXP so that it jumps to DrawExplosion instead
- STA DOEXP              \ to draw the cloud but without progressing it
- LDA #LO(DrawExplosion)
- STA DOEXP+1
- LDA #Hi(DrawExplosion)
- STA DOEXP+2
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: RevertExplosionMod
-\       Type: Subroutine
-\   Category: Universe editor
-\    Summary: Reverse mods for explosions
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.RevertExplosionMod
-
- LDA #&A5               \ Revert DOEXP to its default behaviour of drawing the
- STA DOEXP              \ cloud
- LDA #&64
- STA DOEXP+1
- LDA #&29
- STA DOEXP+2
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
 \       Name: UniverseEditor
 \       Type: Subroutine
 \   Category: Universe editor
@@ -58384,11 +58402,18 @@ ENDMACRO
 
  STY CNT                \ Set CNT = 0 to use as a segment counter
 
+ LDA planetParallax     \ Split planetParallax into the amount of parallax to
+ LSR A                  \ apply to each eye, as follows:
+ STA rParallax          \
+ STA lParallax          \   * rParallax = right-eye parallax (add
+ BCC plan1              \
+ INC rParallax          \   * lParallax = left-eye parallax (subtract)
+
 .plan1
 
  LDA XX3r,Y             \ Fetch the x-coordinate, subtract parallax and store in
  SEC                    \ K6(1 0)
- SBC #PLANET_PARALLAX_P
+ SBC lParallax
  STA K6
  INY
  LDA XX3r,Y
@@ -58433,7 +58458,7 @@ ENDMACRO
 
  LDA XX3,Y              \ Fetch the x-coordinate, subtract parallax and store in
  SEC                    \ K6(1 0)
- SBC #PLANET_PARALLAX_P
+ SBC lParallax
  STA K6
  INY
  LDA XX3,Y
@@ -58493,7 +58518,7 @@ ENDMACRO
 
  LDA XX3r,Y             \ Fetch the x-coordinate, add parallax and store in
  CLC                    \ K6(1 0)
- ADC #PLANET_PARALLAX_P
+ ADC rParallax
  STA K6
  INY
  LDA XX3r,Y
@@ -58538,7 +58563,7 @@ ENDMACRO
 
  LDA XX3,Y              \ Fetch the x-coordinate, add parallax and store in
  CLC                    \ K6(1 0)
- ADC #PLANET_PARALLAX_P
+ ADC rParallax
  STA K6
  INY
  LDA XX3,Y
