@@ -3628,7 +3628,7 @@ ENDIF
 
 .parallaxLevel
 
- EQUB 1                 \ The level of parallax to apply:
+ SKIP 1                 \ The level of parallax to apply:
                         \
                         \   * 0 = disable parallax
                         \
