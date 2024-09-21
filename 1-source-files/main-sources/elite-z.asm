@@ -5274,6 +5274,7 @@ ENDIF
                         \ no line to draw
 
 .hori2
+
                         \ --- End of replacement ------------------------------>
 
  BCC HL5                \ If X1 < X2, jump to HL5 to skip the following code, as
