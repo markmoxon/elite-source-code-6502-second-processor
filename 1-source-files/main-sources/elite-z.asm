@@ -52,9 +52,6 @@
 
  LOAD% = &2300          \ The load address of the main I/O processor code
 
- SUN_PARALLAX_P = 1     \ The number of pixels of positive parallax that we
-                        \ apply to the sun
-
                         \ --- End of replacement ------------------------------>
 
                         \ --- Mod: Code added for speed control: -------------->
@@ -370,6 +367,26 @@
 
  SKIP 1                 \ Storage for the amount of parallax to add to the right
                         \ eye in the ApplyParallax and pixel routines
+
+.sunParallaxL
+
+ SKIP 1                 \ The amount of positive parallax to apply to the sun
+                        \ for the left eye
+
+.sunParallaxR
+
+ SKIP 1                 \ The amount of positive parallax to apply to the sun
+                        \ for the right eye
+
+.sunParallaxEdgeL
+
+ SKIP 1                 \ The x-coordinate for testing whether the sun is up
+                        \ against the left edge of the screen (sunParallaxL + 1)
+
+.sunParallaxEdgeR
+
+ SKIP 1                 \ The x-coordinate for testing whether the sun is up
+                        \ against the right edge of the screen (-sunParallaxR)
 
                         \ --- End of added code ------------------------------->
 
@@ -5283,7 +5300,8 @@ ENDIF
 .hori3
 
                         \ If we get here then we need to draw this line in
-                        \ anaglyph 3D, applying SUN_PARALLAX_P of parallax
+                        \ anaglyph 3D, applying the amount of parallax in
+                        \ sunParallax
 
  LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
  CMP #255               \ line in a two-stage line so jump to hori4
@@ -5841,7 +5859,7 @@ ENDIF
                         \ We start with the left fringe
 
  LDA xStart             \ If the sun is not up against the left edge, jump to
- CMP #SUN_PARALLAX_P+1  \ frin1 to draw the left fringe
+ CMP sunParallaxEdgeL   \ frin1 to draw the left fringe
  BCS frin1
 
  STA xCoreStart         \ The sun is up against the left edge, so set the left
@@ -5856,8 +5874,8 @@ ENDIF
 
                         \ Calculate and draw the left fringe
 
- SEC                    \ Set A = xStart - SUN_PARALLAX_P, keeping the result
- SBC #SUN_PARALLAX_P    \ above 0
+ SEC                    \ Set A = xStart - sunParallaxL, keeping the result
+ SBC sunParallaxL       \ above 0
  BCS frin2
  LDA #0
 
@@ -5868,9 +5886,9 @@ ENDIF
 
  STA xLeftStart         \ Store the result in xLeftStart
 
- LDA xStart             \ Set X2 = xStart + SUN_PARALLAX_P, keeping the result
+ LDA xStart             \ Set A = xStart + sunParallaxR, keeping the result
  CLC                    \ below 255
- ADC #SUN_PARALLAX_P
+ ADC sunParallaxR
  BCC frin3
  LDA #254
 
@@ -5905,8 +5923,8 @@ ENDIF
 
                         \ Now we do the right fringe
 
- LDA xEnd                   \ If the sun is not up against the left edge, jump
- CMP #255-SUN_PARALLAX_P    \ to frin6 to draw the left fringe
+ LDA xEnd               \ If the sun is not up against the right edge, jump to
+ CMP sunParallaxEdgeR   \ frin6 to draw the left fringe
  BCC frin6
 
  STA xCoreEnd           \ The sun is up against the right edge, so set the right
@@ -5921,8 +5939,8 @@ ENDIF
 
                         \ Calculate and draw the right fringe
 
- SEC                    \ Set A = xEnd - SUN_PARALLAX_P, keeping the result
- SBC #SUN_PARALLAX_P    \ above 0
+ SEC                    \ Set A = xEnd - sunParallaxL, keeping the result
+ SBC sunParallaxL       \ above 0
  BCS frin7
  LDA #0
 
@@ -5942,9 +5960,9 @@ ENDIF
  STX xCoreEnd           \ Store the x-coordinate in xCoreEnd to use as the end
                         \ of the white line in the middle
 
- LDA xEnd               \ Set A = xEnd + SUN_PARALLAX_P, keeping the result
+ LDA xEnd               \ Set A = xEnd + sunParallaxR, keeping the result
  CLC                    \ below 254
- ADC #SUN_PARALLAX_P
+ ADC sunParallaxR
  BCC frin9
  LDA #254
 
@@ -7976,14 +7994,15 @@ ENDMACRO
  EQUW SAFE              \            251 (&FB)    11 = Do nothing
  EQUW SAFE              \            252 (&FC)    12 = Do nothing
  EQUW SAFE              \            253 (&FD)    13 = Do nothing
- EQUW SAFE              \            254 (&FE)    14 = Do nothing
 
                         \ --- Mod: Code removed for speed control: ------------>
 
+\EQUW SAFE              \            254 (&FE)    14 = Do nothing
 \EQUW SAFE              \            255 (&FF)    15 = Do nothing
 
                         \ --- And replaced by: -------------------------------->
 
+ EQUW SetSunParallax    \            254 (&FE)    14 = Set the sun's parallax
  EQUW SpeedControl      \            255 (&FF)    15 = Control the game speed
 
                         \ --- End of replacement ------------------------------>
@@ -10666,6 +10685,43 @@ ENDMACRO
 
  LDA syncCounter        \ Wait until the syncCounter reaches 0
  BNE SlowDownMainLoop
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetSunParallax
+\       Type: Subroutine
+\   Category: Drawing suns
+\    Summary: Set the amount of parallax for drawing the sun
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.SetSunParallax
+
+ LDY #2                 \ Fetch byte #2 from the parameter block, which contains
+ LDA (OSSC),Y           \ the parameter that controls the operation
+
+ LSR A                  \ Split the amount of parallax between the eyes, into
+ STA sunParallaxL       \ sunParallaxL and sunParallaxR
+ STA sunParallaxR
+ BCC spar1
+ INC sunParallaxR
+
+.spar1
+
+ LDY sunParallaxL       \ Set sunParallaxEdgeL = sunParallaxL + 1
+ INY
+ STY sunParallaxEdgeL
+
+ LDA #0                 \ Set sunParallaxEdgeR = -sunParallaxR
+ SEC
+ SBC sunParallaxR
+ STA sunParallaxEdgeR
 
  RTS                    \ Return from the subroutine
 

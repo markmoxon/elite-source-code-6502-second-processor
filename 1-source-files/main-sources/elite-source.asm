@@ -4156,16 +4156,16 @@ ENDIF
 
 \ ******************************************************************************
 \
-\       Name: speedBuff
+\       Name: apiBuffer
 \       Type: Variable
 \   Category: Universe editor
-\    Summary: Buffer for speed OSWORD calls
+\    Summary: Buffer for OSWORD calls to the I/O processor's API
 \
 \ ******************************************************************************
 
                         \ --- Mod: Code added for speed control: -------------->
 
-.speedBuff
+.apiBuffer
 
  EQUB 3                 \ The number of bytes to transmit with this command
 
@@ -4188,10 +4188,10 @@ ENDIF
 
 .RestartSync
 
- STZ speedBuff+2        \ Set the parameter to zero to restart the sync counter
+ STZ apiBuffer+2        \ Set the parameter to zero to restart the sync counter
 
- LDX #LO(speedBuff)     \ Set (Y X) to point to the speedBuff parameter
- LDY #HI(speedBuff)     \ block
+ LDX #LO(apiBuffer)     \ Set (Y X) to point to the apiBuffer parameter
+ LDY #HI(apiBuffer)     \ block
 
  LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
 
@@ -4215,10 +4215,10 @@ ENDIF
 .WaitForSync
 
  LDA #1
- STA speedBuff+2        \ Set the parameter to zero to restart the sync counter
+ STA apiBuffer+2        \ Set the parameter to zero to restart the sync counter
 
- LDX #LO(speedBuff)     \ Set (Y X) to point to the speedBuff parameter
- LDY #HI(speedBuff)     \ block
+ LDX #LO(apiBuffer)     \ Set (Y X) to point to the apiBuffer parameter
+ LDY #HI(apiBuffer)     \ block
 
  LDA #255               \ Set A = 255 for the SpeedControl OSWORD call
 
@@ -4421,6 +4421,32 @@ ENDIF
  STA DOEXP+2
 
  RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SetSunParallax
+\       Type: Subroutine
+\   Category: Drawing suns
+\    Summary: Set the amount of parallax to apply to the sun
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.SetSunParallax
+
+ STA apiBuffer+2        \ Set the parameter to A
+
+ LDX #LO(apiBuffer)     \ Set (Y X) to point to the apiBuffer parameter
+ LDY #HI(apiBuffer)     \ block
+
+ LDA #254               \ Set A = 254 for the SetSunParallax OSWORD call
+
+ JMP OSWORD             \ Send an OSWORD command to the I/O processor to set the
+                        \ amoutn of parallax for the sun, returning from the
+                        \ subroutine using a tail call
 
                         \ --- End of added code ------------------------------->
 
@@ -52596,6 +52622,9 @@ ENDIF
 
 .SetParallaxMedium
 
+ LDA #256-4             \ Set the maximum amount of negative parallax, split
+ STA maxParallaxN       \ between each eye, to -4
+
  LDA #1                 \ Set the parallax factor to 1, so we divide
  STA parallaxFactor     \ z-coordinates by 2^1 = 2 to get the parallax
 
@@ -52603,13 +52632,13 @@ ENDIF
  STA maxParallaxP       \ between each eye, to 3
 
  STA planetParallax     \ Set the amount of positive parallax to apply to the
-                        \ platen, split between each eye, to 3
+                        \ planet, split between each eye, to 3
 
- LDA #256-4             \ Set the maximum amount of negative parallax, split
- STA maxParallaxN       \ between each eye, to -4
+ LDA #4
 
-
- RTS                    \ Return from the subroutine
+ JMP SetSunParallax     \ Set the amount of positive parallax to apply to the
+                        \ sun, split between each eye, to 3, returning from the
+                        \ subroutine using a tail call
 
                         \ --- End of added code ------------------------------->
 
@@ -52626,6 +52655,9 @@ ENDIF
 
 .SetParallaxLow
 
+ LDA #256-3             \ Set the maximum amount of negative parallax, split
+ STA maxParallaxN       \ between each eye, to -3
+
  LDA #2                 \ Set the parallax factor to 1, so we divide
  STA parallaxFactor     \ z-coordinates by 2^2 = 4 to get the parallax
 
@@ -52633,12 +52665,11 @@ ENDIF
  STA maxParallaxP       \ between each eye, to 2
 
  STA planetParallax     \ Set the amount of positive parallax to apply to the
-                        \ platen, split between each eye, to 2
+                        \ planet, split between each eye, to 2
 
- LDA #256-3             \ Set the maximum amount of negative parallax, split
- STA maxParallaxN       \ between each eye, to -3
-
- RTS                    \ Return from the subroutine
+ JMP SetSunParallax     \ Set the amount of positive parallax to apply to the
+                        \ sun, split between each eye, to 2, returning from the
+                        \ subroutine using a tail call
 
                         \ --- End of added code ------------------------------->
 
@@ -52658,16 +52689,18 @@ ENDIF
  STZ parallaxFactor     \ Set the parallax factor to 0, so we divide
                         \ z-coordinates by 2^0 = 1 to get the parallax
 
+ LDA #256-5             \ Set the maximum amount of negative parallax, split
+ STA maxParallaxN       \ between each eye, to -5
+
  LDA #4                 \ Set the maximum amount of positive parallax, split
  STA maxParallaxP       \ between each eye, to 4
 
  STA planetParallax     \ Set the amount of positive parallax to apply to the
-                        \ platen, split between each eye, to 4
+                        \ planet, split between each eye, to 4
 
- LDA #256-5             \ Set the maximum amount of negative parallax, split
- STA maxParallaxN       \ between each eye, to -5
-
- RTS                    \ Return from the subroutine
+ JMP SetSunParallax     \ Set the amount of positive parallax to apply to the
+                        \ sun, split between each eye, to 4, returning from the
+                        \ subroutine using a tail call
 
                         \ --- End of added code ------------------------------->
 
