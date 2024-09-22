@@ -29678,8 +29678,8 @@ ENDIF
  LDA Y1                 \ Save Y1 on the stack
  PHA
 
- LDA #255               \ Set Y1 = 255 so the new line is drawn first but is
- STA Y1                 \ flagged so we don't actually draw it until the old
+\LDA #255               \ Set Y1 = 255 so the new line is drawn first but is
+\STA Y1                 \ flagged so we don't actually draw it until the old
                         \ line is sent below
 
  JSR HLOIN              \ Draw the new white line from (X1, Y1) to (X2, Y1)
