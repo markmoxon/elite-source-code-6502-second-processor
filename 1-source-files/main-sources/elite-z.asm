@@ -291,6 +291,8 @@
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
+ ORG &0B50
+
 .V
 
  SKIP 1                 \ Temporary storage
@@ -354,6 +356,22 @@
 .xEnd
 
  SKIP 1                 \ The end x-coordinate for a sun line
+
+.firstX1
+
+ SKIP 1
+
+.firstX2
+
+ SKIP 1
+
+.secondX1
+
+ SKIP 1
+
+.secondX2
+
+ SKIP 1
 
 .twoStageLine
 
@@ -5257,16 +5275,59 @@ ENDIF
                         \ If we get here then X1 = X2, so the start and end
                         \ points are the same and we do not have a line to draw
 
- LDA Y1                 \ If Y1 <> 255 then jump to hori1 to skip the following
+\LDA Y1                 \ If Y1 <> 255 then jump to hori1 to skip the following
+\CMP #255
+\BNE hori1
+
+\STX xLeftStart         \ This is the first part in a two-part line and the line
+\STX xLeftEnd           \ in the first part (the new line) is blank, so set the
+\STX xCoreStart         \ coordinates of the new line to pass the fact that it
+\STX xCoreEnd           \ is blank to the second part (by ensuring the start and
+\STX xRightStart        \ end coordinates are the same)
+\STX xRightEnd
+
+ \ Draw first line - THIS IS THE FIX
+
+ LDA twoStageLine
  CMP #255
  BNE hori1
 
- STX xLeftStart         \ This is the first part in a two-part line and the line
- STX xLeftEnd           \ in the first part (the new line) is blank, so set the
- STX xCoreStart         \ coordinates of the new line to pass the fact that it
- STX xCoreEnd           \ is blank to the second part (by ensuring the start and
- STX xRightStart        \ end coordinates are the same)
- STX xRightEnd
+ LDA firstX1
+ STA X1
+ LDA firstX2
+ STA X2
+
+ LDA X1                 \ Store the original x-coordinates in xStart and xEnd
+ STA xStart
+ LDA X2
+ STA xEnd
+
+ JSR DrawFringes        \ Calculate the coordinates for the fringes and core
+                        \ white line for this sun line, and draw them (but only
+                        \ if Y1 <> 255, so we don't draw anything on the first
+                        \ stage of a two-stage line)
+
+ LDA #WHITE_3D          \ Set the colour to white for the central portion
+ STA S
+
+ LDA xCoreStart         \ If the start coordinate of the white portion is on or
+ CMP xCoreEnd           \ after the end coordinate, jump to hori7 to skip
+ BCS over3              \ drawing the line centre, as the eyes do not overlap
+
+ STA X1                 \ Set X1 = xCoreStart as the start of the white portion
+
+ LDA xCoreEnd           \ Set X2 = xCoreEnd as the end of the white portion
+ STA X2
+
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.over3
+
+ \ Draw first line - THIS IS THE FIX
+
+ LDA #0
+ STA twoStageLine
 
 .hori1
 
@@ -5304,24 +5365,86 @@ ENDIF
                         \ anaglyph 3D, applying the amount of parallax in
                         \ sunParallax
 
+ LDA Y1
+ CMP #255
+ BNE over1
+
+ LDA X1                 \ Store the original x-coordinates in xStart and xEnd
+ STA firstX1
+ LDA X2
+ STA firstX2
+
+ LDA #255
+ STA twoStageLine
+ JMP hori8
+
+.over1
+
  LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
  CMP #255               \ line in a two-stage line so jump to hori4
  BNE hori4
 
                         \ This is the second line in a two-stage line
 
- LDA xCoreStart         \ Copy the values from the previous call into the
- STA xCoreStartNew      \ variables for the new line (as the new line was the
- LDA xCoreEnd           \ first to be sent)
- STA xCoreEndNew
- LDA xLeftStart
- STA xLeftStartNew
- LDA xLeftEnd
- STA xLeftEndNew
- LDA xRightStart
- STA xRightStartNew
- LDA xRightEnd
- STA xRightEndNew
+\LDA xCoreStart         \ Copy the values from the previous call into the
+\STA xCoreStartNew      \ variables for the new line (as the new line was the
+\LDA xCoreEnd           \ first to be sent)
+\STA xCoreEndNew
+\LDA xLeftStart
+\STA xLeftStartNew
+\LDA xLeftEnd
+\STA xLeftEndNew
+\LDA xRightStart
+\STA xRightStartNew
+\LDA xRightEnd
+\STA xRightEndNew
+
+\ hori4 as in-line
+
+ LDA #0
+ STA twoStageLine
+
+ LDA X1
+ STA secondX1
+ LDA X2
+ STA secondX2
+
+ LDA firstX1
+ STA X1
+ LDA firstX2
+ STA X2
+
+ LDA X1                 \ Store the original x-coordinates in xStart and xEnd
+ STA xStart
+ LDA X2
+ STA xEnd
+
+ JSR DrawFringes        \ Calculate the coordinates for the fringes and core
+                        \ white line for this sun line, and draw them (but only
+                        \ if Y1 <> 255, so we don't draw anything on the first
+                        \ stage of a two-stage line)
+
+ LDA #WHITE_3D          \ Set the colour to white for the central portion
+ STA S
+
+ LDA xCoreStart         \ If the start coordinate of the white portion is on or
+ CMP xCoreEnd           \ after the end coordinate, jump to hori7 to skip
+ BCS over2              \ drawing the line centre, as the eyes do not overlap
+
+ STA X1                 \ Set X1 = xCoreStart as the start of the white portion
+
+ LDA xCoreEnd           \ Set X2 = xCoreEnd as the end of the white portion
+ STA X2
+
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.over2
+
+ LDA secondX1
+ STA X1
+ LDA secondX2
+ STA X2
 
 .hori4
 
@@ -5335,19 +5458,19 @@ ENDIF
                         \ if Y1 <> 255, so we don't draw anything on the first
                         \ stage of a two-stage line)
 
- LDA Y1                 \ If Y1 = 255 then skip drawing the core white line and
- CMP #255               \ move on to the next line
- BEQ hori7
-
- LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
- CMP #255               \ line in a two-stage line so jump to hori4
- BNE hori5
-
-                        \ This is the second line in a two-stage line
-
- JMP DrawWhiteLine      \ Draw the core white line, returning to hori8 once done
-
-.hori5
+\ LDA Y1                 \ If Y1 = 255 then skip drawing the core white line and
+\ CMP #255               \ move on to the next line
+\ BEQ hori7
+\
+\ LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
+\ CMP #255               \ line in a two-stage line so jump to hori4
+\ BNE hori5
+\
+\                        \ This is the second line in a two-stage line
+\
+\JMP DrawWhiteLine      \ Draw the core white line, returning to hori8 once done
+\
+\.hori5
 
  LDA #WHITE_3D          \ Set the colour to white for the central portion
  STA S
@@ -5368,8 +5491,8 @@ ENDIF
 
 .hori7
 
- LDY Y1                 \ Set twoStageLine to Y1, so it will be 255 if this line
- STY twoStageLine       \ was the first in a two-stage line
+\ LDY Y1                 \ Set twoStageLine to Y1, so it will be 255 if this line
+\ STY twoStageLine       \ was the first in a two-stage line
 
 .hori8
 
@@ -5910,9 +6033,9 @@ ENDIF
  STX xCoreStart         \ Store the x-coordinate in xCoreStart to use as the
                         \ start of the white line in the middle
 
- LDA Y1                 \ If Y1 = 255 then skip drawing the line
- CMP #255
- BEQ frin5
+\LDA Y1                 \ If Y1 = 255 then skip drawing the line
+\CMP #255
+\BEQ frin5
 
  LDA #RED_3D            \ Set the colour of the left fringe (left eye) to red
  STA S
@@ -5974,9 +6097,9 @@ ENDIF
 
  STA xRightEnd          \ Store the result in xRightEnd
 
- LDA Y1                 \ If Y1 = 255 then skip drawing the line
- CMP #255
- BEQ frin10
+\LDA Y1                 \ If Y1 = 255 then skip drawing the line
+\CMP #255
+\BEQ frin10
 
  LDA #CYAN_3D           \ Set the colour of the right fringe (right eye) to cyan
  STA S
