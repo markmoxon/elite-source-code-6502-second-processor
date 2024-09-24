@@ -3470,6 +3470,16 @@ WP workspace from  &D00  to &E20
      0FA9   A0 0F      LDY #&0F
      0FAB   A9 FE      LDA #&FE
      0FAD   4C F1 FF   JMP &FFF1
+.RemoveViewName
+     0FB0   AD E4 0A   LDA &0AE4
+     0FB3   F0 0D      BEQ &0FC2
+     0FB5   A9 80      LDA #&80
+     0FB7   85 71      STA &71
+     0FB9   8D 0A 23   STA &230A
+     0FBC   20 E1 6C   JSR &6CE1
+     0FBF   9C E4 0A   STZ &0AE4
+.view1
+     0FC2   60         RTS
 Saving file '3-assembled-output/ANAGLYPH.bin'
 .MOS
      1000
@@ -3578,7 +3588,7 @@ Saving file '3-assembled-output/ANAGLYPH.bin'
      106D   A9 10      LDA #&10
      106F   85 01      STA &01
      1071   85 06      STA &06
-     1073   A9 FB      LDA #&FB
+     1073   A9 EE      LDA #&EE
      1075   85 02      STA &02
      1077   A9 81      LDA #&81
      1079   85 03      STA &03
@@ -12193,7 +12203,7 @@ Saving file '3-assembled-output/ELTE.bin'
 .me2
      4BFA   AD E4 0A   LDA &0AE4
      4BFD   F0 06      BEQ &4C05
-     4BFF   20 67 81   JSR &8167
+     4BFF   20 B0 0F   JSR &0FB0
      4C02   4C 0B 4C   JMP &4C0B
 .mess1
      4C05   AD F0 08   LDA &08F0
@@ -12673,7 +12683,7 @@ Saving file '3-assembled-output/ELTE.bin'
 .spasto
      4FA6   88 88
 .BEGIN
-     4FA8   20 7A 81   JSR &817A
+     4FA8   20 67 81   JSR &8167
      4FAB   A2 0A      LDX #&0A
      4FAD   A9 00      LDA #&00
 .BEL1
@@ -13641,7 +13651,7 @@ Saving file '3-assembled-output/ELTE.bin'
      56F2   48         PHA
      56F3   AD F0 08   LDA &08F0
      56F6   20 4A 57   JSR &574A
-     56F9   20 67 81   JSR &8167
+     56F9   20 B0 0F   JSR &0FB0
      56FC   68         PLA
 .MESS
      56FD   48         PHA
@@ -27935,7 +27945,7 @@ End macro ECHR
      812D   78
      812E   7D
 .COLD
-     812F   A9 FC      LDA #&FC
+     812F   A9 EF      LDA #&EF
      8131   85 21      STA &21
      8133   A9 81      LDA #&81
      8135   85 22      STA &22
@@ -27945,7 +27955,7 @@ End macro ECHR
      813D   85 06      STA &06
      813F   A2 04      LDX #&04
      8141   20 56 81   JSR &8156
-     8144   A9 FC      LDA #&FC
+     8144   A9 EF      LDA #&EF
      8146   85 21      STA &21
      8148   A9 85      LDA #&85
      814A   85 22      STA &22
@@ -27966,85 +27976,78 @@ End macro ECHR
      8163   CA         DEX
      8164   D0 F2      BNE &8158
      8166   60         RTS
-.RemoveViewName
-     8167   AD E4 0A   LDA &0AE4
-     816A   F0 0D      BEQ &8179
-     816C   A9 80      LDA #&80
-     816E   85 71      STA &71
-     8170   8D 0A 23   STA &230A
-     8173   20 E1 6C   JSR &6CE1
-     8176   9C E4 0A   STZ &0AE4
-.view1
-     8179   60         RTS
 .ResetAnaglyph
-     817A   A9 02      LDA #&02
-     817C   8D ED 0A   STA &0AED
-     817F   A9 04      LDA #&04
-     8181   8D EF 0A   STA &0AEF
-     8184   A9 00      LDA #&00
-     8186   9C EE 0A   STZ &0AEE
-     8189   A9 02      LDA #&02
-     818B   8D F1 0A   STA &0AF1
-     818E   20 CE 81   JSR &81CE
+     8167   A9 02      LDA #&02
+     8169   8D ED 0A   STA &0AED
+     816C   A9 04      LDA #&04
+     816E   8D EF 0A   STA &0AEF
+     8171   A9 00      LDA #&00
+     8173   9C EE 0A   STZ &0AEE
+     8176   A9 02      LDA #&02
+     8178   8D F1 0A   STA &0AF1
+     817B   20 C1 81   JSR &81C1
 .SetParallaxMedium
-     8191   A9 FC      LDA #&FC
-     8193   8D F3 0A   STA &0AF3
-     8196   A9 01      LDA #&01
-     8198   8D F0 0A   STA &0AF0
-     819B   A9 03      LDA #&03
-     819D   8D F2 0A   STA &0AF2
-     81A0   8D F5 0A   STA &0AF5
-     81A3   4C A4 0F   JMP &0FA4
+     817E   A9 FC      LDA #&FC
+     8180   8D F3 0A   STA &0AF3
+     8183   A9 01      LDA #&01
+     8185   8D F0 0A   STA &0AF0
+     8188   A9 03      LDA #&03
+     818A   8D F2 0A   STA &0AF2
+     818D   8D F5 0A   STA &0AF5
+     8190   A9 02      LDA #&02
+     8192   4C A4 0F   JMP &0FA4
 .SetParallaxLow
-     81A6   A9 FD      LDA #&FD
-     81A8   8D F3 0A   STA &0AF3
-     81AB   A9 02      LDA #&02
-     81AD   8D F0 0A   STA &0AF0
-     81B0   A9 02      LDA #&02
-     81B2   8D F2 0A   STA &0AF2
-     81B5   8D F5 0A   STA &0AF5
-     81B8   4C A4 0F   JMP &0FA4
+     8195   A9 FD      LDA #&FD
+     8197   8D F3 0A   STA &0AF3
+     819A   A9 02      LDA #&02
+     819C   8D F0 0A   STA &0AF0
+     819F   A9 02      LDA #&02
+     81A1   8D F2 0A   STA &0AF2
+     81A4   8D F5 0A   STA &0AF5
+     81A7   A9 01      LDA #&01
+     81A9   4C A4 0F   JMP &0FA4
 .SetParallaxHigh
-     81BB   9C F0 0A   STZ &0AF0
-     81BE   A9 FB      LDA #&FB
-     81C0   8D F3 0A   STA &0AF3
-     81C3   A9 04      LDA #&04
-     81C5   8D F2 0A   STA &0AF2
-     81C8   8D F5 0A   STA &0AF5
-     81CB   4C A4 0F   JMP &0FA4
+     81AC   9C F0 0A   STZ &0AF0
+     81AF   A9 FB      LDA #&FB
+     81B1   8D F3 0A   STA &0AF3
+     81B4   A9 04      LDA #&04
+     81B6   8D F2 0A   STA &0AF2
+     81B9   8D F5 0A   STA &0AF5
+     81BC   A9 03      LDA #&03
+     81BE   4C A4 0F   JMP &0FA4
 .SetParallaxSkew
-     81CE   AD EE 0A   LDA &0AEE
-     81D1   0D EF 0A   ORA &0AEF
-     81D4   F0 22      BEQ &81F8
-     81D6   AD EE 0A   LDA &0AEE
-     81D9   85 4B      STA &4B
-     81DB   AD EF 0A   LDA &0AEF
-     81DE   85 4C      STA &4C
-     81E0   64 4D      STZ &4D
-     81E2   AD ED 0A   LDA &0AED
-     81E5   4A         LSR A
-     81E6   85 1A      STA &1A
-     81E8   64 19      STZ &19
-     81EA   A9 00      LDA #&00
-     81EC   20 55 49   JSR &4955
-     81EF   A5 3F      LDA &3F
-     81F1   10 01      BPL &81F4
-     81F3   E8         INX
+     81C1   AD EE 0A   LDA &0AEE
+     81C4   0D EF 0A   ORA &0AEF
+     81C7   F0 22      BEQ &81EB
+     81C9   AD EE 0A   LDA &0AEE
+     81CC   85 4B      STA &4B
+     81CE   AD EF 0A   LDA &0AEF
+     81D1   85 4C      STA &4C
+     81D3   64 4D      STZ &4D
+     81D5   AD ED 0A   LDA &0AED
+     81D8   4A         LSR A
+     81D9   85 1A      STA &1A
+     81DB   64 19      STZ &19
+     81DD   A9 00      LDA #&00
+     81DF   20 55 49   JSR &4955
+     81E2   A5 3F      LDA &3F
+     81E4   10 01      BPL &81E7
+     81E6   E8         INX
 .skew1
-     81F4   8E F4 0A   STX &0AF4
-     81F7   60         RTS
+     81E7   8E F4 0A   STX &0AF4
+     81EA   60         RTS
 .skew2
-     81F8   9C F4 0A   STZ &0AF4
-     81FB   60         RTS
+     81EB   9C F4 0A   STZ &0AF4
+     81EE   60         RTS
 .F%
-     81FC
+     81EF
 ELITE J
 Assembled at &7365 
-Ends at &81FC 
-Code size is &E97 
+Ends at &81EF 
+Code size is &E8A 
 Execute at &1000 
 Reload at &7365 
-S.ELTJ &7365  &81FC  &1000  &7365 
+S.ELTJ &7365  &81EF  &1000  &7365 
 Saving file '3-assembled-output/ELTJ.bin'
 .XX21
      D000   66 D0
@@ -40427,7 +40430,7 @@ End macro FACE
      F56F   20 E2 41   JSR &41E2
      F572   20 CB F4   JSR &F4CB
 .show2
-     F575   20 CE 81   JSR &81CE
+     F575   20 C1 81   JSR &81C1
      F578   20 21 F4   JSR &F421
      F57B   AD EE 0A   LDA &0AEE
      F57E   85 19      STA &19
@@ -40490,7 +40493,7 @@ End macro FACE
 .show8
      F5F8   C9 72      CMP #&72
      F5FA   D0 06      BNE &F602
-     F5FC   20 7A 81   JSR &817A
+     F5FC   20 67 81   JSR &8167
      F5FF   4C 75 F5   JMP &F575
 .show9
      F602   C9 70      CMP #&70
@@ -40520,13 +40523,13 @@ End macro FACE
      F633   F0 10      BEQ &F645
      F635   C9 02      CMP #&02
      F637   F0 06      BEQ &F63F
-     F639   20 A6 81   JSR &81A6
+     F639   20 95 81   JSR &8195
      F63C   4C 75 F5   JMP &F575
 .show13
-     F63F   20 91 81   JSR &8191
+     F63F   20 7E 81   JSR &817E
      F642   4C 75 F5   JMP &F575
 .show14
-     F645   20 BB 81   JSR &81BB
+     F645   20 AC 81   JSR &81AC
      F648   4C 75 F5   JMP &F575
 .show15
      F64B   C9 40      CMP #&40
@@ -40748,13 +40751,13 @@ Execute at &D000
 Reload at &D000 
 S.SHIPS &D000  &F7EC  &D000  &D000 
 Saving file '3-assembled-output/SHIPS.bin'
-ELITE game code &4  bytes free
-F% = &81FC 
+ELITE game code &11  bytes free
+F% = &81EF 
 Ends at &F7EC 
 Addresses for the scramble routines in elite-checksum.py
 S% = &1065 
 G% = &107B 
-F% = &81FC 
+F% = &81EF 
      1000   2E
      1001   20
      1002   3C
@@ -40787,15 +40790,15 @@ eliteh = &6876
 elitei = &6DC3 
 .elitej
 elitej = &7365 
-F% = &81FC 
-P% = &81FC 
+F% = &81EF 
+P% = &81EF 
 .words
-words = &81FC 
+words = &81EF 
 .ships
-ships = &85FC 
+ships = &85EF 
 .end
-P% = &ADE8 
-S.P.CODE &1000 &ADE8  &1000 &1000 
+P% = &ADDB 
+S.P.CODE &1000 &ADDB  &1000 &1000 
 Saving file '3-assembled-output/P.CODE.unprot.bin'
 .ZP
      0080

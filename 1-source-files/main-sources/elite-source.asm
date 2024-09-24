@@ -4450,6 +4450,41 @@ ENDIF
 
                         \ --- End of added code ------------------------------->
 
+\ ******************************************************************************
+\
+\       Name: RemoveViewName
+\       Type: Subroutine
+\   Category: Flight
+\    Summary: Remove the view name from the top of the space view
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+.RemoveViewName
+
+ LDA showingViewName    \ If showingViewName is zero then we are not showing the
+ BEQ view1              \ view name, so jump to view1 to return from the
+                        \ subroutine as there is no view name to remove
+
+ LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
+ STA QQ17
+
+ STA DTW2               \ Set bit 7 of DTW2 to indicate we are not currently
+                        \ printing a word
+
+ JSR OLDBOX             \ Print the view name to erase it from the screen
+
+ STZ showingViewName    \ Set showingViewName = 0 to record that the view name
+                        \ is no longer being shown (so we don't try to remove it
+                        \ again)
+
+.view1
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
  SKIPTO &1000
 
  SAVE "3-assembled-output/ANAGLYPH.bin", &0E20, &1000, &0E20
@@ -52541,42 +52576,6 @@ ENDIF
 
  RTS                    \ Return from the subroutine
 
-
-\ ******************************************************************************
-\
-\       Name: RemoveViewName
-\       Type: Subroutine
-\   Category: Flight
-\    Summary: Remove the view name from the top of the space view
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for anaglyph 3D: ---------------->
-
-.RemoveViewName
-
- LDA showingViewName    \ If showingViewName is zero then we are not showing the
- BEQ view1              \ view name, so jump to view1 to return from the
-                        \ subroutine as there is no view name to remove
-
- LDA #%10000000         \ Set bit 7 of QQ17 to switch to Sentence Case
- STA QQ17
-
- STA DTW2               \ Set bit 7 of DTW2 to indicate we are not currently
-                        \ printing a word
-
- JSR OLDBOX             \ Print the view name to erase it from the screen
-
- STZ showingViewName    \ Set showingViewName = 0 to record that the view name
-                        \ is no longer being shown (so we don't try to remove it
-                        \ again)
-
-.view1
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
 \ ******************************************************************************
 \
 \       Name: ResetAnaglyph
@@ -52634,8 +52633,8 @@ ENDIF
  STA planetParallax     \ Set the amount of positive parallax to apply to the
                         \ planet, split between each eye, to 3
 
- JMP SetSunParallax     \ Set the amount of positive parallax to apply to the
-                        \ sun, split between each eye, to 3, returning from the
+ LDA #2                 \ Set the amount of positive parallax to apply to the
+ JMP SetSunParallax     \ sun, split between each eye, to 2, returning from the
                         \ subroutine using a tail call
 
                         \ --- End of added code ------------------------------->
@@ -52665,8 +52664,8 @@ ENDIF
  STA planetParallax     \ Set the amount of positive parallax to apply to the
                         \ planet, split between each eye, to 2
 
- JMP SetSunParallax     \ Set the amount of positive parallax to apply to the
-                        \ sun, split between each eye, to 2, returning from the
+ LDA #1                 \ Set the amount of positive parallax to apply to the
+ JMP SetSunParallax     \ sun, split between each eye, to 1, returning from the
                         \ subroutine using a tail call
 
                         \ --- End of added code ------------------------------->
@@ -52696,8 +52695,8 @@ ENDIF
  STA planetParallax     \ Set the amount of positive parallax to apply to the
                         \ planet, split between each eye, to 4
 
- JMP SetSunParallax     \ Set the amount of positive parallax to apply to the
-                        \ sun, split between each eye, to 4, returning from the
+ LDA #3                 \ Set the amount of positive parallax to apply to the
+ JMP SetSunParallax     \ sun, split between each eye, to 3, returning from the
                         \ subroutine using a tail call
 
                         \ --- End of added code ------------------------------->
