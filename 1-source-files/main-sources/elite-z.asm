@@ -291,8 +291,6 @@
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
- ORG &0B50
-
 .V
 
  SKIP 1                 \ Temporary storage
@@ -333,22 +331,6 @@
  SKIP 1                 \ The x-coordinate of the right end of the white part of
                         \ the sun line being drawn in HLOIN
 
-.xLeftStartNew
-
- SKIP 1                 \ The x-coordinate of the start of the left fringe
-
-.xLeftEndNew
-
- SKIP 1                 \ The x-coordinate of the end of the left fringe
-
-.xRightStartNew
-
- SKIP 1                 \ The x-coordinate of the start of the left fringe
-
-.xRightEndNew
-
- SKIP 1                 \ The x-coordinate of the end of the left fringe
-
 .xStart
 
  SKIP 1                 \ The start x-coordinate for a sun line
@@ -359,19 +341,23 @@
 
 .firstX1
 
- SKIP 1
+ SKIP 1                 \ The x-coordinate of the start of the first line in a
+                        \ two-line sun-line transmission
 
 .firstX2
 
- SKIP 1
+ SKIP 1                 \ The x-coordinate of the end of the first line in a
+                        \ two-line sun-line transmission
 
 .secondX1
 
- SKIP 1
+ SKIP 1                 \ The x-coordinate of the start of the second line in a
+                        \ two-line sun-line transmission
 
 .secondX2
 
- SKIP 1
+ SKIP 1                 \ The x-coordinate of the end of the second line in a
+                        \ two-line sun-line transmission
 
 .twoStageLine
 

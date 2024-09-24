@@ -52634,8 +52634,6 @@ ENDIF
  STA planetParallax     \ Set the amount of positive parallax to apply to the
                         \ planet, split between each eye, to 3
 
- LDA #4
-
  JMP SetSunParallax     \ Set the amount of positive parallax to apply to the
                         \ sun, split between each eye, to 3, returning from the
                         \ subroutine using a tail call
