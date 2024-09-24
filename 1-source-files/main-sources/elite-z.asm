@@ -385,12 +385,12 @@
 .sunParallaxEdgeL
 
  SKIP 1                 \ The x-coordinate for testing whether the sun is up
-                        \ against the left edge of the screen (sunParallaxL + 1)
+                        \ against the left edge of the screen
 
 .sunParallaxEdgeR
 
  SKIP 1                 \ The x-coordinate for testing whether the sun is up
-                        \ against the right edge of the screen (-sunParallaxR)
+                        \ against the right edge of the screen
 
                         \ --- End of added code ------------------------------->
 
@@ -5880,10 +5880,10 @@ ENDIF
  STA xLeftStart         \ Store the result in xLeftStart
 
  LDA xStart             \ Set A = xStart + sunParallaxR, keeping the result
- CLC                    \ below 255
+ CLC                    \ on-screen
  ADC sunParallaxR
  BCC frin3
- LDA #254
+ LDA #255
 
 .frin3
 
@@ -5892,10 +5892,10 @@ ENDIF
 
  STA xLeftEnd           \ Store the result in xLeftStart
 
- TAX                    \ Increment the x-coordinate, keeping the result below
- INX                    \ 254
+ TAX                    \ Increment the x-coordinate, keeping the result
+ INX                    \ on-screen
  BNE frin4
- LDX #254
+ LDX #255
 
 .frin4
 
@@ -5950,10 +5950,10 @@ ENDIF
                         \ of the white line in the middle
 
  LDA xEnd               \ Set A = xEnd + sunParallaxR, keeping the result
- CLC                    \ below 254
+ CLC                    \ on-screen
  ADC sunParallaxR
  BCC frin9
- LDA #254
+ LDA #255
 
 .frin9
 
@@ -10703,7 +10703,7 @@ ENDMACRO
  INY
  STY sunParallaxEdgeL
 
- LDA #0                 \ Set sunParallaxEdgeR = -sunParallaxR
+ LDA #255               \ Set sunParallaxEdgeR = 255 - sunParallaxR
  SEC
  SBC sunParallaxR
  STA sunParallaxEdgeR

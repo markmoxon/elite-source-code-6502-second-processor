@@ -43934,14 +43934,14 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      367D   18         CLC
      367E   65 AA      ADC &AA
      3680   90 02      BCC &3684
-     3682   A9 FE      LDA #&FE
+     3682   A9 FF      LDA #&FF
 .frin3
      3684   85 92      STA &92
      3686   85 9C      STA &9C
      3688   AA         TAX
      3689   E8         INX
      368A   D0 02      BNE &368E
-     368C   A2 FE      LDX #&FE
+     368C   A2 FF      LDX #&FF
 .frin4
      368E   86 99      STX &99
      3690   A9 F0      LDA #&F0
@@ -43972,7 +43972,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      36B8   18         CLC
      36B9   65 AA      ADC &AA
      36BB   90 02      BCC &36BF
-     36BD   A9 FE      LDA #&FE
+     36BD   A9 FF      LDA #&FF
 .frin9
      36BF   85 92      STA &92
      36C1   85 9E      STA &9E
@@ -45332,7 +45332,7 @@ End macro DKS4
      3F25   A4 A9      LDY &A9
      3F27   C8         INY
      3F28   84 AB      STY &AB
-     3F2A   A9 00      LDA #&00
+     3F2A   A9 FF      LDA #&FF
      3F2C   38         SEC
      3F2D   E5 AA      SBC &AA
      3F2F   85 AC      STA &AC
