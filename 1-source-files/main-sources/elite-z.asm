@@ -1790,61 +1790,61 @@ ENDIF
 
  PHA                    \ Store A on the stack so we can retrieve it after the
                         \ following call to TT26
-
+ 
  JSR TT26               \ Call TT26 to print the character in A on-screen
-
+ 
  PLA                    \ Retrieve A from the stack
-
+ 
  CMP #11                \ If A = 11, which normally means "move the cursor up
  BEQ nottosend          \ one line", jump to nottosend to skip sending this
                         \ character to the printer, as you can't roll back time
                         \ when you're printing hard copy
-
+ 
  PHA                    \ Store A on the stack so we can retrieve it after the
                         \ following call to NVOSWRCH
-
+ 
  LDA #2                 \ Print ASCII 2 using the non-vectored OSWRCH, which
  JSR NVOSWRCH           \ means "start sending characters to the printer"
-
+ 
  PLA                    \ Retrieve A from the stack, though this is a bit
                         \ pointless given the next instruction, as they cancel
                         \ each other out
-
+ 
  PHA                    \ Store A on the stack so we can retrieve it after the
                         \ following calls to POSWRCH and/or NVOSWRCH
-
+ 
  CMP #' '               \ If A is greater than ASCII " ", then it's a printable
  BCS tosend             \ character, so jump to tosend to print the character
                         \ and jump back to sent to turn the printer off and
                         \ finish
-
+ 
  CMP #10                \ If we are printing a line feed, jump to tosend2 to
  BEQ tosend2            \ send it to POSWRCH
-
+ 
  LDA #13                \ Otherwise print a carriage return instead of whatever
  JSR POSWRCH            \ was in A, and jump to sent to turn the printer off and
  JMP sent               \ finish
-
-.tosend2
-
+ 
+ .tosend2
+ 
 \CMP #13                \ These instructions are commented out in the original
 \BEQ sent               \ source; perhaps they were replaced by the above JMP
                         \ instruction at some point, which does a similar thing
                         \ but in fewer bytes (and without the risk of POSWRCH
                         \ corrupting the value of A)
-
+ 
  LDA #10                \ Call POSWRCH to send a line feed to the printer
  JSR POSWRCH
-
+ 
 .sent
-
+ 
  LDA #3                 \ Print ASCII 3 using the non-vectored OSWRCH, which
  JSR NVOSWRCH           \ means "stop sending characters to the printer"
-
+ 
  PLA                    \ Retrieve A from the stack
-
-.nottosend
-
+ 
+ .nottosend
+ 
  JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
                         \ return from the subroutine using a tail call
 
@@ -5275,64 +5275,32 @@ ENDIF
                         \ If we get here then X1 = X2, so the start and end
                         \ points are the same and we do not have a line to draw
 
-\LDA Y1                 \ If Y1 <> 255 then jump to hori1 to skip the following
-\CMP #255
-\BNE hori1
+                        \ If this is part 2 of a two-stage line and part 2 is
+                        \ an empty line, we still need to draw the first line
 
-\STX xLeftStart         \ This is the first part in a two-part line and the line
-\STX xLeftEnd           \ in the first part (the new line) is blank, so set the
-\STX xCoreStart         \ coordinates of the new line to pass the fact that it
-\STX xCoreEnd           \ is blank to the second part (by ensuring the start and
-\STX xRightStart        \ end coordinates are the same)
-\STX xRightEnd
+ LDA twoStageLine       \ If this is the second line in a two-stage line, jump
+ CMP #255               \ to hori1
+ BEQ hori1
 
- \ Draw first line - THIS IS THE FIX
+ JMP hori7              \ Jump to hori7 to move on to the next line, as there is
+                        \ no line to draw
 
- LDA twoStageLine
- CMP #255
- BNE hori1
+.hori1
+
+                        \ If we get here then this is the second line in a
+                        \ two-stage line but this second line is empty, so we
+                        \ now need to draw the first line that we received
+                        \ previously
 
  LDA firstX1
  STA X1
  LDA firstX2
  STA X2
 
- LDA X1                 \ Store the original x-coordinates in xStart and xEnd
- STA xStart
- LDA X2
- STA xEnd
-
- JSR DrawFringes        \ Calculate the coordinates for the fringes and core
-                        \ white line for this sun line, and draw them (but only
-                        \ if Y1 <> 255, so we don't draw anything on the first
-                        \ stage of a two-stage line)
-
- LDA #WHITE_3D          \ Set the colour to white for the central portion
- STA S
-
- LDA xCoreStart         \ If the start coordinate of the white portion is on or
- CMP xCoreEnd           \ after the end coordinate, jump to hori7 to skip
- BCS over3              \ drawing the line centre, as the eyes do not overlap
-
- STA X1                 \ Set X1 = xCoreStart as the start of the white portion
-
- LDA xCoreEnd           \ Set X2 = xCoreEnd as the end of the white portion
- STA X2
-
- JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
-                        \ (X2, Y1) on the right
-
-.over3
-
- \ Draw first line - THIS IS THE FIX
-
  LDA #0
  STA twoStageLine
 
-.hori1
-
- JMP hori7              \ Jump to hori7 to move on to the next line, as there is
-                        \ no line to draw
+ JMP hori4
 
 .hori2
 
@@ -5369,14 +5337,14 @@ ENDIF
  CMP #255
  BNE over1
 
- LDA X1                 \ Store the original x-coordinates in xStart and xEnd
+ LDA X1                 \ Store the first line's x-coordinates in xStart and xEnd
  STA firstX1
  LDA X2
  STA firstX2
 
  LDA #255
  STA twoStageLine
- JMP hori8
+ JMP hori7
 
 .over1
 
@@ -5386,91 +5354,47 @@ ENDIF
 
                         \ This is the second line in a two-stage line
 
-\LDA xCoreStart         \ Copy the values from the previous call into the
-\STA xCoreStartNew      \ variables for the new line (as the new line was the
-\LDA xCoreEnd           \ first to be sent)
-\STA xCoreEndNew
-\LDA xLeftStart
-\STA xLeftStartNew
-\LDA xLeftEnd
-\STA xLeftEndNew
-\LDA xRightStart
-\STA xRightStartNew
-\LDA xRightEnd
-\STA xRightEndNew
-
-\ hori4 as in-line
-
- LDA #0
- STA twoStageLine
-
- LDA X1
+ LDA X1                 \ Store the second line's coordinates
  STA secondX1
  LDA X2
  STA secondX2
 
- LDA firstX1
+ LDA firstX1            \ Restore the first line's coordinates
  STA X1
  LDA firstX2
  STA X2
 
- LDA X1                 \ Store the original x-coordinates in xStart and xEnd
- STA xStart
- LDA X2
- STA xEnd
-
- JSR DrawFringes        \ Calculate the coordinates for the fringes and core
-                        \ white line for this sun line, and draw them (but only
-                        \ if Y1 <> 255, so we don't draw anything on the first
-                        \ stage of a two-stage line)
-
- LDA #WHITE_3D          \ Set the colour to white for the central portion
- STA S
-
- LDA xCoreStart         \ If the start coordinate of the white portion is on or
- CMP xCoreEnd           \ after the end coordinate, jump to hori7 to skip
- BCS over2              \ drawing the line centre, as the eyes do not overlap
-
- STA X1                 \ Set X1 = xCoreStart as the start of the white portion
-
- LDA xCoreEnd           \ Set X2 = xCoreEnd as the end of the white portion
- STA X2
-
- JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
-                        \ (X2, Y1) on the right
+ JSR DrawFringes        \ Draw the fringes and calculate the coordinates for the
+                        \ core white line for this sun line
 
 .over2
 
- LDA secondX1
+ LDA xCoreStart         \ Copy the values from the previous call into the
+ STA xCoreStartNew      \ variables for the new line (as the new line was the
+ LDA xCoreEnd           \ first to be sent)
+ STA xCoreEndNew
+
+ LDA secondX1           \ Now for the old line
  STA X1
  LDA secondX2
  STA X2
 
 .hori4
 
- LDA X1                 \ Store the original x-coordinates in xStart and xEnd
- STA xStart
- LDA X2
- STA xEnd
+ JSR DrawFringes        \ Draw the fringes and calculate the coordinates for the
+                        \ core white line for this sun line
 
- JSR DrawFringes        \ Calculate the coordinates for the fringes and core
-                        \ white line for this sun line, and draw them (but only
-                        \ if Y1 <> 255, so we don't draw anything on the first
-                        \ stage of a two-stage line)
+ LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
+ CMP #255               \ line in a two-stage line so jump to hori4
+ BNE hori5
 
-\ LDA Y1                 \ If Y1 = 255 then skip drawing the core white line and
-\ CMP #255               \ move on to the next line
-\ BEQ hori7
-\
-\ LDA twoStageLine       \ If twoStageLine <> 255, then this is not the second
-\ CMP #255               \ line in a two-stage line so jump to hori4
-\ BNE hori5
-\
-\                        \ This is the second line in a two-stage line
-\
-\JMP DrawWhiteLine      \ Draw the core white line, returning to hori8 once done
-\
-\.hori5
+                        \ This is the second line in a two-stage line
+
+ JSR DrawWhiteLine      \ Draw the core white line in a flicker-free manner
+
+ JMP hori7              \ Jump to hori7 to move on to the next sun line
+
+.hori5
 
  LDA #WHITE_3D          \ Set the colour to white for the central portion
  STA S
@@ -5490,11 +5414,6 @@ ENDIF
                         \ (X2, Y1) on the right
 
 .hori7
-
-\ LDY Y1                 \ Set twoStageLine to Y1, so it will be 255 if this line
-\ STY twoStageLine       \ was the first in a two-stage line
-
-.hori8
 
  LDY Y2                 \ Set Y to the parameter block offset for this line's Y1
                         \ coordinate, which we stored in Y2 before we drew the
@@ -5826,47 +5745,13 @@ ENDIF
  LDA #WHITE_3D          \ Set the colour to white for the central portion
  STA S
 
- LDA xCoreStartNew      \ If there is a new line, jump to whit1
- CMP xCoreEndNew
- BCC whit1
+ LDA xCoreStart         \ If the start coordinate of the white portion is on or
+ CMP xCoreEnd           \ after the end coordinate, jump to whita to skip
+ BCS whita              \ drawing the line centre, as the eyes do not overlap
 
- LDA xCoreStart         \ If there is no old line, jump to whit3
- CMP xCoreEnd
- BCS whit3
-
-                        \ If we get here there is an old line but no new line
-
- LDA xCoreStart         \ Set X1 and X2 to the old line, so we erase it
- STA X1
- LDA xCoreEnd
- STA X2
-
- JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
-                        \ (X2, Y1) on the right
-
- JMP whit3              \ Jump to whit3 to draw the fringes, if any
-
-.whit1
-
-                        \ If we get here there is a new line
-
- LDA xCoreStart         \ If there is an old line, jump to whit2
- CMP xCoreEnd
- BCC whit2
-
-                        \ If we get here there is a new line but no old line
-
- LDA xCoreStartNew      \ Set X1 and X2 to the new line, so we erase it
- STA X1
- LDA xCoreEndNew
- STA X2
-
- JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
-                        \ (X2, Y1) on the right
-
- JMP whit3              \ Jump to whit3 to draw the fringes, if any
-
-.whit2
+ LDA xCoreStartNew      \ If the start coordinate of the white portion is on or
+ CMP xCoreEndNew        \ after the end coordinate, jump to hori7 to skip
+ BCC faster             \ drawing the line centre, as the eyes do not overlap
 
                         \ If we get here there are both old and new lines so we
                         \ apply the clever logic from part 3 of SUN in the
@@ -5874,6 +5759,36 @@ ENDIF
                         \
                         \ Old line = xCoreStart to xCoreEnd (XX to XX+1)
                         \ New line = xCoreStartNew to xCoreEndNew (X1 to X2)
+
+ LDA xCoreStart         \ Set X1 = xCoreStart as the start of the white portion
+ STA X1
+
+ LDA xCoreEnd           \ Set X2 = xCoreEnd as the end of the white portion
+ STA X2
+
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.whita
+
+ LDA xCoreStartNew      \ If the start coordinate of the white portion is on or
+ CMP xCoreEndNew        \ after the end coordinate, jump to hori7 to skip
+ BCS whitb              \ drawing the line centre, as the eyes do not overlap
+
+ STA X1                 \ Set X1 = xCoreStart as the start of the white portion
+
+ LDA xCoreEndNew        \ Set X2 = xCoreEnd as the end of the white portion
+ STA X2
+
+ JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
+                        \ (X2, Y1) on the right
+
+.whitb
+
+ JMP whit3              \ Jump to whit3 to reset the two-line flag and return
+                        \ from the subroutine
+
+.faster
 
  INC xCoreEndNew        \ Add the final pixel back to the end of each line, as
  INC xCoreEnd           \ we removed them above
@@ -5896,51 +5811,10 @@ ENDIF
 
 .whit3
 
-                        \ We also need to draw the fringes of the first line in
-                        \ the two-stage process, as we didn't draw them first
-                        \ time around (this is the new line)
-
- LDA xLeftStartNew      \ If there is no left fringe, jump to whit4 to skip the
- CMP xLeftEndNew        \ following
- BCS whit4
-
- STA X1                 \ Set X1 = xLeftStartNew as the start of the left
-                        \ fringe
-
- LDA xLeftEndNew        \ Set X2 = xLeftEndNew as the end of the left fringe
- STA X2
-
- LDA #RED_3D            \ Set the colour of the left fringe (left eye) to red
- STA S
-
- JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
-                        \ (X2, Y1) on the right
-
-.whit4
-
- LDA xRightStartNew     \ If there is no left fringe, jump to whit5 to skip the
- CMP xRightEndNew       \ following
- BCS whit5
-
- STA X1                 \ Set X1 = xRightStartNew as the start of the right
-                        \ fringe
-
- LDA xRightEndNew       \ Set X2 = xRightEndNew as the end of the right fringe
- STA X2
-
- LDA #CYAN_3D           \ Set the colour of the right fringe (right eye) to cyan
- STA S
-
- JSR hori9              \ Draw a horizontal line from (X1, Y1) on the left to
-                        \ (X2, Y1) on the right
-
-.whit5
-
  LDA #0                 \ Reset the flag as we have now drawn the second line
  STA twoStageLine
 
- JMP hori8              \ Rejoin the sun line loop to move on to the next
-                        \ line
+ RTS                    \ Return from the subroutine
 
 \ ******************************************************************************
 \
@@ -5954,13 +5828,17 @@ ENDIF
 \
 \ Arguments:
 \
-\   xStart              The x-coordinate of the start of the line
+\   X1                  The x-coordinate of the start of the line
 \
-\   xEnd                The x-coordinate of the end of the line
+\   X2                  The x-coordinate of the end of the line
 \
 \ ------------------------------------------------------------------------------
 \
 \ Returns:
+\
+\   xStart              The x-coordinate of the start of the line
+\
+\   xEnd                The x-coordinate of the end of the line
 \
 \   xLeftStart          The x-coordinate of the start of the left fringe
 \
@@ -5979,6 +5857,11 @@ ENDIF
 \ ******************************************************************************
 
 .DrawFringes
+
+ LDA X1                 \ Store the original x-coordinates in xStart and xEnd
+ STA xStart
+ LDA X2
+ STA xEnd
 
                         \ We start with the left fringe
 
@@ -6032,10 +5915,6 @@ ENDIF
 
  STX xCoreStart         \ Store the x-coordinate in xCoreStart to use as the
                         \ start of the white line in the middle
-
-\LDA Y1                 \ If Y1 = 255 then skip drawing the line
-\CMP #255
-\BEQ frin5
 
  LDA #RED_3D            \ Set the colour of the left fringe (left eye) to red
  STA S
@@ -6096,10 +5975,6 @@ ENDIF
                         \ the right end of the right fringe
 
  STA xRightEnd          \ Store the result in xRightEnd
-
-\LDA Y1                 \ If Y1 = 255 then skip drawing the line
-\CMP #255
-\BEQ frin10
 
  LDA #CYAN_3D           \ Set the colour of the right fringe (right eye) to cyan
  STA S
