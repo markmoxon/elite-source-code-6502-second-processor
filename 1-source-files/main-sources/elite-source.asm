@@ -47146,11 +47146,11 @@ ENDIF
 
                         \ --- And replaced by: -------------------------------->
 
- BCC scro0              \ If the C flag is set then the line is not visible on
+ BCC scro1              \ If the C flag is set then the line is not visible on
  LDA #255               \ screen, so set Y2 = 255 to denote a null line for the
  STA Y2                 \ left eye
 
-.scro0
+.scro1
 
                         \ --- End of replacement ------------------------------>
 
@@ -47197,16 +47197,16 @@ ENDIF
                         \ clipped to fit on-screen, returning the clipped line's
                         \ end-points in (X1, Y1) and (X2, Y2)
 
- BCC scro2              \ If the C flag is clear then the line is visible on
-                        \ screen, so jump to scro2 to draw the line
+ BCC scro3              \ If the C flag is clear then the line is visible on
+                        \ screen, so jump to scro3 to draw the line
 
                         \ If we get here then the right-eye line is not visible
 
  LDX UPO                \ Load the UPO table pointer into X
 
- LDA Y2UB,X             \ If the left-eye line is visible, then jump to scro1
+ LDA Y2UB,X             \ If the left-eye line is visible, then jump to scro2
  CMP #255               \ to draw a null right-eye line
- BNE scro1
+ BNE scro2
 
                         \ If we get here then neither eye's line is visible
 
@@ -47218,7 +47218,7 @@ ENDIF
  JMP GRIDL              \ Loop back to GRIDL to process the next line to draw
                         \ in the scroll text
 
-.scro1
+.scro2
 
                         \ If we get here then the right-eye line is not visible
                         \ but the left-eye is visible
@@ -47226,7 +47226,7 @@ ENDIF
  LDA #255               \ Set Y2 = 255 to denote a null line for the right eye
  STA Y2
 
-.scro2
+.scro3
 
  LDX UPO                \ Load the UPO table pointer into X
 
