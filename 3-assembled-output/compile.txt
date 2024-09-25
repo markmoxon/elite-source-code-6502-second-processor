@@ -17817,7 +17817,7 @@ Saving file '3-assembled-output/ELTH.bin'
      70C3   90 04      BCC &70C9
      70C5   A9 FF      LDA #&FF
      70C7   85 36      STA &36
-.scro0
+.scro1
      70C9   EE D0 0D   INC &0DD0
      70CC   AE D0 0D   LDX &0DD0
      70CF   A5 33      LDA &33
@@ -17853,10 +17853,10 @@ Saving file '3-assembled-output/ELTH.bin'
      711A   CE D0 0D   DEC &0DD0
      711D   AC CE 0D   LDY &0DCE
      7120   4C B8 6F   JMP &6FB8
-.scro1
+.scro2
      7123   A9 FF      LDA #&FF
      7125   85 36      STA &36
-.scro2
+.scro3
      7127   AE D0 0D   LDX &0DD0
      712A   A5 33      LDA &33
      712C   9D 00 92   STA &9200,X
