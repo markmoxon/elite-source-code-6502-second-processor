@@ -52630,8 +52630,8 @@ ENDIF
  LDA #3                 \ Set the maximum amount of positive parallax, split
  STA maxParallaxP       \ between each eye, to 3
 
- STA planetParallax     \ Set the amount of positive parallax to apply to the
-                        \ planet, split between each eye, to 3
+ LDA #2                 \ Set the amount of positive parallax to apply to the
+ STA planetParallax     \ planet, split between each eye, to 2
 
  LDA #2                 \ Set the amount of positive parallax to apply to the
  JMP SetSunParallax     \ sun, split between each eye, to 2, returning from the
@@ -52661,8 +52661,8 @@ ENDIF
  LDA #2                 \ Set the maximum amount of positive parallax, split
  STA maxParallaxP       \ between each eye, to 2
 
- STA planetParallax     \ Set the amount of positive parallax to apply to the
-                        \ planet, split between each eye, to 2
+ LDA #1                 \ Set the amount of positive parallax to apply to the
+ STA planetParallax     \ planet, split between each eye, to 1
 
  LDA #1                 \ Set the amount of positive parallax to apply to the
  JMP SetSunParallax     \ sun, split between each eye, to 1, returning from the
@@ -52692,8 +52692,8 @@ ENDIF
  LDA #4                 \ Set the maximum amount of positive parallax, split
  STA maxParallaxP       \ between each eye, to 4
 
- STA planetParallax     \ Set the amount of positive parallax to apply to the
-                        \ planet, split between each eye, to 4
+ LDA #3                 \ Set the amount of positive parallax to apply to the
+ STA planetParallax     \ planet, split between each eye, to 3
 
  LDA #3                 \ Set the amount of positive parallax to apply to the
  JMP SetSunParallax     \ sun, split between each eye, to 3, returning from the
