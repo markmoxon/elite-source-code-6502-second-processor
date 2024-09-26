@@ -234,7 +234,37 @@
 
                         \ --- End of added code ------------------------------->
 
- ORG &0090
+                        \ --- Mod: Code removed for anaglyph 3D: -------------->
+
+\ORG &0090
+
+                        \ --- And replaced by: -------------------------------->
+
+.sunParallaxL
+
+ SKIP 1                 \ The amount of positive parallax to apply to the sun
+                        \ for the left eye
+
+.sunParallaxR
+
+ SKIP 1                 \ The amount of positive parallax to apply to the sun
+                        \ for the right eye
+
+.sunParallaxEdgeL
+
+ SKIP 1                 \ The x-coordinate for testing whether the sun is up
+                        \ against the left edge of the screen
+
+.sunParallaxEdgeR
+
+ SKIP 1                 \ The x-coordinate for testing whether the sun is up
+                        \ against the right edge of the screen
+
+.V
+
+ SKIP 1                 \ Temporary storage
+
+                        \ --- End of replacement ------------------------------>
 
 .XX15
 
@@ -291,10 +321,6 @@
 
                         \ --- Mod: Code added for anaglyph 3D: ---------------->
 
-.V
-
- SKIP 1                 \ Temporary storage
-
 .xCoreStart
 
  SKIP 1                 \ The x-coordinate of the left end of the white part of
@@ -330,6 +356,12 @@
 
  SKIP 1                 \ The x-coordinate of the right end of the white part of
                         \ the sun line being drawn in HLOIN
+
+                        \ --- Mod: Code added for anaglyph 3D: ---------------->
+
+ ORG &00D1
+
+                        \ --- End of added code ------------------------------->
 
 .xStart
 
@@ -371,26 +403,6 @@
 
  SKIP 1                 \ Storage for the amount of parallax to add to the right
                         \ eye in the ApplyParallax and pixel routines
-
-.sunParallaxL
-
- SKIP 1                 \ The amount of positive parallax to apply to the sun
-                        \ for the left eye
-
-.sunParallaxR
-
- SKIP 1                 \ The amount of positive parallax to apply to the sun
-                        \ for the right eye
-
-.sunParallaxEdgeL
-
- SKIP 1                 \ The x-coordinate for testing whether the sun is up
-                        \ against the left edge of the screen
-
-.sunParallaxEdgeR
-
- SKIP 1                 \ The x-coordinate for testing whether the sun is up
-                        \ against the right edge of the screen
 
                         \ --- End of added code ------------------------------->
 
