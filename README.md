@@ -169,7 +169,7 @@ The annotated source files in the `econet` branch contain both the original Acor
 
 For more information on Elite over Econet, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/elite_over_econet.html).
 
-## Elite3D
+## Elite 3D
 
 This repository also includes an anaglyph 3D version of 6502 Second Processor Elite. Elite 3D is in a separate branch called `anaglyph-3d`, and apart from the code differences for adding the anaglyph 3D, this branch is identical to the main branch and the same build process applies.
 
