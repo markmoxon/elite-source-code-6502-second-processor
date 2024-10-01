@@ -30,6 +30,8 @@ See the [introduction](#introduction) for more information, or jump straight int
 
 * [Elite over Econet](#elite-over-econet)
 
+* [Elite 3D](#elite-3d)
+
 * [Building Elite from the source](#building-elite-from-the-source)
 
   * [Requirements](#requirements)
@@ -166,6 +168,14 @@ This repository also includes a version of 6502 Second Processor Elite that load
 The annotated source files in the `econet` branch contain both the original Acornsoft code and all of the modifications for Elite over Econet, so you can look through the source to see exactly what's changed. Any code that I've removed from the original version is commented out in the source files, so when they are assembled they produce the Elite over Econet binaries, while still containing details of all the modifications. You can find all the diffs by searching the sources for `Mod:`.
 
 For more information on Elite over Econet, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/elite_over_econet.html).
+
+## Elite3D
+
+This repository also includes an anaglyph 3D version of 6502 Second Processor Elite. Elite 3D is in a separate branch called `anaglyph-3d`, and apart from the code differences for adding the anaglyph 3D, this branch is identical to the main branch and the same build process applies.
+
+The annotated source files in the `anaglyph-3d` branch contain both the original Acornsoft code and all of the modifications for Elite 3D, so you can look through the source to see exactly what's changed. Any code that I've removed from the original version is commented out in the source files, so when they are assembled they produce the Elite 3D binaries, while still containing details of all the modifications. You can find all the diffs by searching the sources for `Mod:`.
+
+For more information on Elite 3D, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/elite_3d.html).
 
 ## Building Elite from the source
 
