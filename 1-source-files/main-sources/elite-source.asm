@@ -3402,6 +3402,8 @@ ENDIF
 
  SKIP 100               \ The line buffer used by DASC to print justified text
 
+ PRINT "UP workspace from  ", ~UP," to ", ~P%
+
 \ ******************************************************************************
 \
 \       Name: WP
@@ -3538,7 +3540,7 @@ ENDIF
 \
 \       Name: K%
 \       Type: Workspace
-\    Address: &8200 to &85FF (&8500 to &88FF in the Executive version)
+\    Address: &8200 to &84E3 (&8500 to &87E3 in the Executive version)
 \   Category: Workspaces
 \    Summary: Ship data blocks
 \  Deep dive: Ship data blocks
@@ -9076,10 +9078,6 @@ ENDIF
 \                       drawing anything (as we need two points, i.e. two calls,
 \                       before we can draw a line)
 \
-\   K                   The circle's radius
-\
-\   K3(1 0)             Pixel x-coordinate of the centre of the circle
-\
 \   K4(1 0)             Pixel y-coordinate of the centre of the circle
 \
 \   K5(1 0)             Screen x-coordinate of the previous point added to the
@@ -9087,8 +9085,6 @@ ENDIF
 \
 \   K5(3 2)             Screen y-coordinate of the previous point added to the
 \                       ball line heap (if this is not the first point)
-\
-\   SWAP                If non-zero, we swap (X1, Y1) and (X2, Y2)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -9115,7 +9111,7 @@ ENDIF
  STA K6+2               \
  LDA K4+1               \ so K6(3 2) now contains the y-coordinate of the new
  ADC T                  \ point on the circle but as a screen coordinate, to go
- STA K6+3               \ along with the screen y-coordinate in K6(1 0)
+ STA K6+3               \ along with the screen x-coordinate in K6(1 0)
 
  LDA FLAG               \ If FLAG = 0, jump down to BL1
  BEQ BL1
@@ -19064,18 +19060,18 @@ ENDIF
 \
 \ Arguments:
 \
-\   A                   The colour number to define
+\   A                   The offset of the palette to set
 \
 \ ******************************************************************************
 
 .DOVDU19
 
- PHA                    \ Store A, the colour number, on the stack
+ PHA                    \ Store A, the palette offset, on the stack
 
  LDA #SETVDU19          \ Set A to #SETVDU19, ready to write to the I/O
                         \ processor
 
- BNE label              \ Jump to label to write #SETVDU19 <colour> to the I/O
+ BNE label              \ Jump to label to write #SETVDU19 <offset> to the I/O
                         \ processor, returning from the subroutine using a tail
                         \ call (this BNE is effectively a JMP as A is never
                         \ zero)
@@ -27075,7 +27071,7 @@ ENDIF
 
  JSR PLS6               \ Call PLS6 to calculate:
                         \
-                        \   (X K) = (A P) / (z_sign z_hi z_lo)
+                        \   (X K) = (A P+1 P) / (z_sign z_hi z_lo)
                         \         = (x_sign x_hi x_lo) / (z_sign z_hi z_lo)
                         \         = x / z
 
@@ -27103,7 +27099,7 @@ ENDIF
 
  JSR PLS6               \ Call PLS6 to calculate:
                         \
-                        \   (X K) = (A P) / (z_sign z_hi z_lo)
+                        \   (X K) = (A P+1 P) / (z_sign z_hi z_lo)
                         \         = -(y_sign y_hi y_lo) / (z_sign z_hi z_lo)
                         \         = -y / z
 
@@ -27778,8 +27774,9 @@ ENDIF
  LDX #0                 \ Set CNT = 0
  STX CNT
 
- DEX                    \ Set FLAG = &FF to reset the ball line heap in the call
- STX FLAG               \ to the BLINE routine below
+ DEX                    \ Set FLAG = &FF to start a new line in the ball line
+ STX FLAG               \ heap when calling BLIN below, so the crater or
+                        \ meridian is separate from any previous ellipses
 
 .PLL4
 
@@ -28855,7 +28852,8 @@ ENDIF
  ADC #0                 \ now negated the y-coordinate in (T X)
  STA T
 
- CLC                    \ Clear the C flag so we can do some more addition below
+ CLC                    \ Clear the C flag so the addition at the start of BLINE
+                        \ will work
 
 .PL38
 
@@ -29630,13 +29628,13 @@ ENDIF
 \       Name: PLS6
 \       Type: Subroutine
 \   Category: Drawing planets
-\    Summary: Calculate (X K) = (A P) / (z_sign z_hi z_lo)
+\    Summary: Calculate (X K) = (A P+1 P) / (z_sign z_hi z_lo)
 \
 \ ------------------------------------------------------------------------------
 \
 \ Calculate the following:
 \
-\   (X K) = (A P) / (z_sign z_hi z_lo)
+\   (X K) = (A P+1 P) / (z_sign z_hi z_lo)
 \
 \ returning an overflow in the C flag if the result is >= 1024.
 \
@@ -30272,10 +30270,10 @@ ENDIF
  ADC (INF),Y
  STA P
 
- INY                    \ And next we add A and address in INF+34, with any
- LDA (INF),Y            \ from the previous addition, to get the high byte of
- ADC #0                 \ the top of the heap, which we store in P+1, so P(1 0)
- STA P+1                \ points to the top of this ship's heap
+ INY                    \ And next we add A and the address in INF+34, with any
+ LDA (INF),Y            \ carry from the previous addition, to get the high byte
+ ADC #0                 \ of the top of the heap, which we store in P+1, so
+ STA P+1                \ P(1 0) points to the top of this ship's heap
 
                         \ Now, we're ready to start looping through the ships
                         \ we want to move, moving the slots, data blocks and
@@ -34681,10 +34679,9 @@ ENDIF
 
  STA K%+NI%+8           \ Set the planet's z_sign to the high byte of the result
 
- LDA #1                 \ These instructions have no effect, as the call to
- STA QQ11               \ LOOK1 below starts by setting QQ11 to 0; instead they
-                        \ just set the current view type in QQ11 to 1 for the
-                        \ duration of the next three instructions
+ LDA #1                 \ Temporarily set the view type to a non-zero value, so
+ STA QQ11               \ the call to LOOK1 below clears the screen before
+                        \ switching to the space view
 
  STA MCNT               \ Set the main loop counter to 1, so the next iteration
                         \ through the main loop will potentially spawn ships
@@ -37470,6 +37467,9 @@ ENDIF
 \
 \LDA K4                 \ Set A = y-coordinate of dot + 1 (so this is the second
 \ADC #1                 \ row of the two-pixel-high dot)
+\                       \
+\                       \ The addition works as the Shpt routine clears the C
+\                       \ flag
 
                         \ --- And replaced by: -------------------------------->
 
@@ -37544,9 +37544,9 @@ ENDIF
 \                       \ bytes define a horizontal 4-pixel dash, for either the
 \                       \ top or the bottom of the ship's dot
 \
-\STA (XX19),Y           \ Store A in byte Y of the ship line heap
+\STA (XX19),Y           \ Store A in byte Y of the ship line heap (i.e. Y1)
 \
-\INY                    \ Store A in byte Y+2 of the ship line heap
+\INY                    \ Store A in byte Y+2 of the ship line heap (i.e. Y2)
 \INY
 \STA (XX19),Y
 
@@ -37564,7 +37564,7 @@ ENDIF
 
                         \ --- Mod: Code removed for flicker-free ships: ------->
 
-\DEY                    \ Store A in byte Y+1 of the ship line heap
+\DEY                    \ Store A in byte Y+1 of the ship line heap (i.e. X2)
 \STA (XX19),Y
 \
 \ADC #3                 \ Set A = screen x-coordinate of the ship dot + 3
@@ -37580,7 +37580,7 @@ ENDIF
 \                       \ nono will actually return us from the original call
 \                       \ to LL9, thus aborting the entire drawing process
 \
-\DEY                    \ Store A in byte Y-1 of the ship line heap
+\DEY                    \ Store A in byte Y-1 of the ship line heap (i.e. X1)
 \DEY
 \STA (XX19),Y
 \
@@ -41432,10 +41432,10 @@ ENDIF
 .LL146
 
                         \ If we get here then we have clipped our line to the
-                        \ (if we had to clip it at all), so we move the low
-                        \ bytes from (x1, y1) and (x2, y2) into (X1, Y1) and
-                        \ (X2, Y2), remembering that they share locations with
-                        \ XX15:
+                        \ screen edge (if we had to clip it at all), so we move
+                        \ the low bytes from (x1, y1) and (x2, y2) into (X1, Y1)
+                        \ and (X2, Y2), remembering that they share locations
+                        \ with XX15:
                         \
                         \   X1 = XX15
                         \   Y1 = XX15+1

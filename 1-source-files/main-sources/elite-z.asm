@@ -2576,6 +2576,9 @@ ENDIF
 \
 \   COL                 The line colour
 \
+\   Y                   The offset of the coordinates within the line buffer of
+\                       the line to draw
+\
 \ ******************************************************************************
 
 .HLOIN2
@@ -2583,6 +2586,7 @@ ENDIF
  LDX X1                 \ Set X = X1
 
  STY Y2                 \ Set Y2 = Y, the offset within the line buffer of the
+                        \ line we are currently drawing
 
  INY                    \ Set Q = Y + 1, so the call to HLOIN3 only draws one
  STY Q                  \ line
@@ -4866,7 +4870,7 @@ ENDIF
  STA S                  \ Store the line colour in S
 
  CPX X2                 \ If X1 = X2 then the start and end points are the same,
- BEQ HL6                \ so return from the subroutine (as HL6 contains an RTS)
+ BEQ HL6                \ so jump to HL6 to move on to the next line
 
  BCC HL5                \ If X1 < X2, jump to HL5 to skip the following code, as
                         \ (X1, Y1) is already the left point
@@ -5237,12 +5241,14 @@ ENDIF
 \   * Draw the dot using the dot's distance to determine both the dot's colour
 \     and size. This draws a 1-pixel dot, 2-pixel dash or 4-pixel square in a
 \     colour that's determined by the distance (as per the colour table in
-\     PXCL). These kinds of dot are sent by the PIXEL3 routine in the parasite.
+\     PXCL). These kinds of dot are sent by the PIXEL3 routine in the parasite,
+\     which is used to draw explosion particles.
 \
 \   * Draw the dot using the dot's distance to determine the dot's size, either
 \     a 2-pixel dash or 4-pixel square. The dot is always drawn in white (which
 \     is actually a cyan/red stripe). These kinds of dot are sent by the PIXEL
-\     routine in the parasite.
+\     routine in the parasite, which is used to draw stardust particles and dots
+\     on the Long-range Chart.
 \
 \ The parameters match those put into the PBUF/pixbl block in the parasite.
 \
@@ -5294,12 +5300,13 @@ ENDIF
 
  AND #%00000111         \ If ZZ is a multiple of 8 (which will be the case for
  BEQ PX5                \ pixels sent by the parasite's PIXEL routine), jump to
-                        \ PX5
+                        \ PX5 to draw stardust particles and dots on the
+                        \ Long-range Chart
 
                         \ Otherwise this pixel was sent by the parasite's PIXEL3
                         \ routine and will have an odd value of ZZ, and we use
                         \ the distance value to determine the dot's colour and
-                        \ size
+                        \ size, as this is an explosion particle
 
  TAX                    \ Set S to the ZZ-th value from the PXCL table, to get
  LDA PXCL,X             \ the correct colour byte for this pixel, depending on
@@ -5308,7 +5315,7 @@ ENDIF
  INY                    \ Increment Y to 3
 
  LDA (OSSC),Y           \ Set X to byte #3 from the Y-th pixel block in OSSC,
- TAX                    \ contains the pixel's x-coordinate
+ TAX                    \ which contains the pixel's x-coordinate
 
  INY                    \ Increment Y to 4
 
@@ -5460,7 +5467,7 @@ ENDIF
  INY                    \ Increment Y to 3
 
  LDA (OSSC),Y           \ Set X to byte #3 from the Y-th pixel block in OSSC,
- TAX                    \ contains the pixel's x-coordinate
+ TAX                    \ which contains the pixel's x-coordinate
 
  INY                    \ Increment Y to 4
 
@@ -5503,7 +5510,7 @@ ENDIF
  AND #%00000011         \ which will now be in the range 0-3, and will contain
  TAX                    \ the two pixels to show in the character row
 
- LDA P                  \ Fetch the pixel's distance into P
+ LDA P                  \ Fetch the pixel's distance from P
 
  CMP #80                \ If the pixel's ZZ distance is >= 80, then the dot is
  BCS PX6                \ a medium distance away, so jump to PX6 to draw a
