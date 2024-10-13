@@ -2997,6 +2997,7 @@ Saving file '3-assembled-output/WORDS.bin'
      090F
 .BUF
      0910
+UP workspace from  &800  to &974 
 .WP
      0D00
 .LSX
