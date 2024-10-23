@@ -47,7 +47,7 @@
  _SNG45                 = (_VARIANT = 2)
  _EXECUTIVE             = (_VARIANT = 3)
 
- GUARD &F800             \ Guard against assembling over MOS memory
+ GUARD &F800            \ Guard against assembling over MOS memory
 
 \ ******************************************************************************
 \
