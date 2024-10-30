@@ -4507,9 +4507,26 @@ ENDIF
 \
 \ ******************************************************************************
 
-.MOS
+                        \ --- Mod: Code removed for Delta 14B: ---------------->
 
- SKIP 1                 \ This variable appears to be unused
+\.MOS
+\
+\SKIP 1                 \ This variable appears to be unused
+
+                        \ --- And replaced by: -------------------------------->
+
+.delta14b
+
+ SKIP 1                 \ Delta 14B configuration setting
+                        \
+                        \   * 0 = keyboard or joystick (default)
+                        \
+                        \   * &FF = Delta 14B
+                        \
+                        \ Toggled by pressing "D" when paused, see the DK4
+                        \ routine for details
+
+                        \ --- End of replacement ------------------------------>
 
 .COMC
 
@@ -33372,15 +33389,34 @@ ENDIF
 \JSR BRKBK              \ This instruction is commented out in the original
                         \ source
 
- LDX #(CATF-COMC)       \ We start by zeroing all the configuration variables
-                        \ between COMC and CATF, to set them to their default
-                        \ values, so set a counter in X for CATF - COMC bytes
+                        \ --- Mod: Code removed for Delta 14B: ---------------->
+
+\LDX #(CATF-COMC)       \ We start by zeroing all the configuration variables
+\                       \ between COMC and CATF, to set them to their default
+\                       \ values, so set a counter in X for CATF - COMC bytes
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDX #(CATF-delta14b)   \ We start by zeroing all the configuration variables
+                        \ between delta14b and CATF, to set them to their
+                        \ default values, so set a counter in X for
+                        \ CATF - delta14b bytes
+
+                        \ --- End of replacement ------------------------------>
 
  LDA #0                 \ Set A = 0 so we can zero the variables
 
 .BEL1
 
- STA COMC,X             \ Zero the X-th configuration variable
+                        \ --- Mod: Code removed for Delta 14B: ---------------->
+
+\STA COMC,X             \ Zero the X-th configuration variable
+
+                        \ --- And replaced by: -------------------------------->
+
+ STA delta14b,X         \ Zero the X-th configuration variable
+
+                        \ --- End of replacement ------------------------------>
 
  DEX                    \ Decrement the loop counter
 
@@ -35519,6 +35555,14 @@ ENDIF
 
 .RDKEY
 
+                        \ --- Mod: Code added for Delta 14B: ------------------>
+
+ LDA delta14b           \ Send the configuration of the Delta 14B joystick to
+ STA KTRAN              \ the I/O processor
+
+                        \ --- End of added code ------------------------------->
+
+
  LDA #240               \ Set A in preparation for sending an OSWORD 240 command
 
  LDY #HI(buf)           \ Set (Y X) to point to the parameter block at buf
@@ -36848,6 +36892,24 @@ ENDIF
  JMP DEATH2             \ ESCAPE is being pressed, so jump to DEATH2 to end
                         \ the game
 
+                        \ --- Mod: Code added for Delta 14B: ------------------>
+
+ CPX #&56               \ If "L" is not being pressed, skip to delt1
+ BNE delt1
+
+ LDA delta14b           \ Toggle the value of delta14b between 0 and &FF
+ EOR #&FF
+ STA delta14b
+
+ STA JSTK               \ Configure JSTK to the same value, so when the Delta
+                        \ 14B is enabled, so is the joystick
+
+ BRA delt2              \ Jump to delt2 to make a beep
+
+.delt1
+
+                        \ --- End of added code ------------------------------->
+
  CPX #&64               \ If "B" is not being pressed, skip to nobit
  BNE nobit
 
@@ -36855,12 +36917,30 @@ ENDIF
  EOR #&FF
  STA BSTK
 
- STA JSTK               \ Configure JSTK to the same value, so when the Bitstik
-                        \ is enabled, so is the joystick
+                        \ --- Mod: Code removed for Delta 14B: ---------------->
+
+\STA JSTK               \ Configure JSTK to the same value, so when the Bitstik
+\                       \ is enabled, so is the joystick
+
+                        \ --- End of removed code ----------------------------->
 
  STA JSTE               \ Configure JSTE to the same value, so when the Bitstik
                         \ is enabled, the joystick is configured with reversed
                         \ channels
+
+                        \ --- Mod: Code added for Delta 14B: ------------------>
+
+.delt2
+
+ STA JSTK               \ Configure JSTK to the same value, so when the Bitstik
+                        \ or Delta 14B are enabled, so is the joystick
+
+ JSR BELL               \ Make a beep sound so we know something has happened
+
+ JSR DELAY              \ Wait for Y vertical syncs (Y is between 64 and 70, so
+                        \ this is always a bit longer than a second)
+
+                        \ --- End of added code ------------------------------->
 
 .nobit
 
@@ -37682,7 +37762,15 @@ ENDMACRO
 
 .buf
 
- EQUB 2                 \ Transmit 2 bytes as part of this command
+                        \ --- Mod: Code removed for Delta 14B: ---------------->
+
+\EQUB 2                 \ Transmit 2 bytes as part of this command
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUB 3                 \ Transmit 3 bytes as part of this command
+
+                        \ --- End of replacement ------------------------------>
 
  EQUB 15                \ Receive 15 bytes as part of this command
 
@@ -37807,9 +37895,13 @@ ENDMACRO
  EQUB &88, &89          \ f8            f9
  EQUB &5C, &8D          \ \             Right arrow
 
- EQUB &6C, &20, &02     \ MOS code
- EQUB &D0, &EB, &A2
- EQUB &08
+                        \ --- Mod: Code removed for Delta 14B: ---------------->
+
+\EQUB &6C, &20, &02     \ MOS code
+\EQUB &D0, &EB, &A2
+\EQUB &08
+
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \
@@ -38051,11 +38143,7 @@ ENDMACRO
 \
 \ENDIF
 
-                        \ --- And replaced by: -------------------------------->
-
- ALIGN 256              \ Align the log tables so they start on page boundaries
-
-                        \ --- End of replacement ------------------------------>
+                        \ --- End of removed code ----------------------------->
 
 \ ******************************************************************************
 \

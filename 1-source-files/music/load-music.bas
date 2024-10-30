@@ -288,10 +288,10 @@ PRINT'"Loading music into RAM bank ";?bank;"...";
 P%=&400F
 [OPT 0
 .platform       EQUB 64
-.addrDNOIZ      EQUW &3DFE
-.addrplay1      EQUW &3DB1+1
-.addrDELAY      EQUW &3DEE+1    \ +1 to avoid BeebAsm "DEF" bug
-.addrSFX        EQUW &3936      \ Set to SFX in elite-z
+.addrDNOIZ      EQUW &3E17
+.addrplay1      EQUW &3DCA+1
+.addrDELAY      EQUW &3E08
+.addrSFX        EQUW &394F      \ Set to SFX in elite-z
 .end
 ]
 !&80=&4000 : CALL SRLOAD : REM Load ROM image into the correct bank in I/O
