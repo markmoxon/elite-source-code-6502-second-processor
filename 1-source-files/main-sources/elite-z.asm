@@ -6749,8 +6749,8 @@ ENDMACRO
 
 .fill1
 
- LDA #%10000000         \ Strip bits 0 to 6 of A, as that's what the b_14
-                        \ routine expects (i.e. A = 128)
+ LDA #%10000000         \ Set A to 128, as that's what the b_14 routine expects
+                        \ as a parameter
 
  JSR b_14               \ Call b_14 to check the Delta 14B joystick buttons and
                         \ populate the key logger
