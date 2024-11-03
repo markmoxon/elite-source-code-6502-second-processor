@@ -16321,9 +16321,9 @@ ENDIF
 \
 \   A = A * Q / 256
 \
-\ The Master and 6502 Second Processor versions use logarithms to speed up the
-\ multiplication process. See the deep dive on "Multiplication using logarithms"
-\ for more details.
+\ The advanced versions of Elite use logarithms to speed up the multiplication
+\ process. See the deep dive on "Multiplication using logarithms" for more
+\ details.
 \
 \ ------------------------------------------------------------------------------
 \
@@ -19120,6 +19120,9 @@ ENDIF
 
  JMP INCYC              \ Move the text cursor down by one line and return from
                         \ the subroutine using a tail call
+
+\RTS                    \ This instruction is commented out in the original
+                        \ source
 
 .TT63
 
@@ -23224,7 +23227,8 @@ ENDIF
 \
 \ ------------------------------------------------------------------------------
 \
-\ This command is not used in the 6502 Second Processor version of Elite.
+\ This command is not used in the 6502 Second Processor version of Elite; it is
+\ left over from the BBC Micro disc version.
 \
 \ ******************************************************************************
 
