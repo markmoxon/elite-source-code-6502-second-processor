@@ -111,7 +111,7 @@
 \
 \       Name: ZP
 \       Type: Workspace
-\    Address: &0080 to &0089
+\    Address: &0080 to &0097
 \   Category: Workspaces
 \    Summary: Important variables used by the I/O processor
 \
@@ -224,11 +224,13 @@
 
  SKIP 1                 \ Screen address (high byte)
 
+ PRINT "ZP workspace (I/O processor) from ", ~ZP, "to ", ~P%-1, "inclusive"
+
 \ ******************************************************************************
 \
 \       Name: TINA
 \       Type: Workspace
-\    Address: &0B00-&0BFF
+\    Address: &0B00 to &0BFF
 \   Category: Workspaces
 \    Summary: The code block for the TINA hook
 \  Deep dive: The TINA hook
@@ -251,7 +253,9 @@
 
 .TINA
 
- SKIP 4
+ SKIP 256
+
+ PRINT "TINA workspace (I/O processor) from ", ~ZP, "to ", ~P%-1, "inclusive"
 
 \ ******************************************************************************
 \
@@ -948,6 +952,8 @@ ENDIF
                         \   * 0 = not fitted
                         \
                         \   * &FF = fitted
+
+ PRINT "I/O variables workspace (I/O processor) from ", ~XC, "to ", ~P%-1, "inclusive"
 
 \ ******************************************************************************
 \

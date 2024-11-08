@@ -163,7 +163,7 @@
      00D2
 .K4
      00E0
-Zero page variables from &0  to &E2 
+ZP workspace from &0 to &E1 inclusive
 .XX3
      0100
 .QQ18
@@ -2997,7 +2997,7 @@ Saving file '3-assembled-output/WORDS.bin'
      090F
 .BUF
      0910
-UP workspace from  &800  to &974 
+UP workspace from &800 to &973 inclusive
 .WP
      0D00
 .LSX
@@ -3036,9 +3036,10 @@ UP workspace from  &800  to &974
      0E3A
 .UPO
      0E3B
-WP workspace from  &D00  to &E3C 
+WP workspace from &D00 to &E3B inclusive
 .K%
      8200
+K% workspace from &8200 to &84E3 inclusive
 .LP
      8600
 .X1TB
@@ -3065,6 +3066,7 @@ WP workspace from  &D00  to &E3C
      9000
 .Y2VB
      9100
+LP workspace (6502sp parasite) from &8600 to &91FF inclusive
 .MOS
      1000
 .COMC
@@ -3091,6 +3093,7 @@ WP workspace from  &D00  to &E3C
      100B
 .ZIP
      100C
+Parasite variables workspace (6502sp parasite) from &1000 to &100B inclusive
 .S1%
      100C   3A 30 2E ...
 .NA%
@@ -40244,8 +40247,10 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      0096
 .SCH
      0097
+ZP workspace (I/O processor) from &80 to &97 inclusive
 .TINA
      0B00
+TINA workspace (I/O processor) from &80 to &BFF inclusive
 .TABLE
      2300
 .log
@@ -41658,6 +41663,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2C5F
 .ESCP
      2C60
+I/O variables workspace (I/O processor) from &2C40 to &2C60 inclusive
 .JMPTAB
      2C61   03 2D
      2C63   B6 2E

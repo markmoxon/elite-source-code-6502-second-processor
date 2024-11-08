@@ -922,7 +922,7 @@ ENDIF
 
  SKIP 2                 \ Temporary storage, used in a number of places
 
- PRINT "Zero page variables from ", ~ZP, " to ", ~P%
+ PRINT "ZP workspace from ", ~ZP, "to ", ~P%-1, "inclusive"
 
 \ ******************************************************************************
 \
@@ -2467,7 +2467,7 @@ ENDIF
 \
 \       Name: UP
 \       Type: Workspace
-\    Address: &0800 to &0974
+\    Address: &0800 to &0973
 \   Category: Workspaces
 \    Summary: Ship slots, variables
 \
@@ -3382,7 +3382,7 @@ ENDIF
 
  SKIP 100               \ The line buffer used by DASC to print justified text
 
- PRINT "UP workspace from  ", ~UP," to ", ~P%
+ PRINT "UP workspace from ", ~UP, "to ", ~P%-1, "inclusive"
 
 \ ******************************************************************************
 \
@@ -3514,7 +3514,7 @@ ENDIF
                         \ the scroll text lines onto the Star Wars perspective
                         \ view and then onto the screen
 
- PRINT "WP workspace from  ", ~WP," to ", ~P%
+ PRINT "WP workspace from ", ~WP, "to ", ~P%-1, "inclusive"
 
 \ ******************************************************************************
 \
@@ -3554,6 +3554,8 @@ ENDIF
 .K%
 
  SKIP NOSH * NI%        \ Ship data blocks and ship line heap
+
+ PRINT "K% workspace from ", ~K%, "to ", ~P%-1, "inclusive"
 
 \ ******************************************************************************
 \
@@ -3646,6 +3648,8 @@ ENDIF
  SKIP 256               \ The y-coordinates of the end points for the previous
                         \ set of character lines in the scroll text (as
                         \ projected screen coordinates) so they can be erased
+
+ PRINT "LP workspace (6502sp parasite) from ", ~LP, "to ", ~P%-1, "inclusive"
 
 \ ******************************************************************************
 \
@@ -3832,6 +3836,8 @@ ENDIF
 .ZIP
 
  SKIP 0                 \ This label is not used but is in the original source
+
+ PRINT "Parasite variables workspace (6502sp parasite) from ", ~MOS, "to ", ~P%-1, "inclusive"
 
 \ ******************************************************************************
 \
