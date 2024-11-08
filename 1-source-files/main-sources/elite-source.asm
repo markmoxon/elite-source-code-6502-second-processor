@@ -2482,7 +2482,7 @@ ENDIF
 \.QQ16
 
  SKIP 65                \ This QQ16 label is present in the original source, but
-                        \ it is overridden by the QQ16 label in the Elite A
+                        \ it is overridden by the QQ16 label in the ELITE A
                         \ section, so this declaration has no effect. BeebAsm
                         \ does not allow labels to be defined twice, so this one
                         \ is commented out
@@ -3734,8 +3734,8 @@ ENDIF
                         \
                         \ This needs to be turned on for manual mis-jumps to be
                         \ possible. To do a manual mis-jump, first toggle the
-                        \ author display by pausing the game (COPY) and pressing
-                        \ "X", and during the next hyperspace, hold down CTRL to
+                        \ author display by pausing the game and pressing "X",
+                        \ and during the next hyperspace, hold down CTRL to
                         \ force a mis-jump. See routine ee5 for the "AND PATG"
                         \ instruction that implements this logic
 
@@ -7562,7 +7562,7 @@ IF _MATCH_ORIGINAL_BINARIES
  ENDIF
 
 ELSE
- 
+
  SKIP 256               \ The ball line heap for storing x-coordinates (see the
                         \ deep dive on "The ball line heap" for details)
 
@@ -49474,7 +49474,7 @@ ENDIF
 \       Name: F%
 \       Type: Variable
 \   Category: Utility routines
-\    Summary: Denotes the end of the main game code, from Elite A to Elite J
+\    Summary: Denotes the end of the main game code, from ELITE A to ELITE J
 \
 \ ******************************************************************************
 
