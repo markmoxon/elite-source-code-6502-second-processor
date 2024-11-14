@@ -402,7 +402,11 @@ ELIF _SOURCE_DISC
 \JSR ZZZAP              \ These instructions are commented out in the original
 \BRK                    \ source
 \EQUB 0
-\EQUS " This program only runs on a BBC Micro with 6502 Second Processor"
+\EQUS " This program"
+\EQUS " only runs on a"
+\EQUS " BBC Micro with"
+\EQUS " 6502 Second"
+\EQUS " Processor"
 \EQUW &0C0A
 \BRK
 

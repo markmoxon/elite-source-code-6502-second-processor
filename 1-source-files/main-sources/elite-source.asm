@@ -41015,18 +41015,20 @@ ENDIF
 
  LOAD_H% = LOAD% + P% - CODE%
 
-\CATLOD                 \ These instructions are commented out in the original
+\.CATLOD                \ These instructions are commented out in the original
 \DEC CTLDL+8            \ source
 \JSR CATLODS
 \INC CTLDL+8
 \
 \.CATLODS
+\
 \LDA #127
 \LDX #LO(CTLDL)
 \LDY #HI(CTLDL)
 \JMP OSWORD
 \
-\CTLDL
+\.CTLDL
+\
 \EQUB 0
 \EQUD &0E00
 \EQUB 3
