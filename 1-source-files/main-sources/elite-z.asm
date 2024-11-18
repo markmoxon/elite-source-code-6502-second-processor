@@ -317,7 +317,7 @@
 
  ORG CODE%
 
- FONT% = P% DIV 256
+ FONT% = HI(P%)
 
 IF _SNG45 OR _SOURCE_DISC
  INCBIN "1-source-files/fonts/P.FONT.bin"
@@ -411,7 +411,7 @@ ELSE
 
  FOR I%, 1, 255
 
-  EQUB INT(&2000 * LOG(I%) / LOG(2) + 0.5) DIV 256
+  EQUB HI(INT(&2000 * LOG(I%) / LOG(2) + 0.5))
 
  NEXT
 
@@ -503,7 +503,7 @@ ELSE
 
  FOR I%, 1, 255
 
-  EQUB INT(&2000 * LOG(I%) / LOG(2) + 0.5) MOD 256
+  EQUB LO(INT(&2000 * LOG(I%) / LOG(2) + 0.5))
 
  NEXT
 
@@ -532,7 +532,7 @@ ENDIF
 
  FOR I%, 0, 255
 
-  EQUB INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
+  EQUB HI(INT(2^((I% / 2 + 128) / 16) + 0.5))
 
  NEXT
 
@@ -560,7 +560,7 @@ ENDIF
 
  FOR I%, 0, 255
 
-  EQUB INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
+  EQUB HI(INT(2^((I% / 2 + 128.25) / 16) + 0.5))
 
  NEXT
 

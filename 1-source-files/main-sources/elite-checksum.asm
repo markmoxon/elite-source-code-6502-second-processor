@@ -114,17 +114,17 @@
 
 .V
 
- LDA #G%MOD256          \ V(1 0) = G%
+ LDA #LO(G%)            \ V(1 0) = G%
 
 .SC
 
  STA V                  \ First set the low byte, then the high byte
- LDA #G%DIV256
+ LDA #HI(G%)
  STA V+1
 
- LDA #(F%-1)MOD256      \ SC(1 0) = F%-1
+ LDA #LO(F%-1)          \ SC(1 0) = F%-1
  STA SC
- LDA #(F%-1)DIV256
+ LDA #HI(F%-1)
  STA SC+1
 
 .whiz

@@ -2388,12 +2388,10 @@ ENDIF
   N = ABS(SIN((I% / 64) * 2 * PI))
 
   IF N >= 1
-   B% = 255
+   EQUB 255
   ELSE
-   B% = INT(256 * N + 0.5)
+   EQUB INT(256 * N + 0.5)
   ENDIF
-
-  EQUB B%
 
  NEXT
 
@@ -28767,7 +28765,7 @@ ENDIF
  ASL A                  \ Shift A left, shifting bit 7 (which we know is set)
                         \ into the C flag, so this sets:
                         \
-                        \   A = (A * 2) mod 256
+                        \   A = (A * 2) MOD 256
                         \
                         \ So A contains the number of bytes left over in the
                         \ second batch if we send a full first batch
@@ -30652,7 +30650,7 @@ ENDIF
  LDA RAND               \ Calculate the next two values f2 and f3 in the feeder
  ROL A                  \ sequence:
  TAX                    \
- ADC RAND+2             \   * f2 = (f1 << 1) mod 256 + C flag on entry
+ ADC RAND+2             \   * f2 = (f1 << 1) MOD 256 + C flag on entry
  STA RAND               \   * f3 = f0 + f2 + (1 if bit 7 of f1 is set)
  STX RAND+2             \   * C flag is set according to the f3 calculation
 
@@ -36909,9 +36907,7 @@ ELSE
 
  FOR I%, 1, 255
 
-  B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
-
-  EQUB B% DIV 256
+  EQUB HI(INT(&2000 * LOG(I%) / LOG(2) + 0.5))
 
  NEXT
 
@@ -36995,9 +36991,7 @@ ELSE
 
  FOR I%, 1, 255
 
-  B% = INT(&2000 * LOG(I%) / LOG(2) + 0.5)
-
-  EQUB B% MOD 256
+  EQUB LO(INT(&2000 * LOG(I%) / LOG(2) + 0.5))
 
  NEXT
 
@@ -37026,7 +37020,7 @@ ENDIF
 
  FOR I%, 0, 255
 
-  EQUB INT(2^((I% / 2 + 128) / 16) + 0.5) DIV 256
+  EQUB HI(INT(2^((I% / 2 + 128) / 16) + 0.5))
 
  NEXT
 
@@ -37054,7 +37048,7 @@ ENDIF
 
  FOR I%, 0, 255
 
-  EQUB INT(2^((I% / 2 + 128.25) / 16) + 0.5) DIV 256
+  EQUB HI(INT(2^((I% / 2 + 128.25) / 16) + 0.5))
 
  NEXT
 
@@ -43997,7 +43991,7 @@ ENDIF
  ASL A                  \ Shift bits 6-7 of A into bits 0-1 of z_hi, so the C
  ROL INWK+7             \ flag is clear (as we set z_hi to 0 above) and z_hi is
  ASL A                  \ the high byte if A * 4 = (Y1 - BALI) * 4 is expressed
- ROL INWK+7             \ as a 16-bit value, i.e. ((Y1 - BALI) * 4) div 256
+ ROL INWK+7             \ as a 16-bit value, i.e. HI((Y1 - BALI) * 4)
 
  ADC #D                 \ Set (z_hi z_lo) = (z_hi z_lo) + #D
  STA INWK+6             \
@@ -44005,11 +43999,11 @@ ENDIF
 
  LDA INWK+7             \ And then adding the high bytes, so we now have:
  ADC #0                 \
- STA INWK+7             \   (z_hi z_lo) = ((Y1 - BALI) * 4 div 256) + #D
+ STA INWK+7             \   (z_hi z_lo) = HI((Y1 - BALI) * 4) + #D
                         \
                         \ so because we set z_sign to 0 above, we have:
                         \
-                        \   (z_sign z_hi z_lo) = ((Y1 - BALI) * 4 div 256) + #D
+                        \   (z_sign z_hi z_lo) = HI((Y1 - BALI) * 4) + #D
 
  STZ S                  \ Set S = 0
 
@@ -44110,7 +44104,7 @@ ENDIF
  ASL A                  \ Shift bits 6-7 of A into bits 0-1 of z_hi, so the C
  ROL INWK+7             \ flag is clear (as we set z_hi to 0 above) and z_hi is
  ASL A                  \ the high byte if A * 4 = (Y2 - BALI) * 4 is expressed
- ROL INWK+7             \ as a 16-bit value, i.e. ((Y2 - BALI) * 4) div 256
+ ROL INWK+7             \ as a 16-bit value, i.e. HI((Y2 - BALI) * 4)
 
  ADC #D                 \ Set (z_hi z_lo) = (z_hi z_lo) + #D
  STA INWK+6             \
@@ -44118,11 +44112,11 @@ ENDIF
 
  LDA INWK+7             \ And then adding the high bytes, so we now have:
  ADC #0                 \
- STA INWK+7             \   (z_hi z_lo) = ((Y2 - BALI) * 4 div 256) + #D
+ STA INWK+7             \   (z_hi z_lo) = HI((Y2 - BALI) * 4) + #D
                         \
                         \ so because we set z_sign to 0 above, we have:
                         \
-                        \   (z_sign z_hi z_lo) = ((Y2 - BALI) * 4 div 256) + #D
+                        \   (z_sign z_hi z_lo) = HI((Y2 - BALI) * 4) + #D
 
  STZ S                  \ Set S = 0
 
