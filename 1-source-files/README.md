@@ -8,7 +8,7 @@ This folder contains the source files for the 6502 Second Processor version of E
 
 * [main-sources](main-sources) contains the annotated source code
 
-* [original-sources](original-sources) contains the original text sources from Ian Bell's personal website
+* [original-sources](original-sources) contains the original source code from Ian Bell's personal website
 
 ---
 

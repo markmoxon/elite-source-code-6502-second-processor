@@ -28765,7 +28765,7 @@ ENDIF
  ASL A                  \ Shift A left, shifting bit 7 (which we know is set)
                         \ into the C flag, so this sets:
                         \
-                        \   A = (A * 2) MOD 256
+                        \   A = (A * 2) mod 256
                         \
                         \ So A contains the number of bytes left over in the
                         \ second batch if we send a full first batch
@@ -30650,7 +30650,7 @@ ENDIF
  LDA RAND               \ Calculate the next two values f2 and f3 in the feeder
  ROL A                  \ sequence:
  TAX                    \
- ADC RAND+2             \   * f2 = (f1 << 1) MOD 256 + C flag on entry
+ ADC RAND+2             \   * f2 = (f1 << 1) mod 256 + C flag on entry
  STA RAND               \   * f3 = f0 + f2 + (1 if bit 7 of f1 is set)
  STX RAND+2             \   * C flag is set according to the f3 calculation
 
