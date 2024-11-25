@@ -2572,13 +2572,13 @@ ENDIF
 
  SKIP 0                 \ The start of the UP workspace
 
-\.QQ16
-
- SKIP 65                \ This QQ16 label is present in the original source, but
+\.QQ16                  \ This QQ16 label is present in the original source, but
                         \ it is overridden by the QQ16 label in the ELITE A
                         \ section, so this declaration has no effect. BeebAsm
                         \ does not allow labels to be defined twice, so this one
                         \ is commented out
+
+ SKIP 65                \ These bytes appear to be unused
 
 .KL
 
