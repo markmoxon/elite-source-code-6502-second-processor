@@ -6949,14 +6949,14 @@ ENDMACRO
 \       Name: cls
 \       Type: Subroutine
 \   Category: Drawing the screen
-\    Summary: Clear the top part of the screen and draw a white border
+\    Summary: Clear the top part of the screen and draw a border box
 \
 \ ******************************************************************************
 
 .cls
 
  JSR TTX66              \ Call TTX66 to clear the top part of the screen and
-                        \ draw a white border
+                        \ draw a border box
 
  JMP RR4                \ Jump to RR4 to restore X and Y from the stack and A
                         \ from K3, and return from the subroutine using a tail
@@ -7317,7 +7317,7 @@ ENDMACRO
  PHA                    \ Store A on the stack so we can retrieve it below
 
  JSR TTX66              \ Otherwise we are off the bottom of the screen, so
-                        \ clear the screen and draw a white border
+                        \ clear the screen and draw a border box
 
  LDA #1                 \ Move the text cursor to column 1, row 1
  STA XC
@@ -7497,18 +7497,18 @@ ENDMACRO
 \       Name: TTX66
 \       Type: Subroutine
 \   Category: Drawing the screen
-\    Summary: Clear the top part of the screen and draw a white border
+\    Summary: Clear the top part of the screen and draw a border box
 \
 \ ------------------------------------------------------------------------------
 \
-\ Clear the top part of the screen (the space view) and draw a white border
+\ Clear the top part of the screen (the space view) and draw a border box
 \ along the top and sides.
 \
 \ ------------------------------------------------------------------------------
 \
 \ Other entry points:
 \
-\   BOX                 Just draw the white border along the top and sides
+\   BOX                 Just draw the border box along the top and sides
 \
 \ ******************************************************************************
 
