@@ -2551,11 +2551,11 @@ ENDIF
 \
 \ ******************************************************************************
 
-                        \ In the cassette and disc versions of Elite, LL30 and
-                        \ LOIN are synonyms for the same routine, presumably
-                        \ because the two developers each had their own line
-                        \ routines to start with, and then chose one of them for
-                        \ the final game
+                        \ In the BBC Micro cassette and disc versions of Elite,
+                        \ LL30 and LOIN are synonyms for the same routine,
+                        \ presumably because the two developers each had their
+                        \ own line routines to start with, and then chose one of
+                        \ them for the final game
                         \
                         \ In the 6502 Second Processor version, there are three
                         \ different routines. In the parasite, LL30 draws a
@@ -2816,8 +2816,8 @@ ENDIF
 \     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
-\ cassette and disc versions has been unrolled to speed it up. The algorithm is
-\ unchanged, it's just a lot longer.
+\ BBC Micro cassette and disc versions has been unrolled to speed it up. The
+\ algorithm is unchanged, it's just a lot longer.
 \
 \ ******************************************************************************
 
@@ -3097,8 +3097,8 @@ ENDIF
 \     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
-\ cassette and disc versions has been unrolled to speed it up. The algorithm is
-\ unchanged, it's just a lot longer.
+\ BBC Micro cassette and disc versions has been unrolled to speed it up. The
+\ algorithm is unchanged, it's just a lot longer.
 \
 \ ******************************************************************************
 
@@ -3586,8 +3586,8 @@ ENDIF
 \     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
-\ cassette and disc versions has been unrolled to speed it up. The algorithm is
-\ unchanged, it's just a lot longer.
+\ BBC Micro cassette and disc versions has been unrolled to speed it up. The
+\ algorithm is unchanged, it's just a lot longer.
 \
 \ ******************************************************************************
 
@@ -4162,8 +4162,8 @@ ENDIF
 \     first pixel
 \
 \ This routine looks complex, but that's because the loop that's used in the
-\ cassette and disc versions has been unrolled to speed it up. The algorithm is
-\ unchanged, it's just a lot longer.
+\ BBC Micro cassette and disc versions has been unrolled to speed it up. The
+\ algorithm is unchanged, it's just a lot longer.
 \
 \ ******************************************************************************
 
