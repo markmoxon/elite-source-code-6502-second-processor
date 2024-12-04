@@ -20,6 +20,11 @@
 \
 \ ------------------------------------------------------------------------------
 \
+\ This source file contains the I/O processor code for 6502 Second Processor
+\ Elite. This is the code that runs in the I/O processor (i.e. the BBC Micro).
+\
+\ ------------------------------------------------------------------------------
+\
 \ This source file produces the following binary file:
 \
 \   * I.CODE.bin

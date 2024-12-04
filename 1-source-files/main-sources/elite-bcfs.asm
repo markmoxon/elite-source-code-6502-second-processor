@@ -20,6 +20,12 @@
 \
 \ ------------------------------------------------------------------------------
 \
+\ This source file contains code to produce the Big Code File for 6502 Second
+\ Processor Elite. The Big Code File comprises the parasite game code, the ship
+\ blueprints and the game text.
+\
+\ ------------------------------------------------------------------------------
+\
 \ This source file produces the following binary files:
 \
 \   * P.CODE.unprot.bin

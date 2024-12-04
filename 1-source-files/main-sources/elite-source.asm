@@ -20,6 +20,12 @@
 \
 \ ------------------------------------------------------------------------------
 \
+\ This source file contains the main game code for 6502 Second Processor Elite.
+\ This is the code that runs in the parasite (i.e. the second processor). It
+\ also contains the ship blueprints and game text.
+\
+\ ------------------------------------------------------------------------------
+\
 \ This source file produces the following binary files:
 \
 \   * ELTA.bin

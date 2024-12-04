@@ -20,6 +20,10 @@
 \
 \ ------------------------------------------------------------------------------
 \
+\ This source file produces a README file for 6502 Second Processor Elite.
+\
+\ ------------------------------------------------------------------------------
+\
 \ This source file produces the following binary file:
 \
 \   * README.txt

@@ -20,6 +20,10 @@
 \
 \ ------------------------------------------------------------------------------
 \
+\ This source file produces an SSD disc image for 6502 Second Processor Elite.
+\
+\ ------------------------------------------------------------------------------
+\
 \ This source file produces one of the following SSD disc images, depending on
 \ which release is being built:
 \
