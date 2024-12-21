@@ -887,9 +887,7 @@ ENDIF
  SKIP 1                 \ The main loop counter
                         \
                         \ This counter determines how often certain actions are
-                        \ performed within the main loop. See the deep dive on
-                        \ "Scheduling tasks with the main loop counter" for more
-                        \ details
+                        \ performed within the main loop
 
 .FSH
 
@@ -5170,7 +5168,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing pixels
 \    Summary: Implement the OSWORD 241 command (draw space view pixels)
-\  Deep dive: Drawing colour pixels in mode 5
+\  Deep dive: Drawing colour pixels on the BBC Micro
 \
 \ ------------------------------------------------------------------------------
 \
@@ -8726,8 +8724,7 @@ ENDMACRO
 \
 \ ------------------------------------------------------------------------------
 \
-\ The main interrupt handler, which implements Elite's split-screen mode (see
-\ the deep dive on "The split-screen mode in BBC Micro Elite" for details).
+\ The main interrupt handler, which implements Elite's split-screen mode.
 \
 \ IRQ1V is set to point to IRQ1 by the loading process.
 \

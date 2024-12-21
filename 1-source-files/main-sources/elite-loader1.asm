@@ -136,7 +136,7 @@ ENDIF
 \   Category: Drawing the screen
 \    Summary: VDU commands for setting the square mode 1 screen
 \  Deep dive: The split-screen mode in BBC Micro Elite
-\             Drawing monochrome pixels in mode 4
+\             Drawing monochrome pixels on the BBC Micro
 \
 \ ------------------------------------------------------------------------------
 \
@@ -167,8 +167,7 @@ ENDIF
 \
 \ There is also an interrupt-driven routine that switches the bytes-per-pixel
 \ setting from that of mode 1 to that of mode 2, when the raster reaches the
-\ split between the space view and the dashboard. See the deep dive on "The
-\ split-screen mode" for details.
+\ split between the space view and the dashboard.
 \
 \ ******************************************************************************
 
