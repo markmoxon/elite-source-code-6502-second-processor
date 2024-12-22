@@ -37089,7 +37089,7 @@ ENDIF
  LDY #6                 \ Set Y to 6 for the next call to Shpt
 
  LDA K4                 \ Set A = y-coordinate of dot + 1 (so this is the second
- ADC #1                 \ row of the two-pixel-high dot)
+ ADC #1                 \ row of the two-pixel high dot)
                         \
                         \ The addition works as the Shpt routine clears the C
                         \ flag
@@ -42849,9 +42849,9 @@ ENDIF
                         \   (255, 0) to (255, 191)
                         \   (254, 0) to (254, 191)
                         \
-                        \ So that's a 2-pixel wide vertical border along the
+                        \ So that's a two-pixel wide vertical border along the
                         \ left edge of the upper part of the screen, and a
-                        \ 2-pixel wide vertical border along the right edge
+                        \ two-pixel wide vertical border along the right edge
 
 .BOS2
 

@@ -6819,8 +6819,8 @@ ENDMACRO
 
  LDY #3                 \ Fetch byte #2 from the parameter block (the indicator
  LDA (OSSC),Y           \ colour) into A. This is one of #GREEN2, #YELLOW2 or
-                        \ #RED2, or 0 for black, so this is a 2-pixel wide mode
-                        \ 2 character row byte in the specified colour
+                        \ #RED2, or 0 for black, so this is a two-pixel wide
+                        \ mode 2 character row byte in the specified colour
 
  LDY #5                 \ We now want to draw this line five times to do the
                         \ left two pixels of the indicator, so set a counter in
@@ -7572,9 +7572,9 @@ ENDMACRO
                         \   (255, 0) to (255, 191)
                         \   (254, 0) to (254, 191)
                         \
-                        \ So that's a 2-pixel wide vertical border along the
+                        \ So that's a two-pixel wide vertical border along the
                         \ left edge of the upper part of the screen, and a
-                        \ 2-pixel wide vertical border along the right edge
+                        \ two-pixel wide vertical border along the right edge
 
 .BOS2
 
@@ -8346,7 +8346,7 @@ ENDMACRO
  BCC DL2                \ indicator, which is less than a full character's
                         \ width, so jump down to DL2 to do this
 
- SBC #2                 \ Otherwise we can draw a 2-pixel wide block, so
+ SBC #2                 \ Otherwise we can draw a two-pixel wide block, so
  STA Q                  \ subtract 2 from Q so it contains the amount of the
                         \ indicator that's left to draw after this character
 
