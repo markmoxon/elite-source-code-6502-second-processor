@@ -16678,17 +16678,25 @@ ENDIF
 \                       \ source. They contain the original loop version of the
 \BCC P%+4               \ code that's used in the BBC Micro cassette and disc
 \ADC T1                 \ versions
+\
 \ROR A
 \ROR P
+\
 \DEX
+\
 \BNE MUL4
+\
 \LSR A
 \ROR P
+\
 \ORA T
+\
 \RTS
 \
 \.mu10
+\
 \STA P
+\
 \RTS
 
                         \ We now repeat the following four instruction block
@@ -19602,24 +19610,39 @@ ENDIF
 \STY INWK               \ source. The variable PTEXT doesn't exist, so it isn't
 \LDY #HI(PTEXT)-1       \ entirely obvious what this code does, though it looks
 \STY INWK+1             \ like it loops through a table of text tokens in PTEXT
-\LDY #&FF               \ until we get to the entry for the current system,
-\.PDT1                  \ which it prints out as text tokens (so perhaps PTEXT
-\INY                    \ used to be a token table for the system's extended
-\BNE P%+4               \ descriptions before PDESC took over)
-\INC INWK+1
-\LDA (INWK),Y
-\BNE PDT1
-\DEX
-\BNE PDT1
-\.PDT2
+\                       \ until we get to the entry for the current system,
+\LDY #&FF               \ which it prints out as text tokens (so perhaps PTEXT
+\                       \ used to be a token table for the system's extended
+\.PDT1                  \ descriptions before PDESC took over)
+\
 \INY
 \BNE P%+4
 \INC INWK+1
-\STY INWK+2
+\
 \LDA (INWK),Y
+\
+\BNE PDT1
+\
+\DEX
+\
+\BNE PDT1
+\
+\.PDT2
+\
+\INY
+\BNE P%+4
+\INC INWK+1
+\
+\STY INWK+2
+\
+\LDA (INWK),Y
+\
 \BEQ TT24-1
+\
 \JSR TT27
+\
 \LDY INWK+2
+\
 \JMP PDT2
 
  RTS                    \ Return from the subroutine
@@ -20769,7 +20792,8 @@ ENDIF
 .TT214
 
 \.TT214                 \ These instructions are commented out in the original
-\PHA                    \ source
+\                       \ source
+\PHA
 \JSR TT162
 \PLA
 
@@ -22952,7 +22976,8 @@ ENDIF
                         \ sun
 
 \JSR CATLOD             \ These instructions are commented out in the original
-\JSR LOMOD              \ source
+\                       \ source
+\JSR LOMOD
 
  LDA QQ11               \ If the current view in QQ11 is not a space view (0) or
  AND #%00111111         \ one of the charts (64 or 128), return from the
@@ -23954,11 +23979,11 @@ ENDIF
 \ ******************************************************************************
 
 \.ref2                  \ These instructions are commented out in the original
-\LDY #187               \ source, but they would jump to pres in the EQSHP
-\JMP pres               \ routine with Y = 187, which would show the error:
-\Belgium                \ "LASER PRESENT" (this code was part of the refund
-                        \ bug in the disc version of Elite, which is why it is
-                        \ commented out)
+\                       \ source, but they would jump to pres in the EQSHP
+\LDY #187               \ routine with Y = 187, which would show the error:
+\JMP pres               \ "LASER PRESENT" (this code was part of the refund
+\                       \ bug in the disc version of Elite, which is why it is
+\Belgium                \ commented out)
                         \
                         \ There is also a comment in the original source - the
                         \ solitary word "Belgium"
@@ -32410,7 +32435,7 @@ ELSE
 ENDIF
 
 \JSR BELL               \ This instruction is commented out in the original
-                        \ source. It would make a standard system beep
+                        \ source; it would make a standard system beep
 
                         \ The checksum CHK is correct, so now we check whether
                         \ CHK2 = CHK EOR A9, and if this check fails, bit 7 of
@@ -33693,7 +33718,8 @@ ENDIF
 \LDX #LO(MINI)          \ These instructions are commented out in the original
 \LDY #HI(MINI)          \ source, but they would load a commander file called
 \JSR OSCLI              \ "E.MINING" and continue below, so presumably this is
-\JMP LOL1-2             \ code for loading a test commander file
+\                       \ code for loading a test commander file
+\JMP LOL1-2
 
 \LDX #2                 \ These instructions are commented out in the original
 \JSR FX200              \ source, but they would enable the ESCAPE key and clear
@@ -33750,7 +33776,8 @@ ENDIF
  BRK
 
 \.MINI                  \ These instructions are commented out in the original
-\EQUS "L.E.MINING B00"  \ source, and form part of the commented section above
+\                       \ source, and form part of the commented section above
+\EQUS "L.E.MINING B00"
 \EQUB 13
 
 \ ******************************************************************************
@@ -41007,8 +41034,18 @@ ENDIF
 
  LOAD_H% = LOAD% + P% - CODE%
 
+\ ******************************************************************************
+\
+\       Name: CATLOD
+\       Type: Subroutine
+\   Category: Save and load
+\    Summary: This routine is commented out in the original source
+\
+\ ******************************************************************************
+
 \.CATLOD                \ These instructions are commented out in the original
-\DEC CTLDL+8            \ source
+\                       \ source
+\DEC CTLDL+8
 \JSR CATLODS
 \INC CTLDL+8
 \
