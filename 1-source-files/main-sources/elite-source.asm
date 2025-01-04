@@ -19779,6 +19779,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Charts
 \    Summary: Show the Long-range Chart (red key f4)
+\  Deep dive: A sense of scale
 \
 \ ******************************************************************************
 
@@ -31782,6 +31783,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Maths (Geometry)
 \    Summary: Compare x_hi, y_hi and z_hi with 224
+\  Deep dive: A sense of scale
 \
 \ ------------------------------------------------------------------------------
 \
@@ -31810,6 +31812,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Maths (Geometry)
 \    Summary: Compare x_hi, y_hi and z_hi with A
+\  Deep dive: A sense of scale
 \
 \ ------------------------------------------------------------------------------
 \
@@ -34292,6 +34295,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Flight
 \    Summary: Perform an in-system jump
+\  Deep dive: A sense of scale
 \
 \ ------------------------------------------------------------------------------
 \
