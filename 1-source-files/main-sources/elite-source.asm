@@ -31879,19 +31879,18 @@ ENDIF
 \       Name: brkd
 \       Type: Variable
 \   Category: Utility routines
-\    Summary: The brkd counter for error handling
-\
-\ ------------------------------------------------------------------------------
-\
-\ This counter starts at zero, and is decremented whenever the BRKV handler at
-\ BRBR prints an error message. It is incremented every time an error message
-\ is printed out as part of the TITLE routine.
+\    Summary: A flag that indicates whether a system error has occured
 \
 \ ******************************************************************************
 
 .brkd
 
- EQUB 0
+ EQUB 0                 \ A flag to record whether a system error has occured,
+                        \ so we can print it out
+                        \
+                        \   * 0 = no system error has occured
+                        \
+                        \   * &FF = a system error has occured
 
 \ ******************************************************************************
 \
@@ -31916,14 +31915,20 @@ ENDIF
 \ When it is the BRKV handler, the routine can be triggered using a BRK
 \ instruction. The main differences between this routine and the MEBRK handler
 \ that is used during disc access operations are that this routine restarts the
-\ game rather than returning to the disc access menu, and this handler
-\ decrements the brkd counter.
+\ game rather than returning to the disc access menu.
 \
 \ ******************************************************************************
 
 .BRBR
 
- DEC brkd               \ Decrement the brkd counter
+                        \ When we call this routine, we know that brkd will be
+                        \ zero, as it is initialised to zero and the only other
+                        \ place it gets changed is in the TITLE routine, where
+                        \ it also gets set to 0
+
+ DEC brkd               \ Set brkd = &FF to indicate that there is a system
+                        \ error that needs to be printed out on the title screen
+                        \ by the TITLE routine
 
  LDX #&FF               \ Set the stack pointer to &01FF, which is the standard
  TXS                    \ location for the 6502 stack, so this instruction
@@ -32577,7 +32582,11 @@ ENDIF
  LDA brkd               \ If brkd = 0, jump to BRBR2 to skip the following, as
  BEQ BRBR2              \ we do not have a system error message to display
 
- INC brkd               \ Increment the brkd counter
+                        \ If we get here then brkd = &FF, which indicates that
+                        \ wa have a system error we need to display
+
+ INC brkd               \ Set brkd = 0 to clear the error flag and indicate that
+                        \ the error has been processed
 
  LDA #7                 \ Move the text cursor to column 7
  JSR DOXC
@@ -33316,7 +33325,7 @@ ENDIF
 \ When it is the BRKV handler, the routine can be triggered using a BRK
 \ instruction. The main difference between this routine and the standard BRKV
 \ handler in BRBR is that this routine returns to the disc access menu rather
-\ than restarting the game, and it doesn't decrement the brkd counter.
+\ than restarting the game.
 \
 \ ******************************************************************************
 
