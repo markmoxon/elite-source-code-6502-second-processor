@@ -23270,6 +23270,7 @@ ENDIF
 \   Category: Loader
 \    Summary: The OS command string for running the flight code in file D.CODE
 \             in the disc version of Elite
+\  Deep dive: Swapping between the docked and flight code
 \
 \ ------------------------------------------------------------------------------
 \
@@ -33306,6 +33307,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Save and load
 \    Summary: The BRKV handler for disc access operations
+\  Deep dive: Swapping between the docked and flight code
 \
 \ ------------------------------------------------------------------------------
 \
