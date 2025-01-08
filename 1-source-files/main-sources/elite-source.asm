@@ -8640,7 +8640,14 @@ ENDIF
 \
 \   Y1                  The y-coordinate offset
 \
-\   ZZ                  The distance of the point (further away = smaller point)
+\   ZZ                  The distance of the point, with bigger distances drawing
+\                       smaller points:
+\
+\                         * ZZ < 80           Double-height four-pixel square
+\
+\                         * 80 <= ZZ <= 143   Single-height two-pixel dash
+\
+\                         * ZZ > 143          Single-height one-pixel dot
 \
 \ ******************************************************************************
 
@@ -8653,7 +8660,7 @@ ENDIF
  TXA                    \ Set SYL+Y to X, the low byte of the result
  STA SYL,Y
 
-                        \ Fall through into PIX1 to draw the stardust particle
+                        \ Fall through into PIXEL2 to draw the stardust particle
                         \ at (X1,Y1)
 
 \ ******************************************************************************
@@ -8677,7 +8684,14 @@ ENDIF
 \   Y1                  The y-coordinate offset (positive means up the screen
 \                       from the centre, negative means down the screen)
 \
-\   ZZ                  The distance of the point (further away = smaller point)
+\   ZZ                  The distance of the point, with bigger distances drawing
+\                       smaller points:
+\
+\                         * ZZ < 80           Double-height four-pixel square
+\
+\                         * 80 <= ZZ <= 143   Single-height two-pixel dash
+\
+\                         * ZZ > 143          Single-height one-pixel dot
 \
 \ ******************************************************************************
 
@@ -8732,7 +8746,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing pixels
 \    Summary: Add a white dot at a specific distance to the pixel buffer
-\             (2-pixel dash or 4-pixel square)
+\             (two-pixel dash or four-pixel square)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -8747,7 +8761,14 @@ ENDIF
 \
 \   A                   The screen y-coordinate of the point to draw
 \
-\   ZZ                  The distance of the point (further away = smaller point)
+\   ZZ                  The distance of the point, with bigger distances drawing
+\                       smaller points:
+\
+\                         * ZZ < 80           Double-height four-pixel square
+\
+\                         * 80 <= ZZ <= 143   Single-height two-pixel dash
+\
+\                         * ZZ > 143          Single-height one-pixel dot
 \
 \ ------------------------------------------------------------------------------
 \
@@ -8777,7 +8798,7 @@ ENDIF
 
  LDA ZZ                 \ Store the distance in PBUF, with bits 0-2 cleared so
  AND #%11111000         \ the parasite's PIXEL routine will draw this point as a
- STA PBUF,Y             \ white 2-pixel dash or 4-pixel square
+ STA PBUF,Y             \ white two-pixel dash or four-pixel square
 
  TYA                    \ Set A = Y + 3
  CLC                    \       = PBUP + 3
@@ -8859,7 +8880,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing pixels
 \    Summary: Add a coloured dot at a specific distance to the pixel buffer
-\             (1-pixel dot, 2-pixel dash or 4-pixel square)
+\             (one-pixel dot, two-pixel dash or four-pixel square)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -8874,7 +8895,14 @@ ENDIF
 \
 \   A                   The screen y-coordinate of the point to draw
 \
-\   ZZ                  The distance of the point (further away = smaller point)
+\   ZZ                  The distance of the point, with bigger distances drawing
+\                       smaller points:
+\
+\                         * ZZ < 80           Double-height four-pixel square
+\
+\                         * 80 <= ZZ <= 143   Single-height two-pixel dash
+\
+\                         * ZZ > 143          Single-height one-pixel dot
 \
 \ ------------------------------------------------------------------------------
 \
@@ -19418,18 +19446,18 @@ ENDIF
  INX                    \ is stored in the range 0-14 but the displayed range
                         \ should be 1-15
 
- CLC                    \ Call pr2 to print the technology level as a 3-digit
- JSR pr2                \ number without a decimal point (by clearing the C
-                        \ flag)
+ CLC                    \ Call pr2 to print the technology level as a
+ JSR pr2                \ three-digit number without a decimal point (by
+                        \ clearing the C flag)
 
  JSR TTX69              \ Print a paragraph break and set Sentence Case
 
  LDA #192               \ Print recursive token 32 ("POPULATION") followed by a
  JSR TT68               \ colon
 
- SEC                    \ Call pr2 to print the population as a 3-digit number
- LDX QQ6                \ with a decimal point (by setting the C flag), so the
- JSR pr2                \ number printed will be population / 10
+ SEC                    \ Call pr2 to print the population as a three-digit
+ LDX QQ6                \ number with a decimal point (by setting the C flag),
+ JSR pr2                \ so the number printed will be population / 10
 
  LDA #198               \ Print recursive token 38 (" BILLION"), followed by a
  JSR TT60               \ paragraph break and Sentence Case
@@ -19850,9 +19878,9 @@ ENDIF
 
  JSR PIXEL              \ Call PIXEL to draw a point at (X, A), with the size of
                         \ the point dependent on the distance specified in ZZ
-                        \ (so a high value of ZZ will produce a 1-pixel point,
-                        \ a medium value will produce a 2-pixel dash, and a
-                        \ small value will produce a 4-pixel square)
+                        \ (so a high value of ZZ will produce a one-pixel point,
+                        \ a medium value will produce a two-pixel dash, and a
+                        \ small value will produce a four-pixel square)
 
  JSR TT20               \ We want to move on to the next system, so call TT20
                         \ to twist the three 16-bit seeds in QQ15
@@ -25965,8 +25993,8 @@ ENDIF
 
  LDX #8                 \ First we need to copy the space station's coordinates
                         \ into K3, so set a counter to copy the first 9 bytes
-                        \ (the 3-byte x, y and z coordinates) from the station's
-                        \ data block at K% + NI% into K3
+                        \ (the three-byte x, y and z coordinates) from the
+                        \ station's data block at K% + NI% into K3
 
 .SPL1
 
@@ -34807,8 +34835,9 @@ ENDIF
  ADC #3                 \ Set Y = A + 3, so Y now points to the last byte of
  TAY                    \ four within the block of four-byte values
 
- LDX #7                 \ We want to copy four bytes, spread out into an 8-byte
-                        \ block, so set a counter in Y to cover 8 bytes
+ LDX #7                 \ We want to copy four bytes, spread out into an
+                        \ eight-byte block, so set a counter in Y to cover eight
+                        \ bytes
 
 .NOL1
 
@@ -37179,8 +37208,8 @@ ENDIF
                         \ from byte Y-1 to byte Y+2. If the ship's screen point
                         \ turns out to be off-screen, then this routine aborts
                         \ the entire call to LL9, exiting via nono. The four
-                        \ bytes define a horizontal 4-pixel dash, for either the
-                        \ top or the bottom of the ship's dot
+                        \ bytes define a horizontal four-pixel dash, for either
+                        \ the top or the bottom of the ship's dot
 
  STA (XX19),Y           \ Store A in byte Y of the ship line heap (i.e. Y1)
 
