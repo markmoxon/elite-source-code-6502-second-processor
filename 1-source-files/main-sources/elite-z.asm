@@ -197,7 +197,7 @@
 .X1
 
  SKIP 1                 \ Temporary storage, typically used for x-coordinates in
-                        \ line-drawing routines
+                        \ the line-drawing routines
 
 .Y1
 
@@ -207,7 +207,7 @@
 .X2
 
  SKIP 1                 \ Temporary storage, typically used for x-coordinates in
-                        \ line-drawing routines
+                        \ the line-drawing routines
 
 .Y2
 
@@ -2875,6 +2875,8 @@ ENDIF
  BNE LI130+6            \ If we get here then R must be 3, so jump to LI130+6 to
                         \ skip plotting any of the pixels, but making sure we
                         \ join the routine just after the plotting instructions
+                        \ (this BNE is effectively a JMP as we just passed
+                        \ through a BEQ)
 
 .LI190
 
@@ -3187,6 +3189,8 @@ ENDIF
  BNE LI230+6            \ If we get here then R must be 3, so jump to LI230+6 to
                         \ skip plotting any of the pixels, but making sure we
                         \ join the routine just after the plotting instructions
+                        \ (this BNE is effectively a JMP as we just passed
+                        \ through a BEQ)
 
 .LI191
 
@@ -3211,8 +3215,8 @@ ENDIF
 
  BNE LI230              \ If we get here then R must be 3, so jump to LI130 to
                         \ start plotting from the fourth pixel in this byte
-                        \ (this BNE is effectively a JMP as by now R is never
-                        \ zero)
+                        \ (this BNE is effectively a JMP as we just passed
+                        \ through a BEQ)
 
 .LI200
 
