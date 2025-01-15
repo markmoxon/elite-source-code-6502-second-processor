@@ -42809,7 +42809,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing the screen
 \    Summary: Send control code 11 to the I/O processor to clear the top part
-\             of the screen and draw a border box
+\             of the screen, draw a border box and configure the specified view
 \
 \ ------------------------------------------------------------------------------
 \
