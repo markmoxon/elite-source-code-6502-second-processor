@@ -20066,10 +20066,10 @@ ENDIF
  STA XX15+2             \ Set XX15+2 (X2) = the x-coordinate of the centre of
                         \ the crosshairs
 
- JMP LL30               \ Draw a vertical line (X1, Y1) to (X2, Y2), which will
-                        \ draw from the top edge of the crosshairs to the bottom
-                        \ edge, through the centre of the crosshairs, returning
-                        \ from the subroutine using a tail call
+ JMP LL30               \ Draw a vertical line from (X1, Y1) to (X2, Y2), which
+                        \ will draw from the top edge of the crosshairs to the
+                        \ bottom edge, through the centre of the crosshairs,
+                        \ and returning from the subroutine using a tail call
 
 \ ******************************************************************************
 \
@@ -36112,6 +36112,7 @@ ENDMACRO
 \       Type: Variable
 \   Category: Market
 \    Summary: Market prices table
+\  Deep dive: Market item prices and availability
 \
 \ ------------------------------------------------------------------------------
 \
@@ -36123,12 +36124,12 @@ ENDMACRO
 \   Byte #2 = Base quantity
 \   Byte #3 = Mask to control price fluctuations
 \
-\ To make it easier for humans to follow, we've defined a macro called ITEM
+\ To make it easier for humans to follow, I've defined a macro called ITEM
 \ that takes the following arguments and builds the four bytes for us:
 \
 \   ITEM base price, economic factor, units, base quantity, mask
 \
-\ So for food, we have the following:
+\ So for food, we have the following, for example:
 \
 \   * Base price = 19
 \   * Economic factor = -2
@@ -36156,6 +36157,18 @@ ENDMACRO
  ITEM 97,  -1, 'k',  66, %00000111  \ 13 = Gold
 
 \EQUD &360A118          \ This data is commented out in the original source
+                        \
+                        \ It would have inserted an item as follows:
+                        \
+                        \   ITEM 24, -1, 'k',  96, %00000011
+                        \
+                        \ So that's an item with a base price of 24 credits that
+                        \ is slightly cheaper than average in agricultural
+                        \ economies but closer to average in rich industrial
+                        \ ones, with a base quantity of 96kg and a reasonably
+                        \ stable price
+                        \
+                        \ I wonder what this mysterious item was going to be?
 
  ITEM 171, -2, 'k',  55, %00011111  \ 14 = Platinum
  ITEM 45,  -1, 'g', 250, %00001111  \ 15 = Gem-Stones
