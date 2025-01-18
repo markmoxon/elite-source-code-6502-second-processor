@@ -26751,7 +26751,15 @@ ENDIF
 \
 \ Arguments:
 \
-\   Y                   The new status of the leftmost missile indicator
+\   Y                   The new colour of the missile indicator:
+\
+\                         * &00 = black (no missile)
+\
+\                         * #RED2 = red (armed and locked)
+\
+\                         * #YELLOW2 = yellow/white (armed)
+\
+\                         * #GREEN2 = green (disarmed)
 \
 \ ******************************************************************************
 
@@ -26889,7 +26897,7 @@ ENDIF
 \                       from right to left, so indicator NOMSL is the leftmost
 \                       indicator)
 \
-\   Y                   The colour of the missile indicator:
+\   Y                   The new colour of the missile indicator:
 \
 \                         * &00 = black (no missile)
 \
@@ -26941,7 +26949,7 @@ ENDIF
  LDA #DOmsbar           \ Send a #DOmsbar command to the I/O processor to update
  JSR OSWORD             \ the missile indicator on the dashboard
 
- LDY #0                 \ Set Y = 0
+ LDY #0                 \ Set Y = 0, so we can return it from the subroutine
 
  PLA                    \ Restore the indicator colour from the stack into A
 
