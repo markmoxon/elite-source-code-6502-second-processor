@@ -35152,7 +35152,7 @@ ENDIF
  LDA KTRAN+1            \ Copy the key press state for the "?" key from the
  STA KL+1               \ key logger buffer to the key logger
 
- LDA KTRAN+2            \ Copy the key press state for the SPACE key from the
+ LDA KTRAN+2            \ Copy the key press state for the Space key from the
  STA KL+2               \ key logger buffer to the key logger
 
 .BS1
