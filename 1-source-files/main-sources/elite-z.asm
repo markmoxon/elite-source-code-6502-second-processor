@@ -7129,7 +7129,7 @@ ENDMACRO
                         \ ROM a copy of these bitmap definitions is embedded
                         \ into this source code at page FONT%, so page 0 of the
                         \ font is at FONT%, page 1 is at FONT%+1, and page 2 at
-                        \ FONT%+3
+                        \ FONT%+2
                         \
                         \ There are definitions for 32 characters in each of the
                         \ three pages of MOS memory, as each definition takes up
