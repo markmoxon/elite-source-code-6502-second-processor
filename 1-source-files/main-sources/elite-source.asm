@@ -24018,8 +24018,8 @@ ENDIF
 \                       \ source, but they would jump to pres in the EQSHP
 \LDY #187               \ routine with Y = 187, which would show the error:
 \JMP pres               \ "LASER PRESENT" (this code was part of the refund
-\                       \ bug in the disc version of Elite, which is why it is
-\Belgium                \ commented out)
+\                       \ bug in the BBC Micro disc version of Elite, which
+\Belgium                \ is why it is commented out)
                         \
                         \ There is also a comment in the original source - the
                         \ solitary word "Belgium"
@@ -24040,8 +24040,9 @@ ENDIF
 \CMP T1                 \ These instructions are commented out in the original
 \BEQ ref2               \ source, but they would jump to ref2 above if we were
                         \ trying to replace a laser with one of the same type
-                        \ (this code was part of the refund bug in the disc
-                        \ version of Elite, which is why it is commented out)
+                        \ (this code was part of the refund bug in the BBC Micro
+                        \ disc version of Elite, which is why it is commented
+                        \ out)
 
  LDY #4                 \ If the current laser has power #POW (pulse laser),
  CMP #POW               \ jump to ref1 with Y = 4 (the item number of a pulse
@@ -31987,7 +31988,7 @@ ENDIF
 
  LDA (&FD),Y            \ Fetch the Y-th byte of the block pointed to by
                         \ (&FD &FE), so that's the Y-th character of the message
-                        \ pointed to by the MOS error message pointer
+                        \ pointed to by the error message pointer
 
  BNE BRBRLOOP           \ If the fetched character is non-zero, loop back to the
                         \ JSR OSWRCH above to print the it, and keep looping
