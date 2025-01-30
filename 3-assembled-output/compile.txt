@@ -8537,7 +8537,7 @@ Saving file '3-assembled-output/ELTB.bin'
      326C   D0 CE      BNE &323C
 .PD1
      326E   A2 03      LDX #&03
-.PDL1
+.PDL1K
      3270   B5 6D      LDA &6D,X
      3272   95 00      STA &00,X
      3274   CA         DEX
@@ -9178,7 +9178,7 @@ Saving file '3-assembled-output/ELTC.bin'
      3731   86 81      STX &81
      3733   A2 0C      LDX #&0C
      3735   86 04      STX &04
-.TT223
+.TT223K
      3737   20 90 37   JSR &3790
      373A   B0 C6      BCS &3702
      373C   85 19      STA &19

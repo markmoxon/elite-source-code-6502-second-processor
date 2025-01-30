@@ -7847,7 +7847,7 @@ ENDMACRO
 
  DEY                    \ Decrement the byte counter in Y
 
- BNE EE3                \ Loop back to EE2 to blank the next byte to the left,
+ BNE EE3                \ Loop back to EE3 to blank the next byte to the left,
                         \ until we have done one page's worth (from byte #247 to
                         \ #1)
 

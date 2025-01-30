@@ -18141,22 +18141,22 @@ ENDIF
                         \ every time we call PDESC, so set a counter in X for
                         \ copying 4 bytes
 
-{
-.PDL1                   \ This label is a duplicate of the label above (which is
-                        \ why we need to surround it with braces, as BeebAsm
-                        \ doesn't allow us to redefine labels, unlike BBC BASIC)
+.PDL1K                  \ This label is a duplicate of the label above
+                        \
+                        \ In the original source this label is PDL1, but
+                        \ because BeebAsm doesn't allow us to redefine labels,
+                        \ I have renamed it to PDL1K
 
  LDA QQ15+2,X           \ Copy QQ15+2 to QQ15+5 (s1 and s2) to RAND to RAND+3
  STA RAND,X
 
  DEX                    \ Decrement the loop counter
 
- BPL PDL1               \ Loop back to PDL1 until we have copied all
+ BPL PDL1K              \ Loop back to PDL1K until we have copied all
 
  LDA #5                 \ Set A = 5, so we print extended token 5 in the next
                         \ instruction ("{lower case}{justify}{single cap}[86-90]
                         \ IS [140-144].{cr}{left align}"
-}
 
 .PD4
 
@@ -20298,15 +20298,13 @@ ENDIF
  LDX #12                \ Perhaps they were left behind when code was moved from
  STX T1                 \ here into gnum, and weren't deleted?
 
-{
-.TT223                  \ This label is a duplicate of a label in gnum (which is
-                        \ why we need to surround it with braces, as BeebAsm
-                        \ doesn't allow us to redefine labels, unlike BBC
-                        \ BASIC). This could be a remnant if the code in gnum
-                        \ was originally here, but got moved into the gnum
-                        \ subroutine without removing the original
-
-}
+.TT223K                 \ This label is a duplicate of a label in the gnum
+                        \ routine, so this could also be a remnant from code
+                        \ that got moved into the gnum subroutine
+                        \
+                        \ In the original source this label is TT223, but
+                        \ because BeebAsm doesn't allow us to redefine labels,
+                        \ I have renamed it to TT223K
 
  JSR gnum               \ Call gnum to get a number from the keyboard, which
                         \ will be the quantity of this item we want to purchase,
