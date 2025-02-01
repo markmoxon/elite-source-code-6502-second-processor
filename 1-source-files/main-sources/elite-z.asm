@@ -648,10 +648,11 @@ ENDIF
 \
 \ Palette data is given as a set of bytes, with each byte mapping a logical
 \ colour to a physical one. In each byte, the logical colour is given in bits
-\ 4-7 and the physical colour in bits 0-3. See p.379 of the Advanced User Guide
-\ for details of how palette mapping works, as in modes 1 and 2 we have to do
-\ multiple palette commands to change the colours correctly, and the physical
-\ colour value is EOR'd with 7, just to make things even more confusing.
+\ 4-7 and the physical colour in bits 0-3. See p.379 of the "Advanced User Guide
+\ for the BBC Micro" by Bray, Dickens and Holmes for details of how palette
+\ mapping works, as in modes 1 and 2 we have to do multiple palette commands to
+\ change the colours correctly, and the physical colour value is EOR'd with 7,
+\ just to make things even more confusing.
 \
 \ ******************************************************************************
 
@@ -1274,7 +1275,8 @@ ENDIF
 \ This routine is run when the parasite sends a #DOFE21 <flag> command. It takes
 \ the argument and stores it in SHEILA &21 to change the palette.
 \
-\ See p.379 of the Advanced User Guide for an explanation of palette bytes.
+\ See p.379 of the "Advanced User Guide for the BBC Micro" by Bray, Dickens and
+\ Holmes for an explanation of palette bytes.
 \
 \ ------------------------------------------------------------------------------
 \
@@ -6311,8 +6313,8 @@ ENDIF
 \ Arguments:
 \
 \   A                   The internal number of the key to check (see p.142 of
-\                       the Advanced User Guide for a list of internal key
-\                       numbers)
+\                       the "Advanced User Guide for the BBC Micro" by Bray,
+\                       Dickens and Holmes for a list of internal key numbers)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -6372,8 +6374,8 @@ ENDMACRO
 \ ------------------------------------------------------------------------------
 \
 \ Keyboard table for in-flight controls. This table contains the internal key
-\ codes for the flight keys (see p.142 of the Advanced User Guide for a list of
-\ internal key numbers).
+\ codes for the flight keys (see p.142 of the "Advanced User Guide for the BBC
+\ Micro" by Bray, Dickens and Holmes for a list of internal key numbers).
 \
 \ The pitch, roll, speed and laser keys (i.e. the seven primary flight
 \ control keys) have bit 7 set, so they have 128 added to their internal
@@ -6437,9 +6439,10 @@ ENDMACRO
 \
 \ Next, it scans the keyboard for any other key presses, starting with internal
 \ key number 16 ("Q") and working through the set of internal key numbers (see
-\ p.142 of the Advanced User Guide for a list of internal key numbers). If a key
-\ press is detected, the internal key number is stored in byte #2 of the key
-\ logger table and scanning stops.
+\ p.142 of the "Advanced User Guide for the BBC Micro" by Bray, Dickens and
+\ Holmes for a list of internal key numbers). If a key press is detected, the
+\ internal key number is stored in byte #2 of the key logger table and scanning
+\ stops.
 \
 \ Finally, the joystick is read for X, Y and fire button values. The rotation
 \ value is also read from the Bitstik.
@@ -6931,8 +6934,9 @@ ENDMACRO
 \
 \                         * Byte #2 = The internal number of the key to check
 \
-\                       See p.142 of the Advanced User Guide for a list of
-\                       internal key numbers
+\                       See p.142 of the "Advanced User Guide for the BBC Micro"
+\                       by Bray, Dickens and Holmes for a list of internal key
+\                       numbers
 \
 \ ------------------------------------------------------------------------------
 \
