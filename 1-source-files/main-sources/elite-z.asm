@@ -7615,7 +7615,7 @@ ENDMACRO
 
  JSR LOIN               \ Draw a line from (X1, Y1) to (X2, Y2)
 
- LDA #%00001111         \ Set locations &4000 &41F8 to %00001111, as otherwise
+ LDA #%00001111         \ Set locations &4000 and &41F8 to yellow, as otherwise
  STA &4000              \ the top-left and top-right corners will be black (as
  STA &41F8              \ the lines overlap at the corners, and the EOR logic
                         \ used by LOIN will otherwise make them black)
