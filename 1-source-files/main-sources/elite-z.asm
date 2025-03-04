@@ -44,6 +44,15 @@
 
  LOAD% = &2400          \ The load address of the main I/O processor code
 
+                        \ --- Mod: Code added for speed control: -------------->
+
+ SPEED = 3              \ The minimum number of vertical syncs we want to spend
+                        \ in the main flight loop (there are 50 per second)
+                        \
+                        \ Higher figure = slower game speed
+
+                        \ --- End of added code ------------------------------->
+
  VSCAN = 57             \ Defines the split position in the split-screen mode
 
  Y = 96                 \ The centre y-coordinate of the 256 x 192 space view
@@ -241,6 +250,16 @@
 .SCH
 
  SKIP 1                 \ Screen address (high byte)
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.syncCounter
+
+ SKIP 1                 \ A counter for vertical syncs, so we can control the
+                        \ speed of the main flight loop independently of the
+                        \ delay mechanism
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
@@ -6721,7 +6740,17 @@ ENDMACRO
  EQUW SAFE              \            252 (&FC)    12 = Do nothing
  EQUW SAFE              \            253 (&FD)    13 = Do nothing
  EQUW SAFE              \            254 (&FE)    14 = Do nothing
- EQUW SAFE              \            255 (&FF)    15 = Do nothing
+
+                        \ --- Mod: Code removed for speed control: ------------>
+
+\EQUW SAFE              \            255 (&FF)    15 = Do nothing
+
+                        \ --- And replaced by: -------------------------------->
+
+ EQUW SpeedControl      \            255 (&FF)    15 = Control the game speed
+
+                        \ --- End of replacement ------------------------------>
+
 
  EQUW SAFE              \ These addresses are never used and have no effect, as
  EQUW SAFE              \ they are out of range for one-byte OSWORD numbers
@@ -8972,6 +9001,14 @@ ENDMACRO
  STA VIA+&45            \ (SHEILA &45) to VSCAN (57) to start the T1 counter
                         \ counting down from 14622 at a rate of 1 MHz
 
+                        \ --- Mod: Code added for speed control: -------------->
+
+ LDA syncCounter        \ Decrement the sync counter that we use to control the
+ BEQ P%+4               \ speed of the main flight loop, not going past zero
+ DEC syncCounter
+
+                        \ --- End of added code ------------------------------->
+
  LDA HFX                \ If the hyperspace effect flag in HFX is non-zero, then
  BNE jvec               \ jump up to jvec to pass control to the next interrupt
                         \ handler, instead of switching the palette to mode 1.
@@ -9058,6 +9095,72 @@ ENDMACRO
 
  JMP PUTBACK            \ Jump to PUTBACK to restore the USOSWRCH handler and
                         \ return from the subroutine using a tail call
+
+\ ******************************************************************************
+\
+\       Name: SpeedControl
+\       Type: Subroutine
+\   Category: Music
+\    Summary: Control the game speed
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.SpeedControl
+
+ LDY #2                 \ Fetch byte #2 from the parameter block, which contains
+ LDA (OSSC),Y           \ the parameter that controls the operation
+
+ CMP #1                 \ If the parameter is 1, jump to StartMainLoop to wait
+ BEQ SlowDownMainLoop   \ until the sync counter counts down, returning from the
+                        \ subroutine using a tail call
+
+ JMP StartMainLoop      \ Otherwise the parameter must be 0, so jump to
+                        \ StartMainLoop to restart the sync counter, returning
+                        \ from the subroutine using a tail call
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: StartMainLoop
+\       Type: Subroutine
+\   Category: Main loop
+\    Summary: Restart the sync counter
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.StartMainLoop
+
+ LDA #SPEED             \ Set syncCounter to SPEED, the minimum number of
+ STA syncCounter        \ vertical syncs we want to spend in the main loop
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
+\       Name: SlowDownMainLoop
+\       Type: Subroutine
+\   Category: Main loop
+\    Summary: Pause until the sync counter reaches zero
+\
+\ ******************************************************************************
+
+                        \ --- Mod: Code added for speed control: -------------->
+
+.SlowDownMainLoop
+
+ LDA syncCounter        \ Wait until the syncCounter reaches 0
+ BNE SlowDownMainLoop
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
 
 \ ******************************************************************************
 \
