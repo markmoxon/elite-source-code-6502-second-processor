@@ -54858,8 +54858,8 @@ ENDMACRO
 
 .WaitForSync
 
- LDA #1                 \ Set the parameter to zero to restart the sync counter
- STA musicBuff+2
+ LDA #1                 \ Set the parameter to 1 to wait for the sync counter to
+ STA musicBuff+2        \ count down
 
  LDX #LO(musicBuff)     \ Set (Y X) to point to the musicBuff parameter
  LDY #HI(musicBuff)     \ block
