@@ -55,7 +55,7 @@ elif release == 2:
     # SNG45 variant
     s = 0x106A                  # S%
     g = 0x10D1                  # G%
-    f = 0x8191                  # F%
+    f = 0x81DA                  # F%
 elif release == 3:
     # Executive variant
     s = 0x106C                  # S%
