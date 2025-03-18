@@ -4204,11 +4204,11 @@ ENDIF
  JSR OSCLI              \ Call OSCLI to run the OS command in MESS1, which
                         \ changes the directory to the user's main directory
 
- LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("DIR ELITE")
+ LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("DIR EliteCmdrs")
  LDY #HI(MESS2)
 
  JSR OSCLI              \ Call OSCLI to run the OS command in MESS2, which
-                        \ changes the directory to ELITE
+                        \ changes the directory to EliteCmdrs
 
                         \ --- End of added code ------------------------------->
 
