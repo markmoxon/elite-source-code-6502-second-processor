@@ -183,12 +183,12 @@
 
 .musicWorkspace
 
- SKIP 8                 \ Storage for the music player, &0092 to &0099 inclusive
+ SKIP 8                 \ Storage for the music player, &0086 to &008D inclusive
 
 .musicRomNumber
 
  SKIP 1                 \ The bank number of the sideways ROM slot containing
-                        \ the music player at &009A
+                        \ the music player at &008E
 
 .musicStatus
 
