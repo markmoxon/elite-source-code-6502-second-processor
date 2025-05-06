@@ -3472,7 +3472,8 @@ Saving file '3-assembled-output/COMPENDIUM.bin'
      10E6   98         TYA
      10E7   51 05      EOR (&05),Y
      10E9   49 75      EOR #&75
-     10EB   91 05      STA (&05),Y
+     10EB   EA         NOP
+     10EC   EA         NOP
      10ED   88         DEY
      10EE   D0 F4      BNE &10E4
      10F0   E8         INX
@@ -13106,7 +13107,8 @@ Saving file '3-assembled-output/ELTE.bin'
      50F1   86 86      STX &86
      50F3   20 CE 51   JSR &51CE
      50F6   CD 64 10   CMP &1064
-     50F9   D0 F8      BNE &50F3
+     50F9   EA         NOP
+     50FA   EA         NOP
      50FB   49 A9      EOR #&A9
      50FD   AA         TAX
      50FE   AD B2 08   LDA &08B2
@@ -17339,7 +17341,8 @@ Saving file '3-assembled-output/ELTG.bin'
      6B20   E0 A0      CPX #&A0
      6B22   90 EE      BCC &6B12
      6B24   CD 69 10   CMP &1069
-     6B27   D0 DF      BNE &6B08
+     6B27   EA         NOP
+     6B28   EA         NOP
      6B29   60         RTS
 .PLUT
      6B2A   AE 91 08   LDX &0891
