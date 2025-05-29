@@ -10338,7 +10338,10 @@ ENDIF
                         \ and draw a horizontal line at pixel row 19 to box
                         \ in the title
 
- LDA #15                \ Set A to token 129 ("{sentence case}DOCKED")
+ LDA #15                \ This instruction is left over from the cassette
+                        \ version, where it sets the token number for the
+                        \ "DOCKED" text, but it has no effect in this version
+                        \ as the "DOCKED" text is now an extended token
 
  LDY QQ12               \ Fetch the docked status from QQ12, and if we are
  BNE wearedocked        \ docked, jump to wearedocked
@@ -23575,7 +23578,7 @@ ENDIF
 
 .et5
 
- LDY #111               \ Set Y to recursive token 107 ("FUEL SCOOPS")
+ LDY #111               \ Set Y to recursive token 111 ("FUEL SCOOPS")
 
  CMP #6                 \ If A is not 6 (i.e. the item we've just bought is not
  BNE et6                \ a fuel scoop), skip to et6
