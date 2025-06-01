@@ -53530,7 +53530,8 @@ ENDMACRO
                         \
                         \   * Byte #16 = machine type
                         \                0 = BBC Micro SRAM, 1 = Master,
-                        \                2 = 6502SP, 3 = BBC Micro standard
+                        \                2 = 6502SP, 3 = BBC Micro standard,
+                        \                4 = Archimedes, 5 = Electron
                         \
                         \   * Byte #17 = reserved for the forwarding station
                         \                number, for when packets are forwarded
@@ -53631,7 +53632,7 @@ ENDMACRO
  LDX #0                 \ Set X to condition docked (0)
 
  LDY QQ12               \ Fetch the docked status from QQ12, and if we are
- BNE trcm3              \ docked, jump to wearedocked
+ BNE trcm3              \ docked, jump to trcm3
 
  INX                    \ Set X to condition green (1)
 
@@ -53872,13 +53873,6 @@ ENDMACRO
  STA netTally           \ death count
  STA netTally+1
  STA netDeaths
-
- STA CASH               \ And set the credit level to 100 Cr
- STA CASH+1
- LDA #&03
- STA CASH+2
- LDA #&E8
- STA CASH+3
 
 .gnet4
 
