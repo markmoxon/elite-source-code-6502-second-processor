@@ -318,7 +318,7 @@ ENDIF
 \
 \ ******************************************************************************
 
- ORG &0000
+ ORG &0000              \ Set the assembly address to &0000
 
 .ZP
 
@@ -898,7 +898,7 @@ ENDIF
                         \ of the in-flight message in MESS, so it can be erased
                         \ from the screen at the correct time
 
- ORG &00D1
+ ORG &00D1              \ Set the assembly address to &00D1
 
 .T
 
@@ -934,7 +934,7 @@ ENDIF
 \
 \ ******************************************************************************
 
- ORG &0100
+ ORG &0100              \ Set the assembly address to &0100
 
 .XX3
 
@@ -957,7 +957,7 @@ ENDIF
 \
 \ ******************************************************************************
 
- ORG CODE_WORDS%
+ ORG CODE_WORDS%        \ Set the assembly address to CODE_WORDS%
 
 \ ******************************************************************************
 \
@@ -2557,7 +2557,7 @@ ENDIF
 \
 \ ******************************************************************************
 
- ORG &0800
+ ORG &0800              \ Set the assembly address to &0800
 
 .UP
 
@@ -3436,7 +3436,7 @@ ENDIF
 \
 \ ******************************************************************************
 
- ORG &0D00
+ ORG &0D00              \ Set the assembly address to &0D00
 
 .WP
 
@@ -3581,11 +3581,11 @@ ENDIF
 
 IF _SNG45 OR _SOURCE_DISC
 
- ORG &8200
+ ORG &8200              \ Set the assembly address to &8200
 
 ELIF _EXECUTIVE
 
- ORG &8500
+ ORG &8500              \ Set the assembly address to &8500
 
 ENDIF
 
@@ -3607,11 +3607,11 @@ ENDIF
 
 IF _SNG45 OR _SOURCE_DISC
 
- ORG &8600
+ ORG &8600              \ Set the assembly address to &8600
 
 ELIF _EXECUTIVE
 
- ORG &8900
+ ORG &8900              \ Set the assembly address to &8900
 
 ENDIF
 
@@ -3697,7 +3697,7 @@ ENDIF
 \
 \ ******************************************************************************
 
- ORG CODE%
+ ORG CODE%              \ Set the assembly address to CODE%
 
  LOAD_A% = LOAD%
 
@@ -49731,7 +49731,7 @@ ENDIF
  CODE_SHIPS% = &D000
  LOAD_SHIPS% = &D000
 
- ORG CODE_SHIPS%
+ ORG CODE_SHIPS%        \ Set the assembly address to CODE_SHIPS%
 
 \ ******************************************************************************
 \

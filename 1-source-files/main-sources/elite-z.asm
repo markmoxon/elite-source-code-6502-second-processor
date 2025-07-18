@@ -122,7 +122,7 @@
 \
 \ ******************************************************************************
 
- ORG &0080
+ ORG &0080              \ Set the assembly address to &0080
 
 .ZP
 
@@ -174,7 +174,7 @@
                         \ block (i.e. OSSC(1 0) = (Y X) from the original call
                         \ in the I/O processor)
 
- ORG &0090
+ ORG &0090              \ Set the assembly address to &0090
 
 .XX15
 
@@ -254,7 +254,7 @@
 \
 \ ******************************************************************************
 
- ORG &0B00
+ ORG &0B00              \ Set the assembly address to &0B00
 
 .TINA
 
@@ -281,7 +281,7 @@
 \
 \ ******************************************************************************
 
- ORG &2300
+ ORG &2300              \ Set the assembly address to &2300
 
 .TABLE
 
@@ -320,7 +320,7 @@
 \
 \ ******************************************************************************
 
- ORG CODE%
+ ORG CODE%              \ Set the assembly address to CODE%
 
  FONT% = HI(P%)
 
