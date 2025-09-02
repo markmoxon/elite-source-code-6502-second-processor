@@ -31,11 +31,11 @@
 \
 \ after reading in the following files:
 \
-\   * P.DIALS2P.bin
-\   * P.DATE2P.bin
 \   * Z.ACSOFT.bin
-\   * Z.ELITE.bin
 \   * Z.(C)ASFT.bin
+\   * P.DATE2P.bin
+\   * P.DIALS2P.bin
+\   * Z.ELITE.bin
 \
 \ ******************************************************************************
 
