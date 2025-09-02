@@ -41244,9 +41244,6 @@ ENDIF
 
                         \ --- End of replacement ------------------------------>
 
- LDA (V),Y              \ Fetch byte #3 for this edge into Q, which contains
- STA Q                  \ the number of the vertex at the end of the edge
-
  LDA XX3+1,X            \ Fetch the x_hi coordinate of the edge's start vertex
  STA XX15+1             \ from the XX3 heap into XX15+1
 
