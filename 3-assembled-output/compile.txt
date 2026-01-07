@@ -39941,30 +39941,42 @@ F% = &818F
      100B   41
 .elitea
 elitea = &100C 
+     100C   3A 30 2E ... INCBIN "versions/6502sp/3-assembled-output/ELTA.bin"
 .eliteb
 eliteb = &1A76 
+     1A76   00 82 25 ... INCBIN "versions/6502sp/3-assembled-output/ELTB.bin"
 .elitec
 elitec = &268E 
+     268E   09 54 3B ... INCBIN "versions/6502sp/3-assembled-output/ELTC.bin"
 .elited
 elited = &3368 
+     3368   8D F9 08 ... INCBIN "versions/6502sp/3-assembled-output/ELTD.bin"
 .elitee
 elitee = &4070 
+     4070   A2 05 B5 ... INCBIN "versions/6502sp/3-assembled-output/ELTE.bin"
 .elitef
 elitef = &4B04 
+     4B04   A5 19 8D ... INCBIN "versions/6502sp/3-assembled-output/ELTF.bin"
 .eliteg
 eliteg = &5A79 
+     5A79   A5 19 8D ... INCBIN "versions/6502sp/3-assembled-output/ELTG.bin"
 .eliteh
 eliteh = &6877 
+     6877   A5 64 29 ... INCBIN "versions/6502sp/3-assembled-output/ELTH.bin"
 .elitei
 elitei = &6E0A 
+     6E0A   00 A9 00 ... INCBIN "versions/6502sp/3-assembled-output/ELTI.bin"
 .elitej
 elitej = &738D 
+     738D   57 5E 5C ... INCBIN "versions/6502sp/3-assembled-output/ELTJ.bin"
 F% = &818F 
 P% = &818F 
 .words
 words = &818F 
+     818F   4C 32 24 ... INCBIN "versions/6502sp/3-assembled-output/WORDS.bin"
 .ships
 ships = &858F 
+     858F   66 D0 64 ... INCBIN "versions/6502sp/3-assembled-output/SHIPS.bin"
      A69B   A6
      A69C   A0
      A69D   80
@@ -40253,6 +40265,7 @@ ZP workspace (I/O processor) from &80 to &97 inclusive
 TINA workspace (I/O processor) from &80 to &BFF inclusive
 .TABLE
      2300
+     2400   00 00 00 ... INCBIN "versions/6502sp/1-source-files/fonts/P.FONT.bin"
 .log
      2700   18
      2701   00
@@ -44757,10 +44770,15 @@ End macro MVE
      2086   10 F6      BPL &207E
      2088   60         RTS
 .DIALS
+     2089   0F 0A 1E ... INCBIN "versions/6502sp/1-source-files/images/P.DIALS2P.bin"
 .DATE
+     2E89   33 66 00 ... INCBIN "versions/6502sp/1-source-files/images/P.DATE2P.bin"
 .ASOFT
+     3089   00 00 00 ... INCBIN "versions/6502sp/1-source-files/images/Z.ACSOFT.bin"
 .ELITE
+     3289   00 00 00 ... INCBIN "versions/6502sp/1-source-files/images/Z.ELITE.bin"
 .CpASOFT
+     3489   00 00 00 ... INCBIN "versions/6502sp/1-source-files/images/Z.(C)ASFT.bin"
 S.ELITEa &2000  &3689  &2000  &2000 
 Saving file '3-assembled-output/ELITEa.bin'
 .readme
