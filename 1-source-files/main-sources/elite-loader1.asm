@@ -327,9 +327,9 @@ ENDMACRO
 
 IF _SNG45 OR _EXECUTIVE
 
- NOP                    \ In SNG45, the release version of 6502 Second Processor
- NOP                    \ Elite, the detection code from the original source is
- NOP                    \ disabled and replaced by NOPs
+ NOP                    \ In SNG45 (the release version of 6502 Second Processor
+ NOP                    \ Elite) the MOS version detection code from the source
+ NOP                    \ disc variant is disabled and replaced by NOPs
  NOP                    \
  NOP                    \ This is also true in the Executive version
  NOP
@@ -360,13 +360,12 @@ IF _SNG45 OR _EXECUTIVE
 ELIF _SOURCE_DISC
 
  LDA #129               \ Call OSBYTE with A = 129, X = 0 and Y = &FF to detect
- LDX #0                 \ the machine type. This call is undocumented and is not
- LDY #&FF               \ the recommended way to determine the machine type
- JSR OSBYTE             \ (OSBYTE 0 is the correct way), but this call returns
-                        \ the following:
+ LDX #0                 \ the machine type, which returns the following:
+ LDY #&FF               \
+ JSR OSBYTE             \   * X = Y = 0 if this is a BBC Micro with MOS 0.1
                         \
-                        \   * X = Y = 0   if this is a BBC Micro with MOS 0.1
                         \   * X = Y = &FF if this is a BBC Micro with MOS 1.20
+                        \                                          or MOS 1.00
 
  TXA                    \ If X is non-zero then jump to not0, as this is not MOS
  BNE not0               \ 0.1
@@ -401,7 +400,8 @@ ELIF _SOURCE_DISC
                         \ process, which is again a bit odd, as the game won't
                         \ actually work (if you load this version of the game
                         \ on a Master or BBC B+, it will try to run the game
-                        \ rather than giving an error - most odd)
+                        \ rather than giving an error - probably because the
+                        \ game was written before these machines were released)
 
 \JSR ZZZAP              \ These instructions are commented out in the original
 \BRK                    \ source
@@ -492,23 +492,29 @@ ENDIF
 
 .happy
 
-                        \ If we get here, then one of the following is true:
+                        \ If we get here in either the released SNG45 version or
+                        \ the Executive version of the game, then we know that
+                        \ Tube hardware has been detected (but that's all we
+                        \ know as the MOS version detection code from the source
+                        \ disc variant has been replaced by NOPs)
+                        \
+                        \ If we get here in the source disc variant, then at
+                        \ least one of the following is true:
                         \
                         \   * This is a BBC Micro Model B with MOS 0.1
-                        \     (X = Y = 0)
                         \
-                        \   * This is not a BBC Micro with MOS 1.20
-                        \     (X <> &FF and Y <> &FF)
+                        \   * This is not a BBC Micro with MOS 1.20 or MOS 1.00
                         \
                         \   * This is a BBC Micro with MOS 1.20 and the Tube
-                        \     (X = Y = &FF and Tube hardware is detected)
                         \
                         \ The odd thing is that the game only works on the last
                         \ system, so you would think that the first two would
                         \ give an error... but instead, we try to run the game
                         \ and fail, which is all a bit strange
                         \
-                        \ That's what you get for using undocumented calls...
+                        \ This is probably why the MOS version detection code
+                        \ was removed for the release version, as it doesn't
+                        \ actually work properly
 
  LDA #16                \ Call OSBYTE with A = 16 and X = 3 to set the ADC to
  LDX #3                 \ sample 3 channels from the joystick/Bitstik
