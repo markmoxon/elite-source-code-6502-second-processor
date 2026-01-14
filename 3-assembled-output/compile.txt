@@ -39991,30 +39991,42 @@ F% = &81F7
      100B   41
 .elitea
 elitea = &100C 
+     100C   3A 30 2E ... INCBIN "3-assembled-output/ELTA.bin"
 .eliteb
 eliteb = &1A82 
+     1A82   00 82 25 ... INCBIN "3-assembled-output/ELTB.bin"
 .elitec
 elitec = &269A 
+     269A   09 54 3B ... INCBIN "3-assembled-output/ELTC.bin"
 .elited
 elited = &3374 
+     3374   8D F9 08 ... INCBIN "3-assembled-output/ELTD.bin"
 .elitee
 elitee = &407C 
+     407C   A2 05 B5 ... INCBIN "3-assembled-output/ELTE.bin"
 .elitef
 elitef = &4B10 
+     4B10   A5 19 8D ... INCBIN "3-assembled-output/ELTF.bin"
 .eliteg
 eliteg = &5A9F 
+     5A9F   A5 19 8D ... INCBIN "3-assembled-output/ELTG.bin"
 .eliteh
 eliteh = &689D 
+     689D   A5 64 29 ... INCBIN "3-assembled-output/ELTH.bin"
 .elitei
 elitei = &6E30 
+     6E30   00 A9 00 ... INCBIN "3-assembled-output/ELTI.bin"
 .elitej
 elitej = &73B3 
+     73B3   57 5E 5C ... INCBIN "3-assembled-output/ELTJ.bin"
 F% = &81F7 
 P% = &81F7 
 .words
 words = &81F7 
+     81F7   4C 32 24 ... INCBIN "3-assembled-output/WORDS.bin"
 .ships
 ships = &85F7 
+     85F7   66 D0 64 ... INCBIN "3-assembled-output/SHIPS.bin"
      A703   A6
      A704   A0
      A705   80
@@ -40308,6 +40320,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      0B00
 .TABLE
      2300
+     2400   00 00 00 ... INCBIN "1-source-files/fonts/P.FONT.bin"
 .log
      2700   18
      2701   00
@@ -44924,10 +44937,15 @@ End macro MVE
      2086   10 F6      BPL &207E
      2088   60         RTS
 .DIALS
+     2089   0F 0A 1E ... INCBIN "1-source-files/images/P.DIALS2P.bin"
 .DATE
+     2E89   33 66 00 ... INCBIN "1-source-files/images/P.DATE2P.bin"
 .ASOFT
+     3089   00 00 00 ... INCBIN "1-source-files/images/Z.ACSOFT.bin"
 .ELITE
+     3289   00 00 00 ... INCBIN "1-source-files/images/Z.ELITE.bin"
 .CpASOFT
+     3489   00 00 00 ... INCBIN "1-source-files/images/Z.(C)ASFT.bin"
 S.ELITEa &2000  &3689  &2000  &2000 
 Saving file '3-assembled-output/ELITEa.bin'
 .readme
