@@ -46048,24 +46048,16 @@ Saving file '3-assembled-output/ELITEa.bin'
      027F   0D
      0280   0A
      0281   0D
-     0282   53 69 64 ...
+     0282   53 65 65 ...
+     02A2   0A
+     02A3   0D
      02A4   0A
      02A5   0D
-     02A6   72 6F 75 ...
-     02C8   0A
-     02C9   0D
-     02CA   0A
-     02CB   0D
-     02CC   53 65 65 ...
-     02EC   0A
-     02ED   0D
-     02EE   0A
-     02EF   0D
-     02F0   42 75 69 ...
-     02F7   32 30 32 ...
-     030A   0A
-     030B   0D
-     030C   2D 2D 2D ...
-     0333   0A
-     0334   0D
+     02A6   42 75 69 ...
+     02AD   32 30 32 ...
+     02C0   0A
+     02C1   0D
+     02C2   2D 2D 2D ...
+     02E9   0A
+     02EA   0D
 Saving file '3-assembled-output/README.txt'
