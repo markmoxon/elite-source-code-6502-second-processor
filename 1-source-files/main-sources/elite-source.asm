@@ -37705,9 +37705,7 @@ ENDIF
 \ When called from part 6 of LL9, XX12 contains the vector [x y z] of the vertex
 \ we're analysing, and XX16 contains the transposed orientation vectors with
 \ each of them containing the x, y and z elements of the original vectors, so it
-\ ------------------------------------------------------------------------------
-\
-\ Returns:
+\ returns:
 \
 \   [ x ]   [ sidev_x ]         [ x ]   [ sidev_y ]         [ x ]   [ sidev_z ]
 \   [ y ] . [ roofv_x ]         [ y ] . [ roofv_y ]         [ y ] . [ roofv_z ]
@@ -43007,13 +43005,13 @@ ENDIF
 
 .OLDBOX
 
- LDA #1                 \ Move the text cursor to column 1
+ LDA #1                 \ Move the text cursor to row 1
  JSR DOYC
 
  LDA QQ11               \ If this is not a space view, jump to tt66 to skip
  BNE tt66               \ displaying the view name
 
- LDA #11                \ Move the text cursor to row 11
+ LDA #11                \ Move the text cursor to column 11
  JSR DOXC
 
  LDA #CYAN              \ Send a #SETCOL CYAN command to the I/O processor to
