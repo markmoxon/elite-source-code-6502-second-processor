@@ -2535,7 +2535,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a line: Calculate the line gradient in the form of deltas
-\  Deep dive: Bresenham's line algorithm
+\  Deep dive: Elite's line-drawing algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -2607,7 +2607,7 @@ ENDIF
 
  BEQ HLOIN2             \ If A = 0 then Y1 = Y2, which means the line is
                         \ horizontal, so jump to HLOIN2 to draw a horizontal
-                        \ line instead of applying Bresenham's line algorithm
+                        \ line instead of applying the sloping line algorithm
 
  BCS LI2                \ If Y2 > Y1 then A is already positive and we can skip
                         \ the next two instructions
@@ -2633,7 +2633,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a line: Line has a shallow gradient, step right along x-axis
-\  Deep dive: Bresenham's line algorithm
+\  Deep dive: Elite's line-drawing algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -2806,7 +2806,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a shallow line going right and up or left and down
-\  Deep dive: Bresenham's line algorithm
+\  Deep dive: Elite's line-drawing algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -3089,7 +3089,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a shallow line going right and down or left and up
-\  Deep dive: Bresenham's line algorithm
+\  Deep dive: Elite's line-drawing algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -3403,7 +3403,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a line: Line has a steep gradient, step up along y-axis
-\  Deep dive: Bresenham's line algorithm
+\  Deep dive: Elite's line-drawing algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -3580,7 +3580,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a steep line going up and left or down and right
-\  Deep dive: Bresenham's line algorithm
+\  Deep dive: Elite's line-drawing algorithm
 \
 \ ------------------------------------------------------------------------------
 \
@@ -4156,7 +4156,7 @@ ENDIF
 \       Type: Subroutine
 \   Category: Drawing lines
 \    Summary: Draw a steep line going up and right or down and left
-\  Deep dive: Bresenham's line algorithm
+\  Deep dive: Elite's line-drawing algorithm
 \
 \ ------------------------------------------------------------------------------
 \
