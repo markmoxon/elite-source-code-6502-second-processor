@@ -6405,7 +6405,7 @@ ENDMACRO
 
  EQUB &60               \ TAB       KYTB+8      Energy bomb
  EQUB &70               \ ESCAPE    KYTB+9      Launch escape pod
- EQUB &23               \ T         KYTB+10     Arm missile
+ EQUB &23               \ T         KYTB+10     Target missile
  EQUB &35               \ U         KYTB+11     Unarm missile
  EQUB &65               \ M         KYTB+12     Fire missile
  EQUB &22               \ E         KYTB+13     E.C.M.
@@ -6785,7 +6785,7 @@ ENDMACRO
 \
 \                           * #YELLOW2 = yellow/white (armed)
 \
-\                           * #GREEN2 = green (disarmed)
+\                           * #GREEN2 = green (unarmed)
 \
 \ ------------------------------------------------------------------------------
 \
@@ -6803,14 +6803,14 @@ ENDMACRO
  LDA (OSSC),Y           \ the missile indicator) into A
 
  ASL A                  \ Set T = A * 16
- ASL A
- ASL A
- ASL A
+ ASL A                  \
+ ASL A                  \ This also clears the C flag, as A is in the range 0
+ ASL A                  \ to 3
  STA T
 
- LDA #97                \ Set SC = 97 - T
- SBC T                  \        = 96 + 1 - (X * 16)
- STA SC
+ LDA #97                \ Set SC = 97 - T - (1 - C)
+ SBC T                  \        = 97 - (X * 16) - 1
+ STA SC                 \        = 96 - (X * 16)
 
                         \ So the low byte of SC(1 0) contains the row address
                         \ for the rightmost missile indicator, made up as
@@ -6819,13 +6819,10 @@ ENDMACRO
                         \   * 96 (character block 14, as byte #14 * 8 = 96), the
                         \     character block of the rightmost missile
                         \
-                        \   * 1 (so we start drawing on the second row of the
-                        \     character block)
-                        \
-                        \   * Move left one character (8 bytes) for each count
+                        \   * Move left two characters (16 bytes) for each count
                         \     of X, so when X = 0 we are drawing the rightmost
-                        \     missile, for X = 1 we hop to the left by one
-                        \     character, and so on
+                        \     missile, for X = 1 we hop to the left by two
+                        \     characters, and so on
 
  LDA #&7C               \ Set the high byte of SC(1 0) to &7C, the character row
  STA SCH                \ that contains the missile indicators (i.e. the bottom
@@ -6842,7 +6839,7 @@ ENDMACRO
 
 .MBL1
 
- STA (SC),Y             \ Draw the three-pixel row, and as we do not use EOR
+ STA (SC),Y             \ Draw the two-pixel row, and as we do not use EOR
                         \ logic, this will overwrite anything that is already
                         \ there (so drawing a black missile will delete what's
                         \ there)
@@ -7232,7 +7229,7 @@ ENDMACRO
  LDX CATF               \ If CATF = 0, jump to RR5, otherwise we are printing a
  BEQ RR5                \ disc catalogue
 
- CPY #' '               \ If the character we want to print in Y is a space,
+ CPY #' '               \ If the character we want to print in Y is not a space,
  BNE RR5                \ jump to RR5
 
                         \ If we get here, then CATF is non-zero, so we are
