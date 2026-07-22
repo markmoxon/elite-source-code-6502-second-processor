@@ -4506,7 +4506,7 @@ ENDIF
                         \
                         \   * &FF = Delta 14B
                         \
-                        \ Toggled by pressing "D" when paused, see the DK4
+                        \ Toggled by pressing "L" when paused, see the DK4
                         \ routine for details
 
                         \ --- End of replacement ------------------------------>
@@ -35462,7 +35462,6 @@ ENDIF
  STA KTRAN              \ the I/O processor
 
                         \ --- End of added code ------------------------------->
-
 
  LDA #240               \ Set A in preparation for sending an OSWORD 240 command
 
