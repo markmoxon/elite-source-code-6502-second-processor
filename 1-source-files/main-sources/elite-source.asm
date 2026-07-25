@@ -12830,7 +12830,7 @@ ENDIF
 
                         \ --- Mod: Code added for red enemy lasers: ----------->
 
- LDY #2                 \ Set the Y2 coordinate of the laser line in the ship
+ LDY #2                 \ Set the Y1 coordinate of the laser line in the ship
  LDA #255               \ line heap to 255 so there is no laser line
  STA (INWK+33),Y
 
@@ -26684,7 +26684,7 @@ ENDIF
 
                         \ --- Mod: Code added for red enemy lasers: ----------->
 
- LDY #2                 \ Set the Y2 coordinate of the laser line in the ship
+ LDY #2                 \ Set the Y1 coordinate of the laser line in the ship
  LDA #255               \ line heap to 255 so there is no laser line
  STA (INWK+33),Y
 
@@ -40018,7 +40018,7 @@ ENDIF
  BEQ noLaserLine        \ line currently on-screen, so jump to noLaserLine to
                         \ skip the removal of the old line
 
- LDA #255               \ Set the Y2 coordinate of the laser line in the ship
+ LDA #255               \ Set the Y1 coordinate of the laser line in the ship
  STA (XX19),Y           \ line heap to 255 to remove the laser line from the
                         \ heap
 
