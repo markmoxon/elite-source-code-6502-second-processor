@@ -9798,7 +9798,7 @@ ENDMACRO
                         \ number
 
  LDY #2                 \ Set the key "pressed" in byte #2 of the block at OSSC
- STA (OSSC),Y           \ to the internal key in X
+ STA (OSSC),Y           \ to the internal key in A
 
  LDY P                  \ Restore the button number into Y
 
