@@ -173,6 +173,20 @@ ENDMACRO
 
  JSR OSCLI              \ Call OSCLI to run the OS command in MESS2, which *RUNs
                         \ the main I/O processor game code in I.CODE
+                        \
+                        \ The loader (i.e. this code) is already running in the
+                        \ I/O processor, with the JMP OSCLI instruction below
+                        \ ending at address &2061, so this *RUN command loads
+                        \ the I.CODE file at address &2400, which is well clear
+                        \ of this bit of code, and then jumps to its execution
+                        \ address, which is set to the STARTUP routine
+                        \
+                        \ This configures the I/O processor with all the I/O
+                        \ routines and associated handlers that the game needs,
+                        \ and once the setup is done and the I/O processsor is
+                        \ ready for the game, it returns here to load the
+                        \ parasite code in P.CODE, which can then start talking
+                        \ to the I/O processor to run the game
 
  LDX #LO(MESS3)         \ Set (Y X) to point to MESS3 ("R.P.CODE")
  LDY #HI(MESS3)
