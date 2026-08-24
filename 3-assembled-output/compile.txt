@@ -44813,7 +44813,7 @@ Saving file '3-assembled-output/ELITEa.bin'
      2034   A2 01      LDX #&01
      2036   20 F4 FF   JSR &FFF4
      2039   A2 FF      LDX #&FF
-.L203B
+.entr1
      203B   E8         INX
      203C   BD 0C 20   LDA &200C,X
      203F   20 EE FF   JSR &FFEE

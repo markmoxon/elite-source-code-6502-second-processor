@@ -150,7 +150,7 @@
                         \ byte counter in X, starting at 255 so the INX sets the
                         \ counter to 0 for the first iteration
 
-.L203B
+.entr1
 
  INX                    \ Increment the byte counter in X
 
@@ -159,7 +159,7 @@
  JSR OSWRCH             \ Print the VDU byte in A
 
  CMP #13                \ Loop back until we reach the terminator byte of 13
- BNE L203B
+ BNE entr1
 
  LDX #LO(MESS2)         \ Set (Y X) to point to MESS2 ("LOAD SCREEN")
  LDY #HI(MESS2)
