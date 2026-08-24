@@ -270,6 +270,7 @@ Results for variant: sng45
 [--originals--]  [---output----]
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
+913f8333     93  913f8333     93   Yes   BOOT.bin
 ffdb229a    788  ffdb229a    788   Yes   ELITE.bin
 e78cb0cf   5769  e78cb0cf   5769   Yes   ELITEa.bin
 a95bc864   2666  a95bc864   2666   Yes   ELTA.bin
@@ -350,6 +351,7 @@ Results for variant: sng45
 [--originals--]  [---output----]
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
+913f8333     93  913f8333     93   Yes   BOOT.bin
 ffdb229a    788  ffdb229a    788   Yes   ELITE.bin
 e78cb0cf   5769  e78cb0cf   5769   Yes   ELITEa.bin
 a95bc864   2666  a95bc864   2666   Yes   ELTA.bin
@@ -409,6 +411,7 @@ a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
 11ccbb59  38832  11ccbb59  38832   Yes   P.CODE.unprot.bin
 2580d019   8460  2580d019   8460   Yes   SHIPS.bin
 57406380   1024  57406380   1024   Yes   WORDS.bin
+-             -  913f8333     93    -    BOOT.bin
 ```
 
 ### Building the Executive version
@@ -451,6 +454,7 @@ e2cf0d8a   3674  e2cf0d8a   3674   Yes   ELTJ.bin
 d597e3d0  39143  d597e3d0  39143   Yes   P.CODE.unprot.bin
 2580d019   8460  2580d019   8460   Yes   SHIPS.bin
 272668f2   1024  272668f2   1024   Yes   WORDS.bin
+-             -  913f8333     93    -    BOOT.bin
 ```
 
 ### Differences between the variants
