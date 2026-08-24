@@ -44781,6 +44781,56 @@ End macro MVE
      3489   00 00 00 ... INCBIN "1-source-files/images/Z.(C)ASFT.bin"
 S.ELITEa &2000  &3689  &2000  &2000 
 Saving file '3-assembled-output/ELITEa.bin'
+.MESS2
+     2000   4C 4F 41 ...
+     200B   0D
+.B%
+     200C   16
+     200D   07
+     200E   17
+     200F   01
+     2010   00
+     2011   00
+     2012   00
+     2013   00
+     2014   00
+     2015   00
+     2016   00
+     2017   00
+     2018   00
+     2019   0D
+.MESS3
+     201A   52 55 4E ...
+     2023   0D
+.MESS1
+     2024   4F 50 54 ...
+     202A   0D
+.ENTRY
+     202B   A2 24      LDX #&24
+     202D   A0 20      LDY #&20
+     202F   20 F7 FF   JSR &FFF7
+     2032   A9 72      LDA #&72
+     2034   A2 01      LDX #&01
+     2036   20 F4 FF   JSR &FFF4
+     2039   A2 FF      LDX #&FF
+.L203B
+     203B   E8         INX
+     203C   BD 0C 20   LDA &200C,X
+     203F   20 EE FF   JSR &FFEE
+     2042   C9 0D      CMP #&0D
+     2044   D0 F5      BNE &203B
+     2046   A2 00      LDX #&00
+     2048   A0 20      LDY #&20
+     204A   20 F7 FF   JSR &FFF7
+     204D   A2 90      LDX #&90
+     204F   A0 01      LDY #&01
+     2051   A9 81      LDA #&81
+     2053   20 F4 FF   JSR &FFF4
+     2056   A2 1A      LDX #&1A
+     2058   A0 20      LDY #&20
+     205A   4C F7 FF   JMP &FFF7
+S.BOOT &2000  &205D  &2000  &2000 
+Saving file '3-assembled-output/BOOT.bin'
 .readme
      0000   0A
      0001   0D
