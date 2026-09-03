@@ -12672,8 +12672,8 @@ Saving file '3-assembled-output/ELTE.bin'
      4D92   C9 64      CMP #&64
      4D94   B0 4A      BCS &4DE0
      4D96   EE 95 08   INC &0895
-     4D99   29 03      AND #&03
-     4D9B   4A         LSR A
+     4D99   4A         LSR A
+     4D9A   29 03      AND #&03
      4D9C   69 18      ADC #&18
      4D9E   A8         TAY
      4D9F   20 A7 4B   JSR &4BA7
