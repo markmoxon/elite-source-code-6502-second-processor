@@ -12894,6 +12894,32 @@ ENDIF
 
  STA K3                 \ Store the character to print in K3
 
+                        \ --- Mod: Code added for silent beeps: --------------->
+
+ CMP #7                 \ If this is not a beep, jump to chpr2 to print the
+ BNE chpr2              \ character in A
+
+ LDA DNOIZ              \ Set A to the DNOIZ configuration setting
+
+ BEQ chpr1              \ If DNOIZ is zero then sound is enabled, so jump to
+                        \ chpr1 to make the beep
+
+                        \ If we get here then this is a beep but sound is
+                        \ disabled, so we do not make the beep
+
+ CLC                    \ Clear the C flag
+
+ RTS                    \ Return from the subroutine
+
+.chpr1
+
+ LDA #7                 \ Set A = 7 so we make the beep by printing character 7
+                        \ in the following
+
+.chpr2
+
+                        \ --- End of added code ------------------------------->
+
  CMP #' '               \ If A < ASCII " ", i.e. this is a control character,
  BCC P%+4               \ skip the following instruction so the text cursor
                         \ doesn't move to the right
