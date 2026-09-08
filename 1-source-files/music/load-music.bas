@@ -8,12 +8,17 @@ romNumber=&8E : REM Address of .musicRomNumber
 master%=FALSE
 copro%=TRUE
 :
+*RUN FIXSRAM : REM Fix writes to ROM latch across Tube on B+
+:
 VDU 22,7
 PROCtitle
 PROCfindSRAM
 PROCloadROM
 PROCpatch
 PROCloadSRAM
+:
+A%=&FF:X%=&FF:Y%=&FF:CALL SetByteXY : REM Revert B+ patch
+:
 *RUN ELITE
 END
 :
