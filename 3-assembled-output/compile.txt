@@ -45015,3 +45015,67 @@ Saving file '3-assembled-output/ELITEa.bin'
      0238   0A
      0239   0D
 Saving file '3-assembled-output/README.txt'
+.OSSC
+     0080
+.addrIO
+     0082
+.ENTRY
+     3000   AD 0C 02   LDA &020C
+     3003   8D 67 30   STA &3067
+     3006   AD 0D 02   LDA &020D
+     3009   8D 68 30   STA &3068
+     300C   A9 19      LDA #&19
+     300E   78         SEI
+     300F   8D 0C 02   STA &020C
+     3012   A9 30      LDA #&30
+     3014   8D 0D 02   STA &020D
+     3017   58         CLI
+     3018   60         RTS
+.NWOSWD
+     3019   C9 06      CMP #&06
+     301B   D0 49      BNE &3066
+     301D   86 80      STX &80
+     301F   84 81      STY &81
+     3021   A0 00      LDY #&00
+     3023   B1 80      LDA (&80),Y
+     3025   AA         TAX
+     3026   C8         INY
+     3027   B1 80      LDA (&80),Y
+     3029   C9 00      CMP #&00
+     302B   D0 04      BNE &3031
+     302D   E0 F4      CPX #&F4
+     302F   F0 28      BEQ &3059
+.nwos1
+     3031   C9 FE      CMP #&FE
+     3033   D0 04      BNE &3039
+     3035   E0 30      CPX #&30
+     3037   F0 20      BEQ &3059
+.nwos2
+     3039   C9 FF      CMP #&FF
+     303B   D0 13      BNE &3050
+     303D   E0 FF      CPX #&FF
+     303F   D0 0F      BNE &3050
+     3041   AD 67 30   LDA &3067
+     3044   78         SEI
+     3045   8D 0C 02   STA &020C
+     3048   AD 68 30   LDA &3068
+     304B   8D 0D 02   STA &020D
+     304E   58         CLI
+     304F   60         RTS
+.nwos3
+     3050   A9 06      LDA #&06
+     3052   A6 80      LDX &80
+     3054   A4 81      LDY &81
+     3056   4C 66 30   JMP &3066
+.romLatch
+     3059   86 82      STX &82
+     305B   85 83      STA &83
+     305D   A0 04      LDY #&04
+     305F   B1 80      LDA (&80),Y
+     3061   A0 00      LDY #&00
+     3063   91 82      STA (&82),Y
+     3065   60         RTS
+.notours
+     3066   4C FC FF   JMP &FFFC
+S.FIXSRAM &3000  &3069  &3000  &3000 
+Saving file '3-assembled-output/FIXSRAM.bin'
