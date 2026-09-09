@@ -181,9 +181,6 @@
  LDY #4                 \ Set A to the value to write, from byte #4 of the
  LDA (OSSC),Y           \ OSWORD block
 
-\LDY #0                 \ Write the value into the address in bytes #0 and #1 of
-\STA (OSSC),Y           \ the OSWORD block
-
  LDY #0                 \ Write the value into the ROM latch
  STA (addrIO),Y
 
