@@ -6,6 +6,17 @@
 \
 \ ------------------------------------------------------------------------------
 \
+\ Install the patch with *RUN FIXSRAM
+\
+\ This will fix OSWORD 6 on the BBC Micro B+ with 6502 Second Processor so that
+\ using OSWORD 6 to write to the ROM latches at &00F4 and &FE30 will work
+\
+\ Uninstall the patch by using OSWORD 6 to write an arbitrary value to address
+\ &FFFF (if you overwrite the handler code at NWOSWD without first uninstalling
+\ the patch, then OSWORD will break)
+\
+\ ------------------------------------------------------------------------------
+\
 \ This source file produces the following binary file:
 \
 \   * FIXSRAM.bin
@@ -18,9 +29,9 @@
 \
 \ ******************************************************************************
 
- CODE% = &3000          \ The assembly address of the main I/O processor code
+ CODE% = &3000          \ The assembly address of the patch code
 
- LOAD% = &3000          \ The load address of the main I/O processor code
+ LOAD% = &3000          \ The load address of the patch code
 
  WORDV = &020C          \ The WORDV vector that we intercept to implement our
                         \ own custom OSWORD handler
@@ -35,15 +46,23 @@
 \
 \ ******************************************************************************
 
-ORG &0080
-
-.OSSC
-
- SKIP 2                 \ The address of the OSWORD block
+ ORG &0080              \ Set the assembly address to &0080
 
 .addrIO
 
  SKIP 2                 \ The address being written in the OSWORD 6 call
+
+ ORG &00EF              \ Set the assembly address to &00EF
+
+.OSA
+
+ SKIP 1                 \ The MOS location for storing the number of the OSWORD
+                        \ call in A
+
+.OSSC
+
+ SKIP 2                 \ The MOS location for storing the address of the OSWORD
+                        \ block in (Y X)
 
 \ ******************************************************************************
 \
@@ -54,14 +73,14 @@ ORG &0080
 \
 \ ******************************************************************************
 
-ORG CODE%
+ ORG CODE%              \ Set the assembly address to CODE%
 
 .ENTRY
 
- LDA WORDV              \ Store the current WORDV vector in notours(2 1)
- STA notours+1
+ LDA WORDV              \ Store the current WORDV vector in the operand of the
+ STA osJMP+1            \ JMP instruction at osJMP
  LDA WORDV+1
- STA notours+2
+ STA osJMP+2
 
  LDA #LO(NWOSWD)        \ Disable interrupts and set WORDV to NWOSWD, so calls
  SEI                    \ to OSWORD are now handled by NWOSWD, which lets us
@@ -84,11 +103,17 @@ ORG CODE%
 
 .NWOSWD
 
- CMP #6                 \ If this is not an OSWORD 6 command, jump to notours to
- BNE notours            \ pass the call to the standard handler
+ PHP                    \ Store the processor flags on the stack so we can
+                        \ preserve them across the call
 
- STX OSSC               \ Set OSCC to the address of the OSWORD block
- STY OSSC+1
+ SEI                    \ Disable interrupts
+
+ CMP #6                 \ If this is not an OSWORD 6 command, jump to notOurs to
+ BNE notOurs            \ pass the call to the standard handler
+
+ STA OSA                \ Set OSA to the OSWORD number and OSCC to the address
+ STX OSSC               \ of the OSWORD block, so it is set up in the same way
+ STY OSSC+1             \ as when the MOS processes OSWORD calls
 
  LDY #0                 \ Set X = low byte of address to write
  LDA (OSSC),Y
@@ -97,22 +122,22 @@ ORG CODE%
  INY                    \ Set A = high byte of address to write
  LDA (OSSC),Y
  
- CMP #&00               \ If address is &00F4, jump to romLatch
- BNE nwos1
+ CMP #&00               \ If address is &00F4, jump to nwos4 to perform a write
+ BNE nwos1              \ without using the standard OSWORD handlers
  CPX #&F4
- BEQ romLatch
+ BEQ nwos4
 
 .nwos1
 
- CMP #&FE               \ If address is &FE30, jump to romLatch
- BNE nwos2
+ CMP #&FE               \ If address is &FE30, jump to nwos4 to perform a write
+ BNE nwos2              \ without using the standard OSWORD handlers
  CPX #&30
- BEQ romLatch
+ BEQ nwos4
 
 .nwos2
 
- CMP #&FF               \ If address is not &FFFF, jump to nwos3
- BNE nwos3
+ CMP #&FF               \ If address is not &FFFF, jump to nwos3 to disable our
+ BNE nwos3              \ custom OSWORD handler
  CPX #&FF
  BNE nwos3
 
@@ -120,13 +145,13 @@ ORG CODE%
                         \ an address of &FFFF, which means we have finished with
                         \ the ROM loading code and need to reverse the patch
 
- LDA notours+1          \ Disable interrupts and set WORDV to notours, so calls
- SEI                    \ to OSWORD are now handled by the original handler once
- STA WORDV              \ again
- LDA notours+2
+ LDA osJMP+1            \ Set WORDV to the address in the JMP instruction at
+ STA WORDV              \ osJMP, so calls to OSWORD are now handled by the
+ LDA osJMP+2            \ original handler once again
  STA WORDV+1
 
- CLI                    \ Enable interrupts again
+ PLP                    \ Restore the processor flags from the stack so they are
+                        \ unchanged
 
  RTS                    \ Return from the subroutine
 
@@ -136,31 +161,48 @@ ORG CODE%
                         \ a ROM latch address or &FFFF, so we pass it on to the
                         \ standard OSWORD handler
 
- LDA #6                 \ Set A, X and Y to their values from the original
+ LDA OSA                \ Set A, X and Y to their values from the original
  LDX OSSC               \ OSWORD call
  LDY OSSC+1
 
- JMP notours            \ Pass the call to the standard handler
+ JMP notOurs            \ Jump to notOurs to pass the call to the standard
+                        \ OSWORD handler
 
-.romLatch
+.nwos4
+
+                        \ If we get here then we have called OSWORD 6 with a ROM
+                        \ latch address of &00F4 or &FE40, so we write to the
+                        \ address without calling the standard OSWORD handler
+                        \ (as the latter would undo our write)
 
  STX addrIO             \ Set addrIO(1 0) to the address to write (i.e. the ROM
  STA addrIO+1           \ latch)
 
- LDY #4                 \ Set A to the value to write
- LDA (OSSC),Y
+ LDY #4                 \ Set A to the value to write, from byte #4 of the
+ LDA (OSSC),Y           \ OSWORD block
+
+\LDY #0                 \ Write the value into the address in bytes #0 and #1 of
+\STA (OSSC),Y           \ the OSWORD block
 
  LDY #0                 \ Write the value into the ROM latch
  STA (addrIO),Y
 
+ PLP                    \ Restore the processor flags from the stack so they are
+                        \ unchanged
+
  RTS                    \ Return from the subroutine
 
-.notours
+.notOurs
 
- JMP &FFFC              \ This address is overwritten by the STARTUP routine to
+ PLP                    \ Restore the processor flags from the stack so they are
+                        \ unchanged
+
+.osJMP
+
+ JMP &FFFC              \ This address is overwritten by the ENTRY routine to
                         \ contain the original value of WORDV, so this call acts
                         \ just like a standard JMP OSWORD call and is used to
-                        \ process OSWORD calls that aren't our custom calls
+                        \ process OSWORD calls that aren't our custom call
 
 \ ******************************************************************************
 \

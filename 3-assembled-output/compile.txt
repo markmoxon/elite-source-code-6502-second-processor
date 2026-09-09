@@ -46070,15 +46070,17 @@ Saving file '3-assembled-output/ELITEa.bin'
      02E9   0A
      02EA   0D
 Saving file '3-assembled-output/README.txt'
-.OSSC
-     0080
 .addrIO
-     0082
+     0080
+.OSA
+     00EF
+.OSSC
+     00F0
 .ENTRY
      3000   AD 0C 02   LDA &020C
-     3003   8D 67 30   STA &3067
+     3003   8D 6C 30   STA &306C
      3006   AD 0D 02   LDA &020D
-     3009   8D 68 30   STA &3068
+     3009   8D 6D 30   STA &306D
      300C   A9 19      LDA #&19
      300E   78         SEI
      300F   8D 0C 02   STA &020C
@@ -46087,50 +46089,55 @@ Saving file '3-assembled-output/README.txt'
      3017   58         CLI
      3018   60         RTS
 .NWOSWD
-     3019   C9 06      CMP #&06
-     301B   D0 49      BNE &3066
-     301D   86 80      STX &80
-     301F   84 81      STY &81
-     3021   A0 00      LDY #&00
-     3023   B1 80      LDA (&80),Y
-     3025   AA         TAX
-     3026   C8         INY
-     3027   B1 80      LDA (&80),Y
-     3029   C9 00      CMP #&00
-     302B   D0 04      BNE &3031
-     302D   E0 F4      CPX #&F4
-     302F   F0 28      BEQ &3059
+     3019   08         PHP
+     301A   78         SEI
+     301B   C9 06      CMP #&06
+     301D   D0 4B      BNE &306A
+     301F   85 EF      STA &EF
+     3021   86 F0      STX &F0
+     3023   84 F1      STY &F1
+     3025   A0 00      LDY #&00
+     3027   B1 F0      LDA (&F0),Y
+     3029   AA         TAX
+     302A   C8         INY
+     302B   B1 F0      LDA (&F0),Y
+     302D   C9 00      CMP #&00
+     302F   D0 04      BNE &3035
+     3031   E0 F4      CPX #&F4
+     3033   F0 27      BEQ &305C
 .nwos1
-     3031   C9 FE      CMP #&FE
-     3033   D0 04      BNE &3039
-     3035   E0 30      CPX #&30
-     3037   F0 20      BEQ &3059
+     3035   C9 FE      CMP #&FE
+     3037   D0 04      BNE &303D
+     3039   E0 30      CPX #&30
+     303B   F0 1F      BEQ &305C
 .nwos2
-     3039   C9 FF      CMP #&FF
-     303B   D0 13      BNE &3050
-     303D   E0 FF      CPX #&FF
-     303F   D0 0F      BNE &3050
-     3041   AD 67 30   LDA &3067
-     3044   78         SEI
-     3045   8D 0C 02   STA &020C
-     3048   AD 68 30   LDA &3068
-     304B   8D 0D 02   STA &020D
-     304E   58         CLI
-     304F   60         RTS
+     303D   C9 FF      CMP #&FF
+     303F   D0 12      BNE &3053
+     3041   E0 FF      CPX #&FF
+     3043   D0 0E      BNE &3053
+     3045   AD 6C 30   LDA &306C
+     3048   8D 0C 02   STA &020C
+     304B   AD 6D 30   LDA &306D
+     304E   8D 0D 02   STA &020D
+     3051   28         PLP
+     3052   60         RTS
 .nwos3
-     3050   A9 06      LDA #&06
-     3052   A6 80      LDX &80
-     3054   A4 81      LDY &81
-     3056   4C 66 30   JMP &3066
-.romLatch
-     3059   86 82      STX &82
-     305B   85 83      STA &83
-     305D   A0 04      LDY #&04
-     305F   B1 80      LDA (&80),Y
-     3061   A0 00      LDY #&00
-     3063   91 82      STA (&82),Y
-     3065   60         RTS
-.notours
-     3066   4C FC FF   JMP &FFFC
-S.FIXSRAM &3000  &3069  &3000  &3000 
+     3053   A5 EF      LDA &EF
+     3055   A6 F0      LDX &F0
+     3057   A4 F1      LDY &F1
+     3059   4C 6A 30   JMP &306A
+.nwos4
+     305C   86 80      STX &80
+     305E   85 81      STA &81
+     3060   A0 04      LDY #&04
+     3062   B1 F0      LDA (&F0),Y
+     3064   A0 00      LDY #&00
+     3066   91 80      STA (&80),Y
+     3068   28         PLP
+     3069   60         RTS
+.notOurs
+     306A   28         PLP
+.osJMP
+     306B   4C FC FF   JMP &FFFC
+S.FIXSRAM &3000  &306E  &3000  &3000 
 Saving file '3-assembled-output/FIXSRAM.bin'
