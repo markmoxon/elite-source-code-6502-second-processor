@@ -150,6 +150,8 @@
  LDA osJMP+2            \ original handler once again
  STA WORDV+1
 
+ LDA OSA                \ Set A to the original call value so it is preserved
+
  PLP                    \ Restore the processor flags from the stack so they are
                         \ unchanged
 
@@ -183,6 +185,8 @@
 
  LDY #0                 \ Write the value into the ROM latch
  STA (addrIO),Y
+
+ LDA OSA                \ Set A to the original call value so it is preserved
 
  PLP                    \ Restore the processor flags from the stack so they are
                         \ unchanged

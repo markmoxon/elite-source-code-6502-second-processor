@@ -45023,9 +45023,9 @@ Saving file '3-assembled-output/README.txt'
      00F0
 .ENTRY
      3000   AD 0C 02   LDA &020C
-     3003   8D 6C 30   STA &306C
+     3003   8D 70 30   STA &3070
      3006   AD 0D 02   LDA &020D
-     3009   8D 6D 30   STA &306D
+     3009   8D 71 30   STA &3071
      300C   A9 19      LDA #&19
      300E   78         SEI
      300F   8D 0C 02   STA &020C
@@ -45037,7 +45037,7 @@ Saving file '3-assembled-output/README.txt'
      3019   08         PHP
      301A   78         SEI
      301B   C9 06      CMP #&06
-     301D   D0 4B      BNE &306A
+     301D   D0 4F      BNE &306E
      301F   85 EF      STA &EF
      3021   86 F0      STX &F0
      3023   84 F1      STY &F1
@@ -45049,40 +45049,42 @@ Saving file '3-assembled-output/README.txt'
      302D   C9 00      CMP #&00
      302F   D0 04      BNE &3035
      3031   E0 F4      CPX #&F4
-     3033   F0 27      BEQ &305C
+     3033   F0 29      BEQ &305E
 .nwos1
      3035   C9 FE      CMP #&FE
      3037   D0 04      BNE &303D
      3039   E0 30      CPX #&30
-     303B   F0 1F      BEQ &305C
+     303B   F0 21      BEQ &305E
 .nwos2
      303D   C9 FF      CMP #&FF
-     303F   D0 12      BNE &3053
+     303F   D0 14      BNE &3055
      3041   E0 FF      CPX #&FF
-     3043   D0 0E      BNE &3053
-     3045   AD 6C 30   LDA &306C
+     3043   D0 10      BNE &3055
+     3045   AD 70 30   LDA &3070
      3048   8D 0C 02   STA &020C
-     304B   AD 6D 30   LDA &306D
+     304B   AD 71 30   LDA &3071
      304E   8D 0D 02   STA &020D
-     3051   28         PLP
-     3052   60         RTS
+     3051   A5 EF      LDA &EF
+     3053   28         PLP
+     3054   60         RTS
 .nwos3
-     3053   A5 EF      LDA &EF
-     3055   A6 F0      LDX &F0
-     3057   A4 F1      LDY &F1
-     3059   4C 6A 30   JMP &306A
+     3055   A5 EF      LDA &EF
+     3057   A6 F0      LDX &F0
+     3059   A4 F1      LDY &F1
+     305B   4C 6E 30   JMP &306E
 .nwos4
-     305C   86 80      STX &80
-     305E   85 81      STA &81
-     3060   A0 04      LDY #&04
-     3062   B1 F0      LDA (&F0),Y
-     3064   A0 00      LDY #&00
-     3066   91 80      STA (&80),Y
-     3068   28         PLP
-     3069   60         RTS
+     305E   86 80      STX &80
+     3060   85 81      STA &81
+     3062   A0 04      LDY #&04
+     3064   B1 F0      LDA (&F0),Y
+     3066   A0 00      LDY #&00
+     3068   91 80      STA (&80),Y
+     306A   A5 EF      LDA &EF
+     306C   28         PLP
+     306D   60         RTS
 .notOurs
-     306A   28         PLP
+     306E   28         PLP
 .osJMP
-     306B   4C FC FF   JMP &FFFC
-S.FIXSRAM &3000  &306E  &3000  &3000 
+     306F   4C FC FF   JMP &FFFC
+S.FIXSRAM &3000  &3072  &3000  &3000 
 Saving file '3-assembled-output/FIXSRAM.bin'
