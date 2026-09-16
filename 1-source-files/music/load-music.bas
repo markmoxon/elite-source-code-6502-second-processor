@@ -8,17 +8,12 @@ romNumber=&8E : REM Address of .musicRomNumber
 master%=FALSE
 copro%=TRUE
 :
-*RUN FIXSRAM : REM Fix writes to ROM latch across Tube on B+
-:
 VDU 22,7
 PROCtitle
 PROCfindSRAM
 PROCloadROM
 PROCpatch
 PROCloadSRAM
-:
-A%=&FF:X%=&FF:Y%=&FF:CALL SetByteXY : REM Revert B+ patch
-:
 *RUN ELITE
 END
 :
@@ -215,7 +210,13 @@ P%=CODE%
 
 .PageBankA
 
- PHA                \ Set ?&00F4 = A
+ PHA                \ Set ?&00FC = A
+ LDX #&00
+ LDY #&FC
+ JSR SetByteXY
+
+ PLA                \ Set ?&00F4 = A
+ PHA
  LDX #&00
  LDY #&F4
  JSR SetByteXY
