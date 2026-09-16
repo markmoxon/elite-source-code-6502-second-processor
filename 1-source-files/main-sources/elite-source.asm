@@ -20273,6 +20273,25 @@ ENDIF
 
 .TT25
 
+                        \ --- Mod: Code added for species bug fix: ------------>
+
+ LDA #%11000000         \ Set the DTW4 flag to %11000000 (justify text, buffer
+ STA DTW4               \ entire token including carriage returns)
+
+ LDA #0                 \ Set DTW5 to 0, so DTW5 (which holds the size of the
+ STA DTW5               \ justified text buffer at BUF) is zeroed
+
+ JSR spec2              \ Print the species string in brackets, into the buffer
+
+ LDA DTW5               \ Modify the operand of the LDA instruction at TT75 to
+ STA TT75+1             \ the length of the species line
+
+ JSR MT15               \ Call MT15 to switch to left-aligned text when printing
+                        \ extended tokens disabling the justify text setting we
+                        \ set above
+
+                        \ --- End of added code ------------------------------->
+
  LDA #1                 \ Clear the top part of the screen, draw a white border,
  JSR TRADEMODE          \ and set up a printable trading screen with a view type
                         \ in QQ11 of 1
@@ -20382,23 +20401,112 @@ ENDIF
  LDX QQ6                \ with a decimal point (by setting the C flag), so the
  JSR pr2                \ number printed will be population / 10
 
- LDA #198               \ Print recursive token 38 (" BILLION"), followed by a
- JSR TT60               \ paragraph break and Sentence Case
+                        \ --- Mod: Code removed for species bug fix: ---------->
 
- LDA #'('               \ Print an opening bracket
+\LDA #198               \ Print recursive token 38 (" BILLION"), followed by a
+\JSR TT60               \ paragraph break and Sentence Case
+\
+\LDA #'('               \ Print an opening bracket
+\JSR TT27
+
+                        \ --- And replaced by: -------------------------------->
+
+ LDA #198               \ Print recursive token 38 (" BILLION")
  JSR TT27
+
+                        \ --- End of replacement ------------------------------>
 
  LDA QQ15+4             \ Now to calculate the species, so first check bit 7 of
  BMI TT75               \ s2_lo, and if it is set, jump to TT75 as this is an
                         \ alien species
 
+                        \ --- Mod: Code added for species bug fix: ------------>
+
+ JSR TTX69              \ Print a paragraph break and switch to Sentence Case
+
+ LDA #'('               \ Print an opening bracket
+ JSR TT27
+
+                        \ --- End of added code ------------------------------->
+
  LDA #188               \ Bit 7 of s2_lo is clear, so print recursive token 28
  JSR TT27               \ ("HUMAN COLONIAL")
 
- JMP TT76               \ Jump to TT76 to print "S)" and a paragraph break, so
+                        \ --- Mod: Code removed for species bug fix: ---------->
+
+\JMP TT76               \ Jump to TT76 to print "S)" and a paragraph break, so
+\                       \ the whole species string is "(HUMAN COLONIALS)"
+
+                        \ --- And replaced by: -------------------------------->
+
+ JSR TT76               \ Call TT76 to print "S)" and a paragraph break, so
                         \ the whole species string is "(HUMAN COLONIALS)"
 
+ JMP spec3              \ Jump to spec3 to print the rest of the system data
+
+                        \ --- End of replacement ------------------------------>
+
 .TT75
+
+                        \ --- Mod: Code added for species bug fix: ------------>
+
+ LDA #0                 \ The operand in this instruction is modified to the
+                        \ string length by the code at the start of the routine
+                        \
+                        \ So this sets A to the length of the species string
+
+ CMP #LL+2              \ If the species string is too long to fit within the
+ PHP                    \ line length in LL (including the carriage return at
+ BCS spec1              \ the end), skip the following instruction, so we drop
+                        \ the blank line after the population line and can
+                        \ spread the species over two lines
+                        \
+                        \ We also store the result of this comparison on the
+                        \ stack so we can retrieve it below
+
+ JSR TT67               \ Print a newline
+
+.spec1
+
+                        \ We now print the species as justified text, so long
+                        \ species strings will automatically be split over two
+                        \ lines
+
+ JSR MT14               \ Call MT14 to switch to justified text
+
+ LDA #1                 \ Move the text cursor to column 1 (so short species
+ JSR DOXC               \ strings still do a carriage return)
+
+ JSR spec2              \ Print the species string in brackets as justified
+                        \ text
+
+ DEC YC                 \ The TT60 at the end of the spec2 routine seems to get
+ JSR INCYC              \ YC in the parasite out of sync with YC in the I/O
+                        \ processor, so this puts them back in sync
+
+ JSR MT15               \ Call MT15 to switch to left-aligned text when printing
+                        \ extended tokens, disabling the justify text setting we
+                        \ set above
+
+ JSR TT67               \ Print a newline to insert a blank line after the
+                        \ species
+
+ PLP                    \ Retrieve the comparison result that we stored above
+
+ BCC spec3              \ If the species fits on one line then jump to spec3 to
+                        \ print the rest of the system data
+
+ JSR TT67               \ Otherwise print a newline to insert a blank line after
+                        \ the species, to compensate for the YC correction above
+
+ JMP spec3              \ Jump to spec3 to print the rest of the system data
+
+.spec2
+
+ LDA #'('               \ Print an opening bracket
+ JSR TT27
+
+                        \ --- End of added code ------------------------------->
 
  LDA QQ15+5             \ This is an alien species, and we start with the first
  LSR A                  \ adjective, so fetch bits 2-7 of s2_hi into A and push
@@ -20483,9 +20591,23 @@ ENDIF
  LDA #'S'               \ Print an "S" to pluralise the species
  JSR TT27
 
+                        \ --- Mod: Code removed for species bug fix: ---------->
+
+\LDA #')'               \ And finally, print a closing bracket, followed by a
+\JSR TT60               \ paragraph break and Sentence Case, to end the species
+\                       \ section
+
+                        \ --- And replaced by: -------------------------------->
+
  LDA #')'               \ And finally, print a closing bracket, followed by a
- JSR TT60               \ paragraph break and Sentence Case, to end the species
-                        \ section
+ JMP TT60               \ paragraph break and Sentence Case, to end the species
+                        \ section, returning from the subroutine using a tail
+                        \ call (so this turns the species-printing code at spec2
+                        \ into a subroutine
+
+.spec3
+
+                        \ --- End of replacement ------------------------------>
 
  LDA #193               \ Print recursive token 33 ("GROSS PRODUCTIVITY"),
  JSR TT68               \ followed by a colon
