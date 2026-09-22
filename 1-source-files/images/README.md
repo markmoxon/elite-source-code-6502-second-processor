@@ -2,6 +2,8 @@
 
 This folder contains the image binaries from the original sources for the 6502 Second Processor version of Elite on Ian Bell's personal website.
 
+* [$.SCREEN.bin]($.SCREEN.bin) is the mode 7 Acornsoft loader screen
+
 * [P.DATE2P.bin](P.DATE2P.bin) is an unused image that was used to datestamp the title screen during development
 
 * [P.DIALS2P.bin](P.DIALS2P.bin) is the dashboard image

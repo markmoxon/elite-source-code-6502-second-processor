@@ -5,7 +5,7 @@
 \ 6502 Second Processor Elite was written by Ian Bell and David Braben and is
 \ copyright Acornsoft 1985
 \
-\ The code on this site is identical to the source discs released on Ian Bell's
+\ The code in this file is identical to the source discs released on Ian Bell's
 \ personal website at http://www.elitehomepage.org/ (it's just been reformatted
 \ to be more readable)
 \
@@ -17,6 +17,12 @@
 \
 \ The deep dive articles referred to in this commentary can be found at
 \ https://elite.bbcelite.com/deep_dives
+\
+\ ------------------------------------------------------------------------------
+\
+\ This source file contains code to produce the Big Code File for 6502 Second
+\ Processor Elite. The Big Code File comprises the parasite game code, the ship
+\ blueprints and the game text.
 \
 \ ------------------------------------------------------------------------------
 \
@@ -47,7 +53,7 @@
  _SNG45                 = (_VARIANT = 2)
  _EXECUTIVE             = (_VARIANT = 3)
 
- GUARD &F800             \ Guard against assembling over MOS memory
+ GUARD &F800            \ Guard against assembling over MOS memory
 
 \ ******************************************************************************
 \
@@ -68,7 +74,7 @@
 \
 \ ******************************************************************************
 
- ORG CODE%
+ ORG CODE%              \ Set the assembly address to CODE%
 
 IF _MATCH_ORIGINAL_BINARIES
 
@@ -296,8 +302,6 @@ ELSE
  SKIP 244
 
 ENDIF
-
-.end
 
 \ ******************************************************************************
 \

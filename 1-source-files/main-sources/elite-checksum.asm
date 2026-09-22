@@ -5,7 +5,7 @@
 \ 6502 Second Processor Elite was written by Ian Bell and David Braben and is
 \ copyright Acornsoft 1985
 \
-\ The code on this site is identical to the source discs released on Ian Bell's
+\ The code in this file is identical to the source discs released on Ian Bell's
 \ personal website at http://www.elitehomepage.org/ (it's just been reformatted
 \ to be more readable)
 \
@@ -18,7 +18,7 @@
 \ The deep dive articles referred to in this commentary can be found at
 \ https://elite.bbcelite.com/deep_dives
 \
-\ ******************************************************************************
+\ ------------------------------------------------------------------------------
 \
 \ The following routines from the S.PCODES BBC BASIC source file are implemented
 \ in the elite-checksum.py script. This file is purely for reference and is
@@ -114,17 +114,17 @@
 
 .V
 
- LDA #G%MOD256          \ V(1 0) = G%
+ LDA #LO(G%)            \ V(1 0) = G%
 
 .SC
 
  STA V                  \ First set the low byte, then the high byte
- LDA #G%DIV256
+ LDA #HI(G%)
  STA V+1
 
- LDA #(F%-1)MOD256      \ SC(1 0) = F%-1
+ LDA #LO(F%-1)          \ SC(1 0) = F%-1
  STA SC
- LDA #(F%-1)DIV256
+ LDA #HI(F%-1)
  STA SC+1
 
 .whiz

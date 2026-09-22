@@ -165,7 +165,7 @@
      00D2
 .K4
      00E0
-Zero page variables from &0  to &E2 
+ZP workspace from &0 to &E1 inclusive
 .XX3
      0100
 .QQ18
@@ -2999,7 +2999,7 @@ Saving file '3-assembled-output/WORDS.bin'
      090F
 .BUF
      0910
-UP workspace from  &800  to &974 
+UP workspace from &800 to &973 inclusive
 .WP
      0D00
 .LSX
@@ -3038,9 +3038,10 @@ UP workspace from  &800  to &974
      0E3A
 .UPO
      0E3B
-WP workspace from  &D00  to &E3C 
+WP workspace from &D00 to &E3B inclusive
 .K%
      8200
+K% workspace from &8200 to &84E3 inclusive
 .LP
      8600
 .X1TB
@@ -3067,6 +3068,7 @@ WP workspace from  &D00  to &E3C
      9000
 .Y2VB
      9100
+LP workspace (6502sp parasite) from &8600 to &91FF inclusive
 .MOS
      1000
 .COMC
@@ -3093,6 +3095,7 @@ WP workspace from  &D00  to &E3C
      100B
 .ZIP
      100C
+Parasite variables workspace (6502sp parasite) from &1000 to &100B inclusive
 .S1%
      100C   3A 30 2E ...
 .NA%
@@ -8583,7 +8586,7 @@ Saving file '3-assembled-output/ELTB.bin'
      32D4   D0 CE      BNE &32A4
 .PD1
      32D6   A2 03      LDX #&03
-.PDL1
+.PDL1K
      32D8   B5 6D      LDA &6D,X
      32DA   95 00      STA &00,X
      32DC   CA         DEX
@@ -9224,7 +9227,7 @@ Saving file '3-assembled-output/ELTC.bin'
      3799   86 81      STX &81
      379B   A2 0C      LDX #&0C
      379D   86 04      STX &04
-.TT223
+.TT223K
      379F   20 F8 37   JSR &37F8
      37A2   B0 C6      BCS &376A
      37A4   85 19      STA &19
@@ -40363,30 +40366,42 @@ F% = &81E9
      100B   41
 .elitea
 elitea = &100C 
+     100C   3A 30 2E ... INCBIN "3-assembled-output/ELTA.bin"
 .eliteb
 eliteb = &1A97 
+     1A97   00 82 25 ... INCBIN "3-assembled-output/ELTB.bin"
 .elitec
 elitec = &26ED 
+     26ED   09 54 3B ... INCBIN "3-assembled-output/ELTC.bin"
 .elited
 elited = &33D0 
+     33D0   8D F9 08 ... INCBIN "3-assembled-output/ELTD.bin"
 .elitee
 elitee = &40E3 
+     40E3   A2 05 B5 ... INCBIN "3-assembled-output/ELTE.bin"
 .elitef
 elitef = &4B57 
+     4B57   A5 19 8D ... INCBIN "3-assembled-output/ELTF.bin"
 .eliteg
 eliteg = &5B0F 
+     5B0F   02 00 20 ... INCBIN "3-assembled-output/ELTG.bin"
 .eliteh
 eliteh = &68D0 
+     68D0   A5 64 29 ... INCBIN "3-assembled-output/ELTH.bin"
 .elitei
 elitei = &6E62 
+     6E62   00 A9 00 ... INCBIN "3-assembled-output/ELTI.bin"
 .elitej
 elitej = &73E5 
+     73E5   57 5E 5C ... INCBIN "3-assembled-output/ELTJ.bin"
 F% = &81E9 
 P% = &81E9 
 .words
 words = &81E9 
+     81E9   4C 32 24 ... INCBIN "3-assembled-output/WORDS.bin"
 .ships
 ships = &85E9 
+     85E9   66 D0 64 ... INCBIN "3-assembled-output/SHIPS.bin"
      A9C6   A6
      A9C7   A0
      A9C8   80
@@ -40631,7 +40646,6 @@ ships = &85E9
      AAB7   33
      AAB8   26
      AAB9   32
-.end
 P% = &AABA 
 S.P.CODE &1000 &ADE9  &1000 &1000 
 Saving file '3-assembled-output/P.CODE.unprot.bin'
@@ -40672,10 +40686,13 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      0081
 .syncCounter
      0082
+ZP workspace (I/O processor) from &70 to &82 inclusive
 .TINA
      0B00
+TINA workspace (I/O processor) from &70 to &BFF inclusive
 .TABLE
      2300
+     2400   00 00 00 ... INCBIN "1-source-files/fonts/P.FONT.bin"
 .log
      2700   18
      2701   00
@@ -42086,6 +42103,7 @@ Saving file '3-assembled-output/P.CODE.unprot.bin'
      2C5F
 .ESCP
      2C60
+I/O variables workspace (I/O processor) from &2C40 to &2C60 inclusive
 .JMPTAB
      2C61   03 2D
      2C63   B6 2E
@@ -45219,12 +45237,67 @@ End macro MVE
      2084   10 F6      BPL &207C
      2086   60         RTS
 .DIALS
+     2087   0F 0A 1E ... INCBIN "1-source-files/images/P.DIALS2P.bin"
 .DATE
+     2E87   33 66 00 ... INCBIN "1-source-files/images/P.DATE2P.bin"
 .ASOFT
+     3087   00 00 00 ... INCBIN "1-source-files/images/Z.ACSOFT.bin"
 .ELITE
+     3287   00 00 00 ... INCBIN "1-source-files/images/Z.ELITE.bin"
 .CpASOFT
+     3487   00 00 00 ... INCBIN "1-source-files/images/Z.(C)ASFT.bin"
 S.ELITEa &2000  &3687  &2000  &2000 
 Saving file '3-assembled-output/ELITEa.bin'
+.MESS2
+     2000   4C 4F 41 ...
+     200B   0D
+.B%
+     200C   16
+     200D   07
+     200E   17
+     200F   01
+     2010   00
+     2011   00
+     2012   00
+     2013   00
+     2014   00
+     2015   00
+     2016   00
+     2017   00
+     2018   00
+     2019   0D
+.MESS3
+     201A   52 55 4E ...
+     2023   0D
+.MESS1
+     2024   4F 50 54 ...
+     202A   0D
+.ENTRY
+     202B   A2 24      LDX #&24
+     202D   A0 20      LDY #&20
+     202F   20 F7 FF   JSR &FFF7
+     2032   A9 72      LDA #&72
+     2034   A2 01      LDX #&01
+     2036   20 F4 FF   JSR &FFF4
+     2039   A2 FF      LDX #&FF
+.entr1
+     203B   E8         INX
+     203C   BD 0C 20   LDA &200C,X
+     203F   20 EE FF   JSR &FFEE
+     2042   C9 0D      CMP #&0D
+     2044   D0 F5      BNE &203B
+     2046   A2 00      LDX #&00
+     2048   A0 20      LDY #&20
+     204A   20 F7 FF   JSR &FFF7
+     204D   A2 90      LDX #&90
+     204F   A0 01      LDY #&01
+     2051   A9 81      LDA #&81
+     2053   20 F4 FF   JSR &FFF4
+     2056   A2 1A      LDX #&1A
+     2058   A0 20      LDY #&20
+     205A   4C F7 FF   JMP &FFF7
+S.BOOT &2000  &205D  &2000  &2000 
+Saving file '3-assembled-output/BOOT.bin'
 .readme
      0000   2D 2D 2D ...
      0027   0A

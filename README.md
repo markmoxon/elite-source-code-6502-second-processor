@@ -1,10 +1,26 @@
 # Fully documented source code for Elite on the BBC Micro with a 6502 Second Processor
 
-[BBC Micro cassette Elite](https://github.com/markmoxon/elite-source-code-bbc-micro-cassette) | [BBC Micro disc Elite](https://github.com/markmoxon/elite-source-code-bbc-micro-disc) | **6502 Second Processor Elite** | [BBC Master Elite](https://github.com/markmoxon/elite-source-code-bbc-master) | [Acorn Electron Elite](https://github.com/markmoxon/elite-source-code-acorn-electron) | [NES Elite](https://github.com/markmoxon/elite-source-code-nes) | [Elite-A](https://github.com/markmoxon/elite-a-source-code-bbc-micro) | [Teletext Elite](https://github.com/markmoxon/teletext-elite) | [Elite Universe Editor](https://github.com/markmoxon/elite-universe-editor) | [Elite Compendium (BBC Master)](https://github.com/markmoxon/elite-compendium-bbc-master) | [Elite Compendium (BBC Micro)](https://github.com/markmoxon/elite-compendium-bbc-micro) | [Elite over Econet](https://github.com/markmoxon/elite-over-econet) | [Flicker-free Commodore 64 Elite](https://github.com/markmoxon/c64-elite-flicker-free) | [BBC Micro Aviator](https://github.com/markmoxon/aviator-source-code-bbc-micro) | [BBC Micro Revs](https://github.com/markmoxon/revs-source-code-bbc-micro) | [Archimedes Lander](https://github.com/markmoxon/lander-source-code-acorn-archimedes)
+<details>
+<summary>Links to my other software archaeology repositories</summary>
+<hr>
+
+**Elite sources:** [BBC Micro (cassette)](https://github.com/markmoxon/elite-source-code-bbc-micro-cassette) | [BBC Micro (disc)](https://github.com/markmoxon/elite-source-code-bbc-micro-disc) | [Elite Demonstration Disc](https://github.com/markmoxon/elite-demo-source-code-bbc-micro) | [Acorn Electron](https://github.com/markmoxon/elite-source-code-acorn-electron) | [6502 Second Processor](https://github.com/markmoxon/elite-source-code-6502-second-processor) | [Commodore 64](https://github.com/markmoxon/elite-source-code-commodore-64) | [Apple II](https://github.com/markmoxon/elite-source-code-apple-ii) | [BBC Master](https://github.com/markmoxon/elite-source-code-bbc-master) | [NES](https://github.com/markmoxon/elite-source-code-nes)
+
+**Elite hacks:** [Elite-A](https://github.com/markmoxon/elite-a-source-code-bbc-micro) | [Two-player Elite](https://github.com/markmoxon/elite-two-player-6502-second-processor) | [Teletext Elite](https://github.com/markmoxon/teletext-elite) | [Elite 3D](https://github.com/markmoxon/elite-3d) | [Elite Universe Editor](https://github.com/markmoxon/elite-universe-editor) | [Flicker-free Commodore 64 Elite](https://github.com/markmoxon/c64-elite-flicker-free) | [Elite over Econet](https://github.com/markmoxon/elite-over-econet) | [!EliteNet](https://github.com/markmoxon/elite-over-econet-acorn-archimedes)
+
+**Elite Compendium:** [BBC Master](https://github.com/markmoxon/elite-compendium-bbc-master) | [BBC Micro](https://github.com/markmoxon/elite-compendium-bbc-micro) | [BBC Micro B+](https://github.com/markmoxon/elite-compendium-bbc-micro-b-plus) | [Acorn Electron](https://github.com/markmoxon/elite-compendium-acorn-electron)
+
+**Other sources:** [Aviator (BBC Micro)](https://github.com/markmoxon/aviator-source-code-bbc-micro) | [Revs (BBC Micro)](https://github.com/markmoxon/revs-source-code-bbc-micro) | [The Sentinel (BBC Micro)](https://github.com/markmoxon/the-sentinel-source-code-bbc-micro) | [Lander (Acorn Archimedes)](https://github.com/markmoxon/lander-source-code-acorn-archimedes)
+
+**Other repositories:** [Scripts for generating bbcelite.com](https://github.com/markmoxon/bbcelite-scripts) | [Static content for bbcelite.com](https://github.com/markmoxon/bbcelite-websites) | [Elite source code library](https://github.com/markmoxon/elite-source-code-library) | [Elite Universe Editor library](https://github.com/markmoxon/elite-universe-editor-library) | [Elite over Econet fileserver menu](https://github.com/markmoxon/elite-over-econet-fileserver-menu)
+
+See [my profile](https://github.com/markmoxon) for more repositories to explore.
+<hr>
+</details>
 
 ![Screenshot of 6502 Second Processor Elite on the BBC Micro](https://elite.bbcelite.com/images/github/Elite-Tube.png)
 
-This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained. It is literally the original source code, just heavily documented.
+This repository contains the original source code for Ian Bell and David Braben's classic game Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained. It is literally the original source code, just heavily commented.
 
 It is a companion to the [elite.bbcelite.com website](https://elite.bbcelite.com).
 
@@ -30,9 +46,7 @@ See the [introduction](#introduction) for more information, or jump straight int
 
 * [Elite over Econet](#elite-over-econet)
 
-* [Elite 3D](#elite-3d)
-
-* [Building Elite from the source](#building-elite-from-the-source)
+* [Building 6502 Second Processor Elite from the source](#building-6502-second-processor-elite-from-the-source)
 
   * [Requirements](#requirements)
   * [Windows](#windows)
@@ -61,13 +75,13 @@ This repository contains the original source code for Elite on the BBC Micro wit
 
 You can build the fully functioning game from this source. [Three variants](#building-different-variants-of-6502-second-processor-elite) are currently supported: the Acornsoft SNG45 variant, the Executive version, and the version produced by the original source discs.
 
-It is a companion to the [elite.bbcelite.com website](https://elite.bbcelite.com), which contains all the code from this repository, but laid out in a much more human-friendly fashion. The links at the top of this page will take you to repositories for the other versions of Elite that are covered by this project.
+This repository is a companion to the [elite.bbcelite.com website](https://elite.bbcelite.com), which contains all the code from this repository, but laid out in a much more human-friendly fashion. The links at the top of this page will take you to repositories for the other versions of Elite that are covered by this project.
 
-* If you want to browse the source and read about how Elite works under the hood, you will probably find [the website](https://elite.bbcelite.com) is a better place to start than this repository.
+* If you want to browse the source and read about how Elite works under the hood, you will probably find [the website](https://elite.bbcelite.com) a better place to start than this repository.
 
-* If you would rather explore the source code in your favourite IDE, then the [annotated source](1-source-files/main-sources/elite-source.asm) is what you're looking for. It contains the exact same content as the website, so you won't be missing out (the website is generated from the source files, so they are guaranteed to be identical). You might also like to read the section on [Browsing the source in an IDE](#browsing-the-source-in-an-ide) for some tips.
+* If you would rather explore the source code in your favourite IDE, then the [annotated source](1-source-files/main-sources) is what you're looking for. It contains the exact same content as the website, so you won't be missing out (the website is generated from the source files, so they are guaranteed to be identical). You might also like to read the section on [browsing the source in an IDE](#browsing-the-source-in-an-ide) for some tips.
 
-* If you want to build Elite from the source on a modern computer, to produce a working game disc that can be loaded into a BBC Micro or an emulator, then you want the section on [Building 6502 Second Processor Elite from the source](#building-6502-second-processor-elite-from-the-source).
+* If you want to build 6502 Second Processor Elite from the source on a modern computer, to produce a working game disc that can be loaded into a BBC Micro or an emulator, then you want the section on [building 6502 Second Processor Elite from the source](#building-6502-second-processor-elite-from-the-source).
 
 My hope is that this repository and the [accompanying website](https://elite.bbcelite.com) will be useful for those who want to learn more about Elite and what makes it tick. It is provided on an educational and non-profit basis, with the aim of helping people appreciate one of the most iconic games of the 8-bit era.
 
@@ -83,7 +97,7 @@ Huge thanks are due to the original authors for not only creating such an import
 
 The following archive from Ian Bell's personal website forms the basis for this project:
 
-* [6502 Second Processor sources as a disc image](http://www.elitehomepage.org/archive/a/a5022201.zip)
+* [6502 Second Processor Elite sources as a disc image](http://www.elitehomepage.org/archive/a/a5022201.zip)
 
 ### A note on licences, copyright etc.
 
@@ -91,7 +105,7 @@ This repository is _not_ provided with a licence, and there is intentionally no 
 
 According to [GitHub's licensing documentation](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/licensing-a-repository), this means that "the default copyright laws apply, meaning that you retain all rights to your source code and no one may reproduce, distribute, or create derivative works from your work".
 
-The reason for this is that my commentary is intertwined with the original Elite source code, and the original source code is copyright. The whole site is therefore covered by default copyright law, to ensure that this copyright is respected.
+The reason for this is that my commentary is intertwined with the original source code for Elite, and the original source code is copyright. The whole site is therefore covered by default copyright law, to ensure that this copyright is respected.
 
 Under GitHub's rules, you have the right to read and fork this repository... but that's it. No other use is permitted, I'm afraid.
 
@@ -141,7 +155,7 @@ This repository also includes a flicker-free version, which incorporates the bac
 
 The annotated source files in the `flicker-free` branch contain both the original Acornsoft code and all of the modifications for flicker-free Elite, so you can look through the source to see exactly what's changed. Any code that I've removed from the original version is commented out in the source files, so when they are assembled they produce the flicker-free binaries, while still containing details of all the modifications. You can find all the diffs by searching the sources for `Mod:`.
 
-For more information on flicker-free Elite, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/flicker-free_elite.html).
+For more information on flicker-free Elite, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/flicker-free_elite/).
 
 ## 6502 Second Processor Elite with music
 
@@ -151,7 +165,7 @@ The annotated source files in the `music` branch contain both the original Acorn
 
 The music itself is built as a sideways ROM using the code in the [elite-music repository](https://github.com/markmoxon/elite-music/).
 
-For more information on the music, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/bbc_elite_with_music.html).
+For more information on the music, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/bbc_elite_with_music/).
 
 ## Elite Compendium
 
@@ -159,7 +173,7 @@ This repository also includes a version of 6502 Second Processor Elite for the E
 
 The annotated source files in the `elite-compendium` branch contain both the original Acornsoft code and all of the modifications for the Elite Compendium, so you can look through the source to see exactly what's changed. Any code that I've removed from the original version is commented out in the source files, so when they are assembled they produce the Compendium binaries, while still containing details of all the modifications. You can find all the diffs by searching the sources for `Mod:`.
 
-For more information on the Elite Compendium, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/elite_compendium.html).
+For more information on the Elite Compendium, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/elite_compendium/).
 
 ## Elite over Econet
 
@@ -167,17 +181,9 @@ This repository also includes a version of 6502 Second Processor Elite that load
 
 The annotated source files in the `econet` branch contain both the original Acornsoft code and all of the modifications for Elite over Econet, so you can look through the source to see exactly what's changed. Any code that I've removed from the original version is commented out in the source files, so when they are assembled they produce the Elite over Econet binaries, while still containing details of all the modifications. You can find all the diffs by searching the sources for `Mod:`.
 
-For more information on Elite over Econet, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/elite_over_econet.html).
+For more information on Elite over Econet, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/elite_over_econet/).
 
-## Elite 3D
-
-This repository also includes an anaglyph 3D version of 6502 Second Processor Elite. Elite 3D is in a separate branch called `anaglyph-3d`, and apart from the code differences for adding the anaglyph 3D, this branch is identical to the main branch and the same build process applies.
-
-The annotated source files in the `anaglyph-3d` branch contain both the original Acornsoft code and all of the modifications for Elite 3D, so you can look through the source to see exactly what's changed. Any code that I've removed from the original version is commented out in the source files, so when they are assembled they produce the Elite 3D binaries, while still containing details of all the modifications. You can find all the diffs by searching the sources for `Mod:`.
-
-For more information on Elite 3D, see the [hacks section of the accompanying website](https://elite.bbcelite.com/hacks/elite_3d.html).
-
-## Building Elite from the source
+## Building 6502 Second Processor Elite from the source
 
 Builds are supported for both Windows and Mac/Linux systems. In all cases the build process is defined in the `Makefile` provided.
 
@@ -187,7 +193,7 @@ You will need the following to build 6502 Second Processor Elite from the source
 
 * BeebAsm, which can be downloaded from the [BeebAsm repository](https://github.com/stardot/beebasm). Mac and Linux users will have to build their own executable with `make code`, while Windows users can just download the `beebasm.exe` file.
 
-* Python. The build process has only been tested on 3.x, but 2.7 should work.
+* Python. The build process has only been tested on 3.x, but 2.7 might work.
 
 * Mac and Linux users may need to install `make` if it isn't already present (for Windows users, `make.exe` is included in this repository).
 
@@ -264,6 +270,7 @@ Results for variant: sng45
 [--originals--]  [---output----]
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
+913f8333     93  913f8333     93   Yes   BOOT.bin
 ffdb229a    788  ffdb229a    788   Yes   ELITE.bin
 e78cb0cf   5769  e78cb0cf   5769   Yes   ELITEa.bin
 a95bc864   2666  a95bc864   2666   Yes   ELTA.bin
@@ -344,6 +351,7 @@ Results for variant: sng45
 [--originals--]  [---output----]
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
+913f8333     93  913f8333     93   Yes   BOOT.bin
 ffdb229a    788  ffdb229a    788   Yes   ELITE.bin
 e78cb0cf   5769  e78cb0cf   5769   Yes   ELITEa.bin
 a95bc864   2666  a95bc864   2666   Yes   ELTA.bin
@@ -403,6 +411,7 @@ a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
 11ccbb59  38832  11ccbb59  38832   Yes   P.CODE.unprot.bin
 2580d019   8460  2580d019   8460   Yes   SHIPS.bin
 57406380   1024  57406380   1024   Yes   WORDS.bin
+-             -  913f8333     93    -    BOOT.bin
 ```
 
 ### Building the Executive version
@@ -445,6 +454,7 @@ e2cf0d8a   3674  e2cf0d8a   3674   Yes   ELTJ.bin
 d597e3d0  39143  d597e3d0  39143   Yes   P.CODE.unprot.bin
 2580d019   8460  2580d019   8460   Yes   SHIPS.bin
 272668f2   1024  272668f2   1024   Yes   WORDS.bin
+-             -  913f8333     93    -    BOOT.bin
 ```
 
 ### Differences between the variants
