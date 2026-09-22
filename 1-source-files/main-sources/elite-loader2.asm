@@ -1,11 +1,11 @@
 \ ******************************************************************************
 \
-\ 6502 SECOND PROCESSOR ELITE I/O LOADER (PART 2) SOURCE
+\ 6502 SECOND PROCESSOR ELITE I/O LOADER SOURCE (PART 2 OF 2)
 \
 \ 6502 Second Processor Elite was written by Ian Bell and David Braben and is
 \ copyright Acornsoft 1985
 \
-\ The code on this site is identical to the source discs released on Ian Bell's
+\ The code in this file is identical to the source discs released on Ian Bell's
 \ personal website at http://www.elitehomepage.org/ (it's just been reformatted
 \ to be more readable)
 \
@@ -20,17 +20,22 @@
 \
 \ ------------------------------------------------------------------------------
 \
+\ This source file contains the second of two game loaders for 6502 Second
+\ Processor Elite.
+\
+\ ------------------------------------------------------------------------------
+\
 \ This source file produces the following binary file:
 \
 \   * ELITEa.bin
 \
 \ after reading in the following files:
 \
-\   * P.DIALS2P.bin
-\   * P.DATE2P.bin
 \   * Z.ACSOFT.bin
-\   * Z.ELITE.bin
 \   * Z.(C)ASFT.bin
+\   * P.DATE2P.bin
+\   * P.DIALS2P.bin
+\   * Z.ELITE.bin
 \
 \ ******************************************************************************
 
@@ -69,11 +74,11 @@
 
                         \ --- Mod: Code removed for Econet: ------------------->
 
-\ORG &0090
+\ORG &0090              \ Set the assembly address to &0090
 
                         \ --- And replaced by: -------------------------------->
 
- ORG &0070
+ ORG &0070              \ Set the assembly address to &0070
 
                         \ --- End of replacement ------------------------------>
 
@@ -91,7 +96,7 @@
 \
 \ ******************************************************************************
 
- ORG CODE%
+ ORG CODE%              \ Set the assembly address to CODE%
 
 \ ******************************************************************************
 \
@@ -176,6 +181,20 @@ ENDMACRO
 
  JSR OSCLI              \ Call OSCLI to run the OS command in MESS2, which *RUNs
                         \ the main I/O processor game code in I.CODE
+                        \
+                        \ The loader (i.e. this code) is already running in the
+                        \ I/O processor, with the JMP OSCLI instruction below
+                        \ ending at address &2061, so this *RUN command loads
+                        \ the I.CODE file at address &2400, which is well clear
+                        \ of this bit of code, and then jumps to its execution
+                        \ address, which is set to the STARTUP routine
+                        \
+                        \ This configures the I/O processor with all the I/O
+                        \ routines and associated handlers that the game needs,
+                        \ and once the setup is done and the I/O processsor is
+                        \ ready for the game, it returns here to load the
+                        \ parasite code in P.CODE, which can then start talking
+                        \ to the I/O processor to run the game
 
  LDX #LO(MESS3)         \ Set (Y X) to point to MESS3 ("R.P.CODE")
  LDY #HI(MESS3)
