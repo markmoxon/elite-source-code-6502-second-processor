@@ -29400,6 +29400,66 @@ ENDIF
 
 \ ******************************************************************************
 \
+\       Name: RemoveLaserLine
+\       Type: Subroutine
+\   Category: Drawing lines
+\    Summary: Remove the laser line from the screen, if there is one
+\
+\ ******************************************************************************
+
+.RemoveLaserLine
+
+                        \ --- Mod: Code added for red enemy lasers: ----------->
+
+                        \ We now need to check whether there is a laser line
+                        \ on-screen, and if so remove it
+
+ LDY #1                 \ Set X1 to the first coordinate on the ship line heap,
+ LDA (XX19),Y           \ which is the start of the laser line
+ STA X1
+
+ INY                    \ Increment the index to point to the Y1 coordinate
+
+ LDA (XX19),Y           \ Set Y1 to the first coordinate on the ship line heap
+ STA Y1                 \ which is the start of the laser line
+
+ CMP #255               \ If the Y1 coordinate is 255 then there is no laser
+ BEQ noLaserLine        \ line currently on-screen, so jump to noLaserLine to
+                        \ skip the removal of the old line
+
+ LDA #255               \ Set the Y1 coordinate of the laser line in the ship
+ STA (XX19),Y           \ line heap to 255 to remove the laser line from the
+                        \ heap
+
+ INY                    \ Increment the index to point to the X2 coordinate
+
+ LDA (XX19),Y           \ Set X2 to the second coordinate on the ship line heap,
+ STA X2                 \ which is the end of the laser line
+
+ INY                    \ Increment the index to point to the Y2 coordinate
+
+ LDA (XX19),Y           \ Set Y2 to the second coordinate on the ship line heap,
+ STA Y2                 \ which is the end of the laser line
+
+ LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
+ JSR DOCOL              \ switch to colour 2, which is red in the space view
+
+ JSR LL30               \ Draw the old laser line to remove it from the screen
+
+ LDX TYPE               \ Set A to the ship colour for this type, from the
+ LDA shpcol,X           \ relevant entry in the shpcol table
+
+ JSR DOCOL              \ Send a #SETCOL command to the I/O processor to switch
+                        \ back to the ship's colour
+
+.noLaserLine
+
+ RTS                    \ Return from the subroutine
+
+                        \ --- End of added code ------------------------------->
+
+\ ******************************************************************************
+\
 \       Name: EDGES
 \       Type: Subroutine
 \   Category: Drawing lines
@@ -38672,6 +38732,13 @@ ENDIF
  STA XX1+31             \ clears bit 3 as we know it was set before the EOR), so
                         \ this sets this ship as no longer being drawn on-screen
 
+                        \ --- Mod: Code added for red enemy lasers: ----------->
+
+ JSR RemoveLaserLine    \ Check whether there is a laser line on-screen, and if
+                        \ there is, remove it
+
+                        \ --- End of added code ------------------------------->
+
  JMP LL155              \ Jump to LL155 to draw the ship, which removes it from
                         \ the screen, returning from the subroutine using a
                         \ tail call
@@ -40397,48 +40464,8 @@ ENDIF
 
                         \ --- Mod: Code added for red enemy lasers: ----------->
 
-                        \ We now need to check whether there is a laser line
-                        \ on-screen, and if so remove it
-
- LDY #1                 \ Set X1 to the first coordinate on the ship line heap,
- LDA (XX19),Y           \ which is the start of the laser line
- STA X1
-
- INY                    \ Increment the index to point to the Y1 coordinate
-
- LDA (XX19),Y           \ Set Y1 to the first coordinate on the ship line heap
- STA Y1                 \ which is the start of the laser line
-
- CMP #255               \ If the Y1 coordinate is 255 then there is no laser
- BEQ noLaserLine        \ line currently on-screen, so jump to noLaserLine to
-                        \ skip the removal of the old line
-
- LDA #255               \ Set the Y1 coordinate of the laser line in the ship
- STA (XX19),Y           \ line heap to 255 to remove the laser line from the
-                        \ heap
-
- INY                    \ Increment the index to point to the X2 coordinate
-
- LDA (XX19),Y           \ Set X2 to the second coordinate on the ship line heap,
- STA X2                 \ which is the end of the laser line
-
- INY                    \ Increment the index to point to the Y2 coordinate
-
- LDA (XX19),Y           \ Set Y2 to the second coordinate on the ship line heap,
- STA Y2                 \ which is the end of the laser line
-
- LDA #RED               \ Send a #SETCOL RED command to the I/O processor to
- JSR DOCOL              \ switch to colour 2, which is red in the space view
-
- JSR LL30               \ Draw the old laser line to remove it from the screen
-
- LDX TYPE               \ Set A to the ship colour for this type, from the
- LDA shpcol,X           \ relevant entry in the shpcol table
-
- JSR DOCOL              \ Send a #SETCOL command to the I/O processor to switch
-                        \ back to the ship's colour
-
-.noLaserLine
+ JSR RemoveLaserLine    \ Check whether there is a laser line on-screen, and if
+                        \ there is, remove it
 
                         \ --- End of added code ------------------------------->
 
