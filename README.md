@@ -468,7 +468,7 @@ The main differences in the source disc variant compared to the SNG45 variant ar
 
 * The loader in the source disc variant contains a load of Tube-detection code that is disabled in the SNG45 variant.
 
-* The dashboard image in the source disc differs from the release version in three bytes; these show up as red dots in the SP and RL labels in the right-hand dials. It isn't clear why these three bytes are different.
+* The dashboard image in the source disc variant differs from the release version in three bytes; these show up as red dots in the SP and RL labels in the right-hand dials. It isn't clear why these three bytes are different.
 
 There are lots of differences in the Executive version compared to the SNG45 variant. You can read more about them in the deep dive on [secrets of the Executive version](https://elite.bbcelite.com/deep_dives/secrets_of_the_executive_version.html).
 
