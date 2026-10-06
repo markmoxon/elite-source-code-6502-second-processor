@@ -395,7 +395,7 @@ Results for variant: source-disc
 Checksum   Size  Checksum   Size  Match  Filename
 -----------------------------------------------------------
 56520930    752  56520930    752   Yes   ELITE.bin
-e78cb0cf   5769  e78cb0cf   5769   Yes   ELITEa.bin
+d10dbf64   5769  d10dbf64   5769   Yes   ELITEa.bin
 455ba962   2666  455ba962   2666   Yes   ELTA.bin
 ff84a532   3096  ff84a532   3096   Yes   ELTB.bin
 54e6f0e3   3284  54e6f0e3   3284   Yes   ELTC.bin

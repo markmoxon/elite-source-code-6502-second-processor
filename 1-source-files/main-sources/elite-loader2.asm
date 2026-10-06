@@ -326,7 +326,15 @@ ENDMACRO
 
 .DIALS
 
+IF _SNG45 OR _EXECUTIVE
+
  INCBIN "1-source-files/images/P.DIALS2P.bin"
+
+ELIF _SOURCE_DISC
+
+ INCBIN "1-source-files/images/P.DIALS2P-source-disc.bin"
+
+ENDIF
 
 .DATE
 
