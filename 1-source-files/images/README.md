@@ -2,9 +2,13 @@
 
 This folder contains the image binaries from the original sources for the 6502 Second Processor version of Elite on Ian Bell's personal website.
 
+* [$.SCREEN.bin]($.SCREEN.bin) is the mode 7 Acornsoft loader screen
+
 * [P.DATE2P.bin](P.DATE2P.bin) is an unused image that was used to datestamp the title screen during development
 
-* [P.DIALS2P.bin](P.DIALS2P.bin) is the dashboard image
+* [P.DIALS2P.bin](P.DIALS2P.bin) is the dashboard image from the published game
+
+* [P.DIALS2P-source-disc.bin](P.DIALS2P-source-disc.bin) is the dashboard image from the source disc on Ian Bell's site, which is slightly different to the image in the published game
 
 * [Z.(C)ASOFT.bin](Z.(C)ASOFT.bin) is the "(c) ACORNSOFT 1984" image for the bottom of the title screen
 

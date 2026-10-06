@@ -18,12 +18,12 @@ from __future__ import print_function
 import sys
 
 argv = sys.argv
-Encrypt = True
+encrypt = True
 release = 2
 
 for arg in argv[1:]:
     if arg == "-u":
-        Encrypt = False
+        encrypt = False
     if arg == "-rel1":
         release = 1
     if arg == "-rel2":
@@ -32,7 +32,7 @@ for arg in argv[1:]:
         release = 3
 
 print("6502SP Elite Checksum")
-print("Encryption = ", Encrypt)
+print("Encryption = ", encrypt)
 
 # Configuration variables for scrambling code and calculating checksums
 #
@@ -93,11 +93,8 @@ for i in range(CH, 0, -1):
 
 print("Commander checksum = ", hex(CH))
 
-# Must have Commander checksum otherwise game will lock
-
-if Encrypt:
-    data_block[commander_start + commander_offset] = CH ^ 0xA9
-    data_block[commander_start + commander_offset + 1] = CH
+data_block[commander_start + commander_offset] = CH ^ 0xA9
+data_block[commander_start + commander_offset + 1] = CH
 
 # First part: ZP routine, which sets the checksum byte at S%-1
 
@@ -128,18 +125,18 @@ s_checksum = s_checksum % 256
 
 print("S%-1 checksum = ", s_checksum)
 
-if Encrypt:
+if encrypt:
     data_block[s - 0x1000 - 1] = s_checksum % 256
 
 # Second part: SC routine, which EORs bytes between &1300 and &9FFF
 
-if Encrypt:
+if encrypt:
     for n in range(0x1300, 0xA000):
         data_block[n - 0x1000] = data_block[n - 0x1000] ^ (n % 256) ^ 0x75
 
 # Third part: V, which reverses the order of bytes between G% and F%-1
 
-if Encrypt:
+if encrypt:
     f -= 1
     while g < f:
         tmp = data_block[g - 0x1000]

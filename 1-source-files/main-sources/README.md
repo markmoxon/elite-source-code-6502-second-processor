@@ -12,6 +12,8 @@ This folder contains the annotated source code for the 6502 Second Processor ver
 
 * Other source files:
 
+  * [elite-boot.asm](elite-boot.asm) contains the source for the !BOOT file that loads the mode 7 Acornsoft loading screen
+
   * [elite-loader1.asm](elite-loader1.asm) contains the source for the first stage of the loader
 
   * [elite-loader2.asm](elite-loader2.asm) contains the source for the second stage of the loader

@@ -1,0 +1,4 @@
+   10REM Create P.DATE2P
+   20MODE1
+   30PRINT"2nd Pro ELITE -Finished 13/12/84"
+   40*S.:2.P.DATE2P FFFF3000+200

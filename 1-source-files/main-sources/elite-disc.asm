@@ -5,7 +5,7 @@
 \ 6502 Second Processor Elite was written by Ian Bell and David Braben and is
 \ copyright Acornsoft 1985
 \
-\ The code on this site is identical to the source discs released on Ian Bell's
+\ The code in this file is identical to the source discs released on Ian Bell's
 \ personal website at http://www.elitehomepage.org/ (it's just been reformatted
 \ to be more readable)
 \
@@ -17,6 +17,10 @@
 \
 \ The deep dive articles referred to in this commentary can be found at
 \ https://elite.bbcelite.com/deep_dives
+\
+\ ------------------------------------------------------------------------------
+\
+\ This source file produces an SSD disc image for 6502 Second Processor Elite.
 \
 \ ------------------------------------------------------------------------------
 \
@@ -66,8 +70,8 @@ ELSE
 ENDIF
 
 IF _SNG45
- PUTFILE "1-source-files/boot-files/$.!BOOT.bin", "!BOOT", &002000, &00202B
- PUTFILE "1-source-files/boot-files/$.SCREEN.bin", "SCREEN", &FF7C00, &000000
+ PUTFILE "3-assembled-output/BOOT.bin", "!BOOT", &002000, &00202B
+ PUTFILE "1-source-files/images/$.SCREEN.bin", "SCREEN", &FF7C00, &000000
 ENDIF
 
  PUTFILE "3-assembled-output/README.txt", "README", &FFFFFF, &FFFFFF
