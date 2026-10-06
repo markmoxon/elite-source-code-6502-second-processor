@@ -64,10 +64,7 @@ See the [introduction](#introduction) for more information, or jump straight int
   * [Building the Executive version](#building-the-executive-version)
   * [Differences between the variants](#differences-between-the-variants)
 
-* [Notes on the original source files](#notes-on-the-original-source-files)
-
-  * [Fixing the original build process](#fixing-the-original-build-process)
-  * [Producing byte-accurate binaries](#producing-byte-accurate-binaries)
+* [Producing byte-accurate binaries](#producing-byte-accurate-binaries)
 
 ## Introduction
 
@@ -471,17 +468,13 @@ The main differences in the source disc variant compared to the SNG45 variant ar
 
 * The loader in the source disc variant contains a load of Tube-detection code that is disabled in the SNG45 variant.
 
+* The dashboard image in the source disc differs from the release version in three bytes; these show up as red dots in the SP and RL labels in the right-hand dials. It isn't clear why these three bytes are different.
+
 There are lots of differences in the Executive version compared to the SNG45 variant. You can read more about them in the deep dive on [secrets of the Executive version](https://elite.bbcelite.com/deep_dives/secrets_of_the_executive_version.html).
 
 See the [accompanying website](https://elite.bbcelite.com/6502sp/releases.html) for a comprehensive list of differences between the variants.
 
-## Notes on the original source files
-
-### Fixing the original build process
-
-The source files on the source disc do not build as they are; some massaging is required, as described in [this thread on Stardot](https://stardot.org.uk/forums/viewtopic.php?t=14607). Note also that the `P.DIALS2P` file on the source disc has some erroneous dots in the right-hand side of the dashboard; a fixed version is available in the `images` folder in this repository, and this fixed version was used to build the reference binaries in the `4-reference-binaries` folder.
-
-### Producing byte-accurate binaries
+## Producing byte-accurate binaries
 
 Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either initialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project. Workspace noise is only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
 
