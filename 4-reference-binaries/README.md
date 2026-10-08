@@ -6,7 +6,9 @@ This folder contains the binaries from the original sources for the 6502 Second 
 
 * [sng45](sng45) contains the binaries from the Acornsoft SNG45 release
 
-* [source-disc](source-disc) contains the binaries from the source disc on Ian Bell's personal website
+* [source-disc-build](source-disc-build) contains the binaries from building the source disk on Ian Bell's personal website
+
+* [source-disc-files](source-disc-files) contains the pre-compiled binaries from the source disc on Ian Bell's personal website
 
 ---
 

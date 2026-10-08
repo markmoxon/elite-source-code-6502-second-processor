@@ -33,9 +33,11 @@
 
  INCLUDE "1-source-files/main-sources/elite-build-options.asm"
 
- _SOURCE_DISC           = (_VARIANT = 1)
- _SNG45                 = (_VARIANT = 2)
- _EXECUTIVE             = (_VARIANT = 3)
+ _SNG45                 = (_VARIANT = 1)
+ _EXECUTIVE             = (_VARIANT = 2)
+ _SOURCE_DISC_BUILD     = (_VARIANT = 3)
+ _SOURCE_DISC_FILES     = (_VARIANT = 4)
+ _SOURCE_DISC           = (_VARIANT = 3) OR (_VARIANT = 4)
 
  GUARD &4000            \ Guard against assembling over screen memory
 
@@ -281,7 +283,7 @@
 \
 \ ******************************************************************************
 
- ORG &2300              \ Set the assembly address to &2300
+ ORG CODE% - 256        \ Set the assembly address to the page before CODE%
 
 .TABLE
 
@@ -320,14 +322,25 @@
 \
 \ ******************************************************************************
 
- ORG CODE%              \ Set the assembly address to CODE%
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
 
- FONT% = HI(P%)
+ FONT% = HI(P%)         \ Set FONT% to the high byte of the font file address
+
+ELIF _SOURCE_DISC_FILES
+
+ FONT% = HI(&C000)      \ Set FONT% to the high byte of the address of the
+                        \ character set in the MOS ROM at &C000
+
+ENDIF
 
 IF _SNG45 OR _SOURCE_DISC
+
  INCBIN "1-source-files/fonts/P.FONT.bin"
+
 ELIF _EXECUTIVE
+
  INCBIN "1-source-files/fonts/P.FONTEX.bin"
+
 ENDIF
 
 \ ******************************************************************************
@@ -655,6 +668,19 @@ ENDIF
 \ EOR'd with 7, just to make things even more confusing.
 \
 \ ******************************************************************************
+
+IF _SOURCE_DISC_FILES
+
+ CLEAR CODE%, P%        \ The I.CODE binary file on the source disc does not
+ ORG CODE%              \ include the lookup tables at FONT%, log, logL,
+                        \ antilog, antilogODD or ylookup
+                        \
+                        \ We could wrap all of those tables in IF statements so
+                        \ they don't build in the _SOURCE_DISC_FILES variant,
+                        \ but it's easier just to reset the assembly address to
+                        \ CODE%, just after the 256-byte TABLE
+
+ENDIF
 
 .TVT3
 
@@ -1082,6 +1108,8 @@ ENDIF
  LDA #&FF               \ Set the text and graphics colour to cyan
  STA COL
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  LDA TINA               \ If the contents of locations TINA to TINA+3 are "TINA"
  CMP #'T'               \ then keep going, otherwise jump to PUTBACK to point
  BNE PUTBACK            \ WRCHV to USOSWRCH, and then end the program, as from
@@ -1107,6 +1135,8 @@ ENDIF
                         \ Fall through into PUTBACK to point WRCHV to USOSWRCH,
                         \ and then end the program, as from now on the handlers
                         \ pointed to by the vectors will handle everything
+
+ENDIF
 
 \ ******************************************************************************
 \
@@ -1954,9 +1984,28 @@ ENDIF
 
  TAY                    \ Store the y-coordinate in Y
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  LDA ylookup,Y          \ Look up the page number of the character row that
  STA SC+1               \ contains the pixel with the y-coordinate in Y, and
                         \ store it in the high byte of SC(1 0) at SC+1
+
+ELIF _SOURCE_DISC_FILES
+
+ LSR A                  \ Set A = A / 4, clear bit 0 and add &40, so this sets
+ LSR A                  \ A to &40 + (Y1 / 4) rounded down down to a multiple
+ LSR A                  \ of 2
+ ASL A
+ ORA #&40
+
+ STA SC+1               \ Store the result in the high byte of SC(1 0) at SC+1,
+                        \ which sets SC(1 0) to the the page number of the
+                        \ character row that contains the pixel with the
+                        \ y-coordinate in Y1, as screen memory starts at &4000
+                        \ and there are two pages (512 bytes) per pixel line in
+                        \ the custom screen mode used in the space view
+
+ENDIF
 
  LDA X1                 \ Each character block contains 8 pixel rows, so to get
  AND #%11111100         \ the address of the first byte in the character block
@@ -2677,10 +2726,31 @@ ENDIF
                         \ X1 < X2, so we're going from left to right as we go
                         \ from X1 to X2
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  LDY Y1                 \ Look up the page number of the character row that
  LDA ylookup,Y          \ contains the pixel with the y-coordinate in Y1, and
  STA SC+1               \ store it in SC+1, so the high byte of SC is set
                         \ correctly for drawing our line
+
+ELIF _SOURCE_DISC_FILES
+
+ LDA Y1                 \ Fetch the y-coordinate into A
+
+ LSR A                  \ Set A = A / 4, clear bit 0 and add &40, so this sets
+ LSR A                  \ A to &40 + (Y1 / 4) rounded down down to a multiple
+ LSR A                  \ of 2
+ ASL A
+ ORA #&40
+
+ STA SC+1               \ Store the result in the high byte of SC(1 0) at SC+1,
+                        \ which sets SC(1 0) to the the page number of the
+                        \ character row that contains the pixel with the
+                        \ y-coordinate in Y1, as screen memory starts at &4000
+                        \ and there are two pages (512 bytes) per pixel line in
+                        \ the custom screen mode used in the space view
+
+ENDIF
 
  LDA Y1                 \ Set Y = Y1 mod 8, which is the pixel row within the
  AND #7                 \ character block at which we want to draw the start of
@@ -2704,6 +2774,8 @@ ENDIF
  AND #3                 \ within the character block where the line starts (as
  STA R                  \ each pixel line in the character block is 4 pixels
                         \ wide)
+
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
 
                         \ The following section calculates:
                         \
@@ -2779,6 +2851,105 @@ ENDIF
  STA Q                  \ Store the result of the division in Q, so we have:
                         \
                         \   Q = |delta_y| / |delta_x|
+
+ELIF _SOURCE_DISC_FILES
+
+                        \ The following section calculates:
+                        \
+                        \   Q = Q / P
+                        \     = |delta_y| / |delta_x|
+                        \
+                        \ using the same shift-and-subtract algorithm that's
+                        \ documented in TIS2
+
+ LDA Q                  \ Set A = |delta_y|
+
+                        \ We now repeat the following seven instruction block
+                        \ eight times, one for each bit in P. In the BBC Micro
+                        \ cassette and disc versions of Elite the following is
+                        \ done with a loop, but it is marginally faster to
+                        \ unroll the loop and have eight copies of the code,
+                        \ though it does take up a bit more memory (though that
+                        \ isn't a big concern when you have a 6502 Second
+                        \ Processor)
+
+ ASL A                  \ Shift A to the left
+
+ BCS LI4                \ If bit 7 of A was set, then jump straight to the
+                        \ subtraction
+
+ CMP P                  \ If A < P, skip the following subtraction
+ BCC LI5
+
+.LI4
+
+ SBC P                  \ A >= P, so set A = A - P
+
+ SEC                    \ Set the C flag to rotate into the result in Q
+
+.LI5
+
+ ROL Q                  \ Rotate the counter in Q to the left, and catch the
+                        \ result bit into bit 0 (which will be a 0 if we didn't
+                        \ do the subtraction, or 1 if we did)
+
+ ASL A                  \ Repeat for the second time
+ BCS P%+6
+ CMP P
+ BCC P%+5
+ SBC P
+ SEC
+ ROL Q
+
+ ASL A                  \ Repeat for the third time
+ BCS P%+6
+ CMP P
+ BCC P%+5
+ SBC P
+ SEC
+ ROL Q
+
+ ASL A                  \ Repeat for the fourth time
+ BCS P%+6
+ CMP P
+ BCC P%+5
+ SBC P
+ SEC
+ ROL Q
+
+ ASL A                  \ Repeat for the fifth time
+ BCS P%+6
+ CMP P
+ BCC P%+5
+ SBC P
+ SEC
+ ROL Q
+
+ ASL A                  \ Repeat for the sixth time
+ BCS P%+6
+ CMP P
+ BCC P%+5
+ SBC P
+ SEC
+ ROL Q
+
+ ASL A                  \ Repeat for the seventh time
+ BCS P%+6
+ CMP P
+ BCC P%+5
+ SBC P
+ SEC
+ ROL Q
+
+ ASL A                  \ Repeat for the eighth time
+ BCS P%+6
+ CMP P
+ BCC P%+5
+ SBC P
+ SEC
+ ROL Q
+
+ENDIF
 
  LDX P                  \ Set X = P
                         \       = |delta_x|
@@ -3451,10 +3622,31 @@ ENDIF
                         \ Y1 >= Y2, so we're going from top to bottom as we go
                         \ from Y1 to Y2
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  LDA ylookup,Y          \ Look up the page number of the character row that
  STA SC+1               \ contains the pixel with the y-coordinate in Y1, and
                         \ store it in the high byte of SC(1 0) at SC+1, so the
                         \ high byte of SC is set correctly for drawing our line
+
+ELIF _SOURCE_DISC_FILES
+
+ LSR A                  \ Set A = A / 4, clear bit 0 and add &40, so this sets
+ LSR A                  \ A to &40 + (Y1 / 4) rounded down down to a multiple
+ LSR A                  \ of 2
+ ASL A                  \
+ ADC #&40               \ The addition works because the third LSR A shifts a
+                        \ zero into bit 7 of A, and the ASL A then shift that
+                        \ zero into the C flag
+
+ STA SC+1               \ Store the result in the high byte of SC(1 0) at SC+1,
+                        \ which sets SC(1 0) to the the page number of the
+                        \ character row that contains the pixel with the
+                        \ y-coordinate in Y1, as screen memory starts at &4000
+                        \ and there are two pages (512 bytes) per pixel line in
+                        \ the custom screen mode used in the space view
+
+ENDIF
 
  TXA                    \ Set A = 2 * bits 2-6 of X1
  AND #%11111100         \
@@ -3477,6 +3669,8 @@ ENDIF
 
  LDA TWOS,X             \ Fetch a one-pixel byte from TWOS where pixel X is set,
  STA R                  \ and store it in R
+
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
 
                         \ The following section calculates:
                         \
@@ -3546,6 +3740,105 @@ ENDIF
  STA P                  \ Store the result of the division in P, so we have:
                         \
                         \   P = |delta_x| / |delta_y|
+
+ELIF _SOURCE_DISC_FILES
+
+                        \ The following calculates:
+                        \
+                        \   P = P / Q
+                        \     = |delta_x| / |delta_y|
+                        \
+                        \ using the same shift-and-subtract algorithm that's
+                        \ documented in TIS2
+
+ LDA P                  \ Set A = |delta_x|
+
+                        \ We now repeat the following seven instruction block
+                        \ eight times, one for each bit in P. In the BBC Micro
+                        \ cassette and disc versions of Elite the following is
+                        \ done with a loop, but it is marginally faster to
+                        \ unroll the loop and have eight copies of the code,
+                        \ though it does take up a bit more memory (though that
+                        \ isn't a big concern when you have a 6502 Second
+                        \ Processor)
+
+ ASL A                  \ Shift A to the left
+
+ BCS LI13               \ If bit 7 of A was set, then jump straight to the
+                        \ subtraction
+
+ CMP Q                  \ If A < Q, skip the following subtraction
+ BCC LI14
+
+.LI13
+
+ SBC Q                  \ A >= Q, so set A = A - Q
+
+ SEC                    \ Set the C flag to rotate into the result in Q
+
+.LI14
+
+ ROL P                  \ Rotate the counter in P to the left, and catch the
+                        \ result bit into bit 0 (which will be a 0 if we didn't
+                        \ do the subtraction, or 1 if we did)
+
+ ASL A                  \ Repeat for the second time
+ BCS P%+6
+ CMP Q
+ BCC P%+5
+ SBC Q
+ SEC
+ ROL P
+
+ ASL A                  \ Repeat for the third time
+ BCS P%+6
+ CMP Q
+ BCC P%+5
+ SBC Q
+ SEC
+ ROL P
+
+ ASL A                  \ Repeat for the fourth time
+ BCS P%+6
+ CMP Q
+ BCC P%+5
+ SBC Q
+ SEC
+ ROL P
+
+ ASL A                  \ Repeat for the fifth time
+ BCS P%+6
+ CMP Q
+ BCC P%+5
+ SBC Q
+ SEC
+ ROL P
+
+ ASL A                  \ Repeat for the sixth time
+ BCS P%+6
+ CMP Q
+ BCC P%+5
+ SBC Q
+ SEC
+ ROL P
+
+ ASL A                  \ Repeat for the seventh time
+ BCS P%+6
+ CMP Q
+ BCC P%+5
+ SBC Q
+ SEC
+ ROL P
+
+ ASL A                  \ Repeat for the eighth time
+ BCS P%+6
+ CMP Q
+ BCC P%+5
+ SBC Q
+ SEC
+ ROL P
+
+ENDIF
 
 .LIfudge
 
@@ -4832,6 +5125,8 @@ ENDIF
  DEC X2                 \ Decrement X2 so we do not draw a pixel at the end
                         \ point
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  LDY Y1                 \ Look up the page number of the character row that
  LDA ylookup,Y          \ contains the pixel with the y-coordinate in Y1, and
  STA SC+1               \ store it in SC+1, so the high byte of SC is set
@@ -4840,6 +5135,29 @@ ENDIF
  TYA                    \ Set A = Y1 mod 8, which is the pixel row within the
  AND #7                 \ character block at which we want to draw our line (as
                         \ each character block has 8 rows)
+
+ELIF _SOURCE_DISC_FILES
+
+ LDA Y1                 \ Fetch the y-coordinate into A
+
+ LSR A                  \ Set A = A / 4, clear bit 0 and add &40, so this sets
+ LSR A                  \ A to &40 + (Y1 / 4) rounded down down to a multiple
+ LSR A                  \ of 2
+ ASL A
+ ORA #&40
+
+ STA SC+1               \ Store the result in the high byte of SC(1 0) at SC+1,
+                        \ which sets SC(1 0) to the the page number of the
+                        \ character row that contains the pixel with the
+                        \ y-coordinate in Y1, as screen memory starts at &4000
+                        \ and there are two pages (512 bytes) per pixel line in
+                        \ the custom screen mode used in the space view
+
+ LDA Y1                 \ Set A = Y1 mod 8, which is the pixel row within the
+ AND #7                 \ character block at which we want to draw our line (as
+                        \ each character block has 8 rows)
+
+ENDIF
 
  STA SC                 \ Store this value in SC, so SC(1 0) now contains the
                         \ screen address of the far left end (x-coordinate = 0)
@@ -5270,9 +5588,28 @@ ENDIF
  TAY                    \ the index of this pixel's y-coordinate, in T1, so we
                         \ can restore it at the end of the subroutine
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  LDA ylookup,Y          \ Look up the page number of the character row that
  STA SC+1               \ contains the pixel with the y-coordinate in Y, and
                         \ store it in the high byte of SC(1 0) at SC+1
+
+ELIF _SOURCE_DISC_FILES
+
+ LSR A                  \ Set A = A / 4, clear bit 0 and add &40, so this sets
+ LSR A                  \ A to &40 + (Y1 / 4) rounded down down to a multiple
+ LSR A                  \ of 2
+ ASL A
+ ORA #&40
+
+ STA SC+1               \ Store the result in the high byte of SC(1 0) at SC+1,
+                        \ which sets SC(1 0) to the the page number of the
+                        \ character row that contains the pixel with the
+                        \ y-coordinate in Y1, as screen memory starts at &4000
+                        \ and there are two pages (512 bytes) per pixel line in
+                        \ the custom screen mode used in the space view
+
+ENDIF
 
  TXA                    \ Each character block contains 8 pixel rows, so to get
  AND #%11111100         \ the address of the first byte in the character block
@@ -5423,9 +5760,28 @@ ENDIF
  TAY                    \ the index of this pixel's y-coordinate, in T1, so we
                         \ can restore it at the end of the subroutine
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  LDA ylookup,Y          \ Look up the page number of the character row that
  STA SC+1               \ contains the pixel with the y-coordinate in Y, and
                         \ store it in the high byte of SC(1 0) at SC+1
+
+ELIF _SOURCE_DISC_FILES
+
+ LSR A                  \ Set A = A / 4, clear bit 0 and add &40, so this sets
+ LSR A                  \ A to &40 + (Y1 / 4) rounded down down to a multiple
+ LSR A                  \ of 2
+ ASL A
+ ORA #&40
+
+ STA SC+1               \ Store the result in the high byte of SC(1 0) at SC+1,
+                        \ which sets SC(1 0) to the the page number of the
+                        \ character row that contains the pixel with the
+                        \ y-coordinate in Y1, as screen memory starts at &4000
+                        \ and there are two pages (512 bytes) per pixel line in
+                        \ the custom screen mode used in the space view
+
+ENDIF
 
  TXA                    \ Each character block contains 8 pixel rows, so to get
  AND #%11111100         \ the address of the first byte in the character block
@@ -5796,6 +6152,8 @@ ENDIF
                         \ the screen) and bunching up towards the horizon (low
                         \ value of P, low y-coordinate, higher up the screen)
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  LDA P                  \ Set Y = #Y + P
  CLC                    \
  ADC #Y                 \ where #Y is the y-coordinate of the centre of the
@@ -5805,6 +6163,29 @@ ENDIF
  LDA ylookup,Y          \ Look up the page number of the character row that
  STA SC+1               \ contains the pixel with the y-coordinate in Y, and
                         \ store it in the high byte of SC(1 0) at SC+1
+
+ELIF _SOURCE_DISC_FILES
+
+ LDA P                  \ Set A = #Y + P
+ CLC                    \
+ ADC #Y                 \ where #Y is the y-coordinate of the centre of the
+                        \ screen, so A is now the horizontal pixel row of the
+                        \ line we want to draw to display the hangar floor
+
+ LSR A                  \ Set A = A / 4, clear bit 0 and add &40, so this sets
+ LSR A                  \ A to &40 + (Y1 / 4) rounded down down to a multiple
+ LSR A                  \ of 2
+ ASL A
+ ORA #&40
+
+ STA SC+1               \ Store the result in the high byte of SC(1 0) at SC+1,
+                        \ which sets SC(1 0) to the the page number of the
+                        \ character row that contains the pixel with the
+                        \ y-coordinate in Y1, as screen memory starts at &4000
+                        \ and there are two pages (512 bytes) per pixel line in
+                        \ the custom screen mode used in the space view
+
+ENDIF
 
  STA R                  \ Also store the page number in R
 
@@ -6329,6 +6710,8 @@ ENDIF
 
 MACRO DKS4
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  LDX #3                 \ Set X to 3, so it's ready to send to SHEILA once
                         \ interrupts have been disabled
 
@@ -6360,6 +6743,42 @@ MACRO DKS4
  STX VIA+&40            \ to %00001011 to restart auto scan of keyboard
 
  CLI                    \ Allow interrupts again
+
+ELIF _SOURCE_DISC_FILES
+
+ LDA #%00000011         \ Set A to %00000011, so it's ready to send to SHEILA
+                        \ once interrupts have been disabled
+
+ SEI                    \ Disable interrupts so we can scan the keyboard
+                        \ without being hijacked
+
+ STA VIA+&40            \ Set 6522 System VIA output register ORB (SHEILA &40)
+                        \ to %00000011 to stop auto scan of keyboard
+
+ LDA #%01111111         \ Set 6522 System VIA data direction register DDRA
+ STA VIA+&43            \ (SHEILA &43) to %01111111. This sets the A registers
+                        \ (IRA and ORA) so that:
+                        \
+                        \   * Bits 0-6 of ORA will be sent to the keyboard
+                        \
+                        \   * Bit 7 of IRA will be read from the keyboard
+
+ STX VIA+&4F            \ Set 6522 System VIA output register ORA (SHEILA &4F)
+                        \ to X, the key we want to scan for; bits 0-6 will be
+                        \ sent to the keyboard, of which bits 0-3 determine the
+                        \ keyboard column, and bits 4-6 the keyboard row
+
+ LDX VIA+&4F            \ Read 6522 System VIA output register IRA (SHEILA &4F)
+                        \ into X; bit 7 is the only bit that will have changed.
+                        \ If the key is pressed, then bit 7 will be set,
+                        \ otherwise it will be clear
+
+ LDA #%00001011         \ Set 6522 System VIA output register ORB (SHEILA &40)
+ STA VIA+&40            \ to %00001011 to restart auto scan of keyboard
+
+ CLI                    \ Allow interrupts again
+
+ENDIF
 
 ENDMACRO
 
@@ -6499,6 +6918,8 @@ ENDMACRO
 
 .DKL2
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  LDA KYTB-2,Y           \ Set A to the relevant internal key number from the
                         \ KYTB table (we add Y to KYTB-2 rather than KYTB as Y
                         \ is looping from 9 down to 3, so this grabs the key
@@ -6506,6 +6927,20 @@ ENDMACRO
 
  DKS4                   \ Include macro DKS4 to check whether the key in A is
                         \ being pressed, and if it is, set bit 7 of A
+
+ELIF _SOURCE_DISC_FILES
+
+ LDX KYTB-2,Y           \ Set X to the relevant internal key number from the
+                        \ KYTB table (we add Y to KYTB-2 rather than KYTB as Y
+                        \ is looping from 9 down to 3, so this grabs the key
+                        \ numbers from 7 to 1, i.e. from "A" to "?"
+
+ DKS4                   \ Include macro DKS4 to check whether the key in X is
+                        \ being pressed, and if it is, set bit 7 of X
+
+ TXA                    \ Copy the key press result into A
+
+ENDIF
 
  ASL A                  \ Shift bit 7 of A into the C flag
 
@@ -6527,6 +6962,8 @@ ENDMACRO
 
                         \ We're now going to scan the keyboard to see if any
                         \ other keys are being pressed
+
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
 
  LDA #16                \ We start scanning from internal key number 16 ("Q"),
                         \ so we set A as a loop counter
@@ -6572,6 +7009,33 @@ ENDMACRO
 .DK1
 
  CLD                    \ Clear the D flag to return to binary mode
+
+ELIF _SOURCE_DISC_FILES
+
+ LDX #16                \ We start scanning from internal key number 16 ("Q"),
+                        \ so we set X as a loop counter
+
+.DKL3
+
+ DKS4                   \ Include macro DKS4 to check whether the key in X is
+                        \ being pressed, and if it is, set bit 7 of X
+
+ TXA                    \ Copy the key press result into A
+
+ BMI DK1                \ If bit 7 is set, i.e. the key is being pressed, skip
+                        \ to DK1
+
+ INX                    \ Otherwise this key is not being pressed, so increment
+                        \ the loop counter in X
+
+ BPL DKL3               \ Loop back to test the next key, ending the loop when
+                        \ X is negative (i.e. X = &80 = 128 = %10000000)
+
+ TXA                    \ Copy the key press result into A
+
+.DK1
+
+ENDIF
 
  EOR #%10000000         \ EOR A with #%10000000 to flip bit 7, so A now contains
                         \ 0 if no key has been pressed, or the internal key
@@ -6953,8 +7417,21 @@ ENDMACRO
  LDY #2                 \ Fetch byte #2 from the block pointed to by OSSC, which
  LDA (OSSC),Y           \ contains the key to check, and store it in A
 
+IF _SNG45 OR _EXECUTIVE OR _SOURCE_DISC_BUILD
+
  DKS4                   \ Include macro DKS4 to check whether the key in A is
                         \ being pressed, and if it is, set bit 7 of A
+
+ELIF _SOURCE_DISC_FILES
+
+ TAX                    \ Set X to the number of the key to check
+
+ DKS4                   \ Include macro DKS4 to check whether the key in X is
+                        \ being pressed, and if it is, set bit 7 of X
+
+ TXA                    \ Copy the key press result into A
+
+ENDIF
 
  STA (OSSC),Y           \ Store the updated A in byte #2 of the block pointed to
                         \ by OSSC

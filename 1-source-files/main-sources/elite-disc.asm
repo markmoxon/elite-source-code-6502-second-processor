@@ -37,9 +37,11 @@
 
  INCLUDE "1-source-files/main-sources/elite-build-options.asm"
 
- _SOURCE_DISC           = (_VARIANT = 1)
- _SNG45                 = (_VARIANT = 2)
- _EXECUTIVE             = (_VARIANT = 3)
+ _SNG45                 = (_VARIANT = 1)
+ _EXECUTIVE             = (_VARIANT = 2)
+ _SOURCE_DISC_BUILD     = (_VARIANT = 3)
+ _SOURCE_DISC_FILES     = (_VARIANT = 4)
+ _SOURCE_DISC           = (_VARIANT = 3) OR (_VARIANT = 4)
 
 IF _SNG45 OR _EXECUTIVE
  PUTFILE "3-assembled-output/ELITE.bin", "ELITE", &FF1FDC, &FF2085
@@ -49,10 +51,12 @@ ENDIF
 
  PUTFILE "3-assembled-output/ELITEa.bin", "I.ELITEa", &FF2000, &FF2000
 
-IF _SNG45 OR _SOURCE_DISC
+IF _SNG45 OR _SOURCE_DISC_BUILD
  PUTFILE "3-assembled-output/I.CODE.bin", "I.CODE", &FF2400, &FF2C89
 ELIF _EXECUTIVE
  PUTFILE "3-assembled-output/I.CODE.bin", "I.CODE", &032400, &032C89
+ELIF _SOURCE_DISC_FILES
+ PUTFILE "3-assembled-output/I.CODE.bin", "I.CODE", &FF2400, &FF2489
 ENDIF
 
 IF _REMOVE_CHECKSUMS

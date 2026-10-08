@@ -60,20 +60,18 @@ See the [introduction](#introduction) for more information, or jump straight int
 * [Building different variants of 6502 Second Processor Elite](#building-different-variants-of-6502-second-processor-elite)
 
   * [Building the SNG45 variant](#building-the-sng45-variant)
-  * [Building the source disc variant](#building-the-source-disc-variant)
   * [Building the Executive version](#building-the-executive-version)
+  * [Building the source disc build variant](#building-the-source-disc-build-variant)
+  * [Building the source disc files variant](#building-the-source-disc-files-variant)
   * [Differences between the variants](#differences-between-the-variants)
 
-* [Notes on the original source files](#notes-on-the-original-source-files)
-
-  * [Fixing the original build process](#fixing-the-original-build-process)
-  * [Producing byte-accurate binaries](#producing-byte-accurate-binaries)
+* [Producing byte-accurate binaries](#producing-byte-accurate-binaries)
 
 ## Introduction
 
 This repository contains the original source code for Elite on the BBC Micro with a 6502 Second Processor, with every single line documented and (for the most part) explained.
 
-You can build the fully functioning game from this source. [Three variants](#building-different-variants-of-6502-second-processor-elite) are currently supported: the Acornsoft SNG45 variant, the Executive version, and the version produced by the original source discs.
+You can build the fully functioning game from this source. [Four variants](#building-different-variants-of-6502-second-processor-elite) are currently supported: the Acornsoft SNG45 variant, the Executive version, the variant built by the source disc build process, and the variant built from the binary files already on the source disc.
 
 This repository is a companion to the [elite.bbcelite.com website](https://elite.bbcelite.com), which contains all the code from this repository, but laid out in a much more human-friendly fashion. The links at the top of this page will take you to repositories for the other versions of Elite that are covered by this project.
 
@@ -230,8 +228,9 @@ By default the build process will create a typical Elite game disc with a standa
 * `variant=<name>` - Build the specified variant:
 
   * `variant=sng45` (default)
-  * `variant=source-disc`
   * `variant=executive`
+  * `variant=source-disc-build`
+  * `variant=source-disc-files`
 
 * `commander=max` - Start with a maxed-out commander (specifically, this is the test commander file from the original source, which is almost but not quite maxed-out)
 
@@ -322,9 +321,11 @@ This repository contains the source code for three different variants of 6502 Se
 
 * The Acornsoft SNG45 variant, which was the first appearence of 6502 Second Processor Elite, and the one included on all subsequent discs
 
-* The variant produced by the source disc from Ian Bell's personal website, which was never released
-
 * The Executive version from Ian Bell's personal website, which was also never released
+
+* The variant produced by running the build process on the source disc from Ian Bell's personal website
+
+* The variant produced using the binaries from the source disc on Ian Bell's personal website, which differ slightly from the binaries that are produced by running the build process
 
 By default the build process builds the SNG45 variant, but you can build a specified variant using the `variant=` build parameter.
 
@@ -371,49 +372,6 @@ ee25ce2a   6454  ee25ce2a   6454   Yes   I.CODE.bin
 fc481d3e   1024  fc481d3e   1024   Yes   WORDS.bin
 ```
 
-### Building the source disc variant
-
-You can build the source disc variant by appending `variant=source-disc` to the `make` command, like this on Windows:
-
-```
-make.bat variant=source-disc
-```
-
-or this on a Mac or Linux:
-
-```
-make variant=source-disc
-```
-
-This will produce a file called `elite-6502sp-from-source-disc.ssd` in the `5-compiled-game-discs` folder that contains the source disc variant.
-
-The verification checksums for this version are as follows:
-
-```
-Results for variant: source-disc
-[--originals--]  [---output----]
-Checksum   Size  Checksum   Size  Match  Filename
------------------------------------------------------------
-56520930    752  56520930    752   Yes   ELITE.bin
-d10dbf64   5769  d10dbf64   5769   Yes   ELITEa.bin
-455ba962   2666  455ba962   2666   Yes   ELTA.bin
-ff84a532   3096  ff84a532   3096   Yes   ELTB.bin
-54e6f0e3   3284  54e6f0e3   3284   Yes   ELTC.bin
-cb34d904   3336  cb34d904   3336   Yes   ELTD.bin
-9c847981   2708  9c847981   2708   Yes   ELTE.bin
-dbb22442   3954  dbb22442   3954   Yes   ELTF.bin
-22b0e99e   3591  22b0e99e   3591   Yes   ELTG.bin
-a949f485   1427  a949f485   1427   Yes   ELTH.bin
-6379fa24   1411  6379fa24   1411   Yes   ELTI.bin
-62e09fa4   3619  62e09fa4   3619   Yes   ELTJ.bin
-a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
-5908b6d5  38832  5908b6d5  38832   Yes   P.CODE.bin
-11ccbb59  38832  11ccbb59  38832   Yes   P.CODE.unprot.bin
-2580d019   8460  2580d019   8460   Yes   SHIPS.bin
-57406380   1024  57406380   1024   Yes   WORDS.bin
--             -  913f8333     93    -    BOOT.bin
-```
-
 ### Building the Executive version
 
 You can build the Executive version by appending `variant=executive` to the `make` command, like this on Windows:
@@ -457,11 +415,97 @@ d597e3d0  39143  d597e3d0  39143   Yes   P.CODE.unprot.bin
 -             -  913f8333     93    -    BOOT.bin
 ```
 
+### Building the source disc build variant
+
+You can build the source disc build variant by appending `variant=source-disc-build` to the `make` command, like this on Windows:
+
+```
+make.bat variant=source-disc-build
+```
+
+or this on a Mac or Linux:
+
+```
+make variant=source-disc-build
+```
+
+This will produce a file called `elite-6502sp-from-source-disc.ssd` in the `5-compiled-game-discs` folder that contains the same binaries as those produced by the original build process on the source disc.
+
+The verification checksums for this version are as follows:
+
+```
+Results for variant: source-disc-build
+[--originals--]  [---output----]
+Checksum   Size  Checksum   Size  Match  Filename
+-----------------------------------------------------------
+56520930    752  56520930    752   Yes   ELITE.bin
+d10dbf64   5769  d10dbf64   5769   Yes   ELITEa.bin
+455ba962   2666  455ba962   2666   Yes   ELTA.bin
+ff84a532   3096  ff84a532   3096   Yes   ELTB.bin
+54e6f0e3   3284  54e6f0e3   3284   Yes   ELTC.bin
+cb34d904   3336  cb34d904   3336   Yes   ELTD.bin
+9c847981   2708  9c847981   2708   Yes   ELTE.bin
+dbb22442   3954  dbb22442   3954   Yes   ELTF.bin
+22b0e99e   3591  22b0e99e   3591   Yes   ELTG.bin
+a949f485   1427  a949f485   1427   Yes   ELTH.bin
+6379fa24   1411  6379fa24   1411   Yes   ELTI.bin
+62e09fa4   3619  62e09fa4   3619   Yes   ELTJ.bin
+a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
+5908b6d5  38832  5908b6d5  38832   Yes   P.CODE.bin
+11ccbb59  38832  11ccbb59  38832   Yes   P.CODE.unprot.bin
+2580d019   8460  2580d019   8460   Yes   SHIPS.bin
+57406380   1024  57406380   1024   Yes   WORDS.bin
+-             -  913f8333     93    -    BOOT.bin
+```
+
+### Building the source disc files variant
+
+You can build the source disc files variant by appending `variant=source-disc-files` to the `make` command, like this on Windows:
+
+```
+make.bat variant=source-disc-files
+```
+
+or this on a Mac or Linux:
+
+```
+make variant=source-disc-files
+```
+
+This will produce a file called `elite-6502sp-from-source-disc-files.ssd` in the `5-compiled-game-discs` folder that includes the binaries from the source disc on Ian Bell's personal website, which differ slightly from the binaries that are produced by running the build process on the source disc.
+
+The verification checksums for this version are as follows:
+
+```
+Results for variant: source-disc-files
+[--originals--]  [---output----]
+Checksum   Size  Checksum   Size  Match  Filename
+-----------------------------------------------------------
+56520930    752  56520930    752   Yes   ELITE.bin
+d10dbf64   5769  d10dbf64   5769   Yes   ELITEa.bin
+455ba962   2666  455ba962   2666   Yes   ELTA.bin
+ff84a532   3096  ff84a532   3096   Yes   ELTB.bin
+54e6f0e3   3284  54e6f0e3   3284   Yes   ELTC.bin
+cb34d904   3336  cb34d904   3336   Yes   ELTD.bin
+9c847981   2708  9c847981   2708   Yes   ELTE.bin
+dbb22442   3954  dbb22442   3954   Yes   ELTF.bin
+22b0e99e   3591  22b0e99e   3591   Yes   ELTG.bin
+a949f485   1427  a949f485   1427   Yes   ELTH.bin
+6379fa24   1411  6379fa24   1411   Yes   ELTI.bin
+62e09fa4   3619  62e09fa4   3619   Yes   ELTJ.bin
+e0f973d6   4476  e0f973d6   4476   Yes   I.CODE.bin
+5908b6d5  38832  5908b6d5  38832   Yes   P.CODE.bin
+11ccbb59  38832  11ccbb59  38832   Yes   P.CODE.unprot.bin
+2580d019   8460  2580d019   8460   Yes   SHIPS.bin
+57406380   1024  57406380   1024   Yes   WORDS.bin
+-             -  913f8333     93    -    BOOT.bin
+```
+
 ### Differences between the variants
 
-You can see the differences between the variants by searching the source code for `_SNG45` (for features in the SNG45 variant) or `_SOURCE_DISC` (for features in the source disc variant) or `_EXECUTIVE` (for features in the Executive version). There are only a few differences in the source disc variant (if you ignore [workspace noise](#producing-byte-accurate-binaries)), but quite a few in the Executive version.
+You can see the differences between the variants by searching the source code for `_SNG45` (for features in the SNG45 variant), `_EXECUTIVE` (for features in the Executive version), `_SOURCE_DISC_BUILD` (for features in the source disc build variant) or `_SOURCE_DISC_FILES` (for features in the source disc files variant). You can also search for `_SOURCE_DISC` for features in all the source disc variants.
 
-The main differences in the source disc variant compared to the SNG45 variant are:
+The main differences in the source disc variants compared to the SNG45 variant are:
 
 * In the source disc variant, the extended description of Lave is replaced by the rather cryptic "Bits'n Pieces - End Of Part 1". You can see this by pressing F6 just after starting the game (you have to be docked at Lave).
 
@@ -471,17 +515,25 @@ The main differences in the source disc variant compared to the SNG45 variant ar
 
 * The loader in the source disc variant contains a load of Tube-detection code that is disabled in the SNG45 variant.
 
+* The dashboard image in the source disc variant differs from the release version in three bytes; these show up as red dots in the SP and RL labels in the right-hand dials. It isn't clear why these three bytes are different.
+
+The main differences in the source disc file variant compared to the source disc build variant are:
+
+* The game font is taken directly from the MOS rather than from a font file.
+
+* There are no lookup tables at FONT%, log, logL, antilog, antilogODD or ylookup, so the I.CODE binary is much smaller and has a different execution address.
+
+* The y-coordinate logic is implemented by shifts and additions rather than the ylookup table.
+
+* Divisions in the line-drawing routine LOIN are done using unrolled shift-and-subtract algorithm rather than logarithms.
+
+* The keyboard routines at KEYBOARD, DODKS4 and DKS4 use different registers and don't use BCD mode when scanning the keyboard, so it is slightly less efficient than the release version as it checks all key numbers from 16 to 127, even those that aren't valid BCD key numbers.
+
 There are lots of differences in the Executive version compared to the SNG45 variant. You can read more about them in the deep dive on [secrets of the Executive version](https://elite.bbcelite.com/deep_dives/secrets_of_the_executive_version.html).
 
 See the [accompanying website](https://elite.bbcelite.com/6502sp/releases.html) for a comprehensive list of differences between the variants.
 
-## Notes on the original source files
-
-### Fixing the original build process
-
-The source files on the source disc do not build as they are; some massaging is required, as described in [this thread on Stardot](https://stardot.org.uk/forums/viewtopic.php?t=14607). Note also that the `P.DIALS2P` file on the source disc has some erroneous dots in the right-hand side of the dashboard; a fixed version is available in the `images` folder in this repository, and this fixed version was used to build the reference binaries in the `4-reference-binaries` folder.
-
-### Producing byte-accurate binaries
+## Producing byte-accurate binaries
 
 Instead of initialising workspaces with null values like BeebAsm, the original BBC Micro source code creates its workspaces by simply incrementing the `P%` and `O%` program counters, which means that the workspaces end up containing whatever contents the allocated memory had at the time. As the source files are broken into multiple BBC BASIC programs that run each other sequentially, this means the workspaces in the source code tend to contain either fragments of these BBC BASIC source programs, or assembled code from an earlier stage. This doesn't make any difference to the game code, which either initialises the workspaces at runtime or just ignores their initial contents, but if we want to be able to produce byte-accurate binaries from the modern BeebAsm assembly process, we need to include this "workspace noise" when building the project. Workspace noise is only loaded by the `encrypt` target; for the `build` target, workspaces are initialised with zeroes.
 

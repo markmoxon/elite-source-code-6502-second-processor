@@ -10,8 +10,9 @@ PYTHON?=python
 #   variant=<release>   Build the specified variant:
 #
 #                         sng45 (default)
-#                         source-disc
 #                         executive
+#                         source-disc-build
+#                         source-disc-files
 #
 #   commander=max       Start with a maxed-out commander
 #
@@ -36,9 +37,10 @@ PYTHON?=python
 #   3 = BBC Micro with 6502 Second Processor
 #
 # _VARIANT
-#   1 = Source disc
-#   2 = SNG45 (default)
-#   3 = Executive version
+#   1 = SNG45 (default)
+#   2 = Executive version
+#   3 = Source disc build (the binaries from running a build of the source disc)
+#   4 = Source disc files (the binaries already on the source disc)
 #
 # _MAX_COMMANDER
 #   TRUE  = Maxed-out commander
@@ -75,18 +77,23 @@ else
   match-original-binaries=TRUE
 endif
 
-ifeq ($(variant), source-disc)
-  variant-number=1
-  folder=source-disc
-  suffix=-flicker-free-from-source-disc
-  boot=-boot ELITE
-else ifeq ($(variant), executive)
-  variant-number=3
+ifeq ($(variant), executive)
+  variant-number=2
   folder=executive
   suffix=-flicker-free-executive
   boot=-boot ELITE
+else ifeq ($(variant), source-disc-build)
+  variant-number=3
+  folder=source-disc-build
+  suffix=-flicker-free-from-source-disc-build
+  boot=-boot ELITE
+else ifeq ($(variant), source-disc-files)
+  variant-number=4
+  folder=source-disc-files
+  suffix=-flicker-free-from-source-disc-files
+  boot=-boot ELITE
 else
-  variant-number=2
+  variant-number=1
   folder=sng45
   suffix=-flicker-free-sng45
   boot=-opt 2
