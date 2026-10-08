@@ -60,8 +60,9 @@ See the [introduction](#introduction) for more information, or jump straight int
 * [Building different variants of 6502 Second Processor Elite](#building-different-variants-of-6502-second-processor-elite)
 
   * [Building the SNG45 variant](#building-the-sng45-variant)
-  * [Building the source disc variant](#building-the-source-disc-variant)
   * [Building the Executive version](#building-the-executive-version)
+  * [Building the source disc build variant](#building-the-source-disc-build-variant)
+  * [Building the source disc files variant](#building-the-source-disc-files-variant)
   * [Differences between the variants](#differences-between-the-variants)
 
 * [Producing byte-accurate binaries](#producing-byte-accurate-binaries)
@@ -227,8 +228,9 @@ By default the build process will create a typical Elite game disc with a standa
 * `variant=<name>` - Build the specified variant:
 
   * `variant=sng45` (default)
-  * `variant=source-disc`
   * `variant=executive`
+  * `variant=source-disc-build`
+  * `variant=source-disc-files`
 
 * `commander=max` - Start with a maxed-out commander (specifically, this is the test commander file from the original source, which is almost but not quite maxed-out)
 
@@ -368,49 +370,6 @@ ee25ce2a   6454  ee25ce2a   6454   Yes   I.CODE.bin
 fc481d3e   1024  fc481d3e   1024   Yes   WORDS.bin
 ```
 
-### Building the source disc variant
-
-You can build the source disc variant by appending `variant=source-disc` to the `make` command, like this on Windows:
-
-```
-make.bat variant=source-disc
-```
-
-or this on a Mac or Linux:
-
-```
-make variant=source-disc
-```
-
-This will produce a file called `elite-6502sp-from-source-disc.ssd` in the `5-compiled-game-discs` folder that contains the source disc variant.
-
-The verification checksums for this version are as follows:
-
-```
-Results for variant: source-disc
-[--originals--]  [---output----]
-Checksum   Size  Checksum   Size  Match  Filename
------------------------------------------------------------
-56520930    752  56520930    752   Yes   ELITE.bin
-d10dbf64   5769  d10dbf64   5769   Yes   ELITEa.bin
-455ba962   2666  455ba962   2666   Yes   ELTA.bin
-ff84a532   3096  ff84a532   3096   Yes   ELTB.bin
-54e6f0e3   3284  54e6f0e3   3284   Yes   ELTC.bin
-cb34d904   3336  cb34d904   3336   Yes   ELTD.bin
-9c847981   2708  9c847981   2708   Yes   ELTE.bin
-dbb22442   3954  dbb22442   3954   Yes   ELTF.bin
-22b0e99e   3591  22b0e99e   3591   Yes   ELTG.bin
-a949f485   1427  a949f485   1427   Yes   ELTH.bin
-6379fa24   1411  6379fa24   1411   Yes   ELTI.bin
-62e09fa4   3619  62e09fa4   3619   Yes   ELTJ.bin
-a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
-5908b6d5  38832  5908b6d5  38832   Yes   P.CODE.bin
-11ccbb59  38832  11ccbb59  38832   Yes   P.CODE.unprot.bin
-2580d019   8460  2580d019   8460   Yes   SHIPS.bin
-57406380   1024  57406380   1024   Yes   WORDS.bin
--             -  913f8333     93    -    BOOT.bin
-```
-
 ### Building the Executive version
 
 You can build the Executive version by appending `variant=executive` to the `make` command, like this on Windows:
@@ -451,6 +410,94 @@ e2cf0d8a   3674  e2cf0d8a   3674   Yes   ELTJ.bin
 d597e3d0  39143  d597e3d0  39143   Yes   P.CODE.unprot.bin
 2580d019   8460  2580d019   8460   Yes   SHIPS.bin
 272668f2   1024  272668f2   1024   Yes   WORDS.bin
+-             -  913f8333     93    -    BOOT.bin
+```
+
+
+### Building the source disc build variant
+
+You can build the source disc build variant by appending `variant=source-disc-build` to the `make` command, like this on Windows:
+
+```
+make.bat variant=source-disc-build
+```
+
+or this on a Mac or Linux:
+
+```
+make variant=source-disc-build
+```
+
+This will produce a file called `elite-6502sp-from-source-disc.ssd` in the `5-compiled-game-discs` folder that contains the source disc build variant.
+
+The verification checksums for this version are as follows:
+
+```
+Results for variant: source-disc-build
+[--originals--]  [---output----]
+Checksum   Size  Checksum   Size  Match  Filename
+-----------------------------------------------------------
+56520930    752  56520930    752   Yes   ELITE.bin
+d10dbf64   5769  d10dbf64   5769   Yes   ELITEa.bin
+455ba962   2666  455ba962   2666   Yes   ELTA.bin
+ff84a532   3096  ff84a532   3096   Yes   ELTB.bin
+54e6f0e3   3284  54e6f0e3   3284   Yes   ELTC.bin
+cb34d904   3336  cb34d904   3336   Yes   ELTD.bin
+9c847981   2708  9c847981   2708   Yes   ELTE.bin
+dbb22442   3954  dbb22442   3954   Yes   ELTF.bin
+22b0e99e   3591  22b0e99e   3591   Yes   ELTG.bin
+a949f485   1427  a949f485   1427   Yes   ELTH.bin
+6379fa24   1411  6379fa24   1411   Yes   ELTI.bin
+62e09fa4   3619  62e09fa4   3619   Yes   ELTJ.bin
+a1342e53   6454  a1342e53   6454   Yes   I.CODE.bin
+5908b6d5  38832  5908b6d5  38832   Yes   P.CODE.bin
+11ccbb59  38832  11ccbb59  38832   Yes   P.CODE.unprot.bin
+2580d019   8460  2580d019   8460   Yes   SHIPS.bin
+57406380   1024  57406380   1024   Yes   WORDS.bin
+-             -  913f8333     93    -    BOOT.bin
+```
+
+
+### Building the source disc files variant
+
+You can build the source disc files variant by appending `variant=source-disc-files` to the `make` command, like this on Windows:
+
+```
+make.bat variant=source-disc-files
+```
+
+or this on a Mac or Linux:
+
+```
+make variant=source-disc-files
+```
+
+This will produce a file called `elite-6502sp-from-source-disc-files.ssd` in the `5-compiled-game-discs` folder that contains the source disc files variant.
+
+The verification checksums for this version are as follows:
+
+```
+Results for variant: source-disc-files
+[--originals--]  [---output----]
+Checksum   Size  Checksum   Size  Match  Filename
+-----------------------------------------------------------
+56520930    752  56520930    752   Yes   ELITE.bin
+d10dbf64   5769  d10dbf64   5769   Yes   ELITEa.bin
+455ba962   2666  455ba962   2666   Yes   ELTA.bin
+ff84a532   3096  ff84a532   3096   Yes   ELTB.bin
+54e6f0e3   3284  54e6f0e3   3284   Yes   ELTC.bin
+cb34d904   3336  cb34d904   3336   Yes   ELTD.bin
+9c847981   2708  9c847981   2708   Yes   ELTE.bin
+dbb22442   3954  dbb22442   3954   Yes   ELTF.bin
+22b0e99e   3591  22b0e99e   3591   Yes   ELTG.bin
+a949f485   1427  a949f485   1427   Yes   ELTH.bin
+6379fa24   1411  6379fa24   1411   Yes   ELTI.bin
+62e09fa4   3619  62e09fa4   3619   Yes   ELTJ.bin
+e0f973d6   4476  e0f973d6   4476   Yes   I.CODE.bin
+5908b6d5  38832  5908b6d5  38832   Yes   P.CODE.bin
+11ccbb59  38832  11ccbb59  38832   Yes   P.CODE.unprot.bin
+2580d019   8460  2580d019   8460   Yes   SHIPS.bin
+57406380   1024  57406380   1024   Yes   WORDS.bin
 -             -  913f8333     93    -    BOOT.bin
 ```
 

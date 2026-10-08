@@ -48,9 +48,11 @@
  CPU 1                  \ Switch to 65C02 assembly, as this code runs on the
                         \ 6502 Second Processor
 
- _SOURCE_DISC           = (_VARIANT = 1)
- _SNG45                 = (_VARIANT = 2)
- _EXECUTIVE             = (_VARIANT = 3)
+ _SNG45                 = (_VARIANT = 1)
+ _EXECUTIVE             = (_VARIANT = 2)
+ _SOURCE_DISC_BUILD     = (_VARIANT = 3)
+ _SOURCE_DISC_FILES     = (_VARIANT = 4)
+ _SOURCE_DISC           = (_VARIANT = 3) OR (_VARIANT = 4)
 
  GUARD &F800            \ Guard against assembling over MOS memory
 

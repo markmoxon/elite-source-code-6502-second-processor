@@ -19,7 +19,7 @@ import sys
 
 argv = sys.argv
 encrypt = True
-release = 2
+release = 1
 
 for arg in argv[1:]:
     if arg == "-u":
@@ -30,6 +30,8 @@ for arg in argv[1:]:
         release = 2
     if arg == "-rel3":
         release = 3
+    if arg == "-rel4":
+        release = 4
 
 print("6502SP Elite Checksum")
 print("Encryption = ", encrypt)
@@ -47,20 +49,20 @@ print("Encryption = ", encrypt)
 # values will be listed
 
 if release == 1:
-    # Source disc variant
-    s = 0x106A                  # S%
-    g = 0x10D1                  # G%
-    f = 0x81B0                  # F%
-elif release == 2:
     # SNG45 variant
     s = 0x106A                  # S%
     g = 0x10D1                  # G%
     f = 0x818F                  # F%
-elif release == 3:
+elif release == 2:
     # Executive variant
     s = 0x106C                  # S%
     g = 0x10D3                  # G%
     f = 0x82E7                  # F%
+elif release == 3 or release == 4:
+    # Source disc variant
+    s = 0x106A                  # S%
+    g = 0x10D1                  # G%
+    f = 0x81B0                  # F%
 
 # Load assembled code file for P.CODE
 
@@ -73,14 +75,14 @@ elite_file.close()
 # Commander data checksum
 
 if release == 1:
-    # Source disc
-    commander_start = 12 + 5
-elif release == 2:
     # SNG45
     commander_start = 12 + 5
-elif release == 3:
+elif release == 2:
     # Executive
     commander_start = 14 + 5
+elif release == 3 or release == 4:
+    # Source disc
+    commander_start = 12 + 5
 
 commander_offset = 0x52
 CH = 0x4B - 2
