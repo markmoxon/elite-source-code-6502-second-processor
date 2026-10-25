@@ -1041,7 +1041,7 @@ ENDIF
  LDA RDCHV+1            \ instruction at the start of the newosrdch routine and
  STA newosrdch+2        \ changes it to a JSR to the existing RDCHV address
 
- LDA #LO(newosrdch)     \ Disable interrupts and set WRCHV to newosrdch, so
+ LDA #LO(newosrdch)     \ Disable interrupts and set RDCHV to newosrdch, so
  SEI                    \ calls to OSRDCH are now handled by newosrdch, which
  STA RDCHV              \ lets us implement all our custom OSRDCH commands
  LDA #HI(newosrdch)
@@ -2416,7 +2416,7 @@ ENDIF
  TAY                    \ Transfer the updated loop counter from A into Y
 
  CMP LINMAX             \ Loop back to LL27 to draw the next line segment, until
- BCC LL27               \ we the loop counter has reached LINMAX (which contains
+ BCC LL27               \ the loop counter has reached LINMAX (which contains
                         \ 2 * number of points, so this is when we have run out
                         \ of points)
 
