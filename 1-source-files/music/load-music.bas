@@ -21,10 +21,10 @@ DEF PROCpatch
 P%=&3C0F
 [OPT 0
 .platform       EQUB 64
-.addrDNOIZ      EQUW &3E17
-.addrplay1      EQUW &3DCA+1
-.addrDELAY      EQUW &3E08
-.addrSFX        EQUW &394F      \ Set to SFX in elite-z
+.addrDNOIZ      EQUW &3E19
+.addrplay1      EQUW &3DCC+1
+.addrDELAY      EQUW &3E0A
+.addrSFX        EQUW &3951      \ Set to SFX in elite-z
 .end
 ]
 ENDPROC

@@ -1169,6 +1169,8 @@ ENDIF
  LDA #0                 \ Enable sound by default
  STA DNOIZ
 
+ STA syncCounter        \ Zero the sync counter
+
                         \ --- End of added code ------------------------------->
 
  LDA #LO(newosrdch)     \ Disable interrupts and set WRCHV to newosrdch, so
@@ -6868,7 +6870,7 @@ ENDMACRO
 
                         \ --- And replaced by: -------------------------------->
 
- EQUW SpeedControl      \            255 (&FF)    15 = Control the game speed
+ EQUW WaitForSync       \            255 (&FF)    15 = Control the game speed
 
                         \ --- End of replacement ------------------------------>
 
@@ -9494,65 +9496,22 @@ ENDMACRO
 
 \ ******************************************************************************
 \
-\       Name: SpeedControl
+\       Name: WaitForSync
 \       Type: Subroutine
 \   Category: Music
-\    Summary: Control the game speed
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for speed control: -------------->
-
-.SpeedControl
-
- LDY #2                 \ Fetch byte #2 from the parameter block, which contains
- LDA (OSSC),Y           \ the parameter that controls the operation
-
- CMP #1                 \ If the parameter is 1, jump to StartMainLoop to wait
- BEQ SlowDownMainLoop   \ until the sync counter counts down, returning from the
-                        \ subroutine using a tail call
-
- JMP StartMainLoop      \ Otherwise the parameter must be 0, so jump to
-                        \ StartMainLoop to restart the sync counter, returning
-                        \ from the subroutine using a tail call
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: StartMainLoop
-\       Type: Subroutine
-\   Category: Main loop
-\    Summary: Restart the sync counter
-\
-\ ******************************************************************************
-
-                        \ --- Mod: Code added for speed control: -------------->
-
-.StartMainLoop
-
- LDA #SPEED             \ Set syncCounter to SPEED, the minimum number of
- STA syncCounter        \ vertical syncs we want to spend in the main loop
-
- RTS                    \ Return from the subroutine
-
-                        \ --- End of added code ------------------------------->
-
-\ ******************************************************************************
-\
-\       Name: SlowDownMainLoop
-\       Type: Subroutine
-\   Category: Main loop
 \    Summary: Pause until the sync counter reaches zero
 \
 \ ******************************************************************************
 
                         \ --- Mod: Code added for speed control: -------------->
 
-.SlowDownMainLoop
+.WaitForSync
 
- LDA syncCounter        \ Wait until the syncCounter reaches 0
- BNE SlowDownMainLoop
+ LDY syncCounter        \ Wait until the sync counter reaches 0
+ BNE WaitForSync
+
+ LDY #SPEED             \ Set the sync counter to SPEED, the minimum number of
+ STY syncCounter        \ vertical syncs we want to spend in the main loop
 
  RTS                    \ Return from the subroutine
 
